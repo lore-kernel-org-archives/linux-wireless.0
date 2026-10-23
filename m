@@ -1,71 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.86
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792778765;
-	b=OdVjdhVI/yYnElEeyzVm2zHXP1Y6ps64ZvNYtcej8cp+/Z9EctYCHJH5IOm4lStB4cuo
-	 A24BrjYvGWdXjvzYzNOahrNAAqXmIWORCGWLjtbglhV0c7GWHBOu65DL1vlgGNo9YeJ6G
-	 VkVS9lVTnsXjBl1ZHJvGIyaYys6zdW5Gm/XEP10Haudg7u/JXeBTrAPVXYQ2enCAjF31n
-	 iX/eRQDm0wFXZHRdWPLUQADhExMXWXz4RDvHiCXHX2CSE20dzjknCSEk42ZAjZ+MbxIwo
-	 rlh7S8jY5HvgLA63DnHB7FqfQZmTbq7W4k5UWsj2mWfEv6kD/FlLv9/R4X2o6/oxnmg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792778765;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=YIcgysXfPYSKDSVTUAoOuqEBH5LwuWfcVmo3HJUW2uQ=;
-	b=kuPh996YMzwsam2vLIk0EkWw7g3oa6N+nU777ZIqDtjGn7hEG3hZN74k43Q4CCiSRZw2
-	 i2rnxzsIx8pjLdO3TN+jBPi10AvbOpQZAgWwhI2CO8uyEBf44fBT/U6KzLYq2/27rzkHk
-	 dJAnYECMV2z1hHPmAwy0nQa4otf86FRPaj8TncxEOiAfrON8daRkaBqljUXI+E3xLhPjw
-	 zHHIu2Q4Bfiv8y059mD37kYJe0xQ2/DjUM8OK3X1lcDAmT7jCzLqgTi22He7q+pB3ATCs
-	 Yex3b9e71Nd2YpVSoqZ66yRcuOmKW1CCuscQCpx7GS4Rq+fVK6o5cMkhcMpaWQmzCvQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=justthetip.ca;
-	spf=pass smtp.mailfrom=justthetip.ca;
-	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=QWF+Skce;
-	arc=none smtp.remote-ip=91.218.175.86
-Received: from mta0.migadu.com (out-86.mta0.migadu.com [91.218.175.86])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.171
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792778941;
+	b=Y8dod30MD0GC/VACrjO4ms8NYYDJ6WyqU7dWOoFFFPUwFvsV/GeXNQ7Gx6kEp6gtIPLW
+	 747wJWyNwzCheGiI2jnWnGZPq6gulPjLI6afsZWuPgOJRa+Q/RR3n97Ik3Q/rMBkkuHOt
+	 HQwx9O9PZ/z8q3NreiyDMrvsq4/kS/21qaClE+cwv0Aefn5dgVVeZak4ffjFAWK8kv5bz
+	 5uJxV7juJjyrc2N7aJQQYS0dZmkx+48MERcD0ZzIYNCtMXpSjXy+OzMlSAxlydM7HNKor
+	 nETrJrLGiSaRtODiYgKDLXa7iMcveZ/Z+tRsSdNBuzmAFAuHMdZCmk5J/aLyMy9ox2Q==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792778941;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=nKpQdPCfN7vtbw7obZJvLCHSgtoYzv6z5biXGbDum1g=;
+	b=L8Vyi2yh2aWWlqqthhvgmGjYWx8mv1rCIlk8B1FwwGm+f+CjMrldcE8+PN1MIjir4Kr2
+	 nS0fOp9PiY/J1O0L+xEHTXwAxrezk4DZvNFoDt7EBq1wW49wYgBeY3sX9CX7EvaY3NZWx
+	 UMbuNzlNjX1Uhc5p/3hKelNwBDOT+3m3ezq765dp+VXaL4bmBc6bvOryMcuNYA3IM8+Em
+	 t35loqLJo4ps0vhH3HKkqgtUeddoeSZ7tEFRuyscXuoGBOui9fcMycxajy7791DEBlA3O
+	 Tbe1ub1SGkUKd9pi5nLQdVxN7qmmJFNMkXfMfOmQF6KFMA2Fj6NH/3LiEX0qOMo3wDg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="V2T6l/7a";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.171
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2598F606A31D
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 18:06:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2598F606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F2FE606A31B
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 18:09:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F2FE606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=QWF+Skce
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=wdVvQpPpBRbGyvkvJpDfc4Jb1sOZo/1jzcPqAV19YoA=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792778762; v=1; x=1793383562;
- b=QWF+SkceuNnGW/WaJpouxWLbo3L+wdzJqKy4LmBRnUsB99L2ydG1XnyKaA3EQbRVmKf0Q7Pb
- TwBjTg9yrgso1db9qp0+4IrRU8aPRmUKDjxHC4Hsk+0FDD0K54dyt4EIO1va4Q3dlKEK5OcASpC
- OLa97knFb64Vl+OXmcdb04k80AkD7IWoqFAd3n2npcXX5BhsS1E8BaRvePNqN9YCC95TWU2EuoU
- TzpKXXKFYxZ8nZWiHF5DHJu/DH2emED3zaZEunwCOUMUlyyvOknNkNGho8TgDjoi++ElZzDTks8
- 5BC3+mT8QETArDRKRnEe9IiqL7RvCWByHtXCAWxlUJAbQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4410137d7d7234ff;
-	Fri, 23 Oct 2026 18:06:02 +0000
-X-Mizu-Trace-ID: 4410137d7d7234ff
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Deren Wu <deren.wu@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Javier Tia <floss@jetm.me>,
-	Chris Kelly <hoopyfrood42@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: [RFC PATCH wireless] wifi: mt76: mt7925: get the survey airtime from the firmware
-Date: Fri, 23 Oct 2026 11:05:54 -0700
-Message-ID: <20261023180554.7266-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <CAHaeJsQLvC-KBEpy5qu8iYxSB51mbHohrPvN4PJushF_Tk3foA@mail.gmail.com>
-References: <CAHaeJsQLvC-KBEpy5qu8iYxSB51mbHohrPvN4PJushF_Tk3foA@mail.gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=V2T6l/7a
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-3ab3b29a210so10980571fa.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 11:09:00 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792778939; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XRT4gdw2TeD8yEqTRecin5f76nKAyyxVAyAo2Ukry0E93aHpqWu/+EBn/CLKLyaRqJ
+         MS0hwcKr1HEPH541Lh3rAsPFqdmuiNq5S0A0JoXiCdJ1MtU1m6vAxfvuNy3XPPLHZLqi
+         LGd4GAWpDLDWOs6z3Tsd2lO2ZZ/W8LE552OhA8EpxG3RCgNIZAsw/tT08+5E+KeKwxcE
+         o95ERPyMZMf5nJohLYhzTRgW6ua/fg2naY5v8aXQYw7JxbzrG3zyloahH0iV6E94Eir6
+         1Su37rJ7hJadUjcoalrDwzaas7yuOwZ7hl00zibqyy+zz/eQ9jBW+lKwY3gWthfqeX8x
+         Qc8g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=nKpQdPCfN7vtbw7obZJvLCHSgtoYzv6z5biXGbDum1g=;
+        fh=SenwZFA6gsPXeNarhFNnDrrvycDF3Y7WgSbli3sUy0E=;
+        b=RgC1mZ6ARLYNc5hVibdXwLpyKqtaPO/lXkRNRLOfhWtNSJBiZnc8lDj7Q4JIeuWuoc
+         M94yqVvOK9tlwyZuBrO94mkY51vcvXrvZwZj2lrJnmJ8aQn+39i9x8PcbkyXV9fV6iof
+         S1ZTeubhGlMlGZ4Ody7AE/oq3ebDU5NPYJDtzN8i0ddAHfHAcyDCIfztcyDhS49p/WhR
+         t4BzDuxAA537t2TIbRNRiIzX3A2q+wvAxlyOlUDLH3m8Ro/ClbH0WgbNQEPlT38kAphs
+         DXUdz2zliTyA2rhklvHQeuC9Nmt5nXKieIw0QWtUC7O+SXGNqRpaWUhah9syDCKbpfL4
+         rnkQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792778939; x=1793383739; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=nKpQdPCfN7vtbw7obZJvLCHSgtoYzv6z5biXGbDum1g=;
+        b=V2T6l/7ameed6sVkeAzi5rrA0oehedbrCJVrRWC9j0OKhx2Zc0FICRciba4BDpIPQo
+         DaoImqskD9qR6gvN9ulG9cWDahYaCipbWKqi+StdjBKSgi/XEe8DFKAaWwn66eCKp9X3
+         vfIS0E+7Tjpodd69QWhWun3l0H8L4b3P/4EHAZXQMpq3jEJ2axEI8dFOAPCbcBKnmK6j
+         /ZO+Iknhs6cnujPkJELBC6nC/odMJ0gQXq4m9zGG8dPAQT/A9DMD5oAcXwbvzjdGhmSQ
+         BRMjaYDEuh/N7eC0xYZlDssRAsNMV5DA4IN1Q6D0kr1+Ug/PNtnwg3obm+1YGSudx7/e
+         PHlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792778939; x=1793383739;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=nKpQdPCfN7vtbw7obZJvLCHSgtoYzv6z5biXGbDum1g=;
+        b=O+g+lDj7OITAs7upnp5ckLvjuczX2WSeYPHwF9FQ92rRVcGCaLrENg9zXCNw3au02f
+         ks5qJ5uVs/KtrSXO2kmp6H4VM/kkx+pibycgLdEoOMhNj8jKnzt1iw2H5dby3GiwgHs/
+         TpnicRgG8Swuo0C4C8Rjk99KAvG/fUHoCdgxgtilTuTtuPCGQC4yoi64BobhDwyGXT0d
+         vopiqTSWNsw/xQBG0LpIfA38KmfB4rAOszqix8+BXBi8YdhgGKn1k9OXZKlSbZwMKPPW
+         0ogJRjy4LKoQ9nPmSeIi4++lkawVYQO4xf/ROqXBvkw7kOuATb3Y6DF+Ja5p95jaETHK
+         HBZA==
+X-Forwarded-Encrypted: i=1; AKwUvByi0i1n5FIEpj9P3Bfhp3aBCp3jVL2wpIVN60O0aDpE5W5cnPm6Xk0dyIVax2GrnybPJSDA1humAulea9AryQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLYPidnowklWoGKHw2GZtRBhsZImesYcjjakb98n+16jd7IRYRR
+	Xhd+YmASo8Zs6zwia89Y+z6qOo/j5qA4sCdC52w4lAPk6POI90nekyZt1otw5ZWz3JrGXI0RHKx
+	BCvh60zVgkcAv7g7GhEk1/uRyezemC7k=
+X-Gm-Gg: AYBFou1RYq38XxXUexy/LD9pjlSve0B7/lOrg91SfM5O7CSUoXb7+uguDamzF68HdpF
+	rC6BoFA5wmeOn72nkr45KA9ZwTMImFjq6nrv87UCXFa8/1n/URdTHgwcov+LfHnpjib1hAGMDub
+	VfzXQmX76qtHOOtkvloutILJrGJWtraaei2F9Yi126ywbkSMPaz9Zz1VcJzC8vuXZ8b/XKJlfWd
+	gk29mqK7LA4ltvAAFPbpqVhRCDWDGqnJlcdNPEweuB8N79qNvwEeqMdaJKIQWQc1niRLhCpP/CG
+	8/HKHOXeqZ8WH44w3Ay5+TDQdy701igCu6oHxnH0aPqoTlPvjnq1xG2UwVKwqsc1I7sT5fsvJXL
+	wGhbvk0Nf1wrbXFxotWMh4xlNkHKRNUDxTLxlp+hyr5q6boJTAJpdrEpbRsj0fZIYsO4l4OY=
+X-Received: by 2002:a05:651c:1b84:b0:3a6:62bb:906e with SMTP id
+ 38308e7fff4ca-3ac6fd4e4cdmr269461fa.20.1792778938495; Fri, 23 Oct 2026
+ 11:08:58 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -75,286 +104,46 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAAzpgGfrHpQZQ8iaH5fqZHzk5tTx39+jGvGkVXxhYFkp-A_bQg@mail.gmail.com>
+ <CAAzpgGeAaOjPdiVOmeY7xZqEymyh4BfhESwAvTzczvqj+YuNHw@mail.gmail.com>
+In-Reply-To: <CAAzpgGeAaOjPdiVOmeY7xZqEymyh4BfhESwAvTzczvqj+YuNHw@mail.gmail.com>
+From: =?UTF-8?B?TG/Dr2MgS0FTU0VM?= <loic.kassel@gmail.com>
+Date: Fri, 23 Oct 2026 20:08:47 +0200
+X-Gm-Features: AclHuK_kKsOTsWBx0Yucceg6CRaakmJTdlvJSrwgu8_JgodWjgo2txSWsrgvUvI
+Message-ID: <CAAzpgGddO8H3EVb-WhXEeiCeoV97NuV0G22UZcHmyi0QZLwcMg@mail.gmail.com>
+Subject: Re: [REGRESSION] mac80211_hwsim: CCMP frames dropped on fast-xmit
+ (WARNING in ccmp_encrypt_skb, net/mac80211/wpa.c:462)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sai Pratyusha Magam <sai.magam@oss.qualcomm.com>, Rohan Dutta <quic_drohan@quicinc.com>, 
+	linux-wireless@vger.kernel.org, regressions@lists.linux.dev, 
+	Felix Fietkau <nbd@nbd.name>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Busy time in the mt7925 survey is bogus. The register it comes from
-doesn't work on this chip, so every update adds the same large number
-and busy time soon outgrows the time spent on the channel. Transmit
-and receive time come out far too low as well.
+Hi,
 
-Ask the firmware for all three instead, the way mt7996 does.
+I tested commit 6832075ed4ef ("wifi: mac80211_hwsim: reserve headroom
+for software encryption") for this report, and it fixes it.
 
-The MT7927 counts 5 and 6 GHz on a second band that the survey never
-read, so read both bands there and only add the one the channel is on.
+I applied its one-line change to the v7.2.11 mac80211_hwsim (Fedora 44)
+and loaded it as an out-of-tree module, then disabled my workaround
+(fragmentation threshold) on the AP radio. Pinging the station from
+behind the bridge:
 
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Fixes: 05fd14885303 ("wifi: mt76: mt7925: sync MT7927 BSS band assignment")
-Reported-by: Chris Kelly <hoopyfrood42@gmail.com>
-Closes: https://lore.kernel.org/linux-wireless/CAHaeJsT8O8Nhq351hFp3NAL8e0iU85N-LBdYZ9nYHFHVy7t_hQ@mail.gmail.com/
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
-Chris, here's the RFC you asked about. Busy time now follows the load
-and stays under the time on the channel, hopping every half second too.
+  - without 6832075ed4ef: 100% packet loss, one WARNING at wpa.c:462
+    per packet (10 pings, 10 WARNINGs)
+  - with 6832075ed4ef: 0% packet loss, no WARNING
 
-It's an RFC because the offsets aren't documented. On an A9000:
+(The module also had my unrelated beacon timer fix applied, which does
+not touch this code path.)
 
-  19  busy time, including the card's own transmit
-  20  receive time
-  28  transmit time
+6832075ed4ef has no Fixes: tag, so as far as I can tell it will not be
+picked up for stable. The problem was introduced in 7.1 by a536be923191
+("wifi: mac80211: Fix AAD/Nonce computation for management frames with
+MLO"), which made mac80211_hwsim encrypt CCMP/GCMP frames itself, so
+7.1, 7.2 and 7.3 are affected. Could it be considered for stable ?
 
-The MT7927 counts 5 and 6 GHz on a second band, which keeps counting
-while unused, so only the band in use is added.
+#regzbot fix: 6832075ed4ef
 
-Busy as a share of time on the channel, A9000 on 2.4 GHz next to an
-MT7921AU:
-
-               before    after    MT7921AU
-  idle         4229%     4.2%     1.4%
-  100 Mbit/s   4317%     37.3%    33.7%
-  saturated    4346%     79.5%    77.4%
-
-Tested on the A9000 (Arch 6.18 and 7.2, Ubuntu 7.3, wireless-next with
-lockdep) and on a PCIe MT7925 and MT7927 (Fedora 7.2). mt7921 keeps its
-registers, which work on my MT7921AU.
-
-Could you try it on your A9000 against the Wi-Spy?
-
- .../net/wireless/mediatek/mt76/mt7925/mac.c   | 42 +++++++++++
- .../net/wireless/mediatek/mt76/mt7925/main.c  |  1 +
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 70 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7925/mcu.h   | 17 +++++
- .../wireless/mediatek/mt76/mt7925/mt7925.h    |  3 +
- .../net/wireless/mediatek/mt76/mt7925/pci.c   |  2 +-
- .../net/wireless/mediatek/mt76/mt7925/usb.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt792x.h   |  1 +
- 8 files changed, 136 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 7af996abe294..4ec3712fe614 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -1470,6 +1470,48 @@ void mt7925_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- }
- EXPORT_SYMBOL_GPL(mt7925_queue_rx_skb);
- 
-+void mt7925_mac_update_chan_time(struct mt792x_phy *phy, bool reset)
-+{
-+	struct ieee80211_channel *chan = phy->mt76->chandef.chan;
-+	struct mt76_channel_state *state = phy->mt76->chan_state;
-+	struct mt792x_dev *dev = phy->dev;
-+	int i, n_bands = 1, band = 0;
-+
-+	/* The MT7927 counts 2.4 GHz on band 0 and 5/6 GHz on band 1, and
-+	 * the band not in use keeps counting, so read both every time and
-+	 * only add the band the channel is on.
-+	 */
-+	if (is_mt7927(&dev->mt76)) {
-+		n_bands = ARRAY_SIZE(phy->state_ts);
-+		if (chan)
-+			band = mt7927_band_idx(chan->band);
-+	}
-+
-+	for (i = 0; i < n_bands; i++) {
-+		bool add = !reset && i == band;
-+		u32 bss_rx;
-+
-+		bss_rx = mt76_get_field(dev, MT_MIB_SDR37(i),
-+					MT_MIB_SDR37_RXTIME_MASK);
-+		if (add)
-+			state->cc_bss_rx += bss_rx;
-+
-+		mt7925_mcu_get_chan_mib_info(phy, i, add);
-+	}
-+}
-+
-+void mt7925_update_channel(struct mt76_phy *mphy)
-+{
-+	struct mt792x_dev *dev = container_of(mphy->dev, struct mt792x_dev, mt76);
-+
-+	if (mt76_connac_pm_wake(mphy, &dev->pm))
-+		return;
-+
-+	mt7925_mac_update_chan_time(mphy->priv, false);
-+	mt76_connac_power_save_sched(mphy, &dev->pm);
-+}
-+EXPORT_SYMBOL_GPL(mt7925_update_channel);
-+
- static void
- mt7925_vif_connect_iter(void *priv, u8 *mac,
- 			struct ieee80211_vif *vif)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-index 22cc5b49da0a..393c225c19e4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-@@ -351,6 +351,7 @@ int __mt7925_start(struct mt792x_phy *phy)
- 		return err;
- 
- 	mt792x_mac_reset_counters(phy);
-+	mt7925_mac_update_chan_time(phy, true);
- 	set_bit(MT76_STATE_RUNNING, &mphy->state);
- 
- 	ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index f299a3379adb..b741a4880cfe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -1057,6 +1057,76 @@ int mt7925_mcu_get_temperature(struct mt792x_phy *phy)
- 	return temperature;
- }
- 
-+int mt7925_mcu_get_chan_mib_info(struct mt792x_phy *phy, u8 band, bool add)
-+{
-+	enum {
-+		IDX_BUSY_TIME,
-+		IDX_TX_TIME,
-+		IDX_RX_TIME,
-+		IDX_NUM
-+	};
-+	struct {
-+		struct {
-+			u8 band;
-+			u8 __rsv[3];
-+		} hdr;
-+		struct {
-+			__le16 tag;
-+			__le16 len;
-+			__le32 offs;
-+		} data[IDX_NUM];
-+	} __packed req = {
-+		.hdr.band = band,
-+	};
-+	static const u32 offs[] = {
-+		[IDX_BUSY_TIME] = UNI_MIB_BUSY_TIME,
-+		[IDX_TX_TIME] = UNI_MIB_TX_TIME,
-+		[IDX_RX_TIME] = UNI_MIB_RX_TIME,
-+	};
-+	struct mt76_channel_state *state = phy->mt76->chan_state;
-+	struct mt76_channel_state *state_ts = &phy->state_ts[band];
-+	struct mt792x_dev *dev = phy->dev;
-+	struct mt7925_mcu_mib *res;
-+	struct sk_buff *skb;
-+	int i, ret;
-+
-+	for (i = 0; i < IDX_NUM; i++) {
-+		req.data[i].tag = cpu_to_le16(UNI_CMD_MIB_DATA);
-+		req.data[i].len = cpu_to_le16(sizeof(req.data[i]));
-+		req.data[i].offs = cpu_to_le32(offs[i]);
-+	}
-+
-+	ret = mt76_mcu_send_and_get_msg(&dev->mt76,
-+					MCU_WM_UNI_CMD_QUERY(GET_MIB_INFO),
-+					&req, sizeof(req), true, &skb);
-+	if (ret)
-+		return ret;
-+	if (skb->len < sizeof(req.hdr) + IDX_NUM * sizeof(*res)) {
-+		dev_kfree_skb(skb);
-+		return -EINVAL;
-+	}
-+
-+	skb_pull(skb, sizeof(req.hdr));
-+	res = (struct mt7925_mcu_mib *)skb->data;
-+
-+	if (!add)
-+		goto out;
-+
-+#define __res_u64(s) le64_to_cpu(res[s].data)
-+	state->cc_busy += __res_u64(IDX_BUSY_TIME) - state_ts->cc_busy;
-+	state->cc_tx += __res_u64(IDX_TX_TIME) - state_ts->cc_tx;
-+	state->cc_rx += __res_u64(IDX_RX_TIME) - state_ts->cc_rx;
-+out:
-+	state_ts->cc_busy = __res_u64(IDX_BUSY_TIME);
-+	state_ts->cc_tx = __res_u64(IDX_TX_TIME);
-+	state_ts->cc_rx = __res_u64(IDX_RX_TIME);
-+#undef __res_u64
-+
-+	dev_kfree_skb(skb);
-+
-+	return 0;
-+}
-+
- static void
- mt7925_mcu_parse_phy_cap(struct mt792x_dev *dev, char *data)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-index 11f9eac13ffc..f3e892dbb74c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-@@ -57,6 +57,23 @@ struct mt7925_mcu_reg_event {
- 	__le32 val;
- } __packed;
- 
-+enum {
-+	UNI_CMD_MIB_DATA,
-+};
-+
-+enum {
-+	UNI_MIB_BUSY_TIME = 19,
-+	UNI_MIB_RX_TIME = 20,
-+	UNI_MIB_TX_TIME = 28,
-+};
-+
-+struct mt7925_mcu_mib {
-+	__le16 tag;
-+	__le16 len;
-+	__le32 offs;
-+	__le64 data;
-+} __packed;
-+
- struct mt7925_mcu_ant_id_config {
- 	u8 ant_id[4];
- } __packed;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-index 636efe038392..706e67e8ec42 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-@@ -375,6 +375,9 @@ int mt7925_mcu_set_sniffer(struct mt792x_dev *dev, struct ieee80211_vif *vif,
- int mt7925_mcu_config_sniffer(struct mt792x_vif *vif,
- 			      struct ieee80211_chanctx_conf *ctx);
- int mt7925_mcu_get_temperature(struct mt792x_phy *phy);
-+int mt7925_mcu_get_chan_mib_info(struct mt792x_phy *phy, u8 band, bool add);
-+void mt7925_mac_update_chan_time(struct mt792x_phy *phy, bool reset);
-+void mt7925_update_channel(struct mt76_phy *mphy);
- 
- int mt7925_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 				   enum mt76_txq_id qid, struct mt76_wcid *wcid,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index 0d477dc1086c..939a46c0428b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -604,7 +604,7 @@ static int mt7925_pci_probe(struct pci_dev *pdev,
- 		.sta_add = mt7925_mac_sta_add,
- 		.sta_event = mt7925_mac_sta_event,
- 		.sta_remove = mt7925_mac_sta_remove,
--		.update_survey = mt792x_update_channel,
-+		.update_survey = mt7925_update_channel,
- 	};
- 	static const struct mt792x_hif_ops mt7925_pcie_ops = {
- 		.init_reset = mt7925e_init_reset,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-index f97f787b2198..2d3bf035fdfc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-@@ -174,7 +174,7 @@ static int mt7925u_probe(struct usb_interface *usb_intf,
- 		.sta_add = mt7925_mac_sta_add,
- 		.sta_event = mt7925_mac_sta_event,
- 		.sta_remove = mt7925_mac_sta_remove,
--		.update_survey = mt792x_update_channel,
-+		.update_survey = mt7925_update_channel,
- 	};
- 	static const struct mt792x_hif_ops hif_ops = {
- 		.mcu_init = mt7925u_mcu_init,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
-index a7d71e007da0..3ee513258d00 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
-@@ -221,6 +221,7 @@ struct mt792x_phy {
- 	u32 ampdu_ref;
- 
- 	struct mt76_mib_stats mib;
-+	struct mt76_channel_state state_ts[2];
- 
- 	u8 sta_work_count;
- 	u8 clc_chan_conf;
--- 
-2.56.0
-
+Thanks,
+Lo=C3=AFc Kassel
