@@ -1,95 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.52
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.169
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792878511;
-	b=ngGeKIAB6jWHLpnV+Mqj4ixSHBhL3rnPtxe1LD5I6xphAoiq2KXs4tP4HWL3u2MMSlo1
-	 2orzsAbTmHE0Uezuq3oQyPW1ylEZx4RP4vXtptqugT+8wiuuQH6ok8H7Qqx2aqSSQwdpK
-	 6nskibccvv5Au3T1hT8Li89HqiNIo5sKv6AF4hUsCnH6yNh5lfoN1Jb27WFkMiIYTU22j
-	 cwJP3A0JGlEYzdqiV4a9L3VDvOWmzBOhsy6SK0HemdCZP+XxHDWsejv3E9f0Pn56An9VY
-	 JLsfJJVbgWA1vT4Kk2pHmM/SsAmSnl6EfA5uRMfi0bbxnBts+g2nmNsPlULA/DPkbEQ==
+	t=1792881010;
+	b=cUBVjshnBgYyyFPFs+4yPl639jWaL/uWzuLMOebeD/41EgZGMQkpOE0xwo9t2BAbtn3E
+	 2dNO2wp9PN2zWM7fCFxT6bHgxEqDDl2Qaoj4xzz0/CC9lreu4LMcZlptHA86aDPGrtDXo
+	 F9CmAHEB0jk2y7XWMuV9Cf28hYtXd4pv+Rp/cjl9zoLhcaPSWjq2W/B8PjvZQiKAek8kk
+	 TJtKzhIeFd43o+ImvHcEjZ1ZzXeKJllhgtOEpFGnaCCcZx3N9ad+lijUmBGs2uKQebdpQ
+	 lJ8uV9D9kyzV9rD89Acz4SzUUBnatkJUw5xA0OlcSSiPb+pMO9rEZ9zoO0SsE7SWbrQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792878511;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792881010;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
-	bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
-	b=xAabcnwwd7fCccbe9kOoEx7G+L9lyepIOhgvXk38omHy6oFGHZV9jnUBpDq42aLKArXp
-	 qJJTUfogu17XzuWBmVoRofQ+81maQG8oZMvzacgHe6WbTYT+hNi9ia7nD8+HhRykYItX3
-	 YyScaxsMvXnB6faQeZpxzbZBJeHdhl8FZSgnmLGr5to3grf2Iu4IQ8dM+cecheq+mZpWK
-	 2H82DQBIfbNv9NUMH+4foyJxCmREGHMJOINyRA2NusuuapnFDZp3gNFbHeUxTAl68iyZr
-	 EVXSWn3JXoSLeIiQrRXFr+D0zxVCMNMeEwGBEN6SIZjgFZbQNhQcGpcdMGxjX/vCaZQ==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=PZME0oUNNAqEZpUwzUI5t6YgowzhWBCKgVCF/Etflr0=;
+	b=y5zYj1Y8paieZlSVxbDJr6Nx2E9PtpjIteJDnaceGYEs9gz2Nmq6bGZPfctc7WUsIEtR
+	 zxgxi3Pib584HJYbj+3jX2mGE26/6HGFV1HSIoG1GzuD02jXaw+yyBFqNyuMiAWKAmkdZ
+	 cgnaOZrHsQDPdDxjY+uVPQPXkOBk0YGQCFSQjR6xlCSi6jCPjTGDwuK53bO1nso4cjXyR
+	 yHzJcc5b0m/eG8lwDR+XqO/lS1ztPE8tFrriBaiF+M7Vj/3wZNDgTiGKRtNVfvYHmaSfi
+	 IeJmSVxKpZbjT0hwgfePrw205OHhnvdRprQMYNjS5LK89SEnvo3Ugxw+lx/ikdq3W3Q==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=FYYih7ir;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.52
-Received: from mail-yx1-f52.google.com (mail-yx1-f52.google.com [74.125.224.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=BRcBTBgQ;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.169
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69B54606A31A
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 21:48:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 69B54606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC740606A31D
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 22:30:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC740606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=FYYih7ir
-Received: by mail-yx1-f52.google.com with SMTP id 956f58d0204a3-6798eb0d190so1370355d50.3
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 14:48:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792878510; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=BRcBTBgQ
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2e98798cbddso7243565ad.0
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 15:30:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792881009; cv=none;
         d=google.com; s=arc-20260327;
-        b=KcerkAQ45EtWCMk6XBg5F1oUcUPjT+8c/uwOszuOAvOGsImdxyXZHEtO4RAN2lB9Kl
-         l7kj8efulHBikiFL5TgQ6s1QiJ0hBGtGlpk0yIFYLPNPk2AbHNdu+wV7BFHxSX+jxO8c
-         3vMcUk7yi3ZCE+/dYUG0oImtohD04MiCRHsVSp0/dcqwm/XNHqcfO3pnZpQgxwGMH28V
-         Gge8KVsQgF04dV76LuIfIwfGQc6cB651xeqcOojvvA7KCMu2m9DjMwnZIZsjPtxOrzwB
-         hmyGE/0KCpXh5j2pKWEi39HOZXwZsODbHuss8H3wQawF18LTGo9HbbKsS0nYHfexndLG
-         LVNw==
+        b=IR+LROttCXW8pOQ3Zl9AltFSSpstvUJgh9BuFPVHdKfBZKY3BH9QkmLcaOG+httYO0
+         DsWSArOt8I5ggVXRiQ2DtsIIURZKx9m2DRr7BHchwiR+WW9Id2STLyKfRx+R9MqUzSzr
+         NZK92MfLiWP8q0BFWgrjqCfe7EO2bgujGktvXdbX4Jcz4IeVPeGib/12rwgpGdqZgX90
+         6tTBkEzEH97MldctCwlWSWoWIOp/+nYQje/bDvhDojEsbK0pEkyiqkPPUnGhYLXPKjaC
+         xriuFmZTm0NzyIPtGVfUwbq38B1R71+OesX3MZMxySMklLNigm8ejZOt7tK3By+QOTNu
+         ejuw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
-        fh=FOIvcG1gnFljPdvKpHXd86G81BXv9yfg69STJYa6qHE=;
-        b=TE0AGY/ZTwnxyeUX0NeeOYi4eVymuwGewqz4DysFs0OLQjvGNaNcTpKUm359UB6LJS
-         qTf1H/PTnj+PBgJiijLNlWJFVt5KXGWD+Jhf2pSZlgDuaiY7jWFFQ9ME7LT4b/2VxCcH
-         NaP2h4llO1umw7IRXptNVSrdDoSXL7/TwuSotxh70aqqFfAc4mYfXhYZkL9w5SULfpwk
-         kFo4jQ+bMuln6V88prEh9Gw2xtl4lxPF4/b6h6N0Av7Rb8qY0hdVP7jEp2ARmZ6NWUjk
-         mQRZbDQh6NRgd1j1K9uMjFEpoieZzJnACRyp6RLsU1ehiXSwTHC7hvbwWOP+4wMwIv7M
-         ZxuA==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=PZME0oUNNAqEZpUwzUI5t6YgowzhWBCKgVCF/Etflr0=;
+        fh=Hy974oMOz1VoAI4RSjeHNVf1L1C88kbJDAzBTJ3pF1U=;
+        b=kyXkSiMHi710kB+9CvyvbqESQUl4slSwUeCr5ylMkbYqwd1UizKqDRTVTNFh5r/bQF
+         uG1vLDFmPlAee200eqie3fX4+1o/cN9JnIXAyf8HSucrngAcI6JLjSuP9omzv05NBD/X
+         QD3QdUOoaiQfTaw8AEiQVc+u65N3qgAPKqEwLt3C46HFPAvqVJM0sgGVoOHvPVIUYM3q
+         UDdtb/sQ29SjPaeOIuR2QEQRHf6fzFEiUHbjt1LYousgHuzzzuJN13fx6/xomS3jHNA0
+         Z3WfUgLMT085WO74+9vFAJOLbocw6572yL4Gn5iY5hfBI7sNxJ4t9UXZbAoOJX5S2M6I
+         Nc1Q==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792878510; x=1793483310; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
-        b=FYYih7irORKyWGJ3ZZI/05Okn7FDdIaZ9RtOcJ0cCCZ84oFQMnEkbUNFLY411Ryc8e
-         b20DJViHGxuEIXFQvT7NuHt8GB2WcJ+OZsnNyiLE3t15KThOjHiHFKSHitSsBLmzuR+E
-         Wqmwi1z2i1rw2t/8BZ7G278NOycmuTsBfsK0UKitxUfEl13bUjNy5x8PlszdLPuuL93C
-         cJkoNIzDvgMBq6GE8akEZr9q7IJvNpCg898/6zv38sMOgDN+tF6Vx51iUzWRvUVAVNRY
-         wfeSMf/eRVQagZ79jAwedREiVOjQbeo5dqJTZyN6WnUfj2mOP/PYz2SMnAaetTkK2qYy
-         QH0Q==
+        d=gmail.com; s=20251104; t=1792881009; x=1793485809; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=PZME0oUNNAqEZpUwzUI5t6YgowzhWBCKgVCF/Etflr0=;
+        b=BRcBTBgQjqQlE5DJVrTcGp2lnSxKkbsxey0hAI7cPKiZsq5ND1622CTxHGxhW1X7j5
+         xtK8iMDTZ8uFJdRGdcjvAURlw/lDq+cKQwyobNTtvlpJm/yD4MojV6VaJTTrWTIupb2c
+         nM0Ckecqh0CZ5Bb8b0ii6aLnfnE6MnwynIw0WLXw+7ZiBF9lAj6vQu34VLZn1OATrs7l
+         N1LWYXKKM+w0gv4457nqEUdEIxN02uq3WMvuAihRbymMjugw9wgXaRyjFLEvlEPD7smh
+         /DW2zBtBnOzgnZdV3WWttNde6vE7phzLOj2fX0qVQOSOdkt330v9e2tm0r8jJjWkTzMl
+         LmcQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792878510; x=1793483310;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
-        b=SFPmStfWYwOJjHh7fZbTtDooCqgnxPp2ks07x/zrCVR3HwZqsCEHFcb+O0RQw27Cp+
-         3wuUitPIDQJEww/cG7RgDF8YOnV8oIe/LC/VdFP7C5yrT+CW40e5Z0bcDxBcbZR8xaVl
-         b5zO6+U9ThD9zFbjNjOvm376C99T0RANmkJQlnAtAeBl05ynJdKW1xgCASOm61KkF6Sv
-         AjBn9Yg2LiHWWJ+n4oB9CJzEHBv+xq6qdggN0MG0nwjg5DAmbO0re0aqxOgzhLh0jxpI
-         1jNgEpBznlh41MgJchpxvRTQSmFJgmWRp5AIzfp0+ewjz/luWZ31VsLrrTgCpxHi/3Es
-         NBCQ==
-X-Gm-Message-State: AFq9FYLerKFSXb0mxkSqVxFtWKwoyUnrp4nMyQ29rTu6EgrKRMUQ2AnR
-	y/Tkc9xqKfpESB71SVxCDCJnLn+0HdBI58mwFe11BVh/5dY49iteMGhpWh+Vc3U0HVNHbTEZzCT
-	MA6fY4JKnpxg1gszjkNueQazLWQJHoNB3ajoJDoc=
-X-Gm-Gg: AYBFou0mRw5eoda3aZyeIpBKx7/db0/hv7roYmRkzrj/d7Q1nNmHID2xgsaviWc6tFD
-	ZivQe1Msl9zuOITwnONfTuRM0IJD590v9IukcdPVQ05kgJ3aB36AWpfqBUsG5m+w17gAB7CtwwS
-	/QTWfW1EhOcBgG186CKOkRE9nv+kTylyTezsM8lt7xLon72OmtbCO3hr5eoWow/GKSs5DZOsRCz
-	ojH9Qhb+Iy9Uy9noV4EwPVRNyP/ZNAg8+9lHoxDzBLZOerlqBGkRjS/McNyXfmgLlQnHtF2Xa3q
-	gbKgc9UvR+jXQs2EY2c7TfkmmbEdUVV1IFauUC64gDWlYew7C5Ze9aLCdDSh9PJWMoVSOTTQgLp
-	NjS5FmDb9LvrNiYndED7edJGu5pu8heAIiWya59jMpmHp5p1HwgMRVkvNbb1DdB8KaOKo
-X-Received: by 2002:a05:690e:4402:b0:677:ceec:5eb6 with SMTP id
- 956f58d0204a3-67a4549f020mr1731583d50.91.1792878510400; Sat, 24 Oct 2026
- 14:48:30 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792881009; x=1793485809;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=PZME0oUNNAqEZpUwzUI5t6YgowzhWBCKgVCF/Etflr0=;
+        b=2OiTrRtvMYzzeTiRwIASBWELECwy1IoxldJdTQhD8lciDdqom1CB9YeSAAEX7uc+Yd
+         nD26GOBfCHfzKf+yiDDMosQodfdNqwPvJGLdWuquC+mnGJfgEGkTqGXdIMel6QU9eUrY
+         iIUHXfHLXJlpoayjmSC9+xhjq/Y/XVmshtuvFGceDEmfo1qVkLCm5IfebsbhxnFBNFv7
+         AL4H3/crf595z3KsxjA8F7ZoehJ18d2rQ67ZkDq76GFZPPp/kkLrphC/bi20HhXfvJTv
+         azrCYG6mntsC4TuUzFdGxKCUqfw3vBNN+kNyHW2FdQbygVuUjSiTlKei1+qHd7ogHzX4
+         JUaQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzSQ8l7fCktUJ+w7Bfq/hgxbEB+PpYo2P0dRL1ei66szQlW89zAUvhtIozwiB60fFInXhimyZUR0GL+edwX/A==@vger.kernel.org
+X-Gm-Message-State: AFq9FYK4x08qcXnMQ5jEEiCwBkXa0m3j6wEzFyPE5GjW5s/kTiveVOAy
+	oQkj96Qh/vLsgj/WVUYOgNLu8VOO1x2hR8Zr5oDxc6Qtiqgx/DeRsy+xnln8oRl5w1D2Hiti9N6
+	kviW0oIiEbX4W6+dK3G05vMAY+x7+QCw=
+X-Gm-Gg: AYBFou0WsNqy0SS2VvlO1lkdw3RouRckN1KyPlklQbkjZWvRPc38uCNYIMx/TgZup42
+	a8DYbeG7NNngxZbudtYVNiKUo/Mhc89bTapf03KGeRPyNKWCO1B+C2VHf82oE8dDYiTxGlFZrEC
+	tv9SA5tvW0fXISIDjYgc4dcPcVdKioLG087GbFL1YgC1dIqsHvZx0J5JT5JrTdxjlqJpEvT1PBU
+	MzOagQI+Uacq/MF53I5auWMFWjMfHPbZTBOQm6Hh1AQJ1RaniiDnTeP90i1rogUigVAupVWItQI
+	TnKEyBBfdaKTrbw3qSXZbooXOWB0ir/6/O3KASXLCXmn8qXycD99Xor8sEAZVK87mweAvaeJpco
+	GV59R3KsBpc/+M6D4WELaJHb15lQh1GclHcpPaA==
+X-Received: by 2002:a05:6a20:548c:b0:3e2:9dee:42cd with SMTP id
+ adf61e73a8af0-3e7bfa95bc8mr2307021637.36.1792881009249; Sat, 24 Oct 2026
+ 15:30:09 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,52 +104,61 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: Luca Casati <luk00casati@gmail.com>
-Date: Sat, 24 Oct 2026 23:48:19 +0200
-X-Gm-Features: AclHuK_JlPRfhqgk-dIAhc7Duvk3jv4nFMsVJPa5857f4E-xR1JaGe3jcyIyi1Y
-Message-ID: <CAKM5oscz9UfiqFr_wSmzjcpsZ3QEWvUJuVa0kLhmz1TnF+aBoQ@mail.gmail.com>
-Subject: [RFC] b43: N-PHY fixes - OK to cite wl MMIO traces in comments?
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>, 
-	Arend van Spriel <arend.vanspriel@broadcom.com>, b43-dev@lists.infradead.org
+References: <CAHaeJsQLvC-KBEpy5qu8iYxSB51mbHohrPvN4PJushF_Tk3foA@mail.gmail.com>
+ <20261023180554.7266-1-lucid_duck@justthetip.ca> <CAHaeJsSfoTxJhWVCrELCiLZr1zD42LGJUvrmf7oSzRQpwh6-jw@mail.gmail.com>
+ <20261024173414.10559-1-lucid_duck@justthetip.ca>
+In-Reply-To: <20261024173414.10559-1-lucid_duck@justthetip.ca>
+From: Chris <hoopyfrood42@gmail.com>
+Date: Sat, 24 Oct 2026 18:29:57 -0400
+X-Gm-Features: AclHuK9o9StbGbjqRGEyKvKK_k8FgZq3xzv3Qw33wdsis2WlZchhyzyHV6yo0Hw
+Message-ID: <CAHaeJsTHykkk8Cm+FUZW2RmzzmT47aJNxRR1kpymhDvknnhKuQ@mail.gmail.com>
+Subject: Re: [RFC PATCH wireless] wifi: mt76: mt7925: get the survey airtime
+ from the firmware
+To: Devin Wittmayer <lucid_duck@justthetip.ca>
+Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Deren Wu <deren.wu@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Javier Tia <floss@jetm.me>, linux-wireless@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Sat, Oct 24, 2026 at 1:34=E2=80=AFPM Devin Wittmayer
+<lucid_duck@justthetip.ca> wrote:
+>
+> Chris wrote:
+> > One thing on offset 20: in monitor mode it doesn't look like all of
+> > rx.
+>
+> You're right, it isn't all of rx. Your numbers made me curious, so I
+> tried it here with an A9000 as a 20 MHz monitor next to an Alfa. It
+> seems to come down to how strong the signal is. Share of the time:
+>
+>                                          offset 20   decoded frames
+>   one strong neighbour (-22 dBm)            2.3%          2.0%
+>   only weak neighbours (-73 dBm or less)    0.0%          3.6%
+>   my upload, monitor on a side channel     54.6%          7.5%
+>
+> Strong signals land in 20 even when the monitor can't decode them,
+> including spill from the next channel, and weak ones are left out.
+> That would fit what you saw on 5 GHz and on channels 2 to 4.
+>
+> As a station the A9000's own downlink does show up in 20, so I'd keep
+> it as the receive time.
+>
+> Thanks for the long run against the Wi-Spy, and for the Tested-by.
+>
+> Devin
 
-I have been getting b43 to work properly on a BCM43228 (14e4:4359,
-core rev 30, N-PHY rev 16, radio 2057 rev 9) and have a small series
-of N-PHY bug fixes I would like to submit:
 
-  - TX tone sample table loaded as all zeros (operator precedence and
-    a double fixed-point conversion before cordic_calc_iq())
-  - TX IQ/LO calibration: inverted busy poll, result copied the wrong
-    way, missing rev7+ cleanup
-  - rev3+ RSSI calibrati is written instead
-    of the selected VCM, plus a wrong distance term and rounding
-  - 2057 RC calibration:re it starts
-  - a missing field in the rev7 TX_PU override (compared to brcmsmac)
+Devin Wittmayer wrote:
+> As a station the A9000's own downlink does show up in 20, so I'd keep
+> it as the receive time.
 
-Where brcmsmac has the same logic I used it as the reference. Where it
-doesn't cover this radior accesses against
-an mmiotrace of the proprietary wl driver (6.30.223.271) running on my
-own hardware. Only the M did not
-disassemble the driver.
+Makes sense, thanks for running that down. Strong signals counting and
+weak ones not explains both of the oddities I saw. For my use, a monitor
+hopping channels, busy time is the figure that matters, and that one
+held up on every channel.
 
-Some comments in the patches mention this, for example:
+Happy to test a v2 on the A9000 if one comes.
 
-  /* Values from an mmiotrace of wl 6.30.223.271 on radio 2057 rev 9 */
-
-b43 already has similar comments ("Extracted from MMIO dump of
-6.30.223.141"), but I ware comments
-naming wl and the trace acceptable, or would you prefer the values to
-be described differentlyat all)?
-
-Later I would also like ues (PAD tuning,
-aux ADC midpoints) taken from the same traces, so the answer affects
-those too.
-
-The patches were developg assistant. I
-will mark that in the patches according to the kernel's documentation.
-
-Thanks,
-Luca Casati
+Chris
