@@ -1,88 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.128
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792820366;
-	b=tvQAuTi1n7lVrWQIkX+4pgNSgB12KZUkXpY/YPNrkBxFGKQ/ErhBNwAknCAHZ/azM0xY
-	 Q+SBhmGAkYMxVM4NxzLDj9Y/dFcPVfysqeYEX5uaOAxEmVAVzBUr6pDBh8g3kgofpCyLH
-	 20s7RJd6tNRz+ugpDC3GCYNmN7Wz1ouhV0dzYlrtJvoStEJX6WlQf7Eb/ZLRCnDUfP78c
-	 k57+FPAI5v1R2cusBgMBDlQSjwEy+q/sszVeV5Bbsbt2Hp2QOa8u7kVo55hb3BqkWPMfg
-	 xh3LPJC+8olLfH1OQxiRuqFQxK+xpdfACS5W0UW9sYb324mUQfu5JmoR18vi6AtqDdw==
+	t=1792821954;
+	b=c1P+igJEX4HL32wf+kDmizIw2BR/JpxVmoX8Q6EJojcugc7rDpF73XEhFsK5ANZMUIkS
+	 pjouzUlngLcb8FMJn32h6CDtqHsl4GoGG7VdxSsEwKDGFUbO2LZc3/vZWNzZcSSHcgmiJ
+	 nYPdFMSWqzZhXAlRV1rtJIGnvaGB06bpXkFRPbRj+hoCc/mywuBfeHx7Ksp6lYAYsgceO
+	 rYuk5z9ocJeJgD/UPMfqi7GxolVAooSBiHMWFJwoKNW8+Dc9XvyXbnr3v/QeZ312GsIcW
+	 Be5iaVTUgxdYg0TnFFHt7avCWwduPbMNv3kLjh1357F4593YTcYJxD2La7EWLbh1XSw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792820366;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=NAlRJHzy1wsPSPz/FaTmSQg0jcdHnFgdak9YR0MMUoY=;
-	b=jVIWY4LHyWWzCSB8tl6KPWx9K/V/EAmd5UWVVItoJcOJP3Fc58rOD0ILUMCRDzj8Awoi
-	 z2xzuE9ndX2ZtyTj6+C2Nd9BsAdNL5lRxKfaH112yx8n36PPnuZqhBN8O/byyb8lL8i7B
-	 975MrZZCdY6hJ7fZs2fLNd9g+IspHYTJTleHWC2YkoLHkKqYmb+K5vykk4sBYn44Q6mAG
-	 Bi+Y/Flbdd+1qwLuivW3o7z4AcCvYZS4jxsVKMpSquxp/xfpg2TDWqnR65CQ9jrqjzhAO
-	 hLYdMOl9tMPCsW2kvE+PsAalvQgH5dq+jCkVAh6zi1kj+s353UVHcC1930CGVTg7K+w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792821954;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:In-Reply-To:References:Content-Type:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=LyrLp7MtnHDCZQrIuhGxBdHMfkxuSL1N2R4p1hgpS5w=;
+	b=r6HztrE37LaYRe6oJ+04qckSEyDH3Wkanq8IfgDp9gVN6fGsf9mXSDs7iJUtCzBysgFQ
+	 lt5YW4w83/1DO5Hz1U4aiOIuHTASZ1sMqVoCJeUK4BLRrf9OJFDGA4Bp1USMrQ8944vai
+	 +uefD6w+3eD9yr8imYELpuzwd79b103DweOS0/OzJs2VLj0Zau/pSlkB8rT/IGROw3822
+	 iZ8LShIb5u5ZERqdJ81k6wfN4zjF4xkSunvcPiVzIj8zETAfDpyv6PyRw292uZ5aTLIwq
+	 HGYdcab4087Ejx6METBtmHo8QNhN+nCZVyDlaeTEHBoe9ah3TTGBEc3CrLNVfxxDIWA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=EtWcgvjg;
-	arc=none smtp.remote-ip=74.125.82.182
-Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
+	dmarc=pass header.from=justthetip.ca;
+	spf=pass smtp.mailfrom=justthetip.ca;
+	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=Na3gC1q6;
+	arc=none smtp.remote-ip=95.215.58.128
+Received: from mta1.migadu.com (out-128.mta1.migadu.com [95.215.58.128])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E5E606A31D
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 05:39:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 35E5E606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C609F606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 06:05:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C609F606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=EtWcgvjg
-Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-36661f953e4so2647313eec.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 22:39:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792820365; x=1793425165; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=NAlRJHzy1wsPSPz/FaTmSQg0jcdHnFgdak9YR0MMUoY=;
-        b=EtWcgvjggaTKu6c9xlUsSlUPQ6XVUNtVsXGVTtLyceX/QcXgGPbSXKY8XeO2FSGU8d
-         VciVKo4mE+QmwXcFJK17qw3PZJvca5a+XpL3bfM28dRd5YnTJZ8D7Mm5d66V8NbPZjMe
-         dqvXyiTC4D9CqynigaiyFXB3lqc4x51FqnkqnHA8ameVrie4P0WrFy4HLXRnpiPGVB2s
-         Xuedp+gr5V5TRR0jOv/kTRom+sIznW2P/+AKjJ6DTxvyNS1sipl5zYsTJzJQnMmMJexz
-         93sOWST6MHyjBHcu/uNB6dnhbSdVMJwqcTC3N+OOpw0Ys/r9SIHNDHbG24NuvR9ctKGX
-         JUyQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792820365; x=1793425165;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NAlRJHzy1wsPSPz/FaTmSQg0jcdHnFgdak9YR0MMUoY=;
-        b=EWNoOCebi0ZzKMbYada9KtIDUoRiWLh5ZE+cWt4cYS9DUUHrJ5gkgHWi1ZSSFFsl4Y
-         jpz/8E9fIH686TyRTsANyPEYB5ZlkWwlSJ4Y/Nu6vOd71M89EDy22IYqjMDW7X7bZuXW
-         xPx/sXwNaxc/qP3AV2pYt09haDVlEpWLGSlcBTG1Q65yoFQ9DyGuqXALu/0K5jNRBlTT
-         MM69zeWeK/lDUVCQMeY8fAlmxu+L1gXyB8P6PtPF3eXOYP2M4ThLFFBA2k+02EIqdKOs
-         lKEIsJa+3HyFoHRIp2MWXmwSD80gQt3AsBZXvBwNtwYCGiT0QlBreAUb7Q1rAEyPaEFJ
-         K2Rw==
-X-Gm-Message-State: AFq9FYK1bJwHDZnVKk7CU0Os+FXCU5wHtw9bbzaB/yEYbjsUfF8+gmSS
-	uGBPq6KnHfbI2jfszsHDA9gqCNq2G3iQWoMZQs3de0KmC7pVxbojC0unzDFd9w==
-X-Gm-Gg: AYBFou3GFjjwy+kIhtck++7kq1KkWzI4Myo6cUHGwnvCL6CdiQlXDWn/NgaJPZTU3/n
-	9GXkxwTcX0mM6ZoVstv6BudJ1/ht3so0za492iihV3g1eoiWCIM4+kKS4r/RKUmiBaIp4PJTgMj
-	y/YhPZSg9+VEbRxW1nnoVwkV2x1H/DOphkuscojjtG6A3eEy1uAXk+I6C42POCS9inLZMmw+o+O
-	D8a2afllGFw6DJaHF8iTBWWq0wxNFdKRlyRG+a6m500iGBcOdCUsmodT0xi+1A7HYDYUxR97OZN
-	G7xhZpInLiTieferlcbiFM+aKvYqR9/UR9LqhHdJNuzwWpAPed7KtXnO7jd52Gx67j7Ogp81i6O
-	Wyzk00HNpG+DlXLafqW1OeeHNvgg134saoGQt9PTA2vsw0+JFvDPnwfFsFhKi/CE1Kf2OMWNz+c
-	RtZgxc4o/l4AmZMDz03rBuDDKOkRn1O5aEByG7LlxdIseW8P5tJxeGLDyVEG1BBzWFJl5zaz1lK
-	T8upZhfLVFVHoB3hO/3+0pIsWYRZMfJlVdde72hw5h9Vz3bRjW5gOT4Kh8IuCP21kAK8xLuB+H1
-	01DAU2dm/ZimryKQvW3idm9bFGsYAS8M+zh5wEFAUf/N520niJjhX9k+EdegsfgQe5nkUfDNpI/
-	/s76xQYDAtIx57O/66FIJYxrnxQGzEg==
-X-Received: by 2002:a05:693c:62d9:10b0:35f:2bc:82d3 with SMTP id 5a478bee46e88-369e84bc16bmr1906522eec.15.1792820365214;
-        Fri, 23 Oct 2026 22:39:25 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:37f::e34])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8d56957sm7466859eec.5.2026.10.23.22.39.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 22:39:24 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH ath-next] wifi: ar5523: don't select ATH_COMMON
-Date: Fri, 23 Oct 2026 22:39:23 -0700
-Message-ID: <20261024053923.3585009-1-rosenp@gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=Na3gC1q6
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=CNfYvZVz1LcysgHlM339INEK/Wv9LylLtDOS5Oht0h0=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792821945; v=1; x=1793426745;
+ b=Na3gC1q6TylKXoTQ4hhVl4427lJ3dydm3QPiqsE3hW857yJ8aAZfaodx9+Psdh7JnNWjZ5d1
+ aIglVvNZeIMZnepdOygtGv27C6AVYM64t+8fcPh3jDDPWsAQBHTPXgs/LtHg6eFoQnBhm6eGYgy
+ /Z5E0oAOlxOndO4Bgt1HOtSaH2vnpIpqFIBdYs9UZ3HcxA9D8ALDcM8AmwqpT4puNnLptLVGusG
+ JWkvb8qZOBgr38I2ed2f6GE+hwGu0uF0NqmvMMhXPiooa+Y1KkYlwKIga6gZsgGCpd1WEwvZ6/s
+ 5wrKVKINZGfz+/o1OmP6oBX6nysj9t1SNwh/dKdQ3XVzA==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 1f07bef94bd888e6;
+	Sat, 24 Oct 2026 06:05:45 +0000
+X-Mizu-Trace-ID: 1f07bef94bd888e6
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Ilya Shidlovskiy <shidlovskiyilya@gmail.com>
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	lorenzo@kernel.org,
+	ck.chang@mediatek.com,
+	eason.lai@mediatek.com,
+	emery.hsin@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	regressions@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: Re: [REGRESSION] 7.3: mt7925e hangs on hibernation restore; fix c182bfe944eb only queued for 7.4
+Date: Fri, 23 Oct 2026 23:05:42 -0700
+Message-ID: <20261024060542.52883-1-lucid_duck@justthetip.ca>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <CAGjg407dj0uZ0rCrL4G=PDkQv4-QC_og9Eeg7ewWzxqBvU4b2w@mail.gmail.com>
+References: <CAGjg407dj0uZ0rCrL4G=PDkQv4-QC_og9Eeg7ewWzxqBvU4b2w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -94,27 +80,29 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ar5523 does not use anything from ath.ko, the module does not depend
-on it. Selecting ATH_COMMON only builds ath.ko for nothing when no
-other Atheros driver is enabled, so drop it.
+Ilya wrote:
+> Could it go to Linus through the wireless tree for v7.3? If
+> that is too late, please make sure it is picked up for 7.3.y stable.
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/ath/ar5523/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+v7.3 shipped without it, and the 7.3 stable queue does not have it
+yet, so adding stable@.
 
-diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
-index 0d838c1e7b12..2ee9aadfe19e 100644
---- a/drivers/net/wireless/ath/ar5523/Kconfig
-+++ b/drivers/net/wireless/ath/ar5523/Kconfig
-@@ -2,7 +2,6 @@
- config AR5523
- 	tristate "Atheros AR5523 wireless driver support"
- 	depends on MAC80211 && USB
--	select ATH_COMMON
- 	select FW_LOADER
- 	help
- 	  This module add support for AR5523 based USB dongles such as D-Link
--- 
-2.56.0
+Stable team, please apply to 7.3.y:
 
+  c182bfe944eb ("wifi: mt76: mt7925: fix reset panic caused by the WM2 rx irq mask")
+
+It fixes c4edf9e3e0e5, first in 7.3. No older stable tree has it, and
+it applies cleanly to 7.3.
+
+Hibernation is one way in. Every chip reset on an MT7925 over PCIe
+hits it, and the driver resets the chip whenever a firmware command
+times out. Forced resets on 7.3.0:
+
+  MT7925, stock          NULL pointer oops in napi_disable
+  MT7925, with the fix   recovers, traffic and a reset while
+                         associated both fine
+  MT7927, both           recovers
+
+Thanks to Ilya for the report, and to ck.chang and Eason for the fix.
+
+Devin
