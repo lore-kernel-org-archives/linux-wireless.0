@@ -1,62 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792826376;
-	b=mCZI4Ck/DgZHPU66B2ZoafiezubXg2wK2+2iCRTMRcPsqJ69cR4quddmXJIAnEgRsdCx
-	 0kYcqG9pTvqk5UFqkhZdF1C+W7DB1WHCwLXHlxoqiCA3C12OIUuIb8p/amzkSWuZTitxm
-	 ctw+R9QrnxJwz3GE6gILFZyZ4QYvoKQEi168PE7IjhomCbMZqI1HegUwGHsx8kTd8lRxw
-	 buQFGMvQ4Pl2CigewY9niqR4sRdUONbh9JJevpmczAbNBc+mTJLHIIi/Ua0vVn3M6Qn8r
-	 afiOjmip8lXqR/1cAJBmNj9S68KwJXYRp7abQzVLYLULnhcRsguneRBpsQZzQkvhTng==
+	t=1792830551;
+	b=QcXx/Og0aOV6/2LGwPCFlabRu7kBbL06I0ZAaqfRb1JqJqg5cfpO8RSlWx4MyJ71HTwO
+	 70Tm+Db30klZWBGrdKgxrx+ySBBiuBAL/qH1eOaoBtmcuQM4nG71GBt0DWs1Z86HlmkSw
+	 VaVa9PRSJVUQt//PQTmSfRuTRrSqo37d5+4ROU8V6nordMusi9O6rPJnLpsdskxWLEtZt
+	 BnU268TDJLtoI7Ltq+FASrIOg4Ky+E0e8zlyfUkFYchMcRcgRU0RvHFGbc58N48FKUE1y
+	 MwCCNqnsE5eCt7Yz+AqotJK8gqRafuy3nBjT9guCvQb+q7Qg2vmbmeNepTrNklVYzeQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792826376;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=ck1i9mrthuEWUR+bvhcpDyQ1dzhQpfuGmSfhJsRUw7Y=;
-	b=Gf7DqUcl0pYb4ULixfvl+V/8G7+X4E+ofZdQwd7DICJkSRB0I1UFIJSErnTXMoJ3EyFO
-	 1Z/FwPTOo6ygGAtw6xwtm+cQ/G7El5v77g2NwmBUU3xgrpe5npdscctsS8HjYzR109Kjc
-	 Xz190DW9mEpcHyE7phTOr10EcZOCZ00rOiT/i4BkrxHqwhWaWVt0pGM6DapiYYb15PGKH
-	 yLmqOXXDDTu4Ei1QmJwHB4IMhboVO0PdIDFKzHOH5WYOIOyetVvgJSQGUs2RdnlxnkX02
-	 rXWD1XRkCUaY4pfc4mHa3htziv9192IiWOSfLumGywLaLyAgvqeEbq7VWnIaKfRop6w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792830551;
+	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
+	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type;
+	bh=reH4bAkcleqLDuf8Qi9J6CPbOw5lcJORWlppYC9ksdc=;
+	b=PxcP6m+bih1Z9Ohw5oqrds3WEXt1AcF0p7Nrpawd/4d05ImJegQ0DmQLoy64uNR7ZWzY
+	 6Pw75RGK4VxntNXGl/lrn7DbD8c4/FuFQiQQYsCGq8/xDr5Lw2/gcCI3mJyVPHqTBNqdH
+	 B2KbLv/G64dIwfsqaEgCR/8APje6MR+cVqOlFaxsZ4azYeyGd5kk9aiX2QFDLC6MypHWA
+	 Gf186F8cEif1B+5/awf+t+k1wp8k/tnD3ajvzVYWmN9PKHkpdHxekJhc1YU5pxPqh+Hsd
+	 7Op5AYJxi7ck7RYDj+AGewj8IId8QkIH04W7UD+SH6pdHJFsQ3XWF4X3BSXYlcfjVFQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nbd.name;
-	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=Y1lYvs0y;
-	arc=none smtp.remote-ip=46.4.11.11
-Received: from nbd.name (nbd.name [46.4.11.11])
+	dmarc=pass header.from=toke.dk;
+	spf=pass smtp.mailfrom=toke.dk;
+	arc=none smtp.remote-ip=45.145.95.4
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BE13606A326
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 07:19:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BE13606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=Y1lYvs0y
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=ck1i9mrthuEWUR+bvhcpDyQ1dzhQpfuGmSfhJsRUw7Y=; b=Y1lYvs0y3ijfezlC3ZNicU3FzI
-	wakRZQtVO3bRpdEicGtO7bEe3Nbu8/eifRmci6NLMuXFbMM/3i/Invcp2OrvLcSqXafaKNc3cirOc
-	MuewmqdvmY0HuaYCE8iR7VyDPyaTtDjdDPcyr1JvyfuhQ54Gy9qo4oZpCBdfgOe9kaOg=;
-Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1xKW2Q-009vQq-2D
-	for linux-wireless@vger.kernel.org;
-	Sat, 24 Oct 2026 09:19:34 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 10/11] wifi: mt76: mt7996: validate the ROM patch section table
-Date: Sat, 24 Oct 2026 09:19:26 +0200
-Message-ID: <20261024071927.2279668-10-nbd@nbd.name>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261024071927.2279668-1-nbd@nbd.name>
-References: <20261024071927.2279668-1-nbd@nbd.name>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2720B606A321;
+	Sat, 24 Oct 2026 08:29:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2720B606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Evan Severson <eseverson@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Alexander Wetzel
+ <alexander@wetzel-home.de>, linux-wireless@vger.kernel.org,
+ stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: mac80211: reinstate IEEE80211_TX_CTL_AMPDU flag
+ in ieee80211_tx_prep_agg()
+In-Reply-To: <CAPoPjSd_CedgO6ghSs-vX-O599vVQyEaEniWfz0QpmfmV2YGCA@mail.gmail.com>
+References: <20261023110052.650519-1-toke@toke.dk>
+ <CAPoPjSd_CedgO6ghSs-vX-O599vVQyEaEniWfz0QpmfmV2YGCA@mail.gmail.com>
+Date: Sat, 24 Oct 2026 10:29:06 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87mrs3pkml.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,37 +52,16 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-mt7996_load_patch() only checks that the patch image holds the header.
-The section table after the header, and the offset and length of each
-section, come from the image and are not checked against its size. A
-malformed image makes the driver read past the image and send that data
-to the device.
+Evan Severson <eseverson@gmail.com> writes:
 
-Reject the image with mt76_connac2_patch_check(), like the connac2 patch
-loader. The mt7996 patch header and section layouts match the connac2
-ones.
+> Tested on the QCA9563 AP from the report with stock ath9k. With a
+> station held in power save under downlink load, the TID froze in 5 of
+> 5 runs without this patch and in 0 of 8 with it.
+>
+> Tested-by: Evan Severson <eseverson@gmail.com>
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Great, thanks for testing!
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index d2d4253e2ccd..e3420ac523ab 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -3447,7 +3447,7 @@ static int mt7996_load_patch(struct mt7996_dev *dev)
- 	if (ret)
- 		goto out;
- 
--	if (!fw || !fw->data || fw->size < sizeof(*hdr)) {
-+	if (mt76_connac2_patch_check(fw)) {
- 		dev_err(dev->mt76.dev, "Invalid firmware\n");
- 		ret = -EINVAL;
- 		goto out;
--- 
-2.47.3
-
+-Toke
