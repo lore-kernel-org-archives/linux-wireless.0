@@ -1,79 +1,80 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1792877456;
-	b=DimiUI1ptLG803WXy3SX0sOvhoOYyacosYwyYYh/s6hM5d5qDFk6rwSKUi463PJR786c
-	 +V/x4yAEpfkgXDHNz7+uakZVQZw2EnsHxs4BMHeZjinvhJAQNWkiY/ZlLZyUaw2ynmK2T
-	 JbGP9aM7pDCdVrWzZy5RNULEm81lScSyI03aZApQXv9kXraTdmDprXEKSdfno9Xy+eCw1
-	 5JEHqdi20/yeT+qy8Az0nutCM0iAlJfm4HUv+srKAXhPkNfXf9gcUX2VCzALigIS55wYv
-	 2SpzJ9m+dI7L+VrYgfipsasT+H0X1lDsHbC22vrYMDNjDcPiJYb+CeptBZroWy+YC5Q==
+	b=S5FsaSrDFPSGvpGl5xFsuNHIeGK0GsFXtbYYjBOKbLlcr1CBOGIqQ/OkqLDEbra7w2ew
+	 u7zTZuIwOLl8PSKD7ulW1Oc0yWOtz+iAtNZxggEmklP8fxb9Xeta4gvtQGE7QtTk0aGI2
+	 1wCCKmO0LUBc4b7Dn0kOZz7bSPLJ7g6OELQBmdtcK1Pdzj1T9rWGDLtpZFh5JKkMazq6h
+	 7dCGUnRj/ko/iV9R4iokExNPz3QEj4mF9LyfVEwQXo8g/836VPxc+C0vhFP16Pc11GcPb
+	 CK5vOTXKErJrFdgiOpbQVjczc1HRd61SvDnl0+ckbXjL5VXzGFIVdYlQPPgA9nQdgQQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792877456;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=Lt9gxDPHexxR60rVzHoiJ3UBKdCPi/8/Alm7yUpMUCY=;
-	b=t59Yq86q2IcFGIL8jFwfU7zzFAzFKRfp2stNYYURybGT9HrPNEu5JWdGUa1kDhLocnqi
-	 mGcPBJokgMqEL6yz+eGVvYqADwJkiSvYHn6/Vk+Fvq2Qh97ISD66jibPopLWZD3KdaL0v
-	 8cSpkL5iiQaeHvjPLdRDq88pmhHMcS6OZan0VxsPCqifHJFbiYhdMQcYOoCvQKl+iDIfI
-	 i3AMzFXbNWR5Col2fHDSflnhA2kgExLqpajnMGJCd1FDbalbsfowQl+bDD3/vJjrMtmIk
-	 R35excAKCfjviDWAnXTr3Ja83zpTx3by+Qosm7zWYrWNdCSX8sS2+TBtRF/DW6f/UhQ==
+	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Endpoint-Received:X-Original-From:Reply-To;
+	bh=/jjdbJIsZF6G4eCWKJ+aUwuJXb16bpa6KobpLNWwJLQ=;
+	b=yGoOgB5pk6mhaQSD6lUJDtkAAeCgHYO7tQgi8fIjnPs7U//Ns6/a8GWswc0X3Ygui90u
+	 ip1A9EkQzjRMVLh+h2TXmSn+VZeZ8GhQoqbLU3Cj69d/sY8GE5TXyT0rpJLWS/pgW7vH8
+	 tj0AGmTHctKAtf+sOkV8TP1fT3EncAgI/YheTFUEdpkJUzrlDeq56jdjQvu3XQXzKOoGH
+	 ggAjKf28pAatRBPMtZKiov99CTKBlIJvXEhxmtcmk6Vo1HudJNkWgxf0oKSyAhaUGEkG5
+	 fangw+TeQEUuvv3mmrUcYaygvLg31q+WyfvLwVfgDdle+q4sU+4JH/nVl3PYB8+xPhA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cBjrieTi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VZtIxKZJ;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F395606A31A;
-	Sat, 24 Oct 2026 21:30:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0595F606A31B;
+	Sat, 24 Oct 2026 21:30:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cBjrieTi
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VZtIxKZJ
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792877456;
-	b=zwtIa4D6h6QI/JxsmRDrqcL+2cu8V/zWIfLKTQQ6oNyldniectGilWxMNKP/GB439aws
-	 NIEDBsb2wUm6NpmUu+ZDfWuwyub8b3HMU/XKQmZdvYHbJ1ObGTi9IzJono/FreSFe1S9U
-	 p38/vc57rG0fX40/O1e+URzgTzLyu8kBq/D8dxK0GpXd+eapBFrITdTs5SR5R4uTJN1Bm
-	 jx9YVudVJkdL874PhFUOnEReSpEJqwOwTcxm0lKs/6fLNdKbt7cn0dfJxVZlzNwfC2UWl
-	 +r8uY3+d0qVqp0Ww0VOGfYrLUns+FwMI1/VBUHO8lg5Uz9f933roHpuscznAu0RDyhA==
+	t=1792877455;
+	b=gkMxmyXwbParL7fSnNz3LiaOeEKY6tqy4Wm3Ox7sbj1LCwdeIWGYCqPydE7lBlDs7Ez7
+	 +sPfNSYdBSWgIkR9oJouqC+9XZyCoMwj/Q5OwA1LTTJSkigp9ogY6j9X7RkFFk9tNWsj2
+	 K8GV/3WODnqJ8pkMOQs4C2GmYW+4lsqi6ma4IQJEyN/VcYrHWCDH1D5VUN/Tm7U3SLlFI
+	 FsOm1VbZG+oil0YsybrVcVxujSpzVV7x2MEoVhiB175ctbIAOVxmGuYD2dpXoE4ZeKoZz
+	 d76iIGv4YV7fC8D/2XQJIpV/0XyXZFxnwIb3/R8dMo1mT7y9LB55XqsKCTlmlGiHVUA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792877456;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=Lt9gxDPHexxR60rVzHoiJ3UBKdCPi/8/Alm7yUpMUCY=;
-	b=gVmukaNavuDiwbwIeKUhn8GZeUdKgDcaOqpsSj3oDNyiwQqZnFlKUcU/RjdGBrF3gNzl
-	 cW9bRJCbY2srD0F37n6t/Ly56Ys0+JdY9SbrRapi/4cWQOrJ1H4e7UYvnF5TZVZfO6qmo
-	 SGsSJZ51WTp5rXIa2dhw885KChpnPdPsjfPvg8u2B95piD5pSmHrWjkZBVwWttVcTPngb
-	 KQRHqiaM48shPF0+uwrDj4kIuSF5v0hKsl2CYtgLihX2IhQBf/ZN9OPgZqXffazaqIU2Y
-	 X5Bt6FLQA6+/2TwYWaK0BzRcowStHDhY2RfWlXrXO0EzCoKNdknW2p5GKhvs74tbolg==
+	c=relaxed/relaxed; t=1792877455;
+	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=/jjdbJIsZF6G4eCWKJ+aUwuJXb16bpa6KobpLNWwJLQ=;
+	b=trKWgUUu8/Z6E41DPxVVNsJ6SGCzhonU+0lu/KBV/JVbfxo6IqYbkRbgvu+HAL+VCP5l
+	 i9oLzRrRLEm+rJAgnx+d6m4WG7hSg2yKwqseCoiHBODqtUbYywguffDI6/ptkhajF1UIf
+	 TtrFaJxzQXWxQdZ1xjApJZRqXRx5i4UDwIMhEzlX3S/20H7t8fQ+QygrLLA7xMxNtT6JE
+	 7Twi251MzO2fjNdMm4RGEI/ghMoTo9t9hnPMbdzEp6+sJBV3rJHfZB7UbrDzctYQYCo4B
+	 qxNGX9VK7C9gaSCXHtcdTkA5IDiPmzNNBQz+b/DOqqSKYEHw8Z7+/dU7ARMXhoLtBvw==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id EB3611F01828;
+	by smtp.kernel.org (Postfix) with ESMTPS id EB41F1F01829;
 	Sat, 24 Oct 2026 21:30:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792877456;
-	bh=Lt9gxDPHexxR60rVzHoiJ3UBKdCPi/8/Alm7yUpMUCY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=cBjrieTi30wKOOiSLz+pcXcZSZ0xcBgxk0xswlz9uU6xHsMKVhZwa0/QHi6PfCrIl
-	 FP1ELE3jfqlPZoJK/R4+CURUf5y6e1mbczMUVIBr1FxgcP3OCoNKt6FgDOKhcMe6zD
-	 +35YY72KaE0QyQiY7TGB++MZGHNERHY7bO5KZCPv46khbKsI7nVgX6KPTiwb3xu5Im
-	 hCXavziSV5Ou45Ue9+hwKPO4bSKvTT03wslNAMC6kEL36VxEh1JAnU7dDLbvYWNuLD
-	 SydEwC1XbFYn2LxB1tdrsvvbUCLg11Xj4RJQCwaFcc+Dz8JXPIj8eD0kfAiYldxi4z
-	 QRGWVfw7NvwPQ==
+	s=k20260515; t=1792877455;
+	bh=/jjdbJIsZF6G4eCWKJ+aUwuJXb16bpa6KobpLNWwJLQ=;
+	h=From:Subject:Date:To:Cc:Reply-To;
+	b=VZtIxKZJ5E7ZHKElFJpm+t+eRAHXS51JhEgnDtgfy9MnQn4b7Z8ONkIYEqsQqyRsA
+	 daKFQlDn4nFMuIDAoEvC+NnSfZ8qKAUPUFxvfbxPXuIzkXlP/n1PeOqL6cjWa03/aY
+	 2K8Ipcx1CiVfDk5Z3/Gk//sTraQR8IktKV+1sXdK95lQDKgA5i4fzIcaIvliyWnuRA
+	 8Yq6Y3ne7fZFDhI/las29F5EaIh98niMim5Rx+Q5GYQUXvHcNrW8J2QYjtps8hlRJU
+	 NPelZO8cj4L4LcGNCLGpwK/eRqKDe2dGA1VIjiCETyTJyF3rdNPdRhQcUa7cQDp+wo
+	 9nmrS9HB46HKA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 60D17448BD;
+	by lkml.kernel.org (Postfix) with ESMTP id 4CBA2448B9;
 	Sat, 24 Oct 2026 21:30:54 +0000 (UTC)
 From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Sat, 24 Oct 2026 16:30:55 -0500
-Subject: [PATCH ath-next 2/2] wifi: ath11k: don't take a monitor PPDU ID of
- 0 for no change
+Subject: [PATCH ath-next 0/2] wifi: ath11k: two monitor destination ring
+ fixes
+Date: Sat, 24 Oct 2026 16:30:53 -0500
+Message-Id: <20261024-ath11k-monitor-buffers-v1-0-ff155feca2f6@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,87 +85,55 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261024-ath11k-monitor-buffers-v1-2-ff155feca2f6@gmail.com>
-References: <20261024-ath11k-monitor-buffers-v1-0-ff155feca2f6@gmail.com>
-In-Reply-To: <20261024-ath11k-monitor-buffers-v1-0-ff155feca2f6@gmail.com>
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAI0j3WoC/yWM0QrCMAwAf2Xk2UBTZkF/RXzYutRFsZWkk8HYv
+ 1v18TjuNjBWYYNzt4HyW0xKbkCHDuI85BujTI3BOx/I+R6HOhM98Fmy1KI4LimxGro+hhjIh+N
+ 0gha/lJOsv/EFWoOZ1wrXv7FlvHOs3y/s+wdJDL5uhAAAAA==
+X-Change-ID: 20261024-ath11k-monitor-buffers-04c6c61265d9
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
  linux-kernel@vger.kernel.org, 
  Christopher Griffin <christophergriffin05@gmail.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792877453; l=2187;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792877453; l=1099;
  i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=mWyrYADTKRJAnEcFm7KXNuli5w0DYkuiREx7rbQbq5M=;
- b=rNMjczzUXb7VnePkgWQlGNDVjyS/uUQGAAxfonLR0tVE0T+VvDwjw6oitt9CT3bOQhzGyeDRy
- jOhe4GllrKFCkR6gg6ylcqv2nf3JaafrQteIhEFlZ8Vwtqx6WYI0g4n
+ bh=L7gjGCmzyeulE7eU8L3X1sKQ8Bvh81x5kGFaYfXJVKI=;
+ b=NJoaftq5eB0g13ykQ6+EM7DAMk3urNmrzlqGDQ+5julXoUdBraj0sIAVZMVoso915GM/3WYFo
+ 5v5y4nH06mtCyRd+Jrvhyl53Fm3xl2KByZyWn8P3ay6ZX3dtxBpGY7R
 X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
  pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
 X-Endpoint-Received: by B4 Relay for
  christophergriffin05@gmail.com/20261024 with auth_id=1309
 X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
 Reply-To: christophergriffin05@gmail.com
-Content-Transfer-Encoding: 7bit
 
-From: Christopher Griffin <christophergriffin05@gmail.com>
+Two fixes for ath11k's monitor destination path (the one non-full
+monitor mode uses, as on IPQ8074), found on an Arista C-360 running
+OpenWrt with a monitor interface on each radio.
 
-ath11k_dp_rx_mon_comp_ppduid() returns the PPDU ID it moved *ppdu_id
-to, and ath11k_dp_rx_mon_mpdu_pop() takes a return of 0 for "no
-change". When the destination ring's PPDU ID wraps to 0, it moves
-*ppdu_id to 0 and returns 0, so mpdu_pop goes on and chains the MPDU.
-The caller, ath11k_dp_rx_mon_dest_process(), then sees its ppdu_id
-changed and breaks out with that chain neither delivered nor freed.
+The first stops the driver freeing a buffer the device still holds when
+the device lists a buffer it handed back already. With monitor
+interfaces up this corrupted memory and crashed the AP every few hours.
 
-On an IPQ8074 with a monitor interface on each radio this lost 37 MPDU
-chains in 47 minutes (2.8 million MPDUs); with this change, none in 46
-minutes at the same load (3.2 million).
+The second fixes a small leak of MPDU chains each time the PPDU ID wraps
+to 0.
 
-Return whether the PPDU ID changed.
+The two are independent of each other; both apply to ath-next.
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
-
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
 ---
- drivers/net/wireless/ath/ath11k/dp_rx.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+Christopher Griffin (2):
+      wifi: ath11k: don't free a monitor buffer the device still holds
+      wifi: ath11k: don't take a monitor PPDU ID of 0 for no change
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index f0bff6c16..64fc83ee5 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -4656,15 +4656,13 @@ static void ath11k_hal_rx_msdu_list_get(struct ath11k *ar,
- 	*num_msdus = i;
- }
- 
--static u32 ath11k_dp_rx_mon_comp_ppduid(u32 msdu_ppdu_id, u32 *ppdu_id,
--					u32 *rx_bufs_used)
-+static bool ath11k_dp_rx_mon_comp_ppduid(u32 msdu_ppdu_id, u32 *ppdu_id,
-+					 u32 *rx_bufs_used)
- {
--	u32 ret = 0;
--
- 	if ((*ppdu_id < msdu_ppdu_id) &&
- 	    ((msdu_ppdu_id - *ppdu_id) < DP_NOT_PPDU_ID_WRAP_AROUND)) {
- 		*ppdu_id = msdu_ppdu_id;
--		ret = msdu_ppdu_id;
-+		return true;
- 	} else if ((*ppdu_id > msdu_ppdu_id) &&
- 		((*ppdu_id - msdu_ppdu_id) > DP_NOT_PPDU_ID_WRAP_AROUND)) {
- 		/* mon_dst is behind than mon_status
-@@ -4672,9 +4670,9 @@ static u32 ath11k_dp_rx_mon_comp_ppduid(u32 msdu_ppdu_id, u32 *ppdu_id,
- 		 */
- 		*rx_bufs_used += 1;
- 		*ppdu_id = msdu_ppdu_id;
--		ret = msdu_ppdu_id;
-+		return true;
- 	}
--	return ret;
-+	return false;
- }
- 
- static void ath11k_dp_mon_get_buf_len(struct hal_rx_msdu_desc_info *info,
+ drivers/net/wireless/ath/ath11k/dp_rx.c  | 32 +++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath11k/hal_rx.h |  1 +
+ 2 files changed, 26 insertions(+), 7 deletions(-)
+---
+base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
+change-id: 20261024-ath11k-monitor-buffers-04c6c61265d9
 
--- 
-2.43.0
+Best regards,
+--  
+Christopher Griffin <christophergriffin05@gmail.com>
 
 
