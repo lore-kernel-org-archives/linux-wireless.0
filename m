@@ -1,80 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.52
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792877456;
-	b=S5FsaSrDFPSGvpGl5xFsuNHIeGK0GsFXtbYYjBOKbLlcr1CBOGIqQ/OkqLDEbra7w2ew
-	 u7zTZuIwOLl8PSKD7ulW1Oc0yWOtz+iAtNZxggEmklP8fxb9Xeta4gvtQGE7QtTk0aGI2
-	 1wCCKmO0LUBc4b7Dn0kOZz7bSPLJ7g6OELQBmdtcK1Pdzj1T9rWGDLtpZFh5JKkMazq6h
-	 7dCGUnRj/ko/iV9R4iokExNPz3QEj4mF9LyfVEwQXo8g/836VPxc+C0vhFP16Pc11GcPb
-	 CK5vOTXKErJrFdgiOpbQVjczc1HRd61SvDnl0+ckbXjL5VXzGFIVdYlQPPgA9nQdgQQ==
+	t=1792878511;
+	b=ngGeKIAB6jWHLpnV+Mqj4ixSHBhL3rnPtxe1LD5I6xphAoiq2KXs4tP4HWL3u2MMSlo1
+	 2orzsAbTmHE0Uezuq3oQyPW1ylEZx4RP4vXtptqugT+8wiuuQH6ok8H7Qqx2aqSSQwdpK
+	 6nskibccvv5Au3T1hT8Li89HqiNIo5sKv6AF4hUsCnH6yNh5lfoN1Jb27WFkMiIYTU22j
+	 cwJP3A0JGlEYzdqiV4a9L3VDvOWmzBOhsy6SK0HemdCZP+XxHDWsejv3E9f0Pn56An9VY
+	 JLsfJJVbgWA1vT4Kk2pHmM/SsAmSnl6EfA5uRMfi0bbxnBts+g2nmNsPlULA/DPkbEQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792877456;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=/jjdbJIsZF6G4eCWKJ+aUwuJXb16bpa6KobpLNWwJLQ=;
-	b=yGoOgB5pk6mhaQSD6lUJDtkAAeCgHYO7tQgi8fIjnPs7U//Ns6/a8GWswc0X3Ygui90u
-	 ip1A9EkQzjRMVLh+h2TXmSn+VZeZ8GhQoqbLU3Cj69d/sY8GE5TXyT0rpJLWS/pgW7vH8
-	 tj0AGmTHctKAtf+sOkV8TP1fT3EncAgI/YheTFUEdpkJUzrlDeq56jdjQvu3XQXzKOoGH
-	 ggAjKf28pAatRBPMtZKiov99CTKBlIJvXEhxmtcmk6Vo1HudJNkWgxf0oKSyAhaUGEkG5
-	 fangw+TeQEUuvv3mmrUcYaygvLg31q+WyfvLwVfgDdle+q4sU+4JH/nVl3PYB8+xPhA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792878511;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
+	bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
+	b=xAabcnwwd7fCccbe9kOoEx7G+L9lyepIOhgvXk38omHy6oFGHZV9jnUBpDq42aLKArXp
+	 qJJTUfogu17XzuWBmVoRofQ+81maQG8oZMvzacgHe6WbTYT+hNi9ia7nD8+HhRykYItX3
+	 YyScaxsMvXnB6faQeZpxzbZBJeHdhl8FZSgnmLGr5to3grf2Iu4IQ8dM+cecheq+mZpWK
+	 2H82DQBIfbNv9NUMH+4foyJxCmREGHMJOINyRA2NusuuapnFDZp3gNFbHeUxTAl68iyZr
+	 EVXSWn3JXoSLeIiQrRXFr+D0zxVCMNMeEwGBEN6SIZjgFZbQNhQcGpcdMGxjX/vCaZQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VZtIxKZJ;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0595F606A31B;
-	Sat, 24 Oct 2026 21:30:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VZtIxKZJ
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792877455;
-	b=gkMxmyXwbParL7fSnNz3LiaOeEKY6tqy4Wm3Ox7sbj1LCwdeIWGYCqPydE7lBlDs7Ez7
-	 +sPfNSYdBSWgIkR9oJouqC+9XZyCoMwj/Q5OwA1LTTJSkigp9ogY6j9X7RkFFk9tNWsj2
-	 K8GV/3WODnqJ8pkMOQs4C2GmYW+4lsqi6ma4IQJEyN/VcYrHWCDH1D5VUN/Tm7U3SLlFI
-	 FsOm1VbZG+oil0YsybrVcVxujSpzVV7x2MEoVhiB175ctbIAOVxmGuYD2dpXoE4ZeKoZz
-	 d76iIGv4YV7fC8D/2XQJIpV/0XyXZFxnwIb3/R8dMo1mT7y9LB55XqsKCTlmlGiHVUA==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792877455;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=/jjdbJIsZF6G4eCWKJ+aUwuJXb16bpa6KobpLNWwJLQ=;
-	b=trKWgUUu8/Z6E41DPxVVNsJ6SGCzhonU+0lu/KBV/JVbfxo6IqYbkRbgvu+HAL+VCP5l
-	 i9oLzRrRLEm+rJAgnx+d6m4WG7hSg2yKwqseCoiHBODqtUbYywguffDI6/ptkhajF1UIf
-	 TtrFaJxzQXWxQdZ1xjApJZRqXRx5i4UDwIMhEzlX3S/20H7t8fQ+QygrLLA7xMxNtT6JE
-	 7Twi251MzO2fjNdMm4RGEI/ghMoTo9t9hnPMbdzEp6+sJBV3rJHfZB7UbrDzctYQYCo4B
-	 qxNGX9VK7C9gaSCXHtcdTkA5IDiPmzNNBQz+b/DOqqSKYEHw8Z7+/dU7ARMXhoLtBvw==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=FYYih7ir;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.52
+Received: from mail-yx1-f52.google.com (mail-yx1-f52.google.com [74.125.224.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id EB41F1F01829;
-	Sat, 24 Oct 2026 21:30:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792877455;
-	bh=/jjdbJIsZF6G4eCWKJ+aUwuJXb16bpa6KobpLNWwJLQ=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=VZtIxKZJ5E7ZHKElFJpm+t+eRAHXS51JhEgnDtgfy9MnQn4b7Z8ONkIYEqsQqyRsA
-	 daKFQlDn4nFMuIDAoEvC+NnSfZ8qKAUPUFxvfbxPXuIzkXlP/n1PeOqL6cjWa03/aY
-	 2K8Ipcx1CiVfDk5Z3/Gk//sTraQR8IktKV+1sXdK95lQDKgA5i4fzIcaIvliyWnuRA
-	 8Yq6Y3ne7fZFDhI/las29F5EaIh98niMim5Rx+Q5GYQUXvHcNrW8J2QYjtps8hlRJU
-	 NPelZO8cj4L4LcGNCLGpwK/eRqKDe2dGA1VIjiCETyTJyF3rdNPdRhQcUa7cQDp+wo
-	 9nmrS9HB46HKA==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 4CBA2448B9;
-	Sat, 24 Oct 2026 21:30:54 +0000 (UTC)
-From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Subject: [PATCH ath-next 0/2] wifi: ath11k: two monitor destination ring
- fixes
-Date: Sat, 24 Oct 2026 16:30:53 -0500
-Message-Id: <20261024-ath11k-monitor-buffers-v1-0-ff155feca2f6@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69B54606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 21:48:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 69B54606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=FYYih7ir
+Received: by mail-yx1-f52.google.com with SMTP id 956f58d0204a3-6798eb0d190so1370355d50.3
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 14:48:31 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792878510; cv=none;
+        d=google.com; s=arc-20260327;
+        b=KcerkAQ45EtWCMk6XBg5F1oUcUPjT+8c/uwOszuOAvOGsImdxyXZHEtO4RAN2lB9Kl
+         l7kj8efulHBikiFL5TgQ6s1QiJ0hBGtGlpk0yIFYLPNPk2AbHNdu+wV7BFHxSX+jxO8c
+         3vMcUk7yi3ZCE+/dYUG0oImtohD04MiCRHsVSp0/dcqwm/XNHqcfO3pnZpQgxwGMH28V
+         Gge8KVsQgF04dV76LuIfIwfGQc6cB651xeqcOojvvA7KCMu2m9DjMwnZIZsjPtxOrzwB
+         hmyGE/0KCpXh5j2pKWEi39HOZXwZsODbHuss8H3wQawF18LTGo9HbbKsS0nYHfexndLG
+         LVNw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
+        fh=FOIvcG1gnFljPdvKpHXd86G81BXv9yfg69STJYa6qHE=;
+        b=TE0AGY/ZTwnxyeUX0NeeOYi4eVymuwGewqz4DysFs0OLQjvGNaNcTpKUm359UB6LJS
+         qTf1H/PTnj+PBgJiijLNlWJFVt5KXGWD+Jhf2pSZlgDuaiY7jWFFQ9ME7LT4b/2VxCcH
+         NaP2h4llO1umw7IRXptNVSrdDoSXL7/TwuSotxh70aqqFfAc4mYfXhYZkL9w5SULfpwk
+         kFo4jQ+bMuln6V88prEh9Gw2xtl4lxPF4/b6h6N0Av7Rb8qY0hdVP7jEp2ARmZ6NWUjk
+         mQRZbDQh6NRgd1j1K9uMjFEpoieZzJnACRyp6RLsU1ehiXSwTHC7hvbwWOP+4wMwIv7M
+         ZxuA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792878510; x=1793483310; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
+        b=FYYih7irORKyWGJ3ZZI/05Okn7FDdIaZ9RtOcJ0cCCZ84oFQMnEkbUNFLY411Ryc8e
+         b20DJViHGxuEIXFQvT7NuHt8GB2WcJ+OZsnNyiLE3t15KThOjHiHFKSHitSsBLmzuR+E
+         Wqmwi1z2i1rw2t/8BZ7G278NOycmuTsBfsK0UKitxUfEl13bUjNy5x8PlszdLPuuL93C
+         cJkoNIzDvgMBq6GE8akEZr9q7IJvNpCg898/6zv38sMOgDN+tF6Vx51iUzWRvUVAVNRY
+         wfeSMf/eRVQagZ79jAwedREiVOjQbeo5dqJTZyN6WnUfj2mOP/PYz2SMnAaetTkK2qYy
+         QH0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792878510; x=1793483310;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=B22PeW0KSxJOptnl4CVauMg+1WFHTB5x2jSa9vro5So=;
+        b=SFPmStfWYwOJjHh7fZbTtDooCqgnxPp2ks07x/zrCVR3HwZqsCEHFcb+O0RQw27Cp+
+         3wuUitPIDQJEww/cG7RgDF8YOnV8oIe/LC/VdFP7C5yrT+CW40e5Z0bcDxBcbZR8xaVl
+         b5zO6+U9ThD9zFbjNjOvm376C99T0RANmkJQlnAtAeBl05ynJdKW1xgCASOm61KkF6Sv
+         AjBn9Yg2LiHWWJ+n4oB9CJzEHBv+xq6qdggN0MG0nwjg5DAmbO0re0aqxOgzhLh0jxpI
+         1jNgEpBznlh41MgJchpxvRTQSmFJgmWRp5AIzfp0+ewjz/luWZ31VsLrrTgCpxHi/3Es
+         NBCQ==
+X-Gm-Message-State: AFq9FYLerKFSXb0mxkSqVxFtWKwoyUnrp4nMyQ29rTu6EgrKRMUQ2AnR
+	y/Tkc9xqKfpESB71SVxCDCJnLn+0HdBI58mwFe11BVh/5dY49iteMGhpWh+Vc3U0HVNHbTEZzCT
+	MA6fY4JKnpxg1gszjkNueQazLWQJHoNB3ajoJDoc=
+X-Gm-Gg: AYBFou0mRw5eoda3aZyeIpBKx7/db0/hv7roYmRkzrj/d7Q1nNmHID2xgsaviWc6tFD
+	ZivQe1Msl9zuOITwnONfTuRM0IJD590v9IukcdPVQ05kgJ3aB36AWpfqBUsG5m+w17gAB7CtwwS
+	/QTWfW1EhOcBgG186CKOkRE9nv+kTylyTezsM8lt7xLon72OmtbCO3hr5eoWow/GKSs5DZOsRCz
+	ojH9Qhb+Iy9Uy9noV4EwPVRNyP/ZNAg8+9lHoxDzBLZOerlqBGkRjS/McNyXfmgLlQnHtF2Xa3q
+	gbKgc9UvR+jXQs2EY2c7TfkmmbEdUVV1IFauUC64gDWlYew7C5Ze9aLCdDSh9PJWMoVSOTTQgLp
+	NjS5FmDb9LvrNiYndED7edJGu5pu8heAIiWya59jMpmHp5p1HwgMRVkvNbb1DdB8KaOKo
+X-Received: by 2002:a05:690e:4402:b0:677:ceec:5eb6 with SMTP id
+ 956f58d0204a3-67a4549f020mr1731583d50.91.1792878510400; Sat, 24 Oct 2026
+ 14:48:30 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,56 +99,52 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAI0j3WoC/yWM0QrCMAwAf2Xk2UBTZkF/RXzYutRFsZWkk8HYv
- 1v18TjuNjBWYYNzt4HyW0xKbkCHDuI85BujTI3BOx/I+R6HOhM98Fmy1KI4LimxGro+hhjIh+N
- 0gha/lJOsv/EFWoOZ1wrXv7FlvHOs3y/s+wdJDL5uhAAAAA==
-X-Change-ID: 20261024-ath11k-monitor-buffers-04c6c61265d9
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
- linux-kernel@vger.kernel.org, 
- Christopher Griffin <christophergriffin05@gmail.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792877453; l=1099;
- i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=L7gjGCmzyeulE7eU8L3X1sKQ8Bvh81x5kGFaYfXJVKI=;
- b=NJoaftq5eB0g13ykQ6+EM7DAMk3urNmrzlqGDQ+5julXoUdBraj0sIAVZMVoso915GM/3WYFo
- 5v5y4nH06mtCyRd+Jrvhyl53Fm3xl2KByZyWn8P3ay6ZX3dtxBpGY7R
-X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
- pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
-X-Endpoint-Received: by B4 Relay for
- christophergriffin05@gmail.com/20261024 with auth_id=1309
-X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
-Reply-To: christophergriffin05@gmail.com
+From: Luca Casati <luk00casati@gmail.com>
+Date: Sat, 24 Oct 2026 23:48:19 +0200
+X-Gm-Features: AclHuK_JlPRfhqgk-dIAhc7Duvk3jv4nFMsVJPa5857f4E-xR1JaGe3jcyIyi1Y
+Message-ID: <CAKM5oscz9UfiqFr_wSmzjcpsZ3QEWvUJuVa0kLhmz1TnF+aBoQ@mail.gmail.com>
+Subject: [RFC] b43: N-PHY fixes - OK to cite wl MMIO traces in comments?
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>, 
+	Arend van Spriel <arend.vanspriel@broadcom.com>, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 
-Two fixes for ath11k's monitor destination path (the one non-full
-monitor mode uses, as on IPQ8074), found on an Arista C-360 running
-OpenWrt with a monitor interface on each radio.
+Hi,
 
-The first stops the driver freeing a buffer the device still holds when
-the device lists a buffer it handed back already. With monitor
-interfaces up this corrupted memory and crashed the AP every few hours.
+I have been getting b43 to work properly on a BCM43228 (14e4:4359,
+core rev 30, N-PHY rev 16, radio 2057 rev 9) and have a small series
+of N-PHY bug fixes I would like to submit:
 
-The second fixes a small leak of MPDU chains each time the PPDU ID wraps
-to 0.
+  - TX tone sample table loaded as all zeros (operator precedence and
+    a double fixed-point conversion before cordic_calc_iq())
+  - TX IQ/LO calibration: inverted busy poll, result copied the wrong
+    way, missing rev7+ cleanup
+  - rev3+ RSSI calibrati is written instead
+    of the selected VCM, plus a wrong distance term and rounding
+  - 2057 RC calibration:re it starts
+  - a missing field in the rev7 TX_PU override (compared to brcmsmac)
 
-The two are independent of each other; both apply to ath-next.
+Where brcmsmac has the same logic I used it as the reference. Where it
+doesn't cover this radior accesses against
+an mmiotrace of the proprietary wl driver (6.30.223.271) running on my
+own hardware. Only the M did not
+disassemble the driver.
 
----
-Christopher Griffin (2):
-      wifi: ath11k: don't free a monitor buffer the device still holds
-      wifi: ath11k: don't take a monitor PPDU ID of 0 for no change
+Some comments in the patches mention this, for example:
 
- drivers/net/wireless/ath/ath11k/dp_rx.c  | 32 +++++++++++++++++++++++++-------
- drivers/net/wireless/ath/ath11k/hal_rx.h |  1 +
- 2 files changed, 26 insertions(+), 7 deletions(-)
----
-base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
-change-id: 20261024-ath11k-monitor-buffers-04c6c61265d9
+  /* Values from an mmiotrace of wl 6.30.223.271 on radio 2057 rev 9 */
 
-Best regards,
---  
-Christopher Griffin <christophergriffin05@gmail.com>
+b43 already has similar comments ("Extracted from MMIO dump of
+6.30.223.141"), but I ware comments
+naming wl and the trace acceptable, or would you prefer the values to
+be described differentlyat all)?
 
+Later I would also like ues (PAD tuning,
+aux ADC midpoints) taken from the same traces, so the answer affects
+those too.
 
+The patches were developg assistant. I
+will mark that in the patches according to the kernel's documentation.
+
+Thanks,
+Luca Casati
