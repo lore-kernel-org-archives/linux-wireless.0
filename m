@@ -1,98 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792847930;
-	b=4woe4HsR8u+YnifRoxcq17/7Fz0e7CGYGWJxcnmXADJxvFZsah6Eu3DHlIFG9tdNRLaz
-	 BmeBLy564SQOunc/maE0JdAbPhNz3WbyjnsbgvrGKt98Sz2uScubfQQfQijTUFCWmvDbU
-	 +JPb5qQz6A20rZcMwfdRYL9FJuLtfzLTrfko/o8quUydNBqe1YxxaOJLsIazyjFJgeBus
-	 7DiwHVn6TxupvB6RbkGiQWxPo+tNCiYEZ0rKyiA4vkahe2xIrexGsNZGsPJnChAh1DG5G
-	 HVActQwzFKgatvcPCaTtfVRiF6AQsgpmabJroh2513MmmERVik5VlJ/i/1wo1tzmtkw==
+	t=1792852272;
+	b=DWFNt3aORV9vBjhht447u5WY1HpoqXSZAeDhcTrWEdlZzyR2isDVauBs/JPjfPT2yepf
+	 k1Pi8h8/2AhzR55SMuHgsM3/WxUXSt5Ig1JHDTzr/5pNoRAZN5Ob3y1yec+lkRlGkzetU
+	 NMBHIe27HP8TD4QKYeyyKyG8mq5QdKlKv42EpoK1ksPUmD2rN0kE9S2etB1Bsl3roWa5G
+	 JkWHvZGd0JptbHTpVvLbaiUbnzHIgjtmCmlEKmk9MluSDK0R3TqVvYf/r/TjMoh+tVXju
+	 jOB3M01V9jl7au9UcihSYlW9+xKoS/sW4rHaFdo7GHiQ/J+DEK0+SwoYG7GN1GViBEA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792847930;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792852272;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=b680pKzQa13v0eIR/DWLULm8zwErDKH5uvrOsGuOoiQ=;
-	b=mqZpH9VM/nIhSXz/NnXpZiWuK5o7Qmmge+3DzIl5HR1PI6dtzi6GRVgFhjhEaW2N8Uv3
-	 HSDDC2M90fVNwmGFRlpon1mfoQLJaLJVKN7PRmhQ7gJZIiiW7RbAQP8M0jamJieD6jKIJ
-	 gh/blpXmfpD2wSVLI+RqJldIXhMKNIodkS5moatl+SaPVbysyNRXemZvRa/hof8np5zw9
-	 Iy+ssaw9xNRwM8WDYdA+iEnlRqsgGqyN0xlEmFM80SNPdiB8iE6Umjysl7LdE/c48/66f
-	 8WDO3jka34Y0znlEXiedqBADxiM3DQpMRaGSmTcEr1g9ULOuFVcH382iQPz2W1Nn1tw==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=7zPquDCtZyzOA5PY0kmGl8Aq5WV/QI7GoaYVVezsWQc=;
+	b=LbkEB7SucsVoDAT1seQ2eiLwVZXTBg6CDLK52+l8958LuvTficEqjwuJHwDDvulu8YIT
+	 rnvXEc3bEVsiQN+pioQ+sZppXdiHdDv/pnI9K7fY4NBcWzlTLdqBrQ+gZSs/ReZBozdsa
+	 10fc/WtVUd/Zw8/S67pVZBrtLPD0vuH+2HFuZ6JNRQsEnzc8xlR6mRlZrGlGO4rgwryIc
+	 APHvqhNmATzhQd6Hs8VcYIc2wg+ueLz5oNnnzHDGyw4MTvdDqGJXFHuX2BhqcLPgYOGIY
+	 OO2WXUUWgHUfmU+uq2hFvXmrygbU2HbBuBrlnMeeSQG4ngZy+Uydp1zEqb7+9spFdMg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="Jaxb/P3P";
-	arc=none smtp.remote-ip=209.85.218.52
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=XfUjjjhg;
+	arc=none smtp.remote-ip=209.85.128.43
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57840606A320
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 13:18:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57840606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65096606A31B
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 14:31:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 65096606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Jaxb/P3P
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c468bd799ecso219058366b.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 06:18:50 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=XfUjjjhg
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a218c463d1so9108265e9.0
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 07:31:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792847929; x=1793452729; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=b680pKzQa13v0eIR/DWLULm8zwErDKH5uvrOsGuOoiQ=;
-        b=Jaxb/P3PXjFT38cXGvFVo4MLASdIUYSGXWXC7juOTbCdguJZsMVrOfc5L+iqWqi/ri
-         w5TgqYu+JlJDs668cuw5s+EZbVxKM/ftWrn/jD+8U3VXQhNKCrGrc/geDSTeTECA/Wrw
-         +mVGHgvWiYiFYjebTzctnfnBdnYVi8+z/O2pel/f3TR3bwmtiVzaz0q4xLdTR0Dty/OX
-         Y+vkU+3jukMWt6c5m9Yum1c6axwju/nZOb5/qiUORnFzCm+0543zu/mb6riXYPxKdXDA
-         dmw1bmTFMC9uGYpHsOHAL9zMbC4kSqxqCogFz7iyAeB3LeDiejZZmCHPSjEUWwY5WBEz
-         NcOg==
+        d=gmail.com; s=20251104; t=1792852271; x=1793457071; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7zPquDCtZyzOA5PY0kmGl8Aq5WV/QI7GoaYVVezsWQc=;
+        b=XfUjjjhgRU3xKHOnn3z8d46bbr73JjAC8ug7xqkXxnNxWiyIHSbEfMKKkXKSXHBBTu
+         aRh8PW0+GS4VIeLumDDnmmdR23GxI6OYLl01+SOZlj8bCUzG92sqfdTGJ5pWUbYaJ/zY
+         y2mOBofxl26k90BbgSlGM6l5RU0cXFFDAU5685pIDuam9ny0mG10H8yO29Yj5hvvewIb
+         K94fwYOTZyiI7Qbnik8/rRtXkV/TDCRVYkLrNyY+jmbiUt3GWQ0nPKeujWv9WwM9EKJu
+         sOqpl0HVfT9qrjAJYg6k+jqIJ/H5L//nEcYrXn6YR5oGdKjsUKD7r5WWkU2jYczQoY/f
+         s/8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792847929; x=1793452729;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=b680pKzQa13v0eIR/DWLULm8zwErDKH5uvrOsGuOoiQ=;
-        b=Z89Nv23xWxwFZHI5wQqsLHBaDm1bRH7bl4Is5rHxPHynaeLc1IJXb5kPaFOq8eqhcV
-         dgvACfpeUDEiWZakbVg1XxY1trgxkV5JZZ6CpEZ9dduC23oHL6EAr1IYDPfKMSL0Z5o3
-         mtPuGbSVUQoUOnJLCq7bEPBGxyNbXxCVsw6Q8sH1WaMSbnBu2KR85fg80Tes7oWqDmEt
-         iM2qJuevOzlZ0oy6gBcRxx7dsiIJziYq6gnEkGTwQuQdh4/kBseQ9lSSClUiywVRUq81
-         L89Nf2/1Mlx/QDtF6fza557DM9NMH1KfG0m/sl4XEGQw5M3RlkotZ9CgnbaZ92akKs40
-         rbJg==
-X-Forwarded-Encrypted: i=1; AKwUvBzRYgCzqD+7VjFOmyy3pQjk3zKN8MsCwziB/tlyeWQnlah18bwVjhVorfhVabVWO9oNKw2uw7JUIeIQE9Rvew==@vger.kernel.org
-X-Gm-Message-State: AFq9FYISXVLagV5i6h20depnqtoohOEOkNvqJ5hpnNeypiBHfRF6+b72
-	E6huAP1sxf915MeuMG0ZreWtNGeDeoeK35lOpuKG2huw6R6xiBqBJmgg
-X-Gm-Gg: AYBFou11U+91E8kPzaiPeJUP/c/1qiWkbD3zVKp1ONv08sqsa6IGhH9jZW0aOL3HDvA
-	pGNETD35qYo3BpDDZ1lrycc1rdorDvtZt4mdTMFBBa2CcL2IMqirj9dvvy52rS8O/AVuWx1H8ux
-	EdI912/i91slo+H2I9JuJsMr7HnAL6MBF3NWSZcwi4uZ+e7IXNZedXr1LBu74Irq5zKjfimD1ut
-	aQ+V23vZplWQk8Ggd1QSBP+7AuE3iSA+PDv8FI/dRjfHf8CuunNsSs9WI11+Mo5Cv6+3n8O0ARd
-	WoYhS05DKHRy7z85anfZ1oAnynUc0cCQueG1oPLHvZYLMr7yrUhgHL9NwgWa0hVEw+SHA+slvUz
-	mXLNOEpX90Ozxq7KDTD1Rz6sbhiuqOz2LSJXUAY4hZb3QPKsMhtHupTdmaYJ8UgG/W7MUSUkzZF
-	L+fdbEMvBCGnshMf47oqSS+KWdG3vmhhxX91kox1w36HHdsZpGE7iSQWPeRYgNRe9lLqEladYYX
-	kjagxoEXB1ykIo6blfKOBJIK7XVDbp+EEL0YbLAxP8Mx2JFiYdAx/qm9aT/dPBqYWbRKn66
-X-Received: by 2002:a17:907:2d91:b0:c41:c106:9772 with SMTP id a640c23a62f3a-c46bdac60eamr203215066b.1.1792847928479;
-        Sat, 24 Oct 2026 06:18:48 -0700 (PDT)
-Received: from localhost.localdomain ([185.65.135.248])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c46bd6276d8sm87306666b.41.2026.10.24.06.18.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Oct 2026 06:18:47 -0700 (PDT)
-From: Hedi Ben Hamida <hedihamida096@gmail.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	stable@vger.kernel.org,
-	Hedi Ben Hamida <hedihamida096@gmail.com>
-Subject: [PATCH v2 2/2] wifi: mt76: mt7921: reset on HIF resume timeout
-Date: Sat, 24 Oct 2026 09:16:53 -0400
-Message-ID: <20261024131715.64435-3-hedihamida096@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261024131715.64435-1-hedihamida096@gmail.com>
-References: <20261024131715.64435-1-hedihamida096@gmail.com>
+        d=1e100.net; s=20260707; t=1792852271; x=1793457071;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=7zPquDCtZyzOA5PY0kmGl8Aq5WV/QI7GoaYVVezsWQc=;
+        b=xx+T0CuNGPJcyBP9NyuhmlmqZoSvmnQC7jyxWqkm1m702k2Ms32m6MUkPri33+toE3
+         5LQshKKkactJePA4RjYkfiu7CVgdSDHCJ83XAIpLLv71Q5aRYOafqmVygS5Ef5+erBDB
+         ebk7LXrJvI1ZWayYuOyoZ6v+nYIhXKtTD38Oxo4tNGFJ5L5bPKbbcnGNpI2Ijy215FIM
+         B3sAgDLegbFqKczs3N+H/e9Z8e5xBBFtrp5FM8MLRm2xz+LRAyKOpMweP8Ah+8NObCHJ
+         VpRHcoYbRbYZAcaZaMbqi1psh4boJuzM7drftMvyX/8CWV0FqZLJoMvmAkSVLsWogWAh
+         1QiQ==
+X-Gm-Message-State: AFq9FYKEWagVhqlKFADj5EZsO80GeDNfykM1ab4A8QQHcCrsIbgQCv9p
+	xqqmtIfI7WiLH/IAuDv9nQfsmW+O1TR8TQbVi6rxO2vYQBP+Wk8W+UDk
+X-Gm-Gg: AYBFou2JTcMKck346SxwwYlnWLWREpUgJKu6iJFuMHoig5VrVlEO4cSpQD393gYlYTu
+	Ul/tmsF7vBtmDyJ5bOBvdL7GnRIy84S/z8FQqfGRLhhYbGGaqzYGgxV3OhPSKT0kjlibCSdBXeo
+	gsHrIa7NeLeOCjtU/fspmt6yyFj5kxBeqyYTXXkStXPs4CmxGIspet4f6BqtZchFNdt7sAbOGRh
+	eUoiw0iIJcPPsREWF6Nbk9/wwl8eNIVg3BaIy2a/RGb5cvRFBKNqWdm/rnBED6JMaSxy4BuQy1Z
+	zz450NdGwj9cKL3nDGASkrpqVNteyCNVKDJUD6eXM0ZspD6dXxFLdSx6xLPQvh0vcG8xOMMBlx2
+	M4bxYhvw45zyso+cbAyv5dIxEo0KCNYFhAnWboEWh3gTijSyOCb58qZFcg3O7hOF26G1ntZdkQT
+	jUS0TwMWnC7483HYCEGXy2ZS1fBDKO8VHv1qcF5OYEcW0ES8/7gJV05Ys7WC+pkSUTWk7g8wL1C
+	Gbt6ZGj6DCh4CSyb5fsz87TilH+0zW52YTaCQV7ZdbyDBUY9RTNqOIH/Fte8oiuY/mSWJ63ZzyL
+	u5ylUVSMIaFVOH9vaXoQn2vRBkTO+w==
+X-Received: by 2002:a05:600c:4f4f:b0:4a3:5a42:b29c with SMTP id 5b1f17b1804b1-4a35acbc00bmr34586575e9.26.1792852270605;
+        Sat, 24 Oct 2026 07:31:10 -0700 (PDT)
+Received: from [192.168.1.2] ([31.176.165.29])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a2d6f6fsm56502995e9.12.2026.10.24.07.31.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 24 Oct 2026 07:31:10 -0700 (PDT)
+Message-ID: <b441d4fc-e0a8-4952-bb7e-c3416a040daf@gmail.com>
+Date: Sat, 24 Oct 2026 16:31:09 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,47 +90,15 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/2] mac80211: hide tracepoint definition
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261017155509.128114-1-omer.e.idrissi@gmail.com>
+Content-Language: en-US
+From: Omer El Idrissi <omer.e.idrissi@gmail.com>
+In-Reply-To: <20261017155509.128114-1-omer.e.idrissi@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On some MT7922 firmware the HIF_CTRL resume command does not return a
-response after D3, so mt7921_pci_resume() returns -ETIMEDOUT and the
-PM core reports the resume as failed:
-
-  mt7921e 0000:03:00.0: Message 00020007 (seq 6) timeout
-  mt7921e 0000:03:00.0: PM: dpm_run_callback(): pci_pm_resume returns -110
-
-The driver already resets the device on this error, and the reset
-restores it. Treat the timeout as recovered after queueing the reset
-and return success, so the PM core does not mark the resume as failed.
-
-Tested on MEDIATEK MT7922 (14c3:7922) on kernel 6.12.113: suspend/resume
-no longer returns -110 and Wi-Fi recovers; hibernate/resume still works.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Hedi Ben Hamida <hedihamida096@gmail.com>
----
- drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 00532b29f..dce88fcc7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -597,6 +597,14 @@ static int _mt7921_pci_resume(struct device *device, bool restore)
- 		mt76_connac_mcu_set_deep_sleep(&dev->mt76, false);
- 
- 	err = mt76_connac_mcu_set_hif_suspend(mdev, false, true);
-+	if (err == -ETIMEDOUT) {
-+		/* Firmware may not reply after D3; the reset recovers it. */
-+		dev_warn(dev->mt76.dev,
-+			 "HIF resume timed out, resetting\n");
-+		pm->suspended = false;
-+		mt792x_reset(&dev->mt76);
-+		return 0;
-+	}
- 	if (err < 0)
- 		goto failed;
- 
--- 
-2.47.3
-
+ping
