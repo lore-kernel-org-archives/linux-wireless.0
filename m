@@ -1,67 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792807517;
-	b=1C87BdLE2mvnHSloQzCZ84r6a+eBSbp15ga7iQKs9UmwHc4aIHsxwpobsBU2QED0Tk2s
-	 R3L9NvYXADtp3o9HTMrt/A2y3tmASiN8IRj9fQNwhTliPnojTLtiRplLY1k+qnmc1/74h
-	 cd1sDKjNU8ytp2ILRyc60YHmn8ZIBBhoud1BNWFJ86WDEyb+JMWM5KynL/Ut2FVKG8m0k
-	 fRmtjhv4mJoWs1+dvKEJJ4E2b5DRDyMZ5QzOPFzhIo0p15JpKYDJysDhhM93mJUVwgIdK
-	 ScY3wjKJhxIcrFSIIzR6sbD1TDIZxd4nPuKekl+BNdbPqUxQtDfhjbkQ/dMkxK7GzPg==
+	t=1792812190;
+	b=oG8d2BYSbrhsagMU7JWA47zhOh2drE45LJBCxEY7Hn2102tVA/7BxK7DE39U7J5FR3J0
+	 vSN92M/6ThTDo8+4rtPpYz6y/7VWXzAnxIcUTfcJVZcdFxpjXQFsNTjL+iCBvaWYEySUJ
+	 HYn3okjLCundlRo9eX0btbFqMXexpXI3u3EP/D+IEA2U0sf0Alg3EyvnJ/qwoCFgD+nTu
+	 4EZYveGNmcwf/uUZp6770cn69aZZGp9ru/W4IKQveAvVD4mE9nNlrKjZZUygzBz3Vlxqc
+	 JaN6LU3cLuNAMUMc2xKqS7tPJv7Nxh/b4N8dPNT/34wF+eAttKO1gl/NW/GM4L1k32A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792807517;
-	h=DMARC-Filter:DKIM-Signature:X-QQ-XMRINFO:X-QQ-XMAILINFO:
-	 List-Unsubscribe-Post:List-Unsubscribe:X-QQ-Markdown:From:To:Cc:
-	 Subject:Mime-Version:Content-Type:Content-Transfer-Encoding:Date:
-	 X-Priority:Message-ID:X-QQ-MIME:X-Mailer:X-QQ-Mailer:X-QQ-mid;
-	bh=l9Ixd8D+mo2JAxmk9ZAP4y4uLPb1rdVCCJp81x2tn/4=;
-	b=5faRd0Jq3NByR5Bp1yYpn6nAbPLu9xXb+NTjaR1wLwMDaI2uAWFCdTMlCEGF1mmi1in4
-	 pNG64lP7QSiyawNIBngUipR1Y+g7k/rzCS+cWw4FLTJA9pR6UdEy37lz2BREwsDH2zqCs
-	 /KiTfsem3AeXaZzIzs+cbKkxYG1I8UA8+7mlwHns12dvjHb9v04Px9E75SnKOxTCL9JZb
-	 2DNR1LNXZRo6fvLn/wPXN5dfFhxbCqByOu1VKCjtpWYsHgyMQyKCD28MoVDyWe5oOn0eZ
-	 BfvpGFbHTo2qyEgnBL/q8FxnzcjfjqtK3nI4OqYgngoGvBHjIocIMYBLgqpneQqvmUQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792812190;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=FM8GNQ21z2tofnQ9HAGS228+B6GKkzHToThuxWl3/VM=;
+	b=QxaXsIewfDbiDbI5F96aBiEZGFyQQLr5PFDQtKAv8qSd8o0fcqfcmQijQmFSlvlTjwJD
+	 uXJ7JT9XTQsoPWjFY0qOrJZghSJM6ODDs2j9zhJ+IyPBCwsxU7tfqyy49yOff8duLoWZa
+	 hIm5suAZUz1XjZQXNSR5zYVmyGIOmMQFopkh5mcz0h/Zi9drbEJYf92UgNgRkLslho5OV
+	 sLsLrsyAvqpV9PTh+xe43WZc0TeObss5W8arybNUZqIjogfrhdFPPBsiFI9Pv0iL4YWgf
+	 8Sx9YgihCQZ+JlUE44VMjGKtrMjGYyWbtZ0cATNB1Z6ZkGp9E9rMnnemYwCksnJCtRg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=agent.qq.com;
-	spf=pass smtp.mailfrom=agent.qq.com;
-	dkim=pass header.d=agent.qq.com header.i=@agent.qq.com header.a=rsa-sha256 header.s=s201512 header.b=lxPUgYqK;
-	arc=none smtp.remote-ip=162.62.57.137
-Received: from out162-62-57-137.mail.qq.com (out162-62-57-137.mail.qq.com [162.62.57.137])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=pSYGpV6X;
+	arc=none smtp.remote-ip=209.85.208.50
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D295606A31A
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 02:05:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2D295606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=agent.qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=agent.qq.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 682FE606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 03:23:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 682FE606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=agent.qq.com header.i=@agent.qq.com header.a=rsa-sha256 header.s=s201512 header.b=lxPUgYqK
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agent.qq.com;
-	s=s201512; t=1792807505;
-	bh=l9Ixd8D+mo2JAxmk9ZAP4y4uLPb1rdVCCJp81x2tn/4=;
-	h=List-Unsubscribe:From:To:Cc:Subject:Date;
-	b=lxPUgYqKCH/TyNcgRtyhzctru09UXbJ9SMMaZG7QazAPzVfAp4gxU47rRp5W4Lxa7
-	 rrQwD+6FMAKvKsuxc+jZeaYmBPRVzdkiq5ZYvmE4cO9eiWgZmHbrI6I4Lej34QGI/V
-	 50Dnxf2XOOxBgXslDyzRZp07U9fIjDx1YMEG0/yI=
-X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
-X-QQ-XMAILINFO: ODP7Xsg997RQ6SoK7mZfV1NipaacLJzX9xfggcmKPSGvbleyJR7ugEUqhPn3YB
-	 E/irSLCIChe7hfTUovC+sAXNWy6T2IETS8INcknXMpC1y9myKoWChc3ZCUGhZM1d4Aj02gku2PL93
-	 MGKMIbvOR2apUr5NKNSDXA3FisTlFXJA+7JfPaUOOfQPp2JYE/XjLGjkaOVR/8RFc+ta4/gywT8XY
-	 JgksBkWeeJ8c8mHrQHuykAWd019+SiHB5CJPls3a/8nRCL98o/Yed+LZYIn44iOKoZrYekFfnAog8
-	 wODL9ziseA+WKbtXVbTC+cmGq9NgEtyGhLMZH5c4vs6Bs7Oa4q/a6p6ppxuh44oG+BC15wgUYP7XK
-	 YI3wE+4uIGTDnAnC78RFRI37c5EcqrodCxMcEBdG2iRMiRL/veAWHYLpIdKGjPcWWvq2I+LGDwupe
-	 ipA35koTSWAoVbThJwe0YtJq0gVit9Rr2sO+3yvfZ2T+N8ZkePteIkqvXGCBKMr7bj+VUJnkhInEY
-	 PP+JBQD3zEK1rbOLmczFJegrT2mZxGrU2EsBmTpRJjP+gMjcFiHQ+N2uF+N62qMGKS+TRGFK5QEGo
-	 WJb2502RHyYkBPLGpj+3hPSfymyVRLMQa6O2d+N8yqYH/J0/cbzEjG5l6OtabENR5IhtC49jemEIm
-	 w5GPM/y9wUz+vMYh919jDA78qpycjY5IA7nR+7XUaIQ1Qi3VDA8ejLXK4y6GVcV3drhMFU2FOlZ1c
-	 IRjAPsIwMI1hKIfc2JzQKxCeNQONKuG2IGIb5Bo/GV3eUiDjzT6Gfef7yFFr3iQnJnUH2AKLbqnrh
-	 +T3WM0JMgP8p9L91OxHzZ04+b8AS5Q+bpLAm6/xkWgjsnNj5tO2YRiI80Jo0FM+sYFntbi8yQYZER
-	 sbJfjbQQStGXlvuk2byC+3Lck8JabpOY4+ewXj96CeNsKcjwnOzscqZfHencvIxwqltPy6+LLcA91
-	 Hb0+reoKHBPmWCVkk22mn3d5JuVPMdCJzfQoBhxtOS/qZYL3jFL/dU7V3vEsg3UMdEIsBddFrPjpx
-	 0EnksqbpQJ0PY3BaynjU4ATkBz3Uo5zaxHPrvkAtmbrJuqaA=
-List-Unsubscribe-Post: List-Unsubscribe=One-Click
-X-QQ-Markdown: 1
-From: "=?utf-8?B?eWFuZmlzdA==?=" <yanfist@agent.qq.com>
-To: "=?utf-8?B?bGludXgtd2lyZWxlc3M=?=" <linux-wireless@vger.kernel.org>
-Cc: "=?utf-8?B?bGludXgtcGNp?=" <linux-pci@vger.kernel.org>, "=?utf-8?B?YmhlbGdhYXM=?=" <bhelgaas@google.com>
-Subject: ath9k AR9565 [168c:0036]: continuous PCIe AER correctable error flood from idle adapter (Linux 7.3.0)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=pSYGpV6X
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6b1a86c0316so2238513a12.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 20:23:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792812189; x=1793416989; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FM8GNQ21z2tofnQ9HAGS228+B6GKkzHToThuxWl3/VM=;
+        b=pSYGpV6XhiNrN/MgRiKZavz5Juj7gKfHDnodVvw/X+/QYB6qrlsCrkg2Si4A0+jwnF
+         xfWw3rcxzPKIb2f2tjbwTRkx2xibfU4ND9wl8RmFPhhf9+NX40jGCqtl0R5hv90+Xa6S
+         HU7tUlORqj7WQaN96Do9CmUWRamZQIVX9D0FfuC+y9COyoingI06M48oGcFrhvMtJrKJ
+         oxcYn81kKK1/BcrAEUvDtVjuNTQwCA0FEC2W59VuNX2dWkdaEygnWRqWs8l00U/zxEfL
+         C1mmtkNILTBi3CXCMjsU0KsMVGQ0Kpf4k6a7V9of4MeWTq5H+qY9pSpKl6l5gpz3oren
+         RBvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792812189; x=1793416989;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=FM8GNQ21z2tofnQ9HAGS228+B6GKkzHToThuxWl3/VM=;
+        b=L2FoE9ju0RGWV6vOW5G+laYRNJUSzmW9j3aeNSknps68P6IigeUsG6QgnVfvPszgb4
+         5wMHNdWSWtc269xonglAi5bdDOOQBf9Ke2z6SasGuPhYOnnHRxLZe9HIDIXiKg84+vXo
+         fvepqDOSfZpY3KlRSmGdlTDv85OQWBRn7v3ZYSy6CIEdmW3jFZIwlzUX0ZoebjAZX9+P
+         LqBJjWshc/RGrOdPAcIEV6CHHpA5Kd/AwsLjcAkdu+w8SiEtyeVGlt0QQVi4227bL+ts
+         fSif5NJPWWMsbP3VKpqV2MSqcQHbHqiRxs6J8LiZoM9ZYJax8OciPgiRXXVU/8PTUubP
+         1cMw==
+X-Forwarded-Encrypted: i=1; AKwUvBw8LMzrxzfFMgvhBc+8TQ4Y3z8ZXYwOUMLhgYvV7v0vwXfMSE0YbiJQ7eKwr3uBHP5yUUcEKDIlmBC4pHgaVQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ02OHudWdhs+vvb+Hy2ARyV3L4cpV4F+grflNwNF7N4ML4FtQc
+	/4vBEQuo/i7Oa5sTyyQszwgPxYtLXsZ6tjYWkRO0egsrIYHcS8+dnqji
+X-Gm-Gg: AYBFou3dgzpmVSt/pC5elglffwoC/Hs0oFFSf1fny7bPMvC5vDMBLLOhRVOoGRrZDI2
+	RuIIfBQumcXPkBRr6MZ7OCvjEvzEJOpCmKJXGYaXYY6jrUlWzkLggLyhVlr5CVmW3o0HK9jP12+
+	Te9HjiidzfDFr/1gS6vVPUS3PeDBEAZaGqJci/8qW87BPX+JfHi/bGxeP4vTNVaFFVHq3pbwL7H
+	89W1iinpm3cLtZfHdEoeX+Q6CBgfueS0EkxCsReP4DLHcC7jj3zqjtMuLLclGenFq/AwYskoSTK
+	B6oC+gnuhWVAmIdOw6HI6/PWyD/qnoI6vcXcC6LQ+hvBqEBaNmK3bVtqmefdu0XXrveGPK0NRtX
+	jCiT87qaeXMuRuTWxMPbKVgVTYLcfS0f5XHWiZwkl/w+JgxvagVkS6drKoR0l2IGpdJb0IPpsyx
+	eBXs/diNOpCCDINSNjg2FJgE+LlUG0yoLYXp6eCZ5NOlzqi5n+u8o6JPd4VhpiQnvE7Nq0KeYlo
+	rpUjn4p+LxuwW3kJxhvOPwFED/315U8+fLDW1OjQeqsgPwTBt0f3lUEKURIT48+VjXuKz0F
+X-Received: by 2002:a17:906:f59c:b0:c46:7ec3:fde7 with SMTP id a640c23a62f3a-c46bde62669mr89622066b.31.1792812188826;
+        Fri, 23 Oct 2026 20:23:08 -0700 (PDT)
+Received: from localhost.localdomain ([170.62.100.194])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c46bd7a7c2esm38164666b.80.2026.10.23.20.23.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 20:23:07 -0700 (PDT)
+From: Hedi Ben Hamida <hedihamida096@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>
+Cc: Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	stable@vger.kernel.org,
+	Hedi Ben Hamida <hedihamida096@gmail.com>
+Subject: [PATCH] wifi: mt76: mt7921: add pci restore for hibernate
+Date: Sat, 24 Oct 2026 04:22:37 +0100
+Message-ID: <20261024032246.53918-1-hedihamida096@gmail.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -70,88 +98,85 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Date: Sat, 24 Oct 2026 10:05:04 +0800
-X-Priority: 3
-Message-ID: <tencent_204ABC67C96EE28CFB72172DA0302191EC07@qq.com>
-X-QQ-MIME: TCMime 1.0 by Tencent
-X-Mailer: QQMail 2.x
-X-QQ-Mailer: QQMail 2.x
-X-QQ-mid: xmmazb58-0t1792807504tvm4rvp87
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-SGVsbG8sCgpJIHdvdWxkIGxpa2UgdG8gcmVwb3J0IGEgY29udGludW91cyBQQ0llIEFFUiBj
-b3JyZWN0YWJsZSBlcnJvciBmbG9vZCBmcm9tIGEgUXVhbGNvbW0gQXRoZXJvcyBRQ0E5NTY1
-L0FSOTU2NSB3aXJlbGVzcyBhZGFwdGVyLiBUaGUgZmxvb2Qgb2NjdXJzIGV2ZW4gdGhvdWdo
-IHRoZSBhZGFwdGVyIGlzIGNvbXBsZXRlbHkgaWRsZSAoaW50ZXJmYWNlIGRvd24sIG5ldmVy
-IGFzc29jaWF0ZWQsIG5vIHRyYWZmaWMpLgoKU3lzdGVtCi0tLS0tLQotIEJvYXJkOiBJbnRl
-bCBDb2ZmZWVMYWtlIGRlc2t0b3AsIEgzNzAgY2hpcHNldAotIE9TIC8ga2VybmVsOiBVYnVu
-dHUgMjYuMTAsIExpbnV4IDcuMy4wLTktZ2VuZXJpYyAoZGlzdHJvIGtlcm5lbCA3LjMuMC05
-LjkpCi0gRGV2aWNlOiAwMjowMC4wIE5ldHdvcmsgY29udHJvbGxlciBbMDI4MF06IFF1YWxj
-b21tIEF0aGVyb3MgUUNBOTU2NSAvIEFSOTU2NSBbMTY4YzowMDM2XSAocmV2IDAxKSwgZHJp
-dmVyIGF0aDlrCi0gUm9vdCBwb3J0OiAwMDoxYy43IFBDSSBicmlkZ2UgWzA2MDRdOiBJbnRl
-bCAzMDAvQzI0MCBTZXJpZXMgQ2hpcHNldCBGYW1pbHkgUENJZSBSb290IFBvcnQgIzggWzgw
-ODY6YTMzZl0gKHJldiBmMCkKLSBMaW5rOiBTcGVlZCAyLjVHVC9zLCBXaWR0aCB4MTsgTG5r
-Q2FwOiBBU1BNIEwwcyBMMTsgTG5rQ3RsOiBBU1BNIEwwcyBMMSBFbmFibGVkLCBDb21tQ2xr
-KwoKU3ltcHRvbQotLS0tLS0tCkEgc3VzdGFpbmVkIHN0cmVhbSBvZiBjb3JyZWN0YWJsZSBB
-RVIgbWVzc2FnZXMgc3RhcnRzIHJpZ2h0IGFmdGVyIGJvb3QgYW5kIG5ldmVyIHN0b3BzLCBh
-dCBhIHN0ZWFkeSByYXRlIG9mIGFib3V0IDQzIGV2ZW50cyBwZXIgbWludXRlIChtZWFzdXJl
-ZCBvdmVyIDYwIHNlY29uZHMgb24gYW4gaWRsZSBzeXN0ZW0pLiBFdmVyeSBldmVudCBwcm9k
-dWNlcyB0d28gZG1lc2cgbGluZXMsIGFuZCBlYWNoIGxpbmUgaXMgYWRkaXRpb25hbGx5IHdy
-aXR0ZW4gdG8gdGhlIHN5c3RlbWQgam91cm5hbCBhbmQgdG8gc3lzbG9nL2tlcm4ubG9nIGJ5
-IHJzeXNsb2csIHdoaWNoIGFjY3VtdWxhdGVzIHdlbGwgb3ZlciAxMDAgTUIgb2YgZHVwbGlj
-YXRlIGxvZyBlbnRyaWVzIHBlciBkYXkgb24gdGhpcyBvdGhlcndpc2UgaWRsZSBtYWNoaW5l
-LgoKU2FtcGxlIGRtZXNnIGxpbmVzIChzdGVhZHkgc3RhdGUsIHRpbWVzdGFtcHMgfjMgbWlu
-dXRlcyBhZnRlciBib290KToKClsgIDIwMC4wODM1MjBdIHBjaWVwb3J0IDAwMDA6MDA6MWMu
-NzogQUVSOiBDb3JyZWN0YWJsZSBFcnJvciBtZXNzYWdlIHJlY2VpdmVkIGZyb20gMDAwMDow
-MjowMC4wClsgIDIwMC4wODM1NTJdIGF0aDlrIDAwMDA6MDI6MDAuMDogUENJZSBCdXMgRXJy
-b3I6IHNldmVyaXR5PUNvcnJlY3RhYmxlClsgIDIwMy4yMjg2NThdIHBjaWVwb3J0IDAwMDA6
-MDA6MWMuNzogQUVSOiBDb3JyZWN0YWJsZSBFcnJvciBtZXNzYWdlIHJlY2VpdmVkIGZyb20g
-MDAwMDowMjowMC4wClsgIDIwMy4yMjg2OTJdIGF0aDlrIDAwMDA6MDI6MDAuMDogUENJZSBC
-dXMgRXJyb3I6IHNldmVyaXR5PUNvcnJlY3RhYmxlCgpSZXByZXNlbnRhdGl2ZSBmdWxsIGxp
-bmVzIGZyb20gL3Zhci9sb2cva2Vybi5sb2cgKHNhbWUgYm9vdCk6CgpwY2llcG9ydCAwMDAw
-OjAwOjFjLjc6IEFFUjogTXVsdGlwbGUgQ29ycmVjdGFibGUgZXJyb3IgbWVzc2FnZSByZWNl
-aXZlZCBmcm9tIDAwMDA6MDI6MDAuMAphdGg5ayAwMDAwOjAyOjAwLjA6IFBDSWUgQnVzIEVy
-cm9yOiBzZXZlcml0eT1Db3JyZWN0YWJsZSwgdHlwZT1QaHlzaWNhbCBMYXllciwgKFJlY2Vp
-dmVyIElEKQphdGg5ayAwMDAwOjAyOjAwLjA6ICAgWyAwXSBSeEVyciAgICAgICAgICAgICAg
-ICAgIChGaXJzdCkKYXRoOWsgMDAwMDowMjowMC4wOiAgICBkZXZpY2UgWzE2OGM6MDAzNl0g
-ZXJyb3Igc3RhdHVzL21hc2s9MDAwMDAwMDEvMDAwMDIwMDAKCldvcmthcm91bmRzIHRlc3Rl
-ZAotLS0tLS0tLS0tLS0tLS0tLS0KLSBrZXJuZWwgcGFyYW1ldGVyIHBjaT1ub2Flcjogc2ls
-ZW5jZXMgdGhlIGZsb29kIGNvbXBsZXRlbHkKLSB1bmxvYWRpbmcgdGhlIGF0aDlrIG1vZHVs
-ZTogc2lsZW5jZXMgdGhlIGZsb29kIGNvbXBsZXRlbHkKLSBubyBmdW5jdGlvbmFsIGltcGFj
-dCBvYnNlcnZlZDsgYWxsIGVycm9ycyBhcmUgY29ycmVjdGFibGUgYW5kIHRoZSBsaW5rIGtl
-ZXBzIHdvcmtpbmcKCk5vdGVzCi0tLS0tCi0gVGhpcyBpcyBhIHN0b2NrIGRpc3RybyBrZXJu
-ZWw7IEkgaGF2ZSBub3QgYmlzZWN0ZWQuIFRoZSBzYW1lIG1hY2hpbmUgcHJldmlvdXNseSBy
-YW4gVWJ1bnR1IDI2LjA0IChrZXJuZWwgNy4wLjAtMzgpIGJ1dCBJIGRpZCBub3QgY2hlY2sg
-dGhlIGxvZ3MgYXQgdGhhdCB0aW1lLCBzbyBJIGNhbm5vdCBzYXkgd2hldGhlciB0aGlzIGlz
-IGEgcmVncmVzc2lvbiBvciBoYXMgYWx3YXlzIGJlZW4gdGhlcmUgYXQgdGhpcyByYXRlLgot
-IFRoZSBhZGFwdGVyIGlzIGlkbGUgYW5kIHRoZSBpbnRlcmZhY2UgaXMgRE9XTiwgeWV0IHRo
-ZSBlcnJvciByYXRlIGlzIHN0ZWFkeSwgd2hpY2ggc3VnZ2VzdHMgYSBsaW5rLWxldmVsIC8g
-QVNQTSByZWxhdGVkIGNhdXNlIHJhdGhlciB0aGFuIHNvbWV0aGluZyB0cmFmZmljIHJlbGF0
-ZWQuCi0gSSBjYW4gcHJvdmlkZSBsc3BjaSAtdnZ4IG91dHB1dCwgQUVSIHN5c2ZzIGNvdW50
-ZXJzICgvc3lzL2J1cy9wY2kvZGV2aWNlcy8uLi4vYWVyX2Rldl8qKSwgb3IgdGVzdCBwYXRj
-aGVzIG9uIHJlcXVlc3QuCgpUaGFua3MgZm9yIGxvb2tpbmcgaW50byB0aGlzLgoKLS0tCuat
-pOmCruS7tueUsSZuYnNwOyZuYnNwO1t5YW5maXN0QGFnZW50LnFxLmNvbV0oaHR0cHM6Ly9h
-Z2VudC5xcS5jb20vcGFnZS9pZGVudGl0eT90b2tlbj1wWmJnTjYwbVJrM1J5NjVqR0hwLUxi
-ZkZmeUZOMlcxbWJRLW5HNHFRa2haaGszcFliMVlJTlI0WU1hOGY5WHo5STBHVVVUbGtuRV9R
-dWhVV20wVHltYzJqQ2I5dlNVWnV4X1hfRmpkbWxUVkFwcm9NaDVYVHBLUjFKZk92WmQ1UTY0
-dnBrYkNWNnZobFBnbUxYQnBRdDh4cHdXOGE4V2VHaUpEbmpJSjByUzApJm5ic3A7WyFbXSho
-dHRwczovL3Jlc2Nkbi5xcW1haWwuY29tL3FxbWFpbC9pbWFnZXMvcmVhbG5hbWUuc3ZnKV0o
-aHR0cHM6Ly9hZ2VudC5xcS5jb20vcGFnZS9pZGVudGl0eT90b2tlbj1wWmJnTjYwbVJrM1J5
-NjVqR0hwLUxiZkZmeUZOMlcxbWJRLW5HNHFRa2haaGszcFliMVlJTlI0WU1hOGY5WHo5STBH
-VVVUbGtuRV9RdWhVV20wVHltYzJqQ2I5dlNVWnV4X1hfRmpkbWxUVkFwcm9NaDVYVHBLUjFK
-Zk92WmQ1UTY0dnBrYkNWNnZobFBnbUxYQnBRdDh4cHdXOGE4V2VHaUpEbmpJSjByUzApJm5i
-c3A7Jm5ic3A76YCa6L+HJm5ic3A7W0FnZW50IE1haWxdKGh0dHBzOi8vYWdlbnQucXEuY29t
-KSZuYnNwO+iHquWKqOWPkemAgeOAgiZuYnNwOyZuYnNwO1vkuL7miqVdKGh0dHBzOi8vYWdl
-bnQucXEuY29tL3BhZ2UvcmVwb3J0P3R5cGU9cmVwb3J0JnRva2VuPXBaYmdONjBtUmszUnk2
-NWpHSHAtTGJmRmZ5Rk4yVzFtYlEtbkc0cVFraFpoazNwWWIxWUlOUjRZTWE4ZjlYejlJMEdV
-VVRsa25FX1F1aFVXbTBUeW1jMmpDYjl2U1VadXhfWF9GamRtbFRWQXByb01oNVhUcEtSMUpm
-T3ZaZDVRNjR2cGtiQ1Y2dmhsUGdtTFhCcFF0OHhwd1c4YThXZUdpSkRuaklKMHJTMCkmbmJz
-cDsmbmJzcDtb6YCA6K6iXShodHRwczovL2FnZW50LnFxLmNvbS9wYWdlL3JlcG9ydD90eXBl
-PXVuc3Vic2NyaWJlJnRva2VuPXBaYmdONjBtUmszUnk2NWpHSHAtTGJmRmZ5Rk4yVzFtYlEt
-bkc0cVFraFpoazNwWWIxWUlOUjRZTWE4ZjlYejlJMEdVVVRsa25FX1F1aFVXbTBUeW1jMmpD
-Yjl2U1VadXhfWF9GamRtbFRWQXByb01oNVhUcEtSMUpmT3ZaZDVRNjR2cGtiQ1Y2dmhsUGdt
-TFhCcFF0OHhwd1c4YThXZUdpSkRuaklKMHJTMCkK
+Hibernation powers the device off and on. On resume the generic restore
+path runs the normal resume sequence and can time out waiting for the
+hif-suspend MCU handshake:
+
+  mt7921e 0000:03:00.0: Message 00020007 (seq 12) timeout
+  mt7921e 0000:03:00.0: PM: dpm_run_callback(): pci_pm_restore returns -110
+
+Add a dedicated .restore callback, mirroring mt7925, which skips the
+handshake, resets the device and returns it to its pre-hibernate state.
+
+Tested on MEDIATEK MT7922 (14c3:7922) on kernel 6.12.113.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Hedi Ben Hamida <hedihamida096@gmail.com>
+---
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   | 26 ++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index f87c44f2a..00532b29f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -549,7 +549,7 @@ static int mt7921_pci_suspend(struct device *device)
+ 	return err;
+ }
+ 
+-static int mt7921_pci_resume(struct device *device)
++static int _mt7921_pci_resume(struct device *device, bool restore)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct mt76_dev *mdev = pci_get_drvdata(pdev);
+@@ -589,6 +589,9 @@ static int mt7921_pci_resume(struct device *device)
+ 	napi_schedule(&mdev->tx_napi);
+ 	local_bh_enable();
+ 
++	if (restore)
++		goto failed;
++
+ 	/* restore previous ds setting */
+ 	if (!pm->ds_enable)
+ 		mt76_connac_mcu_set_deep_sleep(&dev->mt76, false);
+@@ -602,7 +605,7 @@ static int mt7921_pci_resume(struct device *device)
+ failed:
+ 	pm->suspended = false;
+ 
+-	if (err < 0)
++	if (err < 0 || restore)
+ 		mt792x_reset(&dev->mt76);
+ 
+ 	return err;
+@@ -715,7 +718,24 @@ static void mt7921_pci_shutdown(struct pci_dev *pdev)
+ 	mt7921_pci_remove(pdev);
+ }
+ 
+-static DEFINE_SIMPLE_DEV_PM_OPS(mt7921_pm_ops, mt7921_pci_suspend, mt7921_pci_resume);
++static int mt7921_pci_resume(struct device *device)
++{
++	return _mt7921_pci_resume(device, false);
++}
++
++static int mt7921_pci_restore(struct device *device)
++{
++	return _mt7921_pci_resume(device, true);
++}
++
++static const struct dev_pm_ops mt7921_pm_ops = {
++	.suspend = pm_sleep_ptr(mt7921_pci_suspend),
++	.resume = pm_sleep_ptr(mt7921_pci_resume),
++	.freeze = pm_sleep_ptr(mt7921_pci_suspend),
++	.thaw = pm_sleep_ptr(mt7921_pci_resume),
++	.poweroff = pm_sleep_ptr(mt7921_pci_suspend),
++	.restore = pm_sleep_ptr(mt7921_pci_restore),
++};
+ 
+ static struct pci_driver mt7921_pci_driver = {
+ 	.name		= KBUILD_MODNAME,
+-- 
+2.47.3
 
