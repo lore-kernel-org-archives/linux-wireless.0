@@ -1,66 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792823123;
-	b=Iz4WLwVNySq9e2XJaGgNIltP8CvBsP6Q2Dtk1lKELGY5WDMEuUf7fDFhGIUDXKm96sl1
-	 oEvlt65gVJQawvL0YEHTw3CnUEylrnNAbWDn0N/gASD33mma806bg+/lhwO/D+CsfR1o5
-	 lVtho618OwZl/kELh+EKK2Ic0CsV5vZkKeK5sfYs502wSgZoUHZy5Ocj0fgTlQC0nZ4hG
-	 4b+3RDWAiHBxLtPRpMzL55l/cEcBMU/LtgvlI46uEynzMNhQYF+sobeAQw4t5nix7E1vH
-	 NQDwQVoI1YXY0AopOcYJSMXssgNJ/JKkuDYcTYXqE6LncBXpRkFr7xk6L49xAd2GVQA==
+	t=1792826191;
+	b=dt6Pdcd9OFvaygSYRSbH/w64DmMnUuehmXVJSk+j7PLMcwk69RkIP1L7RSiRt83m5vEu
+	 DlylVg2v5YhEGjpS37GkcL11SEA1DJmi4cHit9ch5Tvyb+lwLFeJxsPUQWvAaloZj2PGb
+	 7YImGWvA/Ao9UumH2Q+bjxZTk56KFOFfTJL5UHbT6lYVvOsfyrhZz6nOU6oYJR94wW6i0
+	 9fSx2u4a/XlWHULDBUpnaO1rlAQHu4cUD4QDw0MjIOrbWgvhyrnoIcMgV8JwDPl1AVPOH
+	 NzAv+gTabJTy9DeuhVGwOElO0QvRRHkF4Al7lBTtYLuZKA2FCCAAmbs7eIDhWnB/ZbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792823123;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:MIME-Version:X-Received:Reply-To:Message-ID:Date:
-	 Subject:From:To:Content-Type;
-	bh=OmybxwBAR46wDDl63pyAXESI98xxRK/BPussCp8D0eQ=;
-	b=jmcjSzOm+OSD5Rv90f6s1D3GrcRXxUVWDaavLdTKzxI74kUI5zoUZRp5sXqTyAkyBx8S
-	 bUxpOEWTL4qftFiHGGSyTvoFdpiPofjIAWy3q/7GtLkaVx7sSuaMS7wmrFHZZfxO9P6Hi
-	 084etM53uzMpU/mhNPeNxRITEsNOuI0v1bgeEsAGeTjsMqnWXino8raQYnqePbFT07tXK
-	 XmzeKFH5y5TGN7HzE4oDk5tU94b/JYFxYJuiVarbp1K36jguezwv1R8DT+Kc6zHd0ci5y
-	 d/45KWoUSA7XqVC4k+vZHQFjNnv0dbOH4HOTVuw/ig7IruXg1rIb1uynvg2p2SWGCAg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792826191;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
+	 In-Reply-To:References;
+	bh=RMZPxDYP3Ysk1YBTg7uZyxVhQhPtS13iaSAO3aLy8m4=;
+	b=0x3ATXkdYs++oZZA8+UpdfcXDn9btoAJq9C6EylP6wqU5znErbnl73/SXtFM4UbMP2q3
+	 e544wy9mMpI4ET5yQ5xZD3IrzcERPr9orggtPlAQ50sFr50fjJt57C7LkmvBUJ32/kNEX
+	 tPbdkJ41g/+25I8w8JkrYYggPndg4uZJ6IvZFCUUiszhXvHrnutpsXblXPiHCFfMzJwud
+	 8t2xohpx0DjCPJfbVNo9XKz62aiY3rw6uoPea8M1SwjR9hIEEJO/4JS45Y5wiwUA7/zXu
+	 qkJ+HzTR6jhjjyZSNOH+Xsozqf5bOJpOkpdPvftb7YQNmqEndKMWm6lBpuNGPh7MRRA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jmJJtwnr;
-	arc=none smtp.remote-ip=74.125.224.72
-Received: from mail-yx1-f72.google.com (mail-yx1-f72.google.com [74.125.224.72])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="KY+C6/Z3";
+	arc=none smtp.remote-ip=95.215.58.17
+Received: from mta1.migadu.com (out-17.mta1.migadu.com [95.215.58.17])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 108EC606A31A
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 06:25:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 108EC606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 831C6606A31B
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 07:16:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 831C6606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jmJJtwnr
-Received: by mail-yx1-f72.google.com with SMTP id 956f58d0204a3-679f81d5d7bso2732391d50.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 23:25:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792823122; x=1793427922; darn=vger.kernel.org;
-        h=content-type:to:from:subject:date:message-id:reply-to:mime-version
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=OmybxwBAR46wDDl63pyAXESI98xxRK/BPussCp8D0eQ=;
-        b=jmJJtwnraLkiT1tiESs4IAQvWE4pquaCPz+FBUwLaA0wI6Aiz0fzXv/GGNyT+palyl
-         WHiramcY+gBIHuAuf7JZHYscI3R7dph0UkQRVQST/URi64hu6Q66/vjZ3ukTKEV8YxP9
-         lf/gsFtpRxuyX2tUz7Le2xGNp3QzgVA1vaidiGiWpn4WwE9IGgFEwwFno8zWKyNBMdHe
-         wDVHzbtw9o67DVotrvabMZKdpx4qtAUANLKE0/utK7tus3BWqZcB4jMr2OCaBSnOS1UZ
-         bT5NZaTHd8SDpO37xwkfMHXJqTPnhkGYbo04q2SnLX/PQlAR8qUsjJ96M4oisB42l/Z/
-         LMWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792823122; x=1793427922;
-        h=content-type:to:from:subject:date:message-id:reply-to:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OmybxwBAR46wDDl63pyAXESI98xxRK/BPussCp8D0eQ=;
-        b=p7ryAoRZ/L2jakQtF3IGmgev9kLov/LPEq24bGdR8B5aGdpkXLe1N2J0d1Ck9E7spr
-         Xcn6wZT5EPL+pJivhk9jalXtTEAzB+B/xt1wjPe2sHwi9o/xgQK8+oAGd2ytu7YvGNEt
-         akmMqCuJuN1/fPFtzQZWuWJKJasUi/voFcXIyCWJ9a4G/qXFMLK4YfqvXxnkhYQStbmn
-         dcOcIza+GRAQzap/oohCMKVnDXnOrTfj+ewITocDEoGc11qGWZxVZYx4wef6swABuAWM
-         t+CfSHguBsLf7gV2EDdih7cePca6URxKmZM4XysARnMG0dMAh3CPQQKnPhc+SrzwAdt/
-         QSxw==
-X-Gm-Message-State: AFq9FYKE9NzhAW3gyWgkyGqSwCzDWcYL93YC/D5e/+BYrvZQwgDXl8K5
-	q9ZvOF2phccG6sWb/QuY629swwSfV1v14pBjFnHS9XyaKTiCw3+X/FXTq5hHPtjzhuMJXv87iNT
-	ksOY=
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=KY+C6/Z3
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=RMZPxDYP3Ysk1YBTg7uZyxVhQhPtS13iaSAO3aLy8m4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792826188; v=1; x=1793430988;
+ b=KY+C6/Z3h77F+Nnq3ZsEmaUktwyt9P79RlPXn1pihg7egKbzFavfaFRJkYxV53whA5g+pI+D
+ zhWgIfxHnIbFwwpOUIKNhF7vnNSpMPDue/iFoY8i211AfeopEB7JxX2ZdxRCKiN0gYHTDXNxAUD
+ niW+FN3PLnnHozDqKhsJa8Yc=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 49f86fe828731dd2;
+	Sat, 24 Oct 2026 07:16:27 +0000
+X-Mizu-Trace-ID: 49f86fe828731dd2
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -70,28 +56,52 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Received: by 2002:a05:690e:1444:b0:679:8831:9f47 with SMTP id
- 956f58d0204a3-67a4525b7c2mr829706d50.9.1792823122111; Fri, 23 Oct 2026
- 23:25:22 -0700 (PDT)
-Reply-To: editorgkxjournal@gmail.com
-Message-ID: <autogen-java-b5729a0e-8ab3-4d3c-afbf-e3f707dfae4c@google.com>
-Date: Sat, 24 Oct 2026 06:25:22 +0000
-Subject: Submission portal open: Engineering papers
-From: mounishabuddhi89@gmail.com
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Date: Sat, 24 Oct 2026 07:16:27 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <aa1fe1edaad7440ef095524349adc8286ff4d839@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next v5] wifi: rtw88: pci: wake the TX queues after
+ restart_hw and interface up
+To: "Abdurrahman Karadag" <abdurrahmankaradag19@gmail.com>,
+ linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com, linux-kernel@vger.kernel.org, rtl8821cerfe2@gmail.com
+In-Reply-To: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
+References: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
 
-Dear Linux Wireless,
+October 23, 2026 at 12:41 PM, "Abdurrahman Karadag" <abdurrahmankaradag19=
+@gmail.com> wrote:
 
-Consider publishing your next research article or review paper with our  
-open-access platform.
 
-We provide constructive editorial feedback and clear author guidelines.
+>=20
+>=20When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
+> records it in ring->queue_stopped. The completion loop in
+> rtw_pci_tx_isr() is what clears them, and it needs a descriptor to
+> complete. If the device goes down first, rtw_pci_dma_release() rewinds
+> the indices and frees what was in flight, so nothing is left that
+> could. ieee80211_reconfig() does not help either: it wakes only
+> IEEE80211_QUEUE_STOP_REASON_SUSPEND, and an interface down/up does not
+> reach it at all. TX then stays dead although the device came back.
+>=20
+>=20Reset that state where the device starts, which both
+> ieee80211_restart_hw() and an interface down/up reach through
+> rtw_core_start(). Gate the wake on ring->queue_stopped so that a
+> start which stopped nothing leaves the queues alone. The wake cannot be
+> narrowed to the queue the ring-full path stopped: the flag sits on the
+> ring, and rtw_tx_queue_mapping() puts management frames and multicast o=
+n
+> rings of their own whatever queue they came from, so a flag there does
+> not name a queue. mac80211 also keeps a single non-refcounted DRIVER
+> stop per queue, shared with the scan paths in fw.c, so
+> ieee80211_wake_queues() releases whatever holds that slot.
+>=20
+>=20Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+> ---
 
-Submit Here:
+Looks good to me.
 
-https://kexuexuebao.org/
+Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
 
 Best regards,
-
-Editorial Office
+Luka Gejak
