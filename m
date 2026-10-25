@@ -1,92 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.178
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792897514;
-	b=DlE78wATVy1k/UXhLs83hHxoNmmd+GSq+EZMgfUAjWrwNOuktJKB+XUIzTGP4l5wZZsE
-	 fR+ZoFmOdppucoySyou2yszub1EEG2XLYtY7rlsEfIb2kcg2B/y+LmwH8vHJLlmlB5kfg
-	 kEyynwDmh/RgROrDXwC9fccYjhX2R0rKmpNOn/efvVogpAZ8LEICCceLzQ8/AsKctZsmm
-	 31ZBmaYJEC0cqD9cSImwSIL8PLv+Dt+2QON8fqUUMWbFlwMfShENZxHTB20lPZs11B0hB
-	 RY8FX+OEpA7LPDKuFGmE1qg+fUF8KzacZHIU925mwqL+YJKVR94q5BPDQqy30NG2XaQ==
+	t=1792903346;
+	b=HLhLVOAVAtKu2v0JT2GeNrDcqSnvlA+nbrrFGG2a4TNEQ/WTA3bHw9FiJbtBi+T28+7g
+	 YdfITkFbbaY9jmGyEkM4+2X74NJp3aMYu0/m7iSvkzBQusJyjgkGplB4ihRi/AxHZ+jGC
+	 YiK4WpCt1/LfQHlKh1Q5snZ7FXzwnTi1uwDK4EeFIrsho3JKNC0DLdbUdxTVd3FYpnshN
+	 k+68CwwrcH38W5v+sxh+ZuuD7UjEQRHyds98yXO7SOoLjcsdLDa4Zw6noxMd73BQDXxwp
+	 Def1NdHsvjkJsATRfMUSyN/So4C+B3Wq9Od5sj9DgngMNpXb5OUCm/yI0Nb9KtxjPYA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792897514;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792903346;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version;
-	bh=p/QFAv6ccqVlvHGU85S9cnOjWRRSIovz0rOvr/3uAkE=;
-	b=BkHMOzI0Mp7IizYOLX6E9wTcChATpmAeLxAjBynP9Pq/w8ivQ2k/1kv9fnv2QtTUP8IN
-	 qY5k/HjKH4Kt3TGm4x26XW9G7IJXg7hPPPIhdVpW2KMKN8b2lH5YunEgi4Vxfb5c4XD4o
-	 OoT3eflhGpw3AGivc+8tQtl/17H/g27VdWGJ1jdRPG8pLq8jzCExgpGpT6ZuZPkze7HYA
-	 6xbrHiNoe+RzN2ouwbBbKANQCOzgIH+hILtyrRwuwKjtgPHlAM984LfTJXg5byIELJx+8
-	 Sdz/yBr08lY2RE1+6YY8QclQpu1g+lGD6kukWhKgpW6Ucp7l/6XrsF3fdGlRzDZWAFA==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=OPCO9YjhwU3PhMX64BE3lbyAyE6lOGZesBGgUHvyjoA=;
+	b=hqUNHBP8E3xm2MPrR3wd3TawNcOR5pnCaTctbfslyDW1qt82ctwWqjX6HHF3GOP8Fzf4
+	 U5GqRA/UqVLqKdNT0hfVqek4lN8r6fYCKvec6844VBsQ6uiSBXxmXgEsB4Af1Y/3D/uhq
+	 QeMZnsyWhI2S8rlQULCTVfqKXiSB6p8xPc0VHDWZc5F0xsu0TVfw4kHbbz9vgcqm/LPti
+	 t45YyX8qZBjfpuPZigTcI9imNhtWmNrXEWrVYtwAZ15d2Yvr0zHLvR24gNwQsL1N4hWhc
+	 hT66hgvjYACinZ5ErMP2xLCbPzvKpeyUFb3sQ2hQ9aUJkdZ2B9IjGNdSsTH3i9WbsRg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=KqCTg83i;
-	arc=none smtp.remote-ip=209.85.217.51
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=B+jXhrRg;
+	arc=none smtp.remote-ip=74.125.82.178
+Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED4B606A31A
-	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 03:05:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6ED4B606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68217606A31A
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 04:42:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68217606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=KqCTg83i
-Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7a6e560f580so1381311137.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 20:05:14 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=B+jXhrRg
+Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-35c76e9614aso3253790eec.0
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 21:42:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792897513; x=1793502313; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=p/QFAv6ccqVlvHGU85S9cnOjWRRSIovz0rOvr/3uAkE=;
-        b=KqCTg83iJu3JeWaIUmuu4tNCoRuFCECQdIaPpOukXLXn8f70pV7vn8R/FHqf4QYtwg
-         YO4qyLCv+q1ulTz8DCGGojOYzTgg1AUFz7UvrK+RIm9I8WYUWpBOXzKz8uYEldwbsnut
-         jjVx09MfH0yemePwkXKhmfoC50KVRZFWOBZQxqkTkvH4UdpaEqmM8KJj6JxHFrcFJtr4
-         cV/up9zmiEPgOk3MjTXa4m3aEIFTfEWg44bULE+g+2CBzUO3WaAVxgy1atfs2XJMgeYF
-         v9ZatU3m8/1OfzfVFzf8h8ctJWA8Bg4S5gkIx0oOFJ3iTelqVyDejIwEuc7rQkingxbU
-         lKRA==
+        d=gmail.com; s=20251104; t=1792903345; x=1793508145; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OPCO9YjhwU3PhMX64BE3lbyAyE6lOGZesBGgUHvyjoA=;
+        b=B+jXhrRg1WLOCCS9x9cLhNR1waXyZOGYX1tBD+5mOAcP2TmANIwfe8TrwN7eir8gPo
+         zThl5XwZr4JCVUy6dDe1KsnGW9iU2tPHRqAsYAdxEWjY9pPd0sONQ3CABdX5eAqLBNkv
+         m6bpp6pzKfni20VAqQcWLPcUK7z46nF4uDfcWIIn/EU6VRcEpXVcD4Lg57SmoqTMHouK
+         9sSxYjz9jlM99nW+DyndOx/w9uMav59qJvBB7eKbRKMbI/WU1+q7gxHwrVvg3bPjgfJn
+         D3suExZV57f3ac9/SrLja9XeqlCchXyqLeN9yLk8Yx3F/yWEZmIQ1yG0eqqrv8EdNc+3
+         9emA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792897513; x=1793502313;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=p/QFAv6ccqVlvHGU85S9cnOjWRRSIovz0rOvr/3uAkE=;
-        b=E9D5CyMZu/Jz/MAKOCDYJDeCYy/u2FzhF7ksjRvZe8dTMbztwh5phZPqbFvRwxcHDt
-         W8ac1JJM+0pMWA4HhNgjey0r+u5xKkX6utqTpiOeiOr2NYF2wz65dGY3c76tSXB+kcvP
-         xCqiI4KV1bzNlULpF5v11wC4SuqO11izluPgm+qXDDalBwbHdP196abcBXVRa+CtRR84
-         fZhJ+fHtcYFyH/v+8lyrQoiQbk63+l8uzWpaAb7hUW1IFal+6mCiJ/s66n+L904BfN13
-         pB/iWQLBECTMzO2294JuQOncdy3XYFwYFsgHVXSZb8X5VI0aqWzDb9FF/TpMyAZidRve
-         txQA==
-X-Forwarded-Encrypted: i=1; AKwUvBwWB8CKOg4l5V+eKF26UlnMra2DFU86zsTga02JegUzT6caSWlPNe1S7Vo17JazwYIb/xUXByMk3eWmEO4bUw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJGIr0eUT18JHggaqMBNoKsKgPfwisqPzcvy0QTFpxHYnlJT2rt
-	Bp76lDNn3ouISVjlkOsbuTBvg1IsC2LbCCutD7H25A4RMACV11CCdPP9
-X-Gm-Gg: AYBFou0ScGO1pZLu/zjq782QHAewkNIaBKOy4rFSdwBUbs2i2FMNaEpDvbmClacZRLf
-	CstyjUv1NOozvaNRHUImFAvsG2iH6Nmtwr69yYe3R63C3cyDkdIyExLDv5aLttZpzbm1263/qLf
-	piosstPamhCYe/5Bjiy/ovWKof/3QTsEP4T2HluODeHasB3utCU0k/UNZtVW/1I20KuEzJnzXyh
-	mfZILEje7aEoyHXMI8f3vX6DASCRDEBdvW/TJCPLYX03LsNDuys/SLKsjqIjUr9tBJMx1EWJ7OE
-	nDF9BUzTRRSdd7LXsiBmVLHJjkmiwAnxUkE+39f09+3OtjtgHhUmbkEeoSIHCV8Bu7R0uQXBvYM
-	Cf8QaLJtDrrgzb+M+yrPubsfMMngcZBhn2vYsOkLDECCvZEsH9rcPrDjo741nqqh2JqnU2xYbRj
-	MCtfV+H1AUa9gUMgbYkk7YtScUN8Ke1UQnS0D4TLsTYkuVRzjtp37yMm6yBc2SI5CHSia52tosU
-	GDPjqY9lkPoGt7iPpmUhJTjB3+yXMkYhkD9yMQjfHbCTp2yFGzE1xtwJMS7YBM2OeEwEqUwFgX6
-	gBiXIPlSO1BSEmG7DIJWdVOWqbtKeyT/syBOI4tbgBQFgVgUxDc=
-X-Received: by 2002:a05:6102:3e8f:b0:7c3:1395:a090 with SMTP id ada2fe7eead31-7ce5cca8d37mr1117124137.6.1792897513242;
-        Sat, 24 Oct 2026 20:05:13 -0700 (PDT)
-Received: from 1.0.0.127.in-addr.arpa ([2804:7f0:b101:277b:8118:1af6:d493:fe05])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-9910e80701bsm4189123241.11.2026.10.24.20.05.10
+        d=1e100.net; s=20260707; t=1792903345; x=1793508145;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OPCO9YjhwU3PhMX64BE3lbyAyE6lOGZesBGgUHvyjoA=;
+        b=BVlEoArzRNcTXw5w1g0iIrKeJy99+1otanCgyJfcGPP+xX8yG1XlcxgwzWD28aVoYX
+         tQ40+TKYtxsKjJejEAZYQT37vuTkYTrkz7NESRBl4mgM5wqvvlVKXulqUixXAuYOtu7v
+         7ypD4vSxSheqzWYiVxZ9nCYeL8E2itRNecP0fl91rSZ9oWuOnT7cf+hIAOPlcu+PYSVV
+         GoNbYCFFHIIzi+UDwoek0NYSL6Tp4457irKI3xZ+hTE6VFdjzDDR6rwFQuD1YyBQE5dm
+         3H7KxKWh3HdMktc9l/aS8hy+VUJ/Omf44+fptbvIKKD2YbAKsiim9w1svaNaCkN7pXJq
+         tR+Q==
+X-Gm-Message-State: AFq9FYJ0vm6EyNdcCO91RcIqXistTHPF+89KpSq1o5ThJe+13PBEc8cy
+	/s8OnS6u0Q5mgX1R4cGQQDFkXYKXEl8BdjMO4JzX0sWIPHi6olMG6Cds
+X-Gm-Gg: AYBFou3ZexVi7Zpj9IWY+4wlytHWwyAQeWAcuKRlh9nC1QhuJoEkr3UbfXfBy1IQH8K
+	fAWKKFug9Rx5Ong7jn9w+1W7kcymHe46mk6RCQ3+Mj9KY5nVdaRQxGytO65OfdlbIzYXLnJef7w
+	LCouKeMh0dPsLShaMI7+m3hPLETEOw+BRDEIqZlFtKDkpuKgFjTubBAVNWWEiK8732S7VWApFG5
+	IipMhKBlOh7Ke5b6E2z8LK20RG92ghXBDKA92wHBKTMXdzd4S6rFqguBPhQgHrD+37bafsi0h/t
+	imd133OwNZ3TRMnyccXs9YBe6CIzp6UPdB2Q150hySjsDixzECaEjV9o3wY4yemsZqft4SiS+Az
+	SUrP+z+jTBgfY8jBQDhWNrWQDgOLG1BrpbUJ8vfc+TV5h85kORLzbaJsOcP9iFhMQCK5kK3Py49
+	UEWbfjPLP5Y/YXZfiF60tgb3GMd5GAqQdtRuZYnsFKNCIAn1vr8nWkMOMJr0HxHYMI6Zrjz2JDI
+	nNMxdCGvWJPxtIkV+vFv2tkUEhHvgb2pnQhk/j4uwv+swdDtg3tQf4PSNIgQln5uaJB+oKrTR6F
+	nFrrl0km4j5BAaLEC0owEQ==
+X-Received: by 2002:a05:7023:a86:b0:19a:8e3e:530e with SMTP id a92af1059eb24-19a8e3e563bmr5147203c88.8.1792903345218;
+        Sat, 24 Oct 2026 21:42:25 -0700 (PDT)
+Received: from ZephyrLabServer.internal ([165.162.64.148])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-198a37c88aasm11130088c88.23.2026.10.24.21.42.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Oct 2026 20:05:12 -0700 (PDT)
-From: Joas Antonio dos Santos <joasantonio108@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: [PATCH wireless] wifi: mac80211: protect the mesh RMC with a lock
-Date: Sun, 25 Oct 2026 00:05:08 -0300
-Message-ID: <179289750857.55325.15619359041208016782@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        Sat, 24 Oct 2026 21:42:24 -0700 (PDT)
+From: John Macias <dencity7@gmail.com>
+To: ath11k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	robimarko@gmail.com,
+	openwrt-devel@lists.openwrt.org
+Subject: Re: [RFC] IPQ8074 v1 / Netgear RAX120 v1: interest in support and review prerequisites
+Date: Sat, 24 Oct 2026 21:41:57 -0700
+Message-ID: <20261025044158.1375055-1-dencity7@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <CA+KzPsr0G_1tpEDyi2Dk_1ZF_JVeGJL5Y6_A0aCe=dY+5ufq+A@mail.gmail.com>
+References: <CA+KzPsr0G_1tpEDyi2Dk_1ZF_JVeGJL5Y6_A0aCe=dY+5ufq+A@mail.gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -96,112 +97,114 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-mesh_rmc_check() looks up, unlinks/frees and inserts rmc_entry objects
-in the per-interface recent multicast cache without any locking.
+Hello,
 
-Until mesh fast-rx support was added it was only called from the rx
-handlers, which run under local->rx_path_lock.  Since then,
-ieee80211_invoke_fast_rx() also calls ieee80211_rx_mesh_data() (for
-plain frames and for each A-MSDU subframe), and that path does not take
-rx_path_lock.  Fast-rx is meant to run in parallel on several CPUs for
-drivers that set RX_FLAG_DUP_VALIDATED and USES_RSS, such as ath11k and
-ath12k, which also support mesh.  Fast-rx is enabled for authorized
-mesh peers as long as the driver does reordering itself and no
-unsupported cipher is in use.
+A progress update on the IPQ8074 v1 question, in case it helps. Robert,
+thank you for the earlier guidance on openwrt-devel. Your summary of why
+v1 was left unsupported (early silicon, different peripherals and
+clocks, pre-final 802.11ax, no public firmware) gave me a clear list to
+work through, and I have tried to check each point rather than assume
+the answers.
 
-A frame reaches mesh_rmc_check() on the fast path when addr1 is our
-address and the mesh DA (addr3, or the subframe DA in an A-MSDU) is a
-group address.  With two such frames being processed on different CPUs
-(or one there and one in the locked slow path) whose sequence numbers
-map to the same bucket, both can walk and modify the same hlist at
-the same time, and both can unlink and free the same expired or
-oldest entry, corrupting the list and double freeing into rm_cache.
-The sequence number, and so the bucket, is chosen by the sender.
+Everything below is from a single RAX120 v1 (IPQ8074 rev 1.2, SoC ID
+323) on OpenWrt main with Linux 6.18.55 and backports 7.2. The work was
+done with AI assistance.
 
-Add a spinlock to struct mesh_rmc and hold it across the lookup and
-the insertion.
+1. Pieces that are not v1-specific, sent separately
 
-Fixes: 3468e1e0c639 ("wifi: mac80211: add mesh fast-rx support")
-Signed-off-by: Joas Antonio dos Santos <joasantonio108@gmail.com>
-Assisted-by: Yaga Agent HackerSec Claude:claude-opus-5-5
----
-Found by code inspection, compile-tested only (W=1 with
-CONFIG_MAC80211_MESH=y).  I have not hit the race: it needs a driver
-that delivers rx in parallel (ath11k/ath12k with several REO rings),
-and I don't have that hardware.  mac80211_hwsim does not do parallel rx.
+- READY event MAC-address array bounds, ath11k and ath12k, now v2 for
+  ath-next:
+  https://lore.kernel.org/all/20261021-rdy-mac-array-bounds-v2-0-cf7f45f868dd@gmail.com/
+- The mac_phy_caps stride overflow was already fixed in ath-next
+  (7a246c72132e, 4c6eb712a91f); I sent an OpenWrt backport to
+  openwrt-devel today.
+- The secure WCSS separate-M3 loading, as an RFC on top of v14 of the
+  WCSS secure PIL series:
+  https://lore.kernel.org/all/20261025042100.1356088-1-dencity7@gmail.com/
 
- net/mac80211/mesh.c | 16 ++++++++++++----
- net/mac80211/mesh.h |  2 ++
- 2 files changed, 14 insertions(+), 4 deletions(-)
+2. Firmware availability
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 8f88141253..e3718a2252 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -184,6 +184,7 @@ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
- 	if (!sdata->u.mesh.rmc)
- 		return -ENOMEM;
- 	sdata->u.mesh.rmc->idx_mask = RMC_BUCKETS - 1;
-+	spin_lock_init(&sdata->u.mesh.rmc->lock);
- 	for (i = 0; i < RMC_BUCKETS; i++)
- 		INIT_HLIST_HEAD(&sdata->u.mesh.rmc->bucket[i]);
- 	return 0;
-@@ -229,6 +230,7 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 	struct mesh_rmc *rmc = sdata->u.mesh.rmc;
- 	u32 seqnum = 0;
- 	int entries = 0;
-+	int ret = 0;
- 	u8 idx;
- 	struct rmc_entry *p;
- 	struct hlist_node *n;
-@@ -239,6 +241,8 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 	/* Don't care about endianness since only match matters */
- 	memcpy(&seqnum, &mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
- 	idx = le32_to_cpu(mesh_hdr->seqnum) & rmc->idx_mask;
-+
-+	spin_lock_bh(&rmc->lock);
- 	hlist_for_each_entry_safe(p, n, &rmc->bucket[idx], list) {
- 		++entries;
- 		if (time_after(jiffies, p->exp_time) ||
-@@ -246,19 +250,23 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 			hlist_del(&p->list);
- 			kmem_cache_free(rm_cache, p);
- 			--entries;
--		} else if ((seqnum == p->seqnum) && ether_addr_equal(sa, p->sa))
--			return -1;
-+		} else if ((seqnum == p->seqnum) && ether_addr_equal(sa, p->sa)) {
-+			ret = -1;
-+			goto out;
-+		}
- 	}
- 
- 	p = kmem_cache_alloc(rm_cache, GFP_ATOMIC);
- 	if (!p)
--		return 0;
-+		goto out;
- 
- 	p->seqnum = seqnum;
- 	p->exp_time = jiffies + RMC_TIMEOUT;
- 	memcpy(p->sa, sa, ETH_ALEN);
- 	hlist_add_head(&p->list, &rmc->bucket[idx]);
--	return 0;
-+out:
-+	spin_unlock_bh(&rmc->lock);
-+	return ret;
- }
- 
- int mesh_add_meshconf_ie(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 3f9664e4e0..27f12ebc28 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -216,6 +216,8 @@ struct rmc_entry {
- struct mesh_rmc {
- 	struct hlist_head bucket[RMC_BUCKETS];
- 	u32 idx_mask;
-+	/* protects bucket[], fast-rx can run on several CPUs */
-+	spinlock_t lock;
- };
- 
- #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
+The HK1.2 firmware is included in NETGEAR's own public RAX120 downloads
+(http://downloads.netgear.com/files/GDC/RAX120/). Six public releases
+contain a complete HK1.2 set, in two builds:
+
+  V1.2.1.22, V1.2.2.24, V1.2.3.28, V1.2.8.40:
+    WLAN.HK.2.0-01792-QCAHKSWPL_SILICONZ-1.379352.1.389278.1
+  V1.2.9.52, V1.2.10.56:
+    WLAN.HK.2.0-01792-QCAHKSWPL_SILICONZ-1.379352.1.536141.4
+
+I have a small script that an owner can run to download one of these
+official images, check it against a pinned SHA-256 and extract the q6/m3
+firmware and board file, without running anything from the image and
+without touching per-device calibration. Repeated runs give
+byte-identical results. This follows the b43-fwcutter model: the owner
+fetches from the vendor and nothing is redistributed. NETGEAR's terms
+do not explicitly cover extraction, so I am not suggesting adding these
+files to linux-firmware. Both firmware builds work on the unit.
+
+3. 802.11ax
+
+I have no way to show conformance with the final standard and do not
+claim it. What I can report is interoperability: a 27-case client test
+on both bands, with an Intel AX200 and, for the two-client cases, a
+MediaTek MT7925. It covers WPA2-PSK, WPA3-SAE and mixed mode at 20, 40
+and 80 MHz on 5 GHz and 20 MHz on 2.4 GHz, plus reassociation, AP
+restart, radio restart, channel reload, two clients on one band, one
+client per band, and a bounded load case. All 27 ran; 23 pass. The
+other 4 asked for 40 MHz on 2.4 GHz and came up at 20 MHz, which
+hostapd logs as 20/40 coexistence with overlapping BSSes, so that is
+expected behaviour rather than a fault. MU-MIMO, OFDMA, TWT and 160 MHz
+are untested. If the draft-era HE behaviour is a concern, I would be
+glad to hear whether an HE-disabled v1 profile would be a reasonable
+starting point.
+
+4. Silicon, peripherals and clocks
+
+The v1 Wi-Fi block does differ from hw2.0, and each out-of-tree driver
+change is tied to a specific documented or measured difference: ring
+register offsets, TCL descriptor layout and DSCP maps, 16-bit ring size
+fields, REO fragment-destination bits, RX TID/NSS field positions, four
+WBM release rings, copy-engine interrupt offsets and tables, a shorter
+INIT resource encoding, a 9-word VDEV start response, a CALDB request
+with coldboot calibration off, a reported high_5ghz_chan of 6100, and
+zero NSS in RX metadata for HT EAPOL frames. Each sits in a separate v1
+path so existing hardware is unaffected.
+
+Outside the Wi-Fi block:
+
+- cpufreq does not recognise SoC ID 323 and falls back to a 1.38 GHz
+  cap. I have left that alone, since the v1 voltage/CPR behaviour is not
+  verified.
+- The APSS watchdog appears to count about 20 times slower than the
+  32768 Hz that qcom-wdt assumes (a 20 s pretimeout fired after about
+  409 s).
+- On a small fraction of boots (5 of 300 in the last long run), transmit
+  on one QCA8075 port stopped while everything else kept working, and
+  only a full reset cleared it. A PSGMII init change that gates the
+  channel clocks, runs the soft reset and calibration, then resets the
+  QCA8075 SERDES (closer to the vendor SDK sequence) gave 0 events in
+  the following 200 boots. That run also changed the Wi-Fi driver, so
+  it does not prove the cause, and I have not posted it yet.
+
+I have not compared the remaining SoC peripherals register by register.
+
+5. Questions
+
+I would value your view on two points, and I am happy to be told if v1
+is simply not something the project wants to carry:
+
+1. Would owner-side extraction from the vendor's public images be an
+   acceptable firmware story for IPQ8074 v1, or is redistributable
+   firmware a firm prerequisite?
+2. Is v1 support something you would consider reviewing, perhaps
+   starting with an HE-disabled profile?
+
+I can share the extraction script, hashes, measurements and the v1
+series in whatever form is most convenient. No firmware or calibration
+files are attached.
+
+Thank you for your time.
+
+John
