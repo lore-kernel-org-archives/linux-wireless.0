@@ -1,52 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.201
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.169
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792934681;
-	b=YycPGC+vskFcoYxXVaF4XqvMma4iiSEWGDJTWniRrIeK6tLrgkoYq3HQdM+LrUYHoEid
-	 OEGiIgdSEK1QtIgk2oE6nSGR/M/lCBWweHzKD3ABQqL83ukYWpUI9RmdomDQq41U70yU+
-	 KwTn/yR9IU9RwBIeBaj56P/LgUrUISdXtUMIdkyDPBbJMYOu7mtZOz4dTWoROmxYH+EDT
-	 pFEDlBgUL+Q2VjraypZYs6ciyQnMOWSrLjcjcq1EBf7K+3dRnAcsykdVnGD6emCDnRmqN
-	 ndkj3Mmw+fSRkunc8+GcCTHvTUlTBbkrr6yJiWFY1K4aqBHdjCYuRJDuxoL8evWTcEA==
+	t=1792936921;
+	b=ZjGgLVukx/XLoVPuuYa7yIRj/dav5bXl6+QRvSwij0ZW1yii8LjKdIX8ZlhCdKWV9A3n
+	 93DQICa/1n54rdrZaVwTgFZcq162xiYob8mSS4+YY3CvyOQVUIN/G5NtUsWv4cJxIJ56F
+	 DfdO1PvwuPmpEq2ulUoS+CArOTsZnBbc1sbcvYIzRMx51dsOS43P9a3FkCRJfwuHkoW9l
+	 YwaHa3sPUcYcf95zpGzQNvz+dLAe8DFo1K6G9VRIhnjRtiNNukCrbuHI86PYkNKrV4z9E
+	 ywiKfzVqd2iAD0Wv9mH+uvsC8ALI1wYl2n6BoU/ZNJAB53W5UHApo0OaVotqZIC3eag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792934681;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=w2bM2xm2q4lrEvIyhqBo35K6xZhsXu4Ai3jdew9TMdE=;
-	b=qM0lMVwU7n1SLGlLSxEh+iDhXnGDhGMDgwT0S5w+922LLC01ZcnfhBoMQMZkkSpiMLpi
-	 gFRocUK4V4//LSQzFM4cXrM7zTOkSppkAc6QsaF6ggmB9lZeg8T6XtIusM6uLa9arMV0w
-	 0NkpIweaF/8oWJV4PGWybKWktgrJ0/Vc1vxkfCcIMyES18NRxCHRa3n8C6AXpfkMDF5p4
-	 yLVc/Nf7d8Om5HK7Rp9+7UcoZpGlileKoMHqQOGYW9en7mZ0tGG/JCpGHavGHFWaLxjFZ
-	 KN9ohP60VX+SLcWBzBmz7FNA7R5zlAjOoWf8gYS2a/pg4xU0V+dT7ZSGtJ1rxENgckQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792936921;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=vrMXt1z7sqI2rPBLPoXnJ9DxZ7jNjEuTfkEKdCrv0eo=;
+	b=Wql5ajYlmDc862niIMDClctpwOcqg76M4goPq/LA4N1CJtS/kJYZnxUPvTxuHULjMqkU
+	 aYyQAxwNW12AWYciWBP6spaiqIg7CZrwmYt1bPZrvSZEZ2IzHDkAb/GVoGzjPE0O+xR4K
+	 7m90nXD0GcLd+/TtvnuYY3n18KbTO0p5WC7wDk1qeH9zFJz85thwm+F1k2WLB7EPLtZoS
+	 ypuUMaM8q6meZ/XoHl32SwOx78fhx/u/liql6JDrRSTTmFTVDroAjbGQaypSTo3zLciCb
+	 Ef9Lv9p+82DqMFWpbP5OGNCX8U8TWsWE0TTXKz+EVhH6R97C6oZE+vXBE8KXcJup7qQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=l4jFs1bk;
-	arc=none smtp.remote-ip=95.215.58.201
-Received: from mta1.migadu.com (out-201.mta1.migadu.com [95.215.58.201])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=qTIefrEl;
+	arc=none smtp.remote-ip=74.125.82.169
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 277F8606A31A
-	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 13:24:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 277F8606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F7A1606A329
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 14:02:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5F7A1606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=l4jFs1bk
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=h/4/z+tmIDkpH6DwC/ZqN89159IIEXYmI4z+DZmkUU0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792934677; v=1; x=1793539477;
- b=l4jFs1bkmMmzETBEv46o1f92mBzsgsZVXzY4XEAdS5/HHeaqw9Hq4XhfbHpd++tWG1jNG3Un
- iOS+iM10ea3bgEC2xTSH6TmKwr3i+9OjF0it83MX25QU/JoCdg89CDbmqxHCSecylmOeAETns8m
- T31J57Y0WR66iITpps1mhX5k=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8d922a4a885a3ff3;
-	Sun, 25 Oct 2026 13:24:36 +0000
-X-Mizu-Trace-ID: 8d922a4a885a3ff3
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=qTIefrEl
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-3550c917fd3so3379659eec.0
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 07:02:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792936920; x=1793541720; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vrMXt1z7sqI2rPBLPoXnJ9DxZ7jNjEuTfkEKdCrv0eo=;
+        b=qTIefrElyFSBonKz3NWQEjyMYd2mF5liGilEmC2qnXcQs2bY8gzLi0n9lTS9i4yVw0
+         IjWK+TrbICAO6Mjq4nUDMZM901xSQYWk8PCuUpR0X536VWB+2yoQcMa0lsT8Dq8FSL2j
+         B2f20NHADJ2PA19gm48G1ZHuvHaoUNIBmaAZsR0TQdpzQWpNl+wY7zQe2CfC+7woBY/D
+         EftUZEBtRWub5um0Ham7K+9R9HcEm247U9pswSPkDaads3zr/S1BS3NuBc5fDmh8dK0R
+         T3jEXlgigFcirNCJh09dvo95zsHuICwitlsUTGlVTwzVHkt2aLo/sDUDu/QI0OZ+jxJ1
+         lSoA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792936920; x=1793541720;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vrMXt1z7sqI2rPBLPoXnJ9DxZ7jNjEuTfkEKdCrv0eo=;
+        b=i1V/7yOFAZXaCz2WFMkD8gTYjjzyIGtK7TNNGnLSnZsX87QXc2qV/GqXyveRHHvs3S
+         YgHKwJTSnqXCnDJxsMtUHnDrDgzZo3uCk/GMJRp6zsLQuhzpxt/YY4NhLNiatx3NcByi
+         IXRgkDIy3P3RfXMTWgevn7G1LJZr5XUYJC8/NJWpuSh+JaKIR4LqbTOGoxAqDYn5Y32C
+         7awKOndwG/YQEKketgtzjWOGiMXNCwcW8jLuqEUVyM5QOeLBZoBGo19o6ShYB5gnu62I
+         ztwAJ/m41eIvFL/bStU0VHwwAYB6mxXbhEhwKCrFXM6WREUbcWzpxde2uqd+0iNyE3iK
+         0jdA==
+X-Forwarded-Encrypted: i=1; AKwUvBwL6ZhK+A8mXFj1Trh+u+RFZoS2+/phVh7CkQj1VoEOMmst4VTQoA1W9OrA5YizZvhH0IG8aMCNscMTxlUueA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIJSVXvZOvInlZqllzx3YCMmIVJIVaorUhz4OYKVuHlolrhZCq2
+	q+Lhd7PhPGh1CXUfSB8VYLwF6le11r+5TZD3JUqrKemZisM+PqwzfN44
+X-Gm-Gg: AYBFou2VZ4zxhOmMV3/+QkRCIGT5XNn0AK8+y2uu1AHiXIt2yg2LPlZ+AZg7eqZSDFn
+	CjnadHIpOHECmQrjtPYYP3UyalF3AJZFcg+P7MZrjOKC9zffeaJvR9/TIQnt7n5Cr8C9h8k5syK
+	FKluDOR9AWCvmltsfJ0j/48TRuJUF82KkAfEYrFPbQdElIr+yGClhM5jZPXWcta0dDA12w/s03f
+	3GskksiVBTYmPUIkaUPOVuKBewOsM//oMENRev/7FOlKoMiEko0xEJgG3EmzMcEEkxQxu6nByTk
+	7IEnXmZVuhoqJpWfOAUoh2nUxt9RLGMPQYtE5IAbawwpI7wfCaNBCzZHuur6/1lL1i5CrWwmHcR
+	xb7fZyN0MBsRsCG9EH8JgJRHR47woVYCDgghW/XqzXTS6D7g2ARWgIWUEIBueSTlyMYJI8lKxcI
+	5Y+I7mID7SOULwASY6Ac+UwCsrSPcGX31wKE7CVxLHChpTkR5axHQke37/CLEJyqHNkbFX9MzKI
+	8Ruu2ojYsNzbiYIpjPNzx3Hr7rCUdf/+tVrb7L6oD8lhkYtwc6CbxVUuzBvYtq67yVKQuxkeNzx
+	g0uVB01QD4KkcdgqmH2JXRywbRvuTt8vWZ32Y2w=
+X-Received: by 2002:a05:7300:8aa0:b0:35c:ceb0:8bf9 with SMTP id 5a478bee46e88-369e84e00acmr6241494eec.38.1792936920256;
+        Sun, 25 Oct 2026 07:02:00 -0700 (PDT)
+Received: from Gris-Laptop (gia.grisge.info. [67.230.185.89])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369f4164886sm9280272eec.7.2026.10.25.07.01.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 25 Oct 2026 07:01:59 -0700 (PDT)
+From: Gris Ge <cnfourt@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: Gris Ge <cnfourt@gmail.com>,
+	stable@vger.kernel.org,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+	Devin Wittmayer <lucid_duck@justthetip.ca>,
+	Stella Liu <yu-ching.liu@mediatek.com>,
+	Leon Yen <leon.yen@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: mt7925: fix NULL dereference in CSA worker
+Date: Sun, 25 Oct 2026 22:01:18 +0800
+Message-ID: <20261025140123.12056-1-cnfourt@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,131 +108,120 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Sun, 25 Oct 2026 13:24:36 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <796598480d47c5bf474d11828769e864b8209558@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v8 2/3] wifi: rtw88: support channel switch in
- AP mode
-To: "Mehmet Fide" <mehmet.fide@gmail.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- mehmet.fide@screeningeagle.com
-In-Reply-To: <20261021114543.4132776-3-mehmet.fide@gmail.com>
-References: <20261021114543.4132776-1-mehmet.fide@gmail.com>
- <20261021114543.4132776-3-mehmet.fide@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Mehmet, Ping-Ke,
+`mt7925_csa_work()` checks `dev->new_ctx` before taking `dev->mt76.mutex`,
+but the pointer is re-read and dereferenced after
+`mt792x_mutex_acquire()`. That check and the later use are not serialized
+against a concurrent teardown, which can clear the pointer in between:
 
-Sorry for late review, few comments below.
+  BUG: kernel NULL pointer dereference, address: 0000000000000000
+  RIP: 0010:mt7925_csa_work+0x83/0x160 [mt7925_common]
+  RAX: 0000000000000000
 
-October 21, 2026 at 1:45 PM, "Mehmet Fide" <mehmet.fide@gmail.com> wrote:
+`mt7925_remove_chanctx()` clears `dev->new_ctx` without synchronization
+against the worker. During a channel switch mac80211 frees the reserved
+channel context (calling `drv_remove_chanctx()`) before
+`drv_abort_channel_switch()`/unassign can cancel the worker, so it can run
+with a context that was just cleared.
 
->=20
->=20From: Mehmet Fide <mehmet.fide@screeningeagle.com>
->=20
->=20hostapd's CHAN_SWITCH is refused because the driver does not announce
-> channel switch support, so an rtw88 AP can only change its channel by
-> being torn down and started again.
->=20
->=20Declare WIPHY_FLAG_HAS_CHANNEL_SWITCH and implement
-> channel_switch_beacon: the firmware repeats the beacon held in the
-> first reserved page, so while a switch is announced the page is
-> downloaded again every beacon interval to advance the countdown, and
-> ieee80211_csa_finish() is called once it completes. IBSS shares the
-> page and the work.
->=20
->=20The work is a delayed work of the device and csa_vif names the
-> interface, both under the driver mutex. The countdown is cancelled when
-> the AP stops, when the interface goes away, on WoWLAN suspend and in
-> rtw_core_stop(); the BSS_CHANGED_BEACON replay after a hardware restart
-> resumes it. The other page downloads during a countdown, the TIM update=
-,
-> the PG backup and the one on association, are skipped until the beacon
-> after the switch, since every beacon fetch advances the countdown; the
-> next download carries their changes. A scan is refused: it would take
-> the AP off the channel its stations count down to.
->=20
->=20Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
+`mt7925_channel_switch_rx_beacon()` is serialized with the writers by the
+wiphy mutex; the worker is not.
 
-[ ... ]
+Protect `dev->new_ctx` with `dev->mt76.mutex` in add_chanctx() and
+remove_chanctx(), and validate it under the lock in `mt7925_csa_work()`.
+Keep a local pointer for both firmware calls so the context can neither
+become NULL nor be freed while it is being used.
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/ne=
-t/wireless/realtek/rtw88/mac80211.c
-> index 2a9b09fa76e7..182aecc76820 100644
-> --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-> +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+Reproduced the panic by injecting CSA-less "abort" beacon, works well
+after patched.
 
-[ ... ]
+Fixes: 7900da40e315 ("wifi: mt76: mt7925: introduce CSA support in non-MLO mode")
+Cc: stable@vger.kernel.org # 7.1+
+Signed-off-by: Gris Ge <cnfourt@gmail.com>
+---
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 30 +++++++++++--------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-> @@ -438,6 +443,11 @@ static void rtw_ops_bss_info_changed(struct ieee80=
-211_hw *hw,
->               rtw_set_dtim_period(rtwdev, conf->dtim_period);
->               rtw_fw_download_rsvd_page(rtwdev);
->               rtw_send_rsvd_page_h2c(rtwdev);
-> +             /* restart replay resumes it, a beacon without CSA ends i=
-t */
-> +             if (conf->csa_active)
-> +                     rtw_fw_csa_start(rtwdev, vif);
-> +             else
-> +                     rtw_fw_csa_stop(rtwdev, vif);
->       }
->
->       if (changed & BSS_CHANGED_BEACON_ENABLED) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 15d95ad32636..fb5f9aa3534d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -2020,7 +2020,9 @@ mt7925_add_chanctx(struct ieee80211_hw *hw,
+ {
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
+ 
++	mutex_lock(&dev->mt76.mutex);
+ 	dev->new_ctx = ctx;
++	mutex_unlock(&dev->mt76.mutex);
+ 
+ 	return 0;
+ }
+@@ -2031,9 +2033,10 @@ mt7925_remove_chanctx(struct ieee80211_hw *hw,
+ {
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
+ 
++	mutex_lock(&dev->mt76.mutex);
+ 	if (dev->new_ctx == ctx)
+ 		dev->new_ctx = NULL;
+-
++	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
+ static void
+@@ -2509,11 +2512,13 @@ static int mt7925_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 
+ void mt7925_csa_work(struct work_struct *work)
+ {
++	struct ieee80211_chanctx_conf *ctx;
+ 	struct mt792x_vif *mvif;
+ 	struct mt792x_dev *dev;
+ 	struct ieee80211_vif *vif;
+ 	struct ieee80211_bss_conf *link_conf;
+ 	struct mt792x_bss_conf *mconf;
++	bool roc_started;
+ 	u8 link_id, roc_rtype;
+ 	int ret = 0;
+ 
+@@ -2525,26 +2530,27 @@ void mt7925_csa_work(struct work_struct *work)
+ 	if (ieee80211_vif_is_mld(vif))
+ 		return;
+ 
+-	if (!dev->new_ctx)
+-		return;
+-
+ 	link_id = 0;
+ 	mconf = &mvif->bss_conf;
+ 	link_conf = &vif->bss_conf;
+ 	roc_rtype = MT7925_ROC_REQ_JOIN;
+ 
+ 	mt792x_mutex_acquire(dev);
+-	ret = mt7925_set_roc(mvif->phy, mconf, dev->new_ctx->def.chan,
+-			     4000, roc_rtype);
+-	mt792x_mutex_release(dev);
+-	if (!ret) {
+-		mt792x_mutex_acquire(dev);
+-		ret = mt7925_mcu_set_chctx(mvif->phy->mt76, &mconf->mt76, link_conf,
+-					   dev->new_ctx);
++	ctx = dev->new_ctx;
++	if (!ctx) {
+ 		mt792x_mutex_release(dev);
++		return;
++	}
+ 
++	ret = mt7925_set_roc(mvif->phy, mconf, ctx->def.chan, 4000, roc_rtype);
++	roc_started = !ret;
++	if (!ret)
++		ret = mt7925_mcu_set_chctx(mvif->phy->mt76, &mconf->mt76, link_conf,
++					   ctx);
++	mt792x_mutex_release(dev);
++
++	if (roc_started)
+ 		mt7925_abort_roc(mvif->phy, mconf);
+-	}
+ 
+ 	ieee80211_chswitch_done(vif, !ret, link_id);
+ }
+-- 
+2.56.0
 
-What happens when an IBSS is left during its countdown and joined again?
-
-ieee80211_ibss_disconnect() leaves csa_active set and reports no
-BSS_CHANGED_BEACON, so only the idle path through rtw_core_stop() clears
-csa_vif. The next join reports BSS_CHANGED_BEACON with csa_active still
-set and this starts a new countdown. The new beacon has no counter, so
-ieee80211_beacon_cntdwn_is_complete() never returns true. The page is the=
-n
-downloaded every beacon interval and scans return -EBUSY until the
-interface goes down.
-
-Would clearing csa_active in ieee80211_ibss_disconnect(), same way
-ieee80211_stop_ap() does, be the right fix?
-
-[ ... ]
-
-> @@ -846,6 +869,7 @@ static int rtw_ops_suspend(struct ieee80211_hw *hw,
->       int ret;
->
->       mutex_lock(&rtwdev->mutex);
-> +     rtw_fw_csa_stop(rtwdev, rtwdev->csa_vif);
->       ret =3D rtw_wow_suspend(rtwdev, wowlan);
->       if (ret)
->               rtw_err(rtwdev, "failed to suspend for wow %d\n", ret);
-
-What restarts the countdown after a successful WoWLAN resume?
-
-The 8822C registers rtw_iface_combs and a wowlan_stub, so an AP can be
-counting down next to an associated station when the system suspends.
-rtw_wow_vif_iter() only picks the station, so rtw_wow_suspend() succeeds
-and mac80211 keeps the AP running with csa_active set.
-
-rtw_ops_resume() then returns 0 and ieee80211_reconfig() skips the
-replay:
-
-        res =3D drv_resume(local);
-        ...
-        if (res =3D=3D 0)
-                goto wake_up;
-
-So no BSS_CHANGED_BEACON arrives, csa_vif stays NULL and
-ieee80211_csa_finish() is never called. csa_active stays set on the AP,
-so ieee80211_change_beacon() and any later channel switch return -EBUSY
-until the AP is restarted. Also each TIM download fetches the beacon
-again, since csa_vif no longer gates it, and keeps stepping the count.
-
-Maybe rtw_ops_resume() could restart the countdown when the AP still has
-csa_active set?
-
-Best regards,
-Luka Gejak
