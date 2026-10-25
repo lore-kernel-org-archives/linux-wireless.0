@@ -1,84 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792896577;
-	b=cEn8G5ni53zeRxTkiIDj6IxrYoK6/cf4W+uk1gK2xyPlphIeR9RZE9FqKNvYnfaNGRe0
-	 azC3w7tcbsjfzQ5J19ve/T2ZcrszVIQLiV56KOhQ5noic1RNwHLw90FzZeARknzz+aXka
-	 xT5CUgIiQXuph+5Dkj7JTE0igk48JnK4zyeRhk5eGS+/4jV8A2LKTcK+miOM8MiwdTYri
-	 gCA4Ie8InWrd71PYrjxfBWYE7/Y7L86R+AgY1lEGdgbIFd/CVjJGYGrPIAkMuQWDrCKXI
-	 fiIrhaKfwfENFkqlKpiZGIRYz8l0onIRJV0ddahNz1JIErj3SLpZc035/Np3iigdt8g==
+	t=1792897514;
+	b=DlE78wATVy1k/UXhLs83hHxoNmmd+GSq+EZMgfUAjWrwNOuktJKB+XUIzTGP4l5wZZsE
+	 fR+ZoFmOdppucoySyou2yszub1EEG2XLYtY7rlsEfIb2kcg2B/y+LmwH8vHJLlmlB5kfg
+	 kEyynwDmh/RgROrDXwC9fccYjhX2R0rKmpNOn/efvVogpAZ8LEICCceLzQ8/AsKctZsmm
+	 31ZBmaYJEC0cqD9cSImwSIL8PLv+Dt+2QON8fqUUMWbFlwMfShENZxHTB20lPZs11B0hB
+	 RY8FX+OEpA7LPDKuFGmE1qg+fUF8KzacZHIU925mwqL+YJKVR94q5BPDQqy30NG2XaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792896577;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:
-	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=HC76HxefKhWHAcoZqjxRhtpRvmhkbgehQUtWy/qplWw=;
-	b=dygSOv8iaN2kY8etu0SSBetGomNQK9XdgWRvW2XgxeLuaNcadTqkIkaETfkRnSebuTCR
-	 zCp8eztqPFzm5VtLIq5U3vCsykpTJktUM5tL0thPz61BDrQyQq5C0WU4KURNKwDHlIIOa
-	 bwB4ydLh1IaswF1W+TZauB77eXtDkDqnvUG7By+abg4f8TTL31WELRPzPPA1vqxavTBfX
-	 kI3F6CLPeclaBu4awBeXyltSUesdAtZStnioUPj9VeVxWGRlECFREYISpsPKjOY10J9sM
-	 rsMFYDfJvufFa6QVUE/JuW0WVyDfZX9KqAsJzOWYMhZ0fIANv+UyjwIBnefmSQmGYBg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792897514;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=p/QFAv6ccqVlvHGU85S9cnOjWRRSIovz0rOvr/3uAkE=;
+	b=BkHMOzI0Mp7IizYOLX6E9wTcChATpmAeLxAjBynP9Pq/w8ivQ2k/1kv9fnv2QtTUP8IN
+	 qY5k/HjKH4Kt3TGm4x26XW9G7IJXg7hPPPIhdVpW2KMKN8b2lH5YunEgi4Vxfb5c4XD4o
+	 OoT3eflhGpw3AGivc+8tQtl/17H/g27VdWGJ1jdRPG8pLq8jzCExgpGpT6ZuZPkze7HYA
+	 6xbrHiNoe+RzN2ouwbBbKANQCOzgIH+hILtyrRwuwKjtgPHlAM984LfTJXg5byIELJx+8
+	 Sdz/yBr08lY2RE1+6YY8QclQpu1g+lGD6kukWhKgpW6Ucp7l/6XrsF3fdGlRzDZWAFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=MBLjgdRX;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=KqCTg83i;
+	arc=none smtp.remote-ip=209.85.217.51
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C64B8606A31A
-	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 02:49:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C64B8606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED4B606A31A
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 03:05:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6ED4B606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=MBLjgdRX
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69P2nQCP13145906, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792896566; bh=HC76HxefKhWHAcoZqjxRhtpRvmhkbgehQUtWy/qplWw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=MBLjgdRXY9V1vuTHMmv1OuET/wxWLEgI9lcO9GAxXRvKRbGzlo1PER2oBc3/Li5cK
-	 131MsGgk/GYGWpXuN2Vl1ecnHhGhgV7KhnuRhRq5gP3nPrc6hzjqGpst294RU2SvmF
-	 2szTgSLQxn0HnIDnklFHfooTUxW8L7DyS1mwrbde+nf3rCmC4MyvUOsSlu1o0XtUob
-	 XwIth2gbXxU+BPKNUnUxx1+Gi2AT+8ZBiCQso8z8qf7ASolfNTus8lqyBDGhXkLDcV
-	 p+0wWhn7R2jcPGAtxm6gx6DoudLf+aUnMah0sK3Ju/SXDFKBMkN1nssBlJFj4cuuuz
-	 Nqk3tMaIJCgiw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69P2nQCP13145906
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 25 Oct 2026 10:49:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Sun, 25 Oct 2026 10:49:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Sun, 25 Oct 2026 10:49:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Sun, 25 Oct 2026 10:49:26 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v2 1/2] wifi: rtw88: move the bmc high queue
- decision to tx.c
-Thread-Topic: [PATCH rtw-next v2 1/2] wifi: rtw88: move the bmc high queue
- decision to tx.c
-Thread-Index: AQHdYVnJ0q7282zST0eZU32CdZ8tpbcI07VQ//+rD4CAAqT/gIACboDg
-Date: Sun, 25 Oct 2026 02:49:26 +0000
-Message-ID: <ec4065a1cf2c4d0ea357694a1a73ede8@realtek.com>
-References: <20261021124318.15993-1-luka.gejak@linux.dev>
- <ac6d8824bdeb45148ffd6b5dee7da313@realtek.com>
- <5235fd68b703f756cc2ee1e7471339a512db59b8@linux.dev>
- <875b4e96891a2bf256ca1805140b57aeccee4aed@linux.dev>
-In-Reply-To: <875b4e96891a2bf256ca1805140b57aeccee4aed@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=KqCTg83i
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7a6e560f580so1381311137.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2026 20:05:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792897513; x=1793502313; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=p/QFAv6ccqVlvHGU85S9cnOjWRRSIovz0rOvr/3uAkE=;
+        b=KqCTg83iJu3JeWaIUmuu4tNCoRuFCECQdIaPpOukXLXn8f70pV7vn8R/FHqf4QYtwg
+         YO4qyLCv+q1ulTz8DCGGojOYzTgg1AUFz7UvrK+RIm9I8WYUWpBOXzKz8uYEldwbsnut
+         jjVx09MfH0yemePwkXKhmfoC50KVRZFWOBZQxqkTkvH4UdpaEqmM8KJj6JxHFrcFJtr4
+         cV/up9zmiEPgOk3MjTXa4m3aEIFTfEWg44bULE+g+2CBzUO3WaAVxgy1atfs2XJMgeYF
+         v9ZatU3m8/1OfzfVFzf8h8ctJWA8Bg4S5gkIx0oOFJ3iTelqVyDejIwEuc7rQkingxbU
+         lKRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792897513; x=1793502313;
+        h=mime-version:content-transfer-encoding:content-type:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=p/QFAv6ccqVlvHGU85S9cnOjWRRSIovz0rOvr/3uAkE=;
+        b=E9D5CyMZu/Jz/MAKOCDYJDeCYy/u2FzhF7ksjRvZe8dTMbztwh5phZPqbFvRwxcHDt
+         W8ac1JJM+0pMWA4HhNgjey0r+u5xKkX6utqTpiOeiOr2NYF2wz65dGY3c76tSXB+kcvP
+         xCqiI4KV1bzNlULpF5v11wC4SuqO11izluPgm+qXDDalBwbHdP196abcBXVRa+CtRR84
+         fZhJ+fHtcYFyH/v+8lyrQoiQbk63+l8uzWpaAb7hUW1IFal+6mCiJ/s66n+L904BfN13
+         pB/iWQLBECTMzO2294JuQOncdy3XYFwYFsgHVXSZb8X5VI0aqWzDb9FF/TpMyAZidRve
+         txQA==
+X-Forwarded-Encrypted: i=1; AKwUvBwWB8CKOg4l5V+eKF26UlnMra2DFU86zsTga02JegUzT6caSWlPNe1S7Vo17JazwYIb/xUXByMk3eWmEO4bUw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJGIr0eUT18JHggaqMBNoKsKgPfwisqPzcvy0QTFpxHYnlJT2rt
+	Bp76lDNn3ouISVjlkOsbuTBvg1IsC2LbCCutD7H25A4RMACV11CCdPP9
+X-Gm-Gg: AYBFou0ScGO1pZLu/zjq782QHAewkNIaBKOy4rFSdwBUbs2i2FMNaEpDvbmClacZRLf
+	CstyjUv1NOozvaNRHUImFAvsG2iH6Nmtwr69yYe3R63C3cyDkdIyExLDv5aLttZpzbm1263/qLf
+	piosstPamhCYe/5Bjiy/ovWKof/3QTsEP4T2HluODeHasB3utCU0k/UNZtVW/1I20KuEzJnzXyh
+	mfZILEje7aEoyHXMI8f3vX6DASCRDEBdvW/TJCPLYX03LsNDuys/SLKsjqIjUr9tBJMx1EWJ7OE
+	nDF9BUzTRRSdd7LXsiBmVLHJjkmiwAnxUkE+39f09+3OtjtgHhUmbkEeoSIHCV8Bu7R0uQXBvYM
+	Cf8QaLJtDrrgzb+M+yrPubsfMMngcZBhn2vYsOkLDECCvZEsH9rcPrDjo741nqqh2JqnU2xYbRj
+	MCtfV+H1AUa9gUMgbYkk7YtScUN8Ke1UQnS0D4TLsTYkuVRzjtp37yMm6yBc2SI5CHSia52tosU
+	GDPjqY9lkPoGt7iPpmUhJTjB3+yXMkYhkD9yMQjfHbCTp2yFGzE1xtwJMS7YBM2OeEwEqUwFgX6
+	gBiXIPlSO1BSEmG7DIJWdVOWqbtKeyT/syBOI4tbgBQFgVgUxDc=
+X-Received: by 2002:a05:6102:3e8f:b0:7c3:1395:a090 with SMTP id ada2fe7eead31-7ce5cca8d37mr1117124137.6.1792897513242;
+        Sat, 24 Oct 2026 20:05:13 -0700 (PDT)
+Received: from 1.0.0.127.in-addr.arpa ([2804:7f0:b101:277b:8118:1af6:d493:fe05])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-9910e80701bsm4189123241.11.2026.10.24.20.05.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 24 Oct 2026 20:05:12 -0700 (PDT)
+From: Joas Antonio dos Santos <joasantonio108@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [PATCH wireless] wifi: mac80211: protect the mesh RMC with a lock
+Date: Sun, 25 Oct 2026 00:05:08 -0300
+Message-ID: <179289750857.55325.15619359041208016782@gmail.com>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -89,18 +97,111 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 
-THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiBJIHdhcyB0aGlua2lu
-ZywgYXMgc3RhZ2luZyBnb3QgcmVtb3ZlZCwgZm9yIDEwLWlzaCB3ZWVrcyh1bnRpbCA3LjUpDQo+
-IHVzZXJzIG9mIFJUTDg3MjNCUyB3b24ndCBoYXZlIEFQIG1vZGUuIFNvIEkgd2FzIHdvbmRlcmlu
-ZyBpZiB0aGVzZSB0d28NCj4gcGF0Y2hlcyBjb3VsZCBwYXNzIGFzIGZpeGVzIGludG8gcmMyIHJl
-bGVhc2Uob3Igd2hhdGV2ZXIgaXMgdGhlIGZpcnN0DQo+IHJjIGludG8gd2hpY2ggcnR3IHRyZWUg
-aXMgbWVyZ2VkKSwgYXMgdGhpcyB3b3VsZCBiZSBESENQIHN0YWxsIGZpeC4gVG8NCj4gZWxhYm9y
-YXRlOiB3aGVuIHRoaXMgZHJpdmVyIHdhcyBtZXJnZWQgaXQsIHdhcyBleHBvc2luZ0FQIG1vZGUg
-dG8NCj4gdXNlcnNwYWNlLCBkdWUgdG8gUlRXODggZG9pbmcgaXQgZ2xvYmFsbHkuIFRoZXJlZm9y
-ZSBBUCBtb2RlIGV4aXN0ZWQsDQo+IGJ1dCB3YXNuJ3Qgd29ya2luZyBwcm9wZXJseS4gU28gbWF5
-YmUgaXQncyBhIGJpdCBvZiBhIHN0cmV0Y2gsIGJ1dCBJDQo+IHRoaW5rIGl0J3MgYSB2YWxpZCBw
-cm9wb3NhbCB0byBzZW5kIGl0IGFzIGEgZml4IGludG8gbmV4dCByYyByZWxlYXNlLg0KDQpEaWQg
-eW91IHRoaW5rIHBlb3BsZSB1c2Ugc3RhZ2luZyBkcml2ZXIgd2l0aCBBUCBtb2RlPyANCg0KUGVy
-c29uYWxseSwgSSB3YW50IHRoaXMgZ29lcyB0byBydHctbmV4dCwgYnV0IGlmIHlvdSBoYXZlIHN0
-cm9uZyBvcGluaW9uDQp0aGF0IHBlb3BsZSBuZWVkIHRoaXMuIEkgY2FuIHBpY2sgdGhlbSBhbmQg
-bGV0IGl0IGdvZXMgdG8gLXJjLiANCg0KUGluZy1LZQ0KDQo=
+mesh_rmc_check() looks up, unlinks/frees and inserts rmc_entry objects
+in the per-interface recent multicast cache without any locking.
+
+Until mesh fast-rx support was added it was only called from the rx
+handlers, which run under local->rx_path_lock.  Since then,
+ieee80211_invoke_fast_rx() also calls ieee80211_rx_mesh_data() (for
+plain frames and for each A-MSDU subframe), and that path does not take
+rx_path_lock.  Fast-rx is meant to run in parallel on several CPUs for
+drivers that set RX_FLAG_DUP_VALIDATED and USES_RSS, such as ath11k and
+ath12k, which also support mesh.  Fast-rx is enabled for authorized
+mesh peers as long as the driver does reordering itself and no
+unsupported cipher is in use.
+
+A frame reaches mesh_rmc_check() on the fast path when addr1 is our
+address and the mesh DA (addr3, or the subframe DA in an A-MSDU) is a
+group address.  With two such frames being processed on different CPUs
+(or one there and one in the locked slow path) whose sequence numbers
+map to the same bucket, both can walk and modify the same hlist at
+the same time, and both can unlink and free the same expired or
+oldest entry, corrupting the list and double freeing into rm_cache.
+The sequence number, and so the bucket, is chosen by the sender.
+
+Add a spinlock to struct mesh_rmc and hold it across the lookup and
+the insertion.
+
+Fixes: 3468e1e0c639 ("wifi: mac80211: add mesh fast-rx support")
+Signed-off-by: Joas Antonio dos Santos <joasantonio108@gmail.com>
+Assisted-by: Yaga Agent HackerSec Claude:claude-opus-5-5
+---
+Found by code inspection, compile-tested only (W=1 with
+CONFIG_MAC80211_MESH=y).  I have not hit the race: it needs a driver
+that delivers rx in parallel (ath11k/ath12k with several REO rings),
+and I don't have that hardware.  mac80211_hwsim does not do parallel rx.
+
+ net/mac80211/mesh.c | 16 ++++++++++++----
+ net/mac80211/mesh.h |  2 ++
+ 2 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 8f88141253..e3718a2252 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -184,6 +184,7 @@ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+ 	if (!sdata->u.mesh.rmc)
+ 		return -ENOMEM;
+ 	sdata->u.mesh.rmc->idx_mask = RMC_BUCKETS - 1;
++	spin_lock_init(&sdata->u.mesh.rmc->lock);
+ 	for (i = 0; i < RMC_BUCKETS; i++)
+ 		INIT_HLIST_HEAD(&sdata->u.mesh.rmc->bucket[i]);
+ 	return 0;
+@@ -229,6 +230,7 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_rmc *rmc = sdata->u.mesh.rmc;
+ 	u32 seqnum = 0;
+ 	int entries = 0;
++	int ret = 0;
+ 	u8 idx;
+ 	struct rmc_entry *p;
+ 	struct hlist_node *n;
+@@ -239,6 +241,8 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 	/* Don't care about endianness since only match matters */
+ 	memcpy(&seqnum, &mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
+ 	idx = le32_to_cpu(mesh_hdr->seqnum) & rmc->idx_mask;
++
++	spin_lock_bh(&rmc->lock);
+ 	hlist_for_each_entry_safe(p, n, &rmc->bucket[idx], list) {
+ 		++entries;
+ 		if (time_after(jiffies, p->exp_time) ||
+@@ -246,19 +250,23 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 			hlist_del(&p->list);
+ 			kmem_cache_free(rm_cache, p);
+ 			--entries;
+-		} else if ((seqnum == p->seqnum) && ether_addr_equal(sa, p->sa))
+-			return -1;
++		} else if ((seqnum == p->seqnum) && ether_addr_equal(sa, p->sa)) {
++			ret = -1;
++			goto out;
++		}
+ 	}
+ 
+ 	p = kmem_cache_alloc(rm_cache, GFP_ATOMIC);
+ 	if (!p)
+-		return 0;
++		goto out;
+ 
+ 	p->seqnum = seqnum;
+ 	p->exp_time = jiffies + RMC_TIMEOUT;
+ 	memcpy(p->sa, sa, ETH_ALEN);
+ 	hlist_add_head(&p->list, &rmc->bucket[idx]);
+-	return 0;
++out:
++	spin_unlock_bh(&rmc->lock);
++	return ret;
+ }
+ 
+ int mesh_add_meshconf_ie(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 3f9664e4e0..27f12ebc28 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -216,6 +216,8 @@ struct rmc_entry {
+ struct mesh_rmc {
+ 	struct hlist_head bucket[RMC_BUCKETS];
+ 	u32 idx_mask;
++	/* protects bucket[], fast-rx can run on several CPUs */
++	spinlock_t lock;
+ };
+ 
+ #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
