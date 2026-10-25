@@ -1,88 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.172
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792952423;
-	b=4dRx3ujGdBVKPLLOlBWtD7hCKDlKw145RXwOk8Bx/EURTz6g/JqbpSk0HGebLGFYzlm4
-	 esXq3TUL/5XWVlfRG/wjNqcovoX8PZN9dEA9a3OXyj0ljxv5MZsQy7g1jJNStO7ewh3nK
-	 HRP1XMzKXoEWbtFh3idVd7TyrYPklIBUZfY4G4vjCMneDWBK9pxU/vbR6j6NNr64P168R
-	 gGuiDiC+F6+l8e9N5qgEkjsFD4ZIsibsliElXL5cctKYxxAuZVXgvpVL0pbWcjza9OTub
-	 O/8oV4atKtetM/RNQW7jm9x0hezpDPyIEQDn7DJybWgJcpe01agbifdON97v8hf3M3A==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792952423;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.44
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792953382;
+	b=UF5x8K15yHWi0ouAnYkyNrIGWzYc6o8H67dGtZRWnVesr+IVlYCeUtaNJywub02GBCF9
+	 AciIZJSRdT2lObf2E5BsOH/A17OaefMGKDhwOe9fXttVzwJi3wHuXc7dAf+zkCDlL5rmx
+	 c1c4plpbgK+E+rmY/mXjQ5UfXGUHpMtrKHxfeitqb7qxqirvv8YIWscq8zcobNZ4dtBMF
+	 NvXZ6iTXgyvnzInCPyO+QhmRWVY2QOLYrzOsjCa97IQcR/tjCa4I2/ccI/HXRGcQykosZ
+	 UyaxKfAxtqpkXbZLP/vGclpgwakci4A25xTx5EzzPpN7xEfIWYQCANY+exDpvnq35BA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792953382;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=6dNyV3fpMybpXNc3EAQIMokM6V/kPapL6dCc89nw+uc=;
-	b=2Wq+vA6D0DEb95vrorj+69BhqNYTmrodLvcpVHLNr+c57kZlf7BSbEdoqGflWYf8SXYf
-	 gnvjEbUFAywPpxGn0qBcqkliEUwmHiPA7kt8TVQdfK27CTQmzt6RD18Xf0cdgBy71waCo
-	 yn3YBIRw3Gy+hxT8lFLReleFHDg0+zz5ShusuiXGiqpiaSpygPkNYAKfzpTlUmt/4EJr+
-	 gRzQPXklBpaPmR8UcI6mJtbmTGmd9srwT6cLIBnIurI/FmDREy1mZduhY5g356EkgB8Wl
-	 emFK7H1KMpSxEmlhI4CK/QCvVPkij6NlOiCNiepLK7wHRxHL+311rIae8kOMoRODybw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Content-Type;
+	bh=31EP1o5OjqqD4mpc+ubvdp77bMY467Ey02aK0y37VeE=;
+	b=Gy3dN4Aj11ZoniZPC9365p+LrBqJlt0KKnUjVn44F/S0ed0ZPRZBbu0Hn57oFPQfq6Zr
+	 DJ9RrMyiuobXfR3Vxvt4Djpj3T6mWUqgrPaqb/z/Ed7MAbQG/foKT/iiJhQF/ci7Jt4kP
+	 zmmb2b0p2c0PZP4CiDA/FtrajqstrFanpZt/tyzrC1KgfrJP47jnPUuCyIvJcqlYpNZwR
+	 NBjLAkPbvBJELfPpu1UNWlj4nQuc4M6JbkYZwAKS5Au2ZOBzsqJAEYu1aR7gGAR2r0l6U
+	 CmYeTgyA20Od9Quw/E62mfObgyjWEnJ4EohXS/oGAFPMYMyvq8Z0+iG+sRE0/wf5ZEg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=UJ+bpWgE;
-	arc=none smtp.remote-ip=74.125.82.172
-Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=VIaFz5Ue;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.44
+Received: from mail-oa1-f44.google.com (mail-oa1-f44.google.com [209.85.160.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2D82606A31A
-	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 18:20:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2D82606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61E1B606A31A
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 18:36:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61E1B606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=UJ+bpWgE
-Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-3645f0f3fcdso4523273eec.0
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 11:20:22 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=VIaFz5Ue
+Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-48ed0b68895so1249193fac.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 11:36:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792953381; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Nnj1Yf/AOXta4cXpTivI3xQpUchgHeyqYX/AcP/t6MG9gIP2uKn++qTfIdpce7Q00q
+         5NiKmElICvtO19cMX0VAzdxGu0Z1t4x/Boxl+3Ma05LUE0WIWSos/SvEXt6vB3ZRSgBR
+         vcTNXo1AdHkqk+8h3jfAyg2/MHMNSGKYAfoyS0lZKgKDdUvhIue7oVCaDARfh3lgBTW7
+         LKRu/ggWpsMpU3f7Qi11bNrSyomejhSRSu1c07AnUGuuB9sKFGY1ACFKzbkk5fJcE2AC
+         8GkzbVKwzoFg4uvT/G381pYtdjf5JeDTtnl274EoVFKiiGG+JJLA+pEeeSoGaSCIphBS
+         B6AQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=31EP1o5OjqqD4mpc+ubvdp77bMY467Ey02aK0y37VeE=;
+        fh=qW0phhq3fb3oiohK/Mu9j1KY1zyRNiiioKFc5anvatM=;
+        b=HOJH0O/MeuwNDfuxgKLAI/0UerhX05dbKmovMYUEy5Bk/dA4DbEBjcBbkNiqONdIOJ
+         nxDVGbHEbPypOjBdT75Ho/qO4nhpsnTDRieI8Rh44yn0CjmelkH0gw8GVEw0h3EvZUL5
+         R0WM5kGaoOpBvtTpK7iTRH58XEPlLg8xH8Ld4dAKvLajbb5w+vQ3cBM3xEOlhWQEctoV
+         tjVZKSBgHuUWFxDkkj7xEgcqDVgUF28xyAMH1NN2PSy3+d2o9Cp01sWDZ2UVLdjOUY+I
+         vCYWjelKZ0K6fZQ+Ha1FsVdDZJ6D/Hqho2qBVJODMxBGqBWQyNbSo1le/wiytsWsuL4g
+         yTpQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792952422; x=1793557222; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=6dNyV3fpMybpXNc3EAQIMokM6V/kPapL6dCc89nw+uc=;
-        b=UJ+bpWgE9CXU+GK5G3PYpRu90D19azJNtd50lQcuj9wQhnZJpNEomqmASzzbWS3214
-         5gARjZ1qCXsbdKh2EZunI70GMamgrqCZd2Q29tKkrpBJSKZReuaZ3DSSOidiz8058p3D
-         Pi+XJTtMUsEoBd2oMR0dkwJfx79DztlqTka4dttQDVoBl12f82PXGNYT0NvVRWTCh4Vq
-         6JI1Kkh12Eme4ujYBD/pe8kMJGI01xraLwlo5FiOz6W9jw4RntShD3hPuZZ9lWhcKcvb
-         8TdGJTF6xrzjAUeHnEpN8WdIEGETVzTmdKbWKxy3U9kiHKunUWeADJEIJmXXtdpS03tR
-         Ffbw==
+        d=gmail.com; s=20251104; t=1792953381; x=1793558181; darn=vger.kernel.org;
+        h=content-type:to:subject:message-id:date:from:mime-version:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=31EP1o5OjqqD4mpc+ubvdp77bMY467Ey02aK0y37VeE=;
+        b=VIaFz5Ue+7a45MfBVl74zq2j+f3+YaRWrwGJI/00aLUrgjUXoNd0R4MD1kpZHEIIhL
+         v3XxsaXfRiKDRv9/DB/2T1yWHqnfLxb3hPZc6WpC2sanY8m4B/1jxdfV1xR2yOTEt9n6
+         q1v0oS3ZAORzycaljCdOjLbufwtdmIAbDQ81XDldGvus5C+eVfHt4mWM8lbp8/WJeDlW
+         CaS0keyZfKYuu+30Ei0WY0JziuCdZGnlKAdfdB7FFli7Uix6wB21HnMH5/EGhppCFd5K
+         PFqb/vSchX9BX0U1EZmYrhp5xEaYr1duEkShgHVLasmpp0f7PpYtjQhsJBq/HkB/4KMD
+         rAQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792952422; x=1793557222;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6dNyV3fpMybpXNc3EAQIMokM6V/kPapL6dCc89nw+uc=;
-        b=FvXN9BrvqD1j6x1dt6pUv0lmUaRgjtXNkcuMtdgWWgSZtUr6+ZYVNd61hFfWekO7y8
-         wSBLYso7PHVzkgYyjlPnZhk/xIZrzrPbhP9RU4cidgTy9cIYiCeIXlmo2VDNrVpuii1O
-         UhR30W/2z8gXUJd5rzPIZf0iwclPDoVEKmvcX/a35cN/c+M2w3C3++/0K4IWhJfZpQX8
-         /w+VYhV/06icXrU2k597RDXFnnh+oqn8umke+ilUiL6fTGUa2ZJw7kdMbtuMch64+Iqq
-         XDPJS9AeU2Cvvi3WtHbG/mswHDzq655LR4W6+bIRPk1uNlvEjKGhcwMdr7QyCv241Y6M
-         RMEw==
-X-Gm-Message-State: AFq9FYKa41lmiFIcvUmXD3eYNtOOzsaKNdJLw/kbfpi8ERjVPBRxDv0b
-	2lat6kLWiieviK/DyR7zXZ9rrR4qXH7PH2szquJ3Y/8k/RHOdXM6+fCTsYvfiMDzsyQ=
-X-Gm-Gg: AYBFou3rdB1YQgv3fbkEJZIhWyX5DvfInXbR/AbMRaUa75lZZkPoSbssiXpIPMNQJdI
-	eTd9EH7UFxa9aL1TtS//BOqmGdxml1aoDP1GgH28YjFyPbUkgOEwrbfbWNymXre07217Myx7/Jt
-	LiUe3swwPKmovdeIbqlVdfm4P+xD9uwnI+tHwhdArOn534NNLJJSk4pk4STgzLIBLLdu9405XGk
-	ezyhKUGgwCQ8tPgUrBiSM7oqW3HUj0PO1F9xeTgfpWoZc+Z3oJrO/4hXi+4qn3awodLftEFZycW
-	M0jo6TDuxNlBA4GjWBMt1VsJ6Lf2WPvpUnrBR0eDYhsgvsR8G0kXU8BJNx4L5BDCH66EsbjBdgs
-	cKGIUYHEDe4f9IpHgvGcThnJdxJIN5QIbD8FIf3rAwLZyR67eLzOyOH1Mklvl3CZy4lyEQVbQrt
-	faXTAEY1b+3v+VtiK+PA65Abnrg5GjtEDC5rH0hS08rdFe3a3HuAUn4yBxYo2W+XpX/2z37DaFl
-	q1pi3yyQrR9+T89ewmhzLxS0H9Su3m4ZimkDf9wPszBPRVL0kYsMw1CdOzxm5h0jRXl3itjpy9G
-	Yfd36C/SVAMYQizJWQ5oqw==
-X-Received: by 2002:a05:693c:8642:20b0:35e:9c54:d41b with SMTP id 5a478bee46e88-369e85004b7mr9067107eec.21.1792952421588;
-        Sun, 25 Oct 2026 11:20:21 -0700 (PDT)
-Received: from ZephyrLabServer.internal ([165.162.64.148])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8d93663sm21226162eec.13.2026.10.25.11.20.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Oct 2026 11:20:21 -0700 (PDT)
-From: John Macias <dencity7@gmail.com>
-To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Jeff Johnson <jjohnson@kernel.org>
-Subject: [RFC PATCH v2] wifi: ath12k: service all RX rings in an interrupt group
-Date: Sun, 25 Oct 2026 11:19:55 -0700
-Message-ID: <20261025181955.2089498-1-dencity7@gmail.com>
-X-Mailer: git-send-email 2.47.3
+        d=1e100.net; s=20260707; t=1792953381; x=1793558181;
+        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=31EP1o5OjqqD4mpc+ubvdp77bMY467Ey02aK0y37VeE=;
+        b=XfxGnGeEyXoCOvXAT5ExzxCgb5pCQTq5Om4qrykc9EKE98riW9xa8a3NnRanylsLo7
+         keAXAJiP7wKchbH+1fuu6+3lq+FJT3kzAqZoSHiHu009insiHoHXIX7MSGHxBhlfOnxI
+         xTZPQiZF/lgkosjGdFTk2qzkDAoRXBVdSgtWgcjionWcbZsEIvxXDaaQz0vjrgPxFDb+
+         jWVidsYaBwX83laWB2jBaF7w/DWfJl0mnD0mK7QjXmiF24kwLcAYTH/wVsaM3XUbL9rP
+         F8my2IEd2o5dF984/rQSFHHHktqmxCmonlhmy62BTON2G0YiC9JxUUj6zMORzJ14IbCx
+         ZPrw==
+X-Gm-Message-State: AFq9FYKBPn91fqBQ58oSslEKPsa1jVpeAkt3ftuHHsCMjVB4IH3I7XGR
+	com6VwvSrtPIKBk6gjd1QRv0OCJeGQODRY/GEhX0K4C3jYvhG3VPZGJVj7JR7bnLI1LZWaWxzAy
+	gQmUKo8/ZT6A9cLpTekOEtC0mFN0KkjoQvc0RCdhsTTVH8l0=
+X-Gm-Gg: AYBFou2BvfCDoT9VbprwCY4ZpSiasYCBLYKkYnHWfmS6wJrvBv2hMd3v1zq/c+4oUnW
+	6Oi48Ku0Kj3maiMe5vOv8To6cUH/Kv8TOpIjlX/gLf6QiGQHE6EjV9HbSuNV0nDX/r83f8mb9Nf
+	V+WjhpXRwlDaTiYdDdk+T9+b98lFmjODkZKKeWQ+RwjjyFH7HANT7pSl8a3vusoQoN0mMrBVCca
+	VT0cAA3+KAlsqy/L2hfGFK/N3zog8JDAGiSnhoYOCvAmR5EERlXZp5I0YWUfiFdlmEYs5Vu5yFX
+	uGrMEPhpc08lNAP/GkMPIDtZwax9ACItbBtB5BsIv84CXj6ru4Qp64iJnGiBFlJkKaT7o2PcEp0
+	HyabiP23O3GnKSZ0qE2QWrBKjs6nMCk0fCvsUlg==
+X-Received: by 2002:a05:6870:5b9c:b0:48f:e3f5:c41a with SMTP id
+ 586e51a60fabf-4a83f697a53mr3011231fac.59.1792953381251; Sun, 25 Oct 2026
+ 11:36:21 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -92,128 +99,89 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: CryoSlayer <npetr9395@gmail.com>
+Date: Sun, 25 Oct 2026 23:36:10 +0500
+X-Gm-Features: AclHuK_oC29YzgcQls71mSMkCViOD8kd4Y1jEizcJAQkNSNOCh29r-8uizcLuZ8
+Message-ID: <CAEabPvL8adxViMwTFt6uwtocS+DiuYoh8zZoXeBs+huTT7TFMQ@mail.gmail.com>
+Subject: [PATCH v2] wifi: rsi: fix missing offset bounds check in rsi_read_pkt()
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-ath12k_wifi7_dp_service_srng() services only the highest REO destination
-ring selected by ring_mask->rx[grp_id]. If a group selects more than one
-ring, the other rings in that group are never reaped, and the flows
-hashed to them stall.
+From: CryoSlayer <npetr9395@gmail.com>
+Date: Sun, 25 Oct 2026 12:00:00 +0500
+Subject: [PATCH] wifi: rsi: fix missing offset bounds check in rsi_read_pkt()
+ for SDIO path
 
-Every in-tree ring mask selects one REO ring per group today, so this is
-latent upstream. It is hit by the QCN6432 ring mask from the vendor's
-downstream tree, which puts REO rings 2 and 3 in one group. On a
-GL-BE3600 using that mask, 7 of 16 single-flow TCP downloads stalled or
-failed, and ring 2 reaped no packets at all.
+The bounds check on the 'offset' field of an incoming frame descriptor
+was only active for the USB code path (rcv_pkt_len == 0). In the SDIO
+path rsi_read_pkt() is called with a non-zero rcv_pkt_len equal to
+num_blks * 256, so the existing guard:
 
-Walking every ring with the full budget is not enough: under load the
-first ring can use the whole budget on every poll and starve the others.
-With that approach ring 2 reaped under 1% of ring 3's packets, and the
-flows on it ran at 0.2-4.4 Mb/s while the others ran at 100-360 Mb/s.
+    if (!rcv_pkt_len && offset > RSI_MAX_RX_USB_PKT_SIZE - FRAME_DESC_SZ)
+        goto fail;
 
-Instead, give each ring in the group an equal share of the budget first,
-then hand any budget left over back to the rings in a second pass. A
-group with a single ring still gets the whole budget in one pass, so
-current hardware behaves as before.
+was silently skipped, leaving 'offset' -- a u16 read verbatim from
+device-controlled receive data -- unvalidated before it was used to
+index into pktbuffer[8192].
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+Any rogue or compromised SDIO device could set bytes [2..3] of a frame
+descriptor to an arbitrary value (0-65535). The subsequent calls to
+rsi_get_queueno() and rsi_get_length() would then perform an
+out-of-bounds read of up to 57 KB past the end of pktbuffer, leading
+to a kernel oops or exposing heap memory to the driver.
 
-Assisted-by: LLM
-Signed-off-by: John Macias <dencity7@gmail.com>
+Fix this by replacing the transport-specific guard with a single check
+that always validates 'offset' against the actual number of bytes that
+were read into the buffer for the current transport:
+
+  - SDIO: rcv_pkt_len (= num_blks * 256, max 7936)
+  - USB:  RSI_MAX_RX_USB_PKT_SIZE (= 3000)
+
+Also add a check that 'actual_length' is non-zero and does not exceed
+the remaining buffer length, preventing an infinite loop and a
+subsequent out-of-bounds 'index' on a crafted packet.
+
+Fixes: dad0d04fa0f6 ("rsi: Add RS9113 wireless driver")
+Signed-off-by: Nikita Safronov <npetr9395@gmail.com>
 ---
-Changes in v2:
-- Share the budget between the rings of a group. v1 walked the rings
-  with the full budget, which starved the lower ring under load (see
-  below).
-- Rebased on ath-next.
-- Added a Tested-on tag, full name in the sign-off and an Assisted-by
-  tag, as Jeff asked.
-- Link to v1: https://lore.kernel.org/ath12k/CA+KzPsr13czsH=k_UWJqj48C4Vsb-diQ-tiCh7W4XW31E8WzHg@mail.gmail.com/
+ drivers/net/wireless/rsi/rsi_91x_main.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-This is still an RFC because I have no WCN hardware, so the WCN side is
-untested. Since every in-tree mask has one ring per group, the change
-should be a no-op there, but I would be grateful if someone with a
-WCN7850 could test it and reply with a Tested-on tag.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c
+b/drivers/net/wireless/rsi/rsi_91x_main.c
+index xxxxxxx..xxxxxxx 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -157,6 +157,7 @@ int rsi_read_pkt(struct rsi_common *common, u8
+*rx_pkt, s32 rcv_pkt_len)
+     u8 *frame_desc = NULL, extended_desc = 0;
+     u32 index, length = 0, queueno = 0;
+     u16 actual_length = 0, offset;
++    u32 buf_sz;
+     struct sk_buff *skb = NULL;
+ #ifdef CONFIG_RSI_COEX
+     u8 bt_pkt_type;
+@@ -164,15 +164,22 @@ int rsi_read_pkt(struct rsi_common *common, u8
+*rx_pkt, s32 rcv_pkt_len)
 
-Testing. Both radios ran OpenWrt (Linux 6.18, backports 7.2), and only
-the ath12k_wifi7 module was swapped between runs. Rebuilding the
-unmodified sources reproduced the installed modules byte for byte, so
-each test module differed only in this handler. The QCN9274 build also
-carries an unrelated local REO fix, as installed. The QCN6432 is a
-GL-BE3600 using the downstream QCN6432 support (not upstream yet), as a
-5 GHz client of a GL-BE9300 with QCN9274. iperf3 over that link:
-
-                              before    v1           v2
-  16 single TCP flows done     9/16     16/16        16/16
-  slowest of 8 TCP streams     stall    0.2-4.4      70-83 Mb/s
-  ring 2 vs ring 3 packets     0 vs -   3k-8k vs     about equal
-                                        0.7M-1M
-  QCN9274 RX, 8 TCP streams    1012     1048         1034-1042 Mb/s
-  UDP loss, 8 x 50 Mb/s        -        <= 0.02%     0.00%
-
-No warnings or errors appeared in the kernel log on either side. The
-QCN9274 groups are single-ring, so that tag shows no regression rather
-than the fix itself. The hardware runs used a variant that differs only
-in cosmetics (left-- was inside max(), and the comment sat inside the
-loop). The patch as sent builds without warnings with W=1 on x86_64.
-
-This work was assisted by an LLM (Claude), which helped analyse the
-handler, write the test scripts and draft this patch. I reviewed the
-change and the test results, and take responsibility for them.
-
- drivers/net/wireless/ath/ath12k/wifi7/dp.c | 31 +++++++++++++++++-----
- 1 file changed, 24 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp.c b/drivers/net/wireless/ath/ath12k/wifi7/dp.c
-index 397da016b..67a347362 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/dp.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/dp.c
-@@ -27,6 +27,7 @@ static int ath12k_wifi7_dp_service_srng(struct ath12k_dp *dp,
- 	int tot_work_done = 0;
- 	enum dp_monitor_mode monitor_mode;
- 	u8 ring_mask;
-+	int rx_rings, pass, quota;
- 
- 	if (dp->hw_params->ring_mask->tx[grp_id]) {
- 		i = fls(dp->hw_params->ring_mask->tx[grp_id]) - 1;
-@@ -50,13 +51,29 @@ static int ath12k_wifi7_dp_service_srng(struct ath12k_dp *dp,
- 			goto done;
- 	}
- 
--	if (dp->hw_params->ring_mask->rx[grp_id]) {
--		i = fls(dp->hw_params->ring_mask->rx[grp_id]) - 1;
--		work_done = ath12k_wifi7_dp_rx_process(dp, i, napi, budget);
--		budget -= work_done;
--		tot_work_done += work_done;
--		if (budget <= 0)
--			goto done;
-+	/* A group may select more than one REO ring. Give each ring an equal
-+	 * share of the budget first, so a busy ring cannot starve the others,
-+	 * then hand any budget left over back to the rings in a second pass.
-+	 */
-+	ring_mask = dp->hw_params->ring_mask->rx[grp_id];
-+	rx_rings = hweight8(ring_mask);
-+	for (pass = 0; ring_mask && pass < 2; pass++) {
-+		u8 mask = ring_mask;
-+		int left = rx_rings;
++    buf_sz = rcv_pkt_len ? (u32)rcv_pkt_len : RSI_MAX_RX_USB_PKT_SIZE;
 +
-+		while (mask) {
-+			i = fls(mask) - 1;
-+			mask &= ~BIT(i);
-+			quota = pass ? budget : max(budget / left, 1);
-+			left--;
-+			work_done = ath12k_wifi7_dp_rx_process(dp, i, napi, quota);
-+			budget -= work_done;
-+			tot_work_done += work_done;
-+			if (budget <= 0)
-+				goto done;
-+		}
-+		if (rx_rings == 1)
-+			break;
- 	}
- 
- 	if (dp->hw_params->ring_mask->rx_mon_status[grp_id]) {
+     index = 0;
+     do {
+         frame_desc    = &rx_pkt[index];
+         actual_length = *(u16 *)&frame_desc[0];
+         offset        = *(u16 *)&frame_desc[2];
+-        if (!rcv_pkt_len && offset >
+-            RSI_MAX_RX_USB_PKT_SIZE - FRAME_DESC_SZ)
++
++        /* Validate actual_length to avoid infinite loop and
++         * out-of-bounds index on subsequent iterations.
++         */
++        if (actual_length == 0 || actual_length > buf_sz - index)
++            goto fail;
++
++        /* Validate offset for both USB and SDIO paths. */
++        if (offset > buf_sz - index - FRAME_DESC_SZ)
+             goto fail;
 
-base-commit: 734bef548a96e8774d6eef5dfa2026c6edc4e80b
--- 
-2.47.3
-
+         queueno = rsi_get_queueno(frame_desc, offset);
