@@ -1,92 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.174
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793028341;
-	b=4bl2hmStgSjS5SGW6+5YyQYJKsFl7M4753OxGH5VlSG+BqbjLxsa3QjTtu4KI0oUPS2W
-	 DpNdZc+SYamHrpUCCZHTzxv3+GMH5vCaPE0LXhumVNksZS+hI9KLupsphXDx/zlz8WYn7
-	 Dj0s41G6UD7IO6RH2qV5QpS0RxEpb768c9zb5jK7jrbAZe+HSsy6henPNgy6AGmoOsc8v
-	 sQI2MEaFjJW8RZSx+y3TldA2gkACgdmACq09DjiPKo3WT9KjH4zoWJP1DkwwJZZnJnZ53
-	 2fOk5gq7ebJA3DD3JnXrJUwwiV6AfiB00zkbkkmq3+xA6PenjtMynN24oehqaopAVig==
+	t=1793028444;
+	b=OrfkE4ENPWn2nMZ4Ap32LtdGVd7mBSMB4aROeqOfcD7p9C9Dfw6QxIedzKQ8sMVM8nIZ
+	 gvq+da9h12tqCDE3fwR6oMo6v3/ndd6JaBtTE9Hzs4xphJfXILTfxnmUFs2bfnijk3hFN
+	 oT07kPSOCCWKLmDUIvxj4ziTaKrtKqQ+0n1cStloz2iDPLb4RySVhAH0j8Fn7W7wvVH1G
+	 rH0DpNhLHQxSfAVWr5xNK8dcuRLQdqxdaLAGh/EsoEdjoen3/z6zJDKYzmM/wK3+Ikjz/
+	 hmkA8Tcp49Qdn3rSpUzQMHe6MtVwVamUKW+EuXzZ6Xxt6AwNVNHMT8cHKIBEU7no9LA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793028341;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793028444;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=4YwDROZjw8lJkfVsNq0JU1At6fg3SRg612YAoXh1OEU=;
-	b=iKdhf5BMmxjW7aqGQskaz1MGU5vNWr8mGBVcHtE2ZkNxhK1yfXY7hyU2/bU7rHaaozkU
-	 CTxDeekXluSr499TKL5I7ut+lm37CzS/nTJ0juCvl8O7QLN8StyaJXYA3gsNUCANBg4gW
-	 5ZZaLDGjni6QctPRDrddLt97kf/pr86fhAXo+qvSfXjOb5OjCim8ltauvU0BZagzEHf66
-	 981p6UZAvXGlBW5M+CzIjfePW+ksSqOYHZuW9JHlReEh5cSj2U3ZKm2tOr38eoVZ6LrqJ
-	 AcT9BZZOU8cygmzGHq55cYqoXYERM81y5y+Hzyan3BWVEUpqb+vizRQmwTgwbj0DC/w==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=icXw5cUiWlz5rWfTUQ0wOJr2LvS5fa2INLJ4qgOPSMo=;
+	b=TD3+UYwHDCSKtfV97PEJ/QX8W+owUwd7/rqfafOmCVG1YzUc/CfIUR4MgDeuTR1Er9h8
+	 rjMVU8CjBOjM2cTM667veOiHD0wIf4Z7GlJfP2NaOwCwBUzFHms7Q9ycxkjucp+uRXhji
+	 cJzr54ER/WX0E+22vA+wwdXoHdAjha+5KwwI1jeszWcPcwF1CoqX0JDLvyHPGSCgRm6fJ
+	 G2ByVKqHJ53zcoh7eClaTJ4fzz4ag2zapTah9ea8kPV4rwrT+4kyEZk4s8nrNrF5yDv84
+	 AUOO2ufB5ZCIfQEiU7WG2hqBGcF5I4RxYNPlxHH0ZII1uJfVeab7c5RL6B4YaYelZyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=P4YQberJ;
-	arc=none smtp.remote-ip=209.85.128.43
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bfsCPrwm;
+	arc=none smtp.remote-ip=209.85.214.174
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FB25606A31B
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 15:25:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3FB25606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D25B5606A31D
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 15:27:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D25B5606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=P4YQberJ
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a2000d5fb1so20933195e9.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 08:25:41 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bfsCPrwm
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2e9995ce866so29112625ad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 08:27:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793028340; x=1793633140; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1793028443; x=1793633243; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4YwDROZjw8lJkfVsNq0JU1At6fg3SRg612YAoXh1OEU=;
-        b=P4YQberJdPZJpMvUqWaUC8q4sGotadpwikV8wHwjBJhqrPe98kDTlNIu3aGRXAG7RL
-         hbWtchVT1zjIDyKKFqTn0IBSTFm+6hrP3xhwj5/uZPd/CZ/nR/ZLmIZcJDYOqP307q4D
-         NHTt2cWS/5iuiBFQZ5AJtcQ6awsqLOSldFlv3DqPtoRmdmBpeaTM9ZU9U/3sS2uX+Wrf
-         9e3a9BJ1kmDzgLvFUHwdVdUuJTI5SxdLdjqVWe0oJHQUCzyQ4f8qDXDOFXv1q1dSJAar
-         ng+hCpg/wJHzjOSTTvOxEzRvFDPRBrtyWRlXlnihC/Oux0McFYEEkoRx8WEKwz6u0PyH
-         9XEg==
+        bh=icXw5cUiWlz5rWfTUQ0wOJr2LvS5fa2INLJ4qgOPSMo=;
+        b=bfsCPrwm+ad4L4mOecEHO/1R2ve1iTljR5+QR4t0AqvyTBRIQD4Mfibr3x4ot/3eeq
+         wpoU5e1PgwnA8c8fizuSC5ZjSK3A7UZMBujw0ALSFHQXwzvbblh1MkzlXARBAUFmO3fF
+         u1Erz+jTf1JyqpEq77jeELaRzGmrAhSsAR8cZ9FPl/jUWGTsvTfZHG7UZ4O6PRE3WwTr
+         RiWy57QzMtL32Cs/vrieWxyluqEWuKkWZF133QVLLSyiOcxQ1T9p6mkBgeXD/GcU4FbY
+         6xcTAdmHWBJIeIgHuZJIcnZOhLSKPYFO5dIrOmpU6AFsP6CUJwFesWyW1MWgy9QaDmRN
+         FOeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793028340; x=1793633140;
+        d=1e100.net; s=20260707; t=1793028443; x=1793633243;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=4YwDROZjw8lJkfVsNq0JU1At6fg3SRg612YAoXh1OEU=;
-        b=IG4yMh5SrBj5aJy4/UqTs3uZu6noyuugjctKdZq9/AwFFTo3CXuHh3+bFxveTR5JAE
-         PwfJk2ujcjhJNy7BUietYOkggXsYNG9uIiXcrkBi3QBS7zzhfzp7lyH9fiJXWVXyTvv4
-         Cf/s314f7NDYXSYMON+VrodFcLlGJBNwkDxSka7oherUeFa7+uVlL4ISv6IY713ecSEL
-         jGGZXHSeqqprpFyEpne5s+FDcbl4NRC+RZZNq77kiRwLI8iKaZxmnEFB6oH0iA+r6FAR
-         DNLMb2842GH41TkaUg/RHuwuqtDLB54D1JIMe2kRFipfrMi897NeZ7cYrz3jbj+DcO/T
-         JveA==
-X-Forwarded-Encrypted: i=1; AKwUvBx6+CG7R0IyNF8JtW7JMGVB3L8l6ASlOGpIDE7gUJBrHNk+LxIE7yR7mJMsRwftkFNqUewOaGWBUTdGsoQ8tw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKMehRuMivTM1NV5MdMfuKnyqZGu35EFVdG5H3eCh036nuYiuwx
-	o20rbIsaGhLRaD9W4nyeOFmBHbSEIiw4FWMBefxojLz1kHqdKTelwd8w
-X-Gm-Gg: AYBFou3B1dbL0EhBb5ZyiP2p5hMtjrJGQH7ibUstE4qVxbhhV4w5QntXusWseqr7V2t
-	fokETXxRDYMFBZvwRulb1GaSM5PISFS4jCM5v2XXF3rSuBkn/twcKTRsfnqqVVS5TwhoLLR3PcG
-	mWFpirxCdAMQsfiFgMGTt7zCXtL7ANir3qQWbeCVyRuCm91NiDQ/ENjYfPWnQTrIu7VbzcAizmh
-	206T9Ey7cRqPDK5CMQiuTBMglFcioLfxRPS2vGtu4k9yXNh7HARvXeEzr712FRpTO2lEwrdgzGa
-	F/Ww4CK30lvkwa3UHjautAtX6jTvS+PK8gH0Q2Nblmu4hfoonHacHbeOAIoUKeAh05TYlNCaLYS
-	TH/V+I5UqjDm0TXdhXG7rvGWk7aGbWM26kLBN4gVSbr0P+YW7h+b0zyVob84z70IiPs17cu4oFV
-	TRlnb0N4tvr7QcYqh620Z8tpQDlxUvAU4kKoX1tQRjsHjYnOqGsoT/Vit/PwyNpApSGqdz1PHPo
-	v9H6ZsU5J0s3xw0YxiJHlCpL/syXovC8jTvKBjVCc+q4P/RvAyRQWEo01DKhQ==
-X-Received: by 2002:a05:600c:c095:b0:4a6:44b:2593 with SMTP id 5b1f17b1804b1-4a6044b27fdmr53438845e9.29.1793028339458;
-        Mon, 26 Oct 2026 08:25:39 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a08643dsm159615375e9.4.2026.10.26.08.25.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 08:25:38 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: Luka Gejak <luka.gejak@linux.dev>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
+        bh=icXw5cUiWlz5rWfTUQ0wOJr2LvS5fa2INLJ4qgOPSMo=;
+        b=KjG46A+NBJxJW72dQPasiLsZ52hN8BtVumbfqVHhhY+x8/qOZgr0+03K2YC+3ApkmT
+         agibH6uA8BUQzfvXniQkz0eCtetgbcI92ofD3EeFh6hMPNo4ayn2OdRmmegeynOfFOV5
+         CF1Y+yMu2tgagzPc9cbGpQLxg2pg+UjP9ZFJoAh3qt77hJTMPsaUWrC2+kCKYAZ16TS7
+         wSe9FguBHWfdOWvq6wPgytTbbZUFtMjkrFEsRo3unpIvbFBOgXenQpJMo6Z6nKmoEUWc
+         WnK8WWKxg5HtW+vkgCHoE4MmC89H2TMzbIuM2Daq57GwN32yUcrfthfKyNlRCulC1tpF
+         Lskg==
+X-Gm-Message-State: AFq9FYL0Ud77CuNwRIxyauBA+dW5fkYRapf3UFi5kChAORKMrjPr5cA1
+	EcfFBYzwSeXEi90Cq0hJIfzJHnI27gJo0M+abid1vjk2dFVtMzDn8EhXIt2g8jjR
+X-Gm-Gg: AYBFou29/J6XZ/xjMzBGBJqIyB0Y5Sm0yZg12X8YNI5oOenfer47DVilR0xNgzJOJWq
+	pysHctWaUVsBO3ag0SYlEyLVC8xNTdHuAR6OLxXkRFWYVHcQaPOcQaPY8YUBGLhe/cBZ4CSV+um
+	07VH/rMZCQlLE21SZOU2Xrgk6HpVbNI4CcI667F5GYHYVdwWHfECETci+zANxFI0VGpOMtQobAS
+	CfeqaPQfk71DqV4BmTOiGdvyiuszvheOXSGYjIzpQAh9TV3Gq0nrP2D5tHtLnAn8RP2QXFGBG/I
+	RzzJtCXwoLvmMgCW0zLngslwWKcFi2gMgqoPyssgofNsX7J5Uq9MU3qaQrOT+UAw06s1K8dz+JC
+	B/Xc7pAsq1lDeuMIbDs0pYOEnPQ3kyYNGwfqpeRy0ddk84bh5vHUbqS+J9/8NGrTzinwkvSs/He
+	QUNZ6flgBP1KvCbs/QEaCDYluX5R4fqn1Dth4syu77bVvK3NzePgZkonxdxeoVKFSVOJ6OXKuA9
+	kMJERaF2SGS8Ay7yqDmyv6vV4UYU0aLVVP9iZa+MnTsLwL1A//d/+lAZYnrbFlqVGwAwhipebPe
+	jI+L0XM8J69rWpnxjr4ZNg==
+X-Received: by 2002:a17:903:234e:b0:2e9:7ff5:545a with SMTP id d9443c01a7336-2ea9c67c29fmr66184465ad.32.1793028442579;
+        Mon, 26 Oct 2026 08:27:22 -0700 (PDT)
+Received: from KRHW1CJW23 ([139.177.225.224])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ea9af32085sm18713105ad.2.2026.10.26.08.27.19
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Mon, 26 Oct 2026 08:27:22 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: [PATCH ath-current] wifi: ath9k_htc: clear csa_vif when a switch is aborted
-Date: Mon, 26 Oct 2026 16:25:37 +0100
-Message-ID: <20261026152537.1272836-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: fix use-after-free when MLO link setup is rolled back
+Date: Mon, 26 Oct 2026 23:26:54 +0800
+Message-ID: <20261026152654.80697-1-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,52 +95,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+Rolling back an MLO link addition can free link containers while RCU
+readers still hold pointers to them. ieee80211_vif_update_links()
+publishes new links before checking for duplicate addresses and calling
+drv_change_vif_links(). If either fails, it restores the old pointers
+and frees the new containers without waiting for readers.
 
-priv->csa_vif is cleared only when the countdown completes or the
-interface is removed. When mac80211 aborts a switch and stops
-beaconing, as ieee80211_stop_ap() and ieee80211_stop_mesh() do, it
-stays set, and the next switch on the interface hits the WARN_ON() in
-ath9k_htc_channel_switch_beacon().
+During a non-MLO to MLO transition, the published link 0 replaces the
+deflink, so existing link 0 users can acquire the new container. Readers
+such as ieee80211_csa_finish() and
+ieee80211_obss_color_collision_notify() can also queue work embedded in
+the link. If they queue after ieee80211_link_stop() cancels that work,
+it remains queued when the container is freed.
 
-Clear it when beaconing stops and the switch is no longer active.
-Off channel, beaconing stops with the switch still active and the
-countdown continues afterwards, so keep it then.
+Wait for RCU readers after restoring the old pointers and before
+stopping the new links, so their work is queued before it is cancelled.
 
-Fixes: f0e449627e4a ("ath9k_htc: add support of channel switch")
-Reported-by: Luka Gejak <luka.gejak@linux.dev>
-Closes: https://lore.kernel.org/linux-wireless/c8bc5affa75d7519b424ea98c07c1d6b65942347@linux.dev/
-Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+Fixes: d3e2439b0f33 ("wifi: mac80211: fix link manipulation")
+Cc: stable@vger.kernel.org # 7.2.x
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
+LLM-assisted source review and patch preparation.
+KASAN test-tree harness: pre-fix 22 reports, fixed 0; wait after stop 22.
+Sparse, Smatch and driver-failure testing were not run.
+Older affected kernels need an adapted rollback hunk.
 
-Notes:
-    Tested on an AR9271 (firmware 1.4), 6.12.114, also with PROVE_LOCKING
-    and DEBUG_ATOMIC_SLEEP. A mesh point left during its countdown and
-    joined again hit the WARN on the next switch 3/3 before, 0/8 after. An
-    IBSS does the same with [1] applied: 13/13 before, 0/35 after. A scan
-    during an IBSS countdown still lets the switch complete (24/24).
-    
-    [1] https://lore.kernel.org/linux-wireless/20261025193615.1123718-1-mehmet.fide@gmail.com/
+ net/mac80211/link.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 +++
- 1 file changed, 3 insertions(+)
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index ce1c95b40cd9..34d313a2fef3 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -401,6 +401,8 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(sdata->link, old_data, sizeof(old_data));
+ 		memcpy(sdata->vif.link_conf, old, sizeof(old));
+ 		ieee80211_set_vif_links_bitmaps(sdata, old_links, dormant_links);
++		/* drain RCU readers before cancelling work they may queue */
++		synchronize_rcu();
+ 		for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
+ 			ieee80211_link_debugfs_remove(&links[link_id]->data);
+ 			ieee80211_link_stop(&links[link_id]->data);
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0d6272ac0dac..8080fff765e9 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1569,6 +1569,9 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 			priv->cur_beacon_conf.enable_beacon = 0;
- 			ath9k_htc_beacon_config(priv, vif);
- 		}
-+
-+		if (priv->csa_vif == vif && !bss_conf->csa_active)
-+			priv->csa_vif = NULL;
- 	}
- 
- 	if (changed & BSS_CHANGED_BEACON_INT) {
+base-commit: 6b4b543fa18757297ac756a6fe6e64f506b7844a
 
-base-commit: 9d8ec0b5b5295bd23d979d1b2b905de25c36fff2
 -- 
-2.55.0
+2.56.0
 
