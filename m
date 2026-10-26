@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793035556;
-	b=fKu0IJ8rLm+DQ162xF9Gd1TW1c2kjgfNgCVz10wCzMPewSlJKCNi/MVIWBMubra8DI3w
-	 Y6rxEzv4oR26UbrFHJb/lXL0x54qiFJae3m8PKTq/94ofWU8dZInow19EwvRKhrpYl9mb
-	 lH+CMUNY+DIwTKrPRG0OoHqdJ8NeueFQ/yTL4qaL2IQ54rt3WThMztD7Hzo9nb5lbyb4n
-	 EraLwUs3rFhRk1LaPlWlgcthyyIT8s7Oltz7M7KO5o6j4WnKltbhh3dhhdjN16puO63Xa
-	 29L8UrrFPsCRLQTbAp9zu57jZfNWd3itS9xAv4nc/ntBYkOjHgVGXdkBXvO7RoE5OWA==
+	t=1793035581;
+	b=DbFrr2ZeyfkXf0GX0KInGqIPHRNd8hE9S5pwoMuwUtSuzNCWr5vAKwxvtLPHsWP3Pvp/
+	 9iYf6j1HD8X1uEDYhzxFsPm57nOhSzuaq4GnhGK5vIXLeqFN9/IdjrgwN22jEmheKTN0H
+	 DZ8MS/RmCQik8bNszFmB02D2Uazu2MzxkmYGzalu9atNegyk8izvTf99oHTYszSlaHYjQ
+	 Argtle0CxnWmzO4bchliFbGsmBtiF8oXjbaD/GqzRmlnupb0mfS14v3KHM9E8uB+8+dZ5
+	 /MKQZLp2oLRryF9zwhfylOmlzGst3hVnozycSEJIMogX/cmnOy2u+LfVuUEjLqRtmWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793035556;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793035581;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=4flWI2WVnwFI/fTrvl/y9DbpMdHilW4fazMAT/2C8K4=;
-	b=qkzgOO8Suc/CN1AxQcIQvciFT7/Pmhqb4uasS64yzFYBjyJpERXWAUOJOFveuFOX3bnM
-	 5lzoXICIcBsonzoL+sKMFQIVSKFuIfp3RzqMsaDFRAtA5gCjz/nKihaPSK83fEB9Q6KgP
-	 f/eqcpnyhrfCqLAsQ4sSm68lptZIJUuFL9uAGT1BniYjwS5rq8veFvM3tA0QtQhEBLe3R
-	 tyqFJh2IZ56diq303jCpv1pw4RSsDOsE8olFdaOdCGN+9S0E3d8SwJaRHpe1x8ao3FPxn
-	 HnaTFBT2YFYN4hP5UNDcyjTappFzbMr8o7WrPuFr5VV167HI40E6g+J3di7h3G61vtw==
+	bh=Y7fieeF7CmqetCmDW/QKoeVOfYtQRHVfDW9OzlsY0n4=;
+	b=UF2h+cJQ+tGef6eGf8HVosGw8P/v7Rq6H4uDAo3HWStLzhpUWr6xN6/IPVuiwTWgK9hv
+	 GvkUcOQDtIc5V7PA4uBgdFjcsL4AxjGu+ltzHQf3DCbtaSsEtp2JcxxMyoUkQt+gJTJnV
+	 xClhaxnflG6fHiM3qbwUC8zITliaJ0ZVMC6KNnv8SexGCqgIo6oXksjGJUGRsVfWqHtCi
+	 KtpZ5zqjYTGOL4tre5gbLYmEDzslrqhSIJMcI7SjmvDSFjTgT6eeYG6SvNs157FgR78Nr
+	 TzzxDJNf6ovCYShmr2MWPW+2baKzJT4JFMTSf+Ca7UOQd7bOdYDtuY/pLJBr06S6/7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="do/DnN1s";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bIwrq3jc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45643606A31D;
-	Mon, 26 Oct 2026 17:25:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1E02606A327;
+	Mon, 26 Oct 2026 17:26:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=do/DnN1s
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA8AA1F031E1;
-	Mon, 26 Oct 2026 17:25:52 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bIwrq3jc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 893661F01825;
+	Mon, 26 Oct 2026 17:26:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793035556;
-	bh=4flWI2WVnwFI/fTrvl/y9DbpMdHilW4fazMAT/2C8K4=;
+	s=k20260515; t=1793035580;
+	bh=Y7fieeF7CmqetCmDW/QKoeVOfYtQRHVfDW9OzlsY0n4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=do/DnN1sS/BFglJXOVc3eSqMWCTulTWj7p+/8C3vlAjiIZXkLfkFq6Swf3Uyn1IUU
-	 Sj1q08ywy4L7I4hshh4mggb81RpchiYROxIIos+HPKXxZmsJ6WcqSD+8S3CZOOTE9g
-	 qjvHFXmXB9W2eRZQ9Jogkt8laFHm4/M19aEW2a/HErOn2EIkWygQkWrYrUSW4IStr4
-	 EMsE9KAHgg9TF3Vtb88B8eqVr1iH0YB3LV9tnrFmp8odKW4wOjD7ovpWx49ulxtBmA
-	 9X+Qvsz7hDgthb4wgYZRcfYNPc8g60Spyim+kDi2YZ3E5HhzAyp9dei5iTrZqY+deG
-	 jA0LRiGwZaZBA==
-Date: Mon, 26 Oct 2026 17:25:50 +0000
+	b=bIwrq3jcWrVWlKY8Ol4vI8+yt/qdkIhJvzjUsFnJcQWz3XJYeEXX2S4C0ZhimFzof
+	 goBbek1dQU+wXfkoaPDg3K54VH/pP38R+714tMnt48sRGhzCxeYts7CkqGlCj5V+wM
+	 MUvhfO4sZkf1zfcxsOHV016bxGhPv5P1SLg6l3H7T/dqml1fDcfdtBSNE8RYo8yXya
+	 RxLGizVb2O5ZJry4Es3MXd/uAUOEio8S58XVeog9qr3kNNdiZLowA2thGEVkKW0iVF
+	 2xmF4MLCyvZ3pC7/5uFhf/hgxEa94yrglFs/C+j2WjAPs3Cms7mHnWh/ClX/km5DZo
+	 N20jrkg72XU4w==
+Date: Mon, 26 Oct 2026 17:26:15 +0000
 From: Simon Horman <horms@kernel.org>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
@@ -55,11 +55,11 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>,
 	Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
 	Jeff Hugo <jeff.hugo@oss.qualcomm.com>
-Subject: Re: [PATCH v4 3/4] wifi: ath11k: Connect to the QMI server belonging
+Subject: Re: [PATCH v4 4/4] wifi: ath12k: Connect to the QMI server belonging
  to the device owned by this driver
-Message-ID: <20261026172550.GJ257209@horms.kernel.org>
+Message-ID: <20261026172615.GK257209@horms.kernel.org>
 References: <20261022-qrtr-multi-ep-v4-0-c6fdb75fcd3e@oss.qualcomm.com>
- <20261022-qrtr-multi-ep-v4-3-c6fdb75fcd3e@oss.qualcomm.com>
+ <20261022-qrtr-multi-ep-v4-4-c6fdb75fcd3e@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -71,10 +71,10 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261022-qrtr-multi-ep-v4-3-c6fdb75fcd3e@oss.qualcomm.com>
+In-Reply-To: <20261022-qrtr-multi-ep-v4-4-c6fdb75fcd3e@oss.qualcomm.com>
 
-On Thu, Oct 22, 2026 at 07:43:09PM +0200, Manivannan Sadhasivam wrote:
-> When two identical ath11k PCIe devices are connected to the same host, both
+On Thu, Oct 22, 2026 at 07:43:10PM +0200, Manivannan Sadhasivam wrote:
+> When two identical ath12k PCIe devices are connected to the same host, both
 > advertise the WLFW service with the same service and instance id. The QMI
 > lookup reports both servers to each device, so a device may connect to the
 > firmware running on the other device.
