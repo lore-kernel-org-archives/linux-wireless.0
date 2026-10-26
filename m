@@ -1,66 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.10
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793052233;
-	b=3kL//N+kexJncBtwbRxAAJ3r7P4funzb1okQQsKWpGa5+wIKPzZ1ilvGC1MTQ5fgA0TV
-	 laruljk1QoSwJwcblni3btOkFuIJDOXTNyIt//ak98iVECeQb585xAyp0J11hGTFi5oay
-	 rWfldGQvb/lF0a4DI4NcIjEAv0QEWAPVZ1cHU3V/A824R2TCn0bsZ+0M4iSleO5ZaTjuN
-	 e6sioFq5W1w5/pBjHxQyrA7/4FtXm8V/zWvDUCs01ShdDI30ypbKa993IAcHh3zTfjKIf
-	 72VQafMYRHzFDkQmzW1cE2P5C4B/aVvd8eA6caaYj1WDfeOL5A8a5QJufvhI5GHEsoA==
+	t=1793053918;
+	b=ZDr1WYa/JL6JgjwcWPMzgEZ/VahsVsi7tZPi7/7P7NtEIYz4uzTfMhk6FHwAOZr3Ivpy
+	 M1cf0c+oy1J/51o+RRmM3y/udDAvjAbdx4TcweTQCV3ibl43z/1CnJJ6nvTRpaA7p0a04
+	 Bpzc/PYnFbal1tk12rBQ5qK1ckXAEpZg1wCBkIaRHvx9Cw/pLsLHF2/I0B9GZ0/Pz2GeP
+	 8DpVFoDvYpPKTMI7FFk/p5OQ/16LqtyVvi6UyRtZpf19Eoi0SND3qf0vtE1NkHgboZSj3
+	 qo4+t9T3tkWPFFg1wIRSsXcm7Y7SLQKeQxb0JSFch4z9+Pqix9DyPvKVTKZew9DmTWA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793052233;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=ibD08606yEFUxTJGU5K0RlgFEJpEu1WZ7fdVr6ZErf8=;
-	b=MBwmHlfvvGoP4EVAZ7zlqpltLOI/eHeecZbsmR+MvXJaPxd4XjVy/+cOKSCq1EYnEeTD
-	 aWteZDIRUlfPHRrpfVYIwiz0AByaxYRUdPy8UDCI2eXFark1ZiijdU5Aux5W8eHy0KADi
-	 +D5kz9Eb7K2iO+ZSTPVwFQWZNdBe5QbkxNCaiInIqMkHkE6+/jxidpjAIVIWGkfsEFH7h
-	 d/MS5FZH7iaDSHkdbudme5nyYFC1QjOlgRcjE5GrBsZGh4onUWNFqtqJ5MqFWJe/kcHqT
-	 Yy3KXS61UBhs4wTk2SWMrK5CC1f1mRGVUYKzOrEiCeFihd6m5HBjStIQbVRAVSY3MIw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793053918;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=i66KXUTXEbPZ+43dRja9tAwpUa6R3X+N03pd/C5xTMU=;
+	b=EICOzeaIb9p0sWdfEmcZRgE99dVsP5OFdSKzvC7yCZ5ZTgSZHA4aZVU7OL+nABSjWOUt
+	 YbY8RnKG26GnnC7iE7QdcBE36V7mXIiSc5uvB2vjmErdR4KRK/NgTJHWvyFN11QpXPwzN
+	 HCo5H4azyQkZihr1CfTrCmIjvJx4S51ifSaPN84Ldg7OZQ9iuKQekgKZInsOscWPDLMD+
+	 XU47HP9V/mrwsqBql5c6uS2MViwNSoNuQNoKN4Cj32nh0jMxSFBpGVvdU6UThpe8Fdi2n
+	 dnEbX4wXsCGYEHAQplIaqhMt0DwEQ9r56Px2yq47wVte/UZg77kAWUmnOkQRXWwolqw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=justthetip.ca;
-	spf=pass smtp.mailfrom=justthetip.ca;
-	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=frI4I1AT;
-	arc=none smtp.remote-ip=95.215.58.10
-Received: from mta1.migadu.com (out-10.mta1.migadu.com [95.215.58.10])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=d0xMsaaB;
+	arc=none smtp.remote-ip=209.85.128.50
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1466D606A31A
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 22:03:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1466D606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F33606A320
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 22:31:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28F33606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=frI4I1AT
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=jh+Q1NPj1U0mthfgFZ04CAfxglcvSphNXg64QZcFOik=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793052230; v=1; x=1793657030;
- b=frI4I1ATEmh1cT7dDgpYt0tW2TtZHvgZ5VjhDk/QS1ImIHUqSHPnR7kz5tK8VdVPF8CWTLnx
- Ep5Y2VMxX0tMOCP/+8zSvzoYvvNySfqmXS2NWG360chBXjjHibiq/g90YRoNMXe+EWwD3nm8phf
- MJ0+eEN0SxrWL5bNqwR3fumM5e5eofz46iVzl+3imv8pbYwXFzT85Yej5sHYepDnvV0vH8Z4h1n
- yMw8yP7Y9EYKo3ttYGIOA55GDxjc+XS9tucnYYOw9kAl4oZe997qlnXDCUl0ujAq/GyIXWypHTp
- QYIxJeLwp3Ug3CbxcxNf4WUDDxdEALAANScrw/4ShBisw==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 475ee133ccb2599b;
-	Mon, 26 Oct 2026 22:03:49 +0000
-X-Mizu-Trace-ID: 475ee133ccb2599b
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Deren Wu <deren.wu@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=d0xMsaaB
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4a35d5d4a20so23229295e9.2
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 15:31:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1793053915; x=1793658715; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=i66KXUTXEbPZ+43dRja9tAwpUa6R3X+N03pd/C5xTMU=;
+        b=d0xMsaaB4WGjhMGrkqJN3tX6vRJtYGRSPRYoGoe7IZO7UV4g1DmJdKOBC8MC0hTe9b
+         M3dc8+Z6enUQtR4ba2NqVaQYFK+jToBuneUNHPAWzRyjufMRUUn7X8OAuPFaMViZacY5
+         tGEeiCjn4N/mOuI8HmFE8f6psJFG15ukXejnByOU+7as89+1MJyIkdg8wVNmO/fkqaC+
+         wMbr55l9WYeD5beBpoGhc+H5K6r22JrkwutGP69iz2rfdCfDuSors96/KLnr6vzWKuE2
+         0dhNi2/o8cgV2Lyzyv5DWV3FwPeiIPdjANz9T/0C6n8lR2IHxr/u4l3wn57uy2rUtA5y
+         9m9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793053915; x=1793658715;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=i66KXUTXEbPZ+43dRja9tAwpUa6R3X+N03pd/C5xTMU=;
+        b=02HvF1qRUlOGN7Fp4MLli263zNjmJxU8svT9wvh0yPpOXD5e/uskj4mv2XqQFKmdCw
+         JePp/B5d2vGBbFJC36VyuciCsOYENgns9OgqlrvWSySXdq6/LeGN2DtY28MjIBG+RyBx
+         6LOLDDhYnzV42SoIeiv1+ixU+sbnU2vUm6SpEyf3aFAkHui92X5GAKhBJi0L/594dRbF
+         By0KF5ipgaTcbwG8o0eS3pDwwVtsV1HqduU0O+1X0kTD5+PqxeNL51zAkd+XuX3PQVVH
+         Gj8OLw2rEvcYVqq7PY7k89dgnjY2BEAoDF81A+PiAG5hjyn5QFMzEQhje1T+/wh0q4gg
+         gj9g==
+X-Forwarded-Encrypted: i=1; AKwUvBx8Qu01tZgFslGNvECylOoBHezZNYHtBOelR7rbWjm2e1aubNTZOoV4YUkTqlbhePhL6knbyFeyR+UM/6pWNA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIffstIXTAmumR+Iqe+1bmZdAzDr+RvPM2YbJG4w/PWcASrKx+x
+	sRVr3NlWzt38p9+2Uh/RGS+eZWCUdNpK8MqPZKSasTbR1J3vHvz6t1s=
+X-Gm-Gg: AYBFou0ueevTux07Zmv3OyOgB6kElF6YY1GNWPnDV8iDQFtiKlL6lA2eQxuY1FapMGT
+	ZzrC+wJCGd2o8bU+aK7HF+GJ+JUPjowUqrgOn87JUWYPGRq/Je9EGfcXlBK8Mfg09nG5cRdCoiS
+	sLDza0YZM1lFTOJEROYFne68YGJWsTVERYAbQOOX3P4uTBc8FUimHDCOlSCytVDRU+l8FxIi//M
+	z5j2G/gFhMMWs6nm5uAIviJuFLWe/FHPJINA4ITtP1Rz0BH+H+jL/qLj74cd9lVbuoIL5GfcIfy
+	g582EZkpbqiPpYNn/frhjh5rsKZpFeZtkOTvfOc5vBRVooSmSZhhFHVG3G4MsEAbrw3mCOG4ZZK
+	2+Z4RlPKRaWCViOHYsy5PWC5eVnYauAWJ3qu15NocXLXBlYyJJQyKOTWEis4BvvGKJU/mePsWXs
+	9Wse5VWveYpDmfMk11F1fylHXps5gyLcwmBGL2yS51TxTuoZOnAlkWA+SacZdaHAO8ho4jgGiil
+	nDrWoaQDqntJ2rsX/T8CIF7ES9HPn29m1aCnA==
+X-Received: by 2002:a05:600c:a00c:b0:4a2:133:45e1 with SMTP id 5b1f17b1804b1-4a35acd56d8mr145273565e9.24.1793053915397;
+        Mon, 26 Oct 2026 15:31:55 -0700 (PDT)
+Received: from debian.. ([2001:41d0:303:db6b::])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a04ae28sm229743655e9.2.2026.10.26.15.31.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Oct 2026 15:31:54 -0700 (PDT)
+From: Tristan Madani <tristmd@gmail.com>
+X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Kees Cook <kees@kernel.org>,
 	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH wireless] wifi: mt76: mt7921: let monitors see other stations' unicast
-Date: Mon, 26 Oct 2026 15:03:46 -0700
-Message-ID: <20261026220346.601314-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.56.0
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	tristan@talencesecurity.com
+Subject: [PATCH v2 wireless 0/3] wifi: replace open-coded IE searches with cfg80211_find_ie()
+Date: Mon, 26 Oct 2026 22:31:52 +0000
+Message-ID: <20261026223153.2087218-1-tristan@talencesecurity.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -72,66 +103,28 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-After an mt7921 has scanned or connected, its firmware drops unicast
-frames meant for other stations even with the sniffer on. A monitor
-then gets the AP's beacons but none of the unicast between the AP and
-its clients, so it never catches a handshake.
+Three wireless drivers (carl9170, rt2x00, p54) each hand-roll their own
+TIM IE search function.  Replace them with cfg80211_find_ie(), which
+already provides a correct and well-tested IE search.
 
-Clear that filter whenever the sniffer is enabled.
+Changes in v2:
+  - Replace the entire open-coded functions with cfg80211_find_ie()
+    instead of only tightening the loop condition, per Johannes Berg.
+  - Add pre-subtraction length guards in p54 to prevent unsigned
+    underflow on truncated beacon frames.
 
-Fixes: cbaa0a404f8d ("mt76: mt7921: fix up the monitor mode")
-Link: https://github.com/WLAN-Pi/wlanpi-core/pull/364
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
-Tested on wireless-next with an MT7921AU and an MT7922, the monitor
-on channel 6 while clients joined a WPA2 AP:
+Tristan Madani (3):
+  wifi: carl9170: replace open-coded IE search with cfg80211_find_ie()
+  wifi: rt2x00: replace open-coded IE search with cfg80211_find_ie()
+  wifi: p54: replace open-coded IE search with cfg80211_find_ie()
 
-	handshakes caught, of 3      before   after
-	fresh driver load               3        3
-	after a scan                    0        3
-	after connecting                0        3
-	scan while capturing            0        3
-	connected while capturing       0        3
+ drivers/net/wireless/ath/carl9170/rx.c        | 27 ++++-------------
+ drivers/net/wireless/intersil/p54/lmac.h      |  3 --
+ drivers/net/wireless/intersil/p54/main.c      | 30 +++++--------------
+ drivers/net/wireless/intersil/p54/txrx.c      | 12 ++++++--
+ .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 30 +++++--------------
+ 5 files changed, 29 insertions(+), 73 deletions(-)
 
-Same on 7.2.6 and on 5 GHz. Left up for a few hours with a scan every
-few minutes, the monitor didn't miss a handshake. 6.18 also needs
-a7d35545c2ce for the scan while capturing.
-
-Once the monitor is gone the radio connects as normal, and the firmware
-turns the filter back on by itself.
-
-Doing this from the filter callback instead was only enough for default
-monitors. A monitor created with only the fcsfail flag never asks for
-other-BSS frames, so it still went blind after a scan.
-
-An A9000 (mt7925) doesn't need it. Its firmware clears the filter by
-itself when a monitor comes up, even after a scan.
-
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index a0caa77339ee..7ef870b2a37b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -1207,9 +1207,15 @@ int mt7921_mcu_set_sniffer(struct mt792x_dev *dev, struct ieee80211_vif *vif,
- 			.enable = enable,
- 		},
- 	};
-+	int err;
- 
--	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD(SNIFFER), &req, sizeof(req),
--				 true);
-+	err = mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD(SNIFFER), &req, sizeof(req),
-+				true);
-+	if (err || !enable)
-+		return err;
-+
-+	return mt7921_mcu_set_rxfilter(dev, 0, MT7921_FIF_BIT_CLR,
-+				       MT_WF_RFCR_DROP_OTHER_UC);
- }
- 
- int mt7921_mcu_config_sniffer(struct mt792x_vif *vif,
 -- 
-2.56.0
+2.47.3
 
