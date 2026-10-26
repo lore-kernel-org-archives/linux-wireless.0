@@ -1,54 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792970869;
-	b=k8lSRiXRg8EQ+nD7l8PkYFdmmgV9sJPANC9SYKGrbys3qIhnQCniI2Hs9rtVJ1HG2N0J
-	 SBMcPFxjb4VfTRfURk2dUihP6+WlrZwcehC3JW1WgW67Fl5kp/fN028L2gsQE4XScVLwt
-	 K1KbeS+EAL75t2LXXvb2Zi9+AndE96Z2xMPg7dfS6rLWZw43wBuKO1reL9GHRChCsFHlw
-	 IShgXtwunyZHAdVLDC773Lr0iSf/87Hal7rfjhKXI9yJsQeVq/lTJeMKXibnsJfr3dVVP
-	 /mvwy2Q0dUAOMjYGTIax78JIxqlyC9VMN2bKAYw8UoU07Twtn7Ctq51nksHVnk26iKQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792970869;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=749F1kNMvONRb00QECAoqsVJNtCXAyhqfBI03/TRF+Q=;
-	b=zDHN7axJXe4HpNdvlmf+PX0mN0fUo/bApr9+RwLJQ9AFK+mtRhXg9KXW6kl2dlQKlqz2
-	 wAxdHSsa5WYWQWwLv4PU29OqqI8e/0VJiI4IWxwuzPTfGnRjWktGzblGfG0qFsmVgYs52
-	 V5enuH0O8eRAInEyRL9UhkzKs6hEN/J+UJd/Vq1xNR3Nrx32e/TRTeasYBUi//O4rKsAU
-	 PRYSJ10ibcfvA3CWfYsq+g2sP1Qa3n3tEH2+Ti48nIGaQctd/vIGW5IGv/Xlc9aspoG46
-	 /cO2UMqLIFs/gCPspoQVd/DfrCPXaB7As5Q0v2VZKzKR3AD+HdPymiwDW+vc+RaFTIQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jZaigJSZ;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.176
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792977117;
+	b=zYqbSJCofty9O/nApltSpN5lnsIWf57SSGl8q32kld+YANx32OHOEPsVz75xuiXOu9LY
+	 Ue0tgGerCD2XeawDFU7ilt6t/0LM/dAouYjItr2SEWsEBoC4oUmlqFcsGCIrTPYfQ6rZv
+	 4f2DPPpZqfG7n/gjAdyuVuSiX78Z6R7WqJrRCEv/MGaaAVs+PnZ7klbdSeWJF6pKN9JhZ
+	 rBa5fbU6JqUaodfP5G2NEjebUe+DdCOJ1AR8mYuFGPbmmgXCJ7XMB6T2L/3Mo9QpK1SPu
+	 S9h6imJHlWyhpat7AYStij00X+OmivkoHHkQCoV107Iu9C3ZjPbZ8dKVp4lyOxB2T3A==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792977117;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:MIME-Version:
+	 From:Date:X-Gm-Features:Message-ID:Subject:To:Content-Type;
+	bh=3tjtj4LsBCTmim+1Ivvh+J04zu4kCZ6W9uWJQPYf0DA=;
+	b=OvV9Gj97pVIo75d+SeHhP4xCCNOXeq4Qeu2r1M/BKiQW3xEzqoTUV6rbCFbAAVh1eJ3Q
+	 /D/xqraRQM6LHjVqf1bO8ibhxys4C3+r1jU5Qpbme+hTiSn7gIKHc9gLzPN1QlI1UQJ0a
+	 f8eLcaA7V+MpDJLXhhDCBuvLWA03XEPBqPEwDf5eeFcBVHUxkJLIAJBGxX58yV7hV2HcI
+	 5J/fiJL522tW+Dix/+WMlfAKi+fOrsFHYzVT5U2zLzABtFeBjmcB2fx5NSwLinl3SXkzC
+	 ZlCPWcdV8MQSd3SXg4rnVOkrH7e03SjmdbRVKkHZ2ddT9ImCWbD3wCwyPD8MuljvuPQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LfsoGUrh;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.176
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE74C606A31A;
-	Sun, 25 Oct 2026 23:27:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C5C7606A31A
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 01:11:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C5C7606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jZaigJSZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39C081F01825;
-	Sun, 25 Oct 2026 23:27:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792970868;
-	bh=749F1kNMvONRb00QECAoqsVJNtCXAyhqfBI03/TRF+Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jZaigJSZwL7yGLaLiqgMfXUpeXaWekbhNHRqoHeQY4Vp0sG8lH8VJwO4QCsu/bV39
-	 MevoG+esrRiIHwiwRVoQeDX08/+NmXYcQxoSnck04aKhAAx8W7Q4I4pD+Rs0nsnxgl
-	 rm5a4H18XiVBmnFE+RSQJEKeHf/esvQ0bxW9KjWOaSK+ifut5acrNlxY9mR2pM2+4F
-	 LTYl4z7NsoMV7XpdOpNfxXZBI1AlhKWyJQzpqtm+BgenDyQjzkt9Yo/jZQZTrCKEXy
-	 rZ8I54cmR+/cjCIdK0s3yi8v/v4RuMM1wEB744OlcJCGaAyF8viaYaJck2b2mhgKxx
-	 O3VJfq8NeiuPA==
-Date: Sun, 25 Oct 2026 16:27:46 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-crypto@vger.kernel.org,
-	Yuqi Xu <xuyuqiabc@gmail.com>, stable@vger.kernel.org
-Subject: Re: [PATCH RESEND] wifi: mac80211: Fix cryptographic MAC comparison
- to be constant-time
-Message-ID: <20261025232746.GB148998@quark>
-References: <20261025210032.134911-1-ebiggers@kernel.org>
- <676effaff715929da980158820833c18a3a2845c.camel@sipsolutions.net>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LfsoGUrh
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2e608cd460eso15200475ad.3
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 18:11:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792977116; cv=none;
+        d=google.com; s=arc-20260327;
+        b=IBx9N7n7XZo+vouQF7LjUQjjIVg00/bUm+OrvCKEXGDuj1dGEk6iwS1iuPQEgPY+A8
+         c2BstudkPFdsoH2U9V+nN068jb6Fl1wAkGCCC6yFmn3lC8m1I6PtBlWC6uxkm0yCPKrH
+         sbk+Da/GAF4jS5vSq3roRaObH0WpPC3k4z7WqF+pOhKsHLGd1PefwogNLwhVSWFzduW2
+         6DBdtx44ScKmMpPHH8lPyIQJtdBV2rsZPHGRAmgIO6ZuARFz6NsNDtdq/l/KCsOn5/ke
+         2o4TgjJqb7DA0HrNeyxMfvgjb3jQJcWQdBgHL0TVcEjm2tOwhQuAGCfXoRKDOLuzV4qc
+         AmzQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=3tjtj4LsBCTmim+1Ivvh+J04zu4kCZ6W9uWJQPYf0DA=;
+        fh=qW0phhq3fb3oiohK/Mu9j1KY1zyRNiiioKFc5anvatM=;
+        b=PjWlZLL0AFfrEbf4t/ZSF33et1moV6OkroFHdLBruJg0OOG2XqXhE66P+jaguv52+b
+         RVmW3bVc261wei4j30k7UZhyATpYsd9Y3L4e6lDgQK4GvOwCCcgg8PsKXO4xss3BCwty
+         L76CDw6+CnF7jgQ0IL1mk3VycMddVAm+U1cm3/IkgB+BVTy04/HTdt0dio8uRfKXSyiK
+         j1/2QqF1hm9F4mOJYM0ouVRLb+MttOpIo3ln/FblmoK0OJgztNyAni36EkrCBuFkc/Fr
+         iflNku7Qc9Gt0zr9WMFAbpc7Iyz+s1/Af9Y1nfvxRg+XHp3co8H8I5xsS1BjxGwXFrD5
+         x3Uw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792977116; x=1793581916; darn=vger.kernel.org;
+        h=content-type:to:subject:message-id:date:from:mime-version:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=3tjtj4LsBCTmim+1Ivvh+J04zu4kCZ6W9uWJQPYf0DA=;
+        b=LfsoGUrhUIyKBea38Hju1lmoAqrVBVWIDDpE32+c6/e5CTLmbt5Ot5UZW9e8ZgChZT
+         nBbwHMG7aXbRbYDFZHBvsv7LJl5tO8bbSTiJXG93cNhqOkPOHVwj6FmGPmuMCcAbPswr
+         ITqbeLPkXtDc8xMoNE2g8oUNurtWhaJHhAwkuA2oYMT1ac+1ZPJuYKVjK+Uftdz7ytBP
+         ZZPEYXRHxgQ+u1ZTc65GNK8n/ATrtwH2aVtL9NtdyT06z4NerrgCPiy50iyYPGsMoH9q
+         YU3lpBXLhNoWTklT3SutkH5LH4q3MH6lctIM0vPe2rKua3rZZUb5xXsCKz3na3kQrm2Q
+         cM9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792977116; x=1793581916;
+        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=3tjtj4LsBCTmim+1Ivvh+J04zu4kCZ6W9uWJQPYf0DA=;
+        b=BQdj3lETbntUUIxj39nqKjKnL8cKc9MDSuehrwOP/us8FwBb9BrTp2mjbO9niCNAjp
+         z56uIazP1vyCOXUAfB5YnpPIwbXN76Iyd7KH2RCvuVFzXgro0M6Pp2MS/uteTV56I5BV
+         inqx5XKx2DoLFuIx6CM5wJWozm9jyZ3PR0wbreJfE2q9fqseBGFVpJhDUBl1GPT9l+jb
+         l5K4UJE37uRQxcxDd0LF+W81AtZFxuH36/EVwzDEEVeugXmE/SNbzcqoCA+Qpr3BSolY
+         XDu9lS5Mhk1qgy48uxUaRh9DPmNH3isJuiozJbJIz6T149jAMLJZveFXTKdDRIumd0Eh
+         dPbQ==
+X-Gm-Message-State: AFq9FYJCItJ/gMZghEUq4NCOplDmCyXjPuA+C3RbCXWGAHv5r0mEHjcr
+	SIXGlWwOz1FGVk/SSMaDONCKqVQlnFQUaShh3XPHq1Mx7/ao4TTcGWl3II6mwZjHNtfY5G0wVuf
+	Xy1+OEuU+aCibtqd0r1YPvyxsk/1SCOm5JA==
+X-Gm-Gg: AYBFou13L8z9SJZeXFnhrAkxJBhXPOIc8VAcqnlwLh+05kZrq9aStSrvziyANC5Jh8D
+	paHtKrnUdq33OS87mJ0p4bUyU5+97LrMsQtnTzsGTNG0t5qhE9rnuvIHPd1ruid5vA5Q1JioqaJ
+	DM87gZw+ET0/5v+lAJLYv2JJN56H9CUcASOCDmGVNhqKd9+22eEr/As4XW+d0gR5/PlfboaeYI9
+	SeduNIdoy4ypNCB9NRXXpJE02krJUM6Tygcjc9kcYRxqfjYGDDW+KlQuyv1tYa09RVSODahVfu2
+	U7Q5WvNbpa82rdkv1mxXlOy5/B8xYxEdJqakU/wnSirw5bOA/kPXjxJjEzym1688Wwrf2Ay5bu1
+	GrMGRCJDuorVRtwWmjRct8g1mjivhX4+YCG5qKILpYyVLC+4NljuszFk=
+X-Received: by 2002:a17:902:d4c1:b0:2e9:5eee:e074 with SMTP id
+ d9443c01a7336-2ea9c69b1fdmr43705805ad.46.1792977116168; Sun, 25 Oct 2026
+ 18:11:56 -0700 (PDT)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Sun, 25 Oct 2026 18:11:55 -0700
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Sun, 25 Oct 2026 18:11:55 -0700
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -58,45 +103,94 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <676effaff715929da980158820833c18a3a2845c.camel@sipsolutions.net>
+From: Thomas Mason <ranchitossf@gmail.com>
+Date: Sun, 25 Oct 2026 18:11:55 -0700
+X-Gm-Features: AclHuK9BXdjfcU5QlGnG072t8FeOpflhf_s2fi-Hg0MDn-Y42hOQqvLVVlG1UMg
+Message-ID: <CAGhUpaPwFz6C1GnP-JxQ=_-XqgOLXWyxTyEd5h3BaM1-tZvsZA@mail.gmail.com>
+Subject: [brcmfmac] BCM4350C2 MacBook10,1 cannot discover DFS channel 104 AP
+ (Ubuntu 7.0.0-38)
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Sun, Oct 25, 2026 at 10:37:47PM +0100, Johannes Berg wrote:
-> On Sun, 2026-10-25 at 14:00 -0700, Eric Biggers wrote:
-> > To prevent timing attacks, the comparison of cryptographic message
-> > authentication codes (MACs) needs to have data-independent timing.
-> > Replace the memcmp() with the correct function, crypto_memneq().
-> > 
-> > Fixes: 39404feee691 ("mac80211: FILS AEAD protection for station mode association frames")
-> > Cc: stable@vger.kernel.org
-> > 
-> 
-> I'll apply this if you either come up with an actual attack, or stop
-> pretending it's a bug.
+Hello linux-wireless maintainers,
 
-I don't have time to set up a system using IEEE 802.11ai and try to
-exploit this to forge a frame, sorry.  Especially when we fix timing
-bugs like this all the time.  Realistically, these types of bugs are
-usually hard to exploit (e.g., involving sending a lot of packets and
-doing statistical analysis) and can be the topic of a research paper.
-But that doesn't mean they don't exist or aren't obvious bugs.
+I'm reporting a reproducible Wi-Fi discovery problem on a 2017 Apple
+12-inch MacBook (MacBook10,1).
 
-You can find more details about such bugs at external sources such as
-https://blog.canutethegreat.com/index.php/2026/10/04/timing-side-channels-constant-time-comparison/
-A memcmp of HMAC values (16 bytes, which coincidentally is the same
-length here) was also exploited in the Xbox 360 to install arbitrary
-code.  That example is covered in cryptography textbooks.
+Hardware and software:
+- Ubuntu 24.04.5.1 LTS, kernel 7.0.0-38-generic
+- Broadcom BCM4350/5 BCM4350C2 PCIe wireless adapter, PCI ID
+14e4:43a3, using brcmfmac
+- Firmware: 7.35.180.133 (r602372), FWID 01-c45b39d6
+- Global regulatory domain: US / DFS-FCC; phy0 reports country 99 / DFS-UNSET
 
-The use of AES-SIV here does seem to remove some flexibility for the
-attacker over a MAC by itself, due to the synthetic IV.  But that gets
-defeated by frames with zero-length ciphertexts, as far as I can tell,
-which can still include arbitrary IEs as associated data in addr[4].
+Problem:
+The MacBook discovers its UniFi SSID "macgmason" on 2.4 GHz (BSSID
+9C:05:D6:BD:B9:CA, channel 11), as well as other 5 GHz APs on channels
+48 and 153, but never discovers the same nearby AP's 5 GHz BSSID
+9C:05:D6:BD:B9:CB operating on channel 104 (5520 MHz, 80 MHz width).
+UniFi confirms that this AP is operating on channel 104 and serving
+another 5 GHz client.
 
-Understood that you don't want to fix this bug now, though you've
-accepted similar fixes in the past such as 98c67d187db7.  It will still
-need to be fixed at some point anyway unless this code is dropped.
-Perhaps you could consider at least applying it without the tags for
-now, and we can consider the stable backport separately later.
+The wireless PHY lists:
+  5520 MHz [104]
+  Maximum TX power: 20.0 dBm
+  Radar detection
+  Channel widths: 20MHz HT40- HT40+ VHT80
+  DFS state: usable
+  DFS CAC time: 60000 ms
 
-- Eric
+Reproduction:
+  sudo iw dev wlp2s0 scan flush freq 5520
+  nmcli device wifi rescan
+  nmcli -f BSSID,SSID,CHAN,FREQ,SIGNAL device wifi list
+
+The targeted iw scan returns successfully, but displays BSS entries on
+other frequencies and none for the channel-104 BSSID. It is not clear
+whether the firmware actually scanned 5520 MHz or returned
+wider/cached results.
+
+Kernel tracing produced:
+  872.205343: rdev_scan: phy0
+  874.279291: cfg80211_scan_done: aborted: false
+
+The scan completed in approximately 2.07 seconds. The rdev_scan
+tracepoint in this kernel exposes only wiphy_name, not the requested
+channel list; the trace therefore cannot confirm whether channel 104
+was passed down.
+
+Kernel configuration:
+  CONFIG_BRCM_TRACING=y
+  # CONFIG_BRCMDBG is not set
+  CONFIG_DYNAMIC_DEBUG=y
+  CONFIG_DYNAMIC_DEBUG_CORE=y
+
+Firmware observations:
+  Direct firmware load for brcm/brcmfmac4350c2-pcie.clm_blob failed
+with error -2
+  brcmf_c_process_clm_blob: no clm_blob available (err=-2), device may
+have limited channels available
+
+Tests tried without success:
+- The stock Ubuntu BCM4350C2 firmware
+- A minimal MacBook-specific NVRAM .txt with ccode=US / regrev=53
+- The alternative BCM4350C2 firmware image in
+WiltonH/macbook12-wifi-driver (different file hash, same embedded
+firmware version/FWID)
+
+The original Ubuntu firmware was restored; the machine is otherwise
+stable. I have not patched the brcmfmac kernel driver.
+
+Could you advise:
+1. Whether this BCM4350C2 firmware supports passive discovery of DFS
+channel 104 under FCC rules;
+2. Whether the absent CLM blob could specifically affect DFS discovery
+despite other 5 GHz channels working;
+3. Whether brcmfmac could be ignoring the frequency-restricted scan request;
+4. The preferred instrumentation to inspect channel specifications
+generated by brcmf_escan_prep() without needing an entire custom
+kernel?
+
+I can provide additional diagnostic traces or tests if helpful.
+
+Thank you.
