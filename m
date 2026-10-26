@@ -1,97 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793053948;
-	b=QhJN5Jrb/Rmu8gi6rf+cMc7DiUiqX1ko0FytMOAgRcsDO+w7vcFulPOKFVyN/kh5EPs3
-	 /YO32DfvoT5JYEEHrQh17VGpuYeoW/G6SKpcCIZjYHm21vF1czLD9wIWXrbIH3lYX07Op
-	 Ch8houFFm79jnGKuhSgA92eirhKQCIJT8/P6tpvHepmPzLmWQaN46ThQzZ81MXWxqwDDp
-	 xsWsQK3WbITp0At/FmZth01U/qx9193SRYJl5MsMBR2tKf79gcqpxS0/JagdyoyYr/agb
-	 oXY3sskmJ5Af3/2Odb+RWBnbcpqAsIBR5pMfEs/dZoHPFDzXfe3saejmcJnL2JiB+rA==
+	t=1793054519;
+	b=DGaSKlVkoLSdl1K42mgEE4cpOlnDVCdVJ/sh6rZoA97d+V1HNUt/Or6jUVLjNo9jhlfq
+	 VviL2ybzTsb+Qf64GPTbeKAS+/v9UUR8X25ICDXuNvgV3nbub1Soy+A/PgkHI4XQ3qXbk
+	 FGlY3/eDih2i4OHTKAQ79r1ig3gH3/p8aqALyl7ykw2KquQMeyj1A2Jp9Smf/9J3Ts1Cx
+	 dN6q1EVskOv5YyB7JlErb/wZcPt2CCpHaS7Ws/t5s1wxjoPQ6eo8KI+yAV7/17cnxWNHb
+	 7svplG+ORqupzbvYN5onsjD5JBNKPZs9p0lyEYceykQtv9U0B2/+eaKjD7+i8VK6rPg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793053948;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793054519;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=8rXduDRKJP8drgeo5JnRezfiCAk6F66eeBkch8vfFZw=;
-	b=eHQsT40xc4s8V7Ehe7x0ZRngwftTnsQeGtYsml5cl7cdXKKFlSL9n/1E12q/+fifcnU8
-	 CiytdbIG72QUCvqVntktANPzSjPj3vn7r6YMCatHbCpwyubAGo9Vxxa5t7vkMPSIiIZlc
-	 KjOfIx+Jnm/JtpIsV6L+5oe+Loy1Pqd9ModHljLGvY+17SRHdZhn2fsDwOAqnmPOpaWRB
-	 s6F7lcqYSUdYA68VQVqCN35SAWQoAzn1XBnQrI36/M+aYbbnWxAcsQIXYX9j93rlrDKYt
-	 d+jPXrLdtnOCzzYJRMwMjc86Kswxzjmk7zvs3SvmqvpouVQSoatrwm7fCj9zlDKxDjg==
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=9TJ2uWGQA28B7/IVLdQOUeh7B2n+/HiF9b/pWpbRQp8=;
+	b=gielRsrfjIXTb72lvZTlWVovIJl2y+ltMO0loLvBiTiXa4Vct66XW4E3/X+wS+Vc6uA9
+	 VeR9IMpF+f+coVk4TugWsNapxkzvkyV8K91pFkG1k/AxfQstN96YEEI6DAUiSjXOJZgeK
+	 idtFGetHi5JnvsBUItNOCtZ1waeiqKeuP7QJ3eoAbQ90sVvr81NObdVghB5BrMLEem5Fx
+	 2Xh2k60SDShAP6jpzJVhVK1Oxp2C3mnCvG1ORkGWmRGIziYqmkzTO+gXVU/U78ZLqM6tG
+	 1FCKwEmI+7zITaqLCy24U5xm/Kr9gcMklASaycdwINljUJ87qU9inNGRe1v0DeB8Wkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=HwRuhF6M;
-	arc=none smtp.remote-ip=209.85.221.52
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=sTR+N0rG;
+	arc=none smtp.remote-ip=209.85.128.43
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2331606A31D
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 22:32:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A2331606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A23B7606A31E
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 22:41:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A23B7606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=HwRuhF6M
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48c4d99c32bso2457700f8f.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 15:32:27 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=sTR+N0rG
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a59100fa83so15254715e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 15:41:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793053946; x=1793658746; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8rXduDRKJP8drgeo5JnRezfiCAk6F66eeBkch8vfFZw=;
-        b=HwRuhF6M+Y66D48I35HkC/WvYHV4sTTX1rD0qaNjeay0lN5WIzYdDyQA8rX1ak4GqR
-         mgrkEzMgbdiStyVxLOvv3vIyiDX4YQQ3iBVjE794ZRVYi6HGB0gQECYxdTYMPPpvkyvp
-         29w/hfSBgvSW5zfhJDiDIzUgbnHD0QLoZXaEEoRjenbetrJki4n7RS1+x94YO+NnsV3Z
-         Xjix2v1h7SVPMcxEAexgee+afdRv4mDBCtHoncnXIrNPwdSq4gR+gG2hFON12d6uJL5d
-         GVYZxep4DLSsCALe7+D3ZyFm/jW/LPNOeKxqTAK5pPc3rFtyQTqyPSFbOfnvTixmNhEi
-         BU0w==
+        d=gmail.com; s=20251104; t=1793054517; x=1793659317; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9TJ2uWGQA28B7/IVLdQOUeh7B2n+/HiF9b/pWpbRQp8=;
+        b=sTR+N0rG1eZuvFqHfBbcpGz3dtTjerA5lXe1bEMttgS8nsv33ERnGeZnDqeMZfzc9d
+         tlbLJUgj2VgJ7Sk7V5qzTyGTFywijunoRW6dxp2pekNeJuohvkWkMkqZFvLlfVRWHRn2
+         YwCSMBl6E1CJsaBedBHyfbkKfvX6molQ5dK8Jd23ohTYLxQVhmIGc+7SaBzM9pjJTjzV
+         PctpyRgTvTIv7NIYQYiklT1HTHeE789laPiMiOf54QF66H0e1VFNmZXKSDeWW7MfvKD6
+         1uCsAXegaBbTd72u70LFKABs2/C3Hn2JYGBq8zcglgUUmRWKdNNYLxaKwCGehtRzvbr9
+         tJZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793053946; x=1793658746;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1793054517; x=1793659317;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=8rXduDRKJP8drgeo5JnRezfiCAk6F66eeBkch8vfFZw=;
-        b=kyK0NIVbZdqL5TNz++//3J0J/P7FldD+jdOaQqTwDy1tnrMT+53rnb1V+lOcSrCuDY
-         8V0Jsw9Lw8WdhZS6vB3gxEEHdB0jTbWhRi7Q2BN7GrtqxzT0e4ry+vsONNhtOAHRgUHK
-         OSPXIoPtu3J32+pKxhsxPgq/7GUthZNzQRwxodG18UTFJTp53NzJk5/b0cKDpBGlNERs
-         VTQs/aIgMNzqQsNAyvJgppibvD8pZzcM6IEf3mQFbGJ263Gc03bwnDYsTgXmQWvjhWIT
-         JjvKFrUCZu3gR175jqTmS0guN67tI1Y+tsPYZR+Y6iXQ6B12n0I4Ryp1CW6hSLc5Qyf+
-         OLmg==
-X-Forwarded-Encrypted: i=1; AKwUvByY5P1AEyQQ81x1+KCZVMn7h2J12ZQ23A4RaqgpY6hKB0nN+uAAjwVuL84vVZN3i/AtPHaUycNH5zfyEc9erA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJyietkMGQPjFetU4vVSg1EhRjIB5yuDHkDhZAJ8wExDOm58IRg
-	SKf5I+aq2X3o4GKBL094+4cJ/u0XJTR4dJVtpP6yci0Y77pGBIOieG0=
-X-Gm-Gg: AYBFou0UeTwq1L1n/+/hpDwjKMYcuagVUbJg1z/oopGCJ6F1rO1daQtvp83Dd8zG5SS
-	Q67wJxRfhyjnBcj2gMWAGLlmo+grCUYz5ggFIreW/cbgc8gf5FK7IQ+/JvrKk+EpE9ue4n8hENg
-	B2UQ282nB9x53IbRkG5A7bXrfmJLDVXenzsI+IydmUDT2pXqsPSeSC6aw7ILygki6pRFo65s+hE
-	imiTBuZV8kXki4Ncjsd+uZegvQ1wxOUKY/ikvF72MJuHudIGVCMAMVh2dIFNLP4UtyMWJjLysgP
-	z3at08Yzl6B0U4R27h8qizCM9ql5v9AU7ui+6xtgbOGY3YAzIa6XNLX2IM0Qo0UbVz7Q3qtCTL0
-	Pm8G639FjIsyLy2eDDihP/CsjdW89zaWyUz02sRHOFU7BjfyVhwQs1oqqSu7WEVMLDyxWL/guNm
-	c/V2Zks4API/pPkhKOAoHVaxCvq0cjzKK1Yv3HyCDUQ4bVtVBHEbEQNJ2BqN6GHL3xA4MhoQrHs
-	wA4QNfjxgnfUbyIfvt+gVtLu2hpRSZG00sipw==
-X-Received: by 2002:a05:6000:2a87:b0:48e:2c2f:59eb with SMTP id ffacd0b85a97d-48e3eb9a023mr11905332f8f.12.1793053945957;
-        Mon, 26 Oct 2026 15:32:25 -0700 (PDT)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebcb851sm16239300f8f.26.2026.10.26.15.32.22
+        bh=9TJ2uWGQA28B7/IVLdQOUeh7B2n+/HiF9b/pWpbRQp8=;
+        b=HZGUlz5XLf2FUXVulINUvZ7TsUcHCAN9VR1KyyhxEUNUR53U3wf07/vjd+sCN2M/II
+         L0p/BAw8A3Qyuap1cmf5hXQVXph62m57HuykABm8ih5klcBQ7TvB2Kbpz9KTurl+57de
+         QQwqa39AwGdKaWJ+SDS5DyWup5TVgMqYwhTMLIg7a193pI14KKrtAVZqFG2AvrsBK5tR
+         fao+8HTyPy6T/Qc9MCAS0W2lfOFdYarq2HXKG08sgGCUy46DXj7Bn9HOy0z24B7kc/5d
+         KfWaqTF+gcReeTM0ZFRC9ccIxTjpqddWEdwd8tAmbOhLIG5c8/K9p7Ou4AtMlaE2l2aT
+         bskQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwub0/kPttY7d7x0j99OMBcqmDipeSA2TJIGYAoZyTmLwOos7MlHNDbC+GqZ5lETCdF8gTtJtmb2EVIxajEFw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLDIGcAPKska3cDKuECa5Q3USZVyqOB6ajC58a9GQnWlQDEFDPD
+	sVgAtipJAoSA+d5IbOp/4IFGd7BHNxT0gGqDVNLzIuv+L65zVUT48I8J
+X-Gm-Gg: AYBFou21oE9oQd3E0xEfqOsnOTTEoeOsySJPARr03cvBB8RKzbsEGuP4HScWGMchbTM
+	q5ygGzRBbx6OyVIynVQu/LKBjMp+W2EVGoJUKGBIVmDTNh0G60kZyJ4kIiFQUlfyfAcBpK/cp7y
+	NKhNjzbNLyf8zxIv79glbh7qvQnmfBfy7KC/zTa41G0m90zSU79i9gZX+TFncNIauZtD997g5n4
+	ZEvpg93zWYKwJ++VCPqhbD7LjLsQo4uu+GzJhBga2AICfBERZzt/dKEKeVYL3OGMseyjge8I+DP
+	NdZcypwwzuAeFjdDO849w4QtV8s5NA7LV49bo+I+UYyXUlw48f0ZHgL5ErOQ3Vao3Fcoh/IYOlA
+	Vg5QhEm5Ing2Bo8Cjd0PZVStObN4+5h7MTFMhsUyPUhXBeHn5svEIJ5PQkpBGihP0mXLvwyy22s
+	wwzdhFZ3vSVfhzqFTtCG4IU92xYmtnQA7utnVPIZtVLTpInKf/UDcH9rislGMe8Y3TKVYsbUBJ/
+	8KB7V9XvgcGeRWLE0Mqbm/RUVxdB/GnaSnA1AeI5fq/kPquMW414ubtKzhbC5cQTK/CfnOUVl8n
+	X80K8HBfYYkaHX2QfgSxUe1d7hswGBzh1+hR8lk71HuqvDQazTigoQF1Hd2KHaauFHCzC0IvU1h
+	K2RpGHg==
+X-Received: by 2002:a05:600c:4e87:b0:4a1:f7f4:7cf2 with SMTP id 5b1f17b1804b1-4a35acaa046mr152446335e9.17.1793054516772;
+        Mon, 26 Oct 2026 15:41:56 -0700 (PDT)
+Received: from shift.daheim (p200300d5ff07190050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff07:1900:50f4:96ff:fe46:beef])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a55e99fsm228800335e9.4.2026.10.26.15.41.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 15:32:24 -0700 (PDT)
-From: Tristan Madani <tristmd@gmail.com>
-X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Kees Cook <kees@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	tristan@talencesecurity.com
-Subject: [PATCH v2 wireless 3/3] wifi: p54: replace open-coded IE search with cfg80211_find_ie()
-Date: Mon, 26 Oct 2026 22:32:21 +0000
-Message-ID: <20261026223222.2093813-1-tristan@talencesecurity.com>
-X-Mailer: git-send-email 2.47.3
+        Mon, 26 Oct 2026 15:41:54 -0700 (PDT)
+Received: from localhost ([127.0.0.1])
+	by shift.daheim with esmtp (Exim 4.100.1)
+	(envelope-from <chunkeey@gmail.com>)
+	id 1xLTO3-00000000SgX-3CYi;
+	Mon, 26 Oct 2026 23:41:54 +0100
+Message-ID: <7a52a44b-d674-4469-bc77-35a5a648472d@gmail.com>
+Date: Mon, 26 Oct 2026 23:41:53 +0100
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -101,126 +98,74 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless 3/3] wifi: p54: fix IE parsing loop bounds check
+To: Johannes Berg <johannes@sipsolutions.net>,
+ Tristan Madani <tristmd@gmail.com>, Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, Kees Cook <kees@kernel.org>,
+ linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, Tristan Madani <tristan@talencesecurity.com>
+References: <20261026112151.2515228-1-tristmd@gmail.com>
+ <20261026112151.2515228-3-tristmd@gmail.com>
+ <9658b549be7c1c0f1637699b8b61960d2101dfca.camel@sipsolutions.net>
+Content-Language: de-DE, en-US
+From: Christian Lamparter <chunkeey@gmail.com>
+In-Reply-To: <9658b549be7c1c0f1637699b8b61960d2101dfca.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Replace the hand-rolled p54_find_ie() with cfg80211_find_ie() at both
-call sites.  The old function had a buggy short-frame guard
-(sizeof(mgmt) compares against pointer size, not struct size) and
-open-coded the IE iteration that cfg80211_find_ie() already provides
-correctly.
+On 10/26/26 12:45 PM, Johannes Berg wrote:
+> On Mon, 2026-10-26 at 11:21 +0000, Tristan Madani wrote:
+>> From: Tristan Madani <tristan@talencesecurity.com>
+>>
+>> p54_find_ie() iterates over information elements using a loop condition
+>> of while (pos < end). When only one byte remains (pos == end - 1),
+>> the loop body accesses pos[1] which reads one byte beyond the validated
+>> buffer boundary. The read happens in the bounds check expression
+>> pos + 2 + pos[1] > end before the result of that check can prevent
+>> the access.
+>>
+>> Fix by tightening the loop condition to while (pos + 2 <= end),
+>> which ensures that at least the IE id (pos[0]) and length (pos[1])
+>> bytes are within bounds before any access.
+>>
+>> Fixes: 0ac0d6cedf611 ("p54: Move mac80211 glue code")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+>> ---
+>>   drivers/net/wireless/intersil/p54/main.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+>> index 57a62108cbc35..16614f65dfa5f 100644
+>> --- a/drivers/net/wireless/intersil/p54/main.c
+>> +++ b/drivers/net/wireless/intersil/p54/main.c
+>> @@ -81,7 +81,7 @@ u8 *p54_find_ie(struct sk_buff *skb, u8 ie)
+> 
+> We'd probably be better off just replacing that whole function with one
+> of the real search functions or iteration macros?
+> yeah, I think carl9170 probably can just straight up use cfg80211_find_ie.
 
-Add a pre-subtraction length guard at both call sites to prevent an
-unsigned underflow when computing the IE area length from a truncated
-beacon frame.
+But p54 needs to edit the beacon and the memmove the (found) TIM element
+to the end of the beacon and modify it a bit of tim in p54_beacon_format_ie_tim.
+The problem here is that the helpers are all casting to const. So this will
+look "funny" via to "uncast" const. Unless you meant something else?
 
-In p54_beacon_format_ie_tim() the returned pointer is cast to non-const
-u8 * because the caller modifies the buffer via memmove(); this matches
-existing in-tree precedent (ath10k, wlcore, cw1200, nxpwifi).
+As for what to expect if something read past the end? Well, p54 works on skbs. So past the
+"end" in p54_beacon_format_ie_tim() would either be extra tailroom then padding or the start
+of skb_shared_info (u8 flags) I think? In case of p54_pspoll_workaround(), after the "end",
+there will be the FCS (32-bit checksum) - at least on real hardware) and then padding or
+the start of skb_shared_info.
 
-Fixes: e5ea92a7528d ("p54: AP & Ad-hoc testing")
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
----
- drivers/net/wireless/intersil/p54/lmac.h |  3 ---
- drivers/net/wireless/intersil/p54/main.c | 30 ++++++------------------
- drivers/net/wireless/intersil/p54/txrx.c | 12 +++++++---
- 3 files changed, 16 insertions(+), 29 deletions(-)
+For rt2xx: not sure. But the existing use cfg80211_find_ie in rtw89_core_cancel_6ghz_probe_tx()
+and rtw89_core_cancel_6ghz_probe_tx() looks suspecious.
+Because from what I gleamed, both just pass "skb->len" as then len parameter. But shouldn't
+that be subtracted by the offsetof mgmt->u.beacon.variable? Because cfg80211_find_ie thinks
+len starts from the "ies"? I can't tell right now as I'm sick and need to go back to bed.
+This all could either be a fever dream an be true/half-true or completely wrong. So I have to
+ask in advance: Please don't take this all too seriously.
 
-diff --git a/drivers/net/wireless/intersil/p54/lmac.h b/drivers/net/wireless/intersil/p54/lmac.h
-index 8adde6ba35ab8..d9cbffb74a265 100644
---- a/drivers/net/wireless/intersil/p54/lmac.h
-+++ b/drivers/net/wireless/intersil/p54/lmac.h
-@@ -553,7 +553,4 @@ int p54_download_eeprom(struct p54_common *priv, void *buf,
- 			u16 offset, u16 len);
- struct p54_rssi_db_entry *p54_rssi_find(struct p54_common *p, const u16 freq);
- 
--/* utility */
--u8 *p54_find_ie(struct sk_buff *skb, u8 ie);
--
- #endif /* LMAC_H */
-diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
-index 57a62108cbc35..30f235d470bb4 100644
---- a/drivers/net/wireless/intersil/p54/main.c
-+++ b/drivers/net/wireless/intersil/p54/main.c
-@@ -71,28 +71,6 @@ static int p54_set_tim(struct ieee80211_hw *dev, struct ieee80211_sta *sta,
- 	return p54_update_beacon_tim(priv, sta->aid, set);
- }
- 
--u8 *p54_find_ie(struct sk_buff *skb, u8 ie)
--{
--	struct ieee80211_mgmt *mgmt = (void *)skb->data;
--	u8 *pos, *end;
--
--	if (skb->len <= sizeof(mgmt))
--		return NULL;
--
--	pos = (u8 *)mgmt->u.beacon.variable;
--	end = skb->data + skb->len;
--	while (pos < end) {
--		if (pos + 2 + pos[1] > end)
--			return NULL;
--
--		if (pos[0] == ie)
--			return pos;
--
--		pos += 2 + pos[1];
--	}
--	return NULL;
--}
--
- static int p54_beacon_format_ie_tim(struct sk_buff *skb)
- {
- 	/*
-@@ -100,12 +78,18 @@ static int p54_beacon_format_ie_tim(struct sk_buff *skb)
- 	 * The dummy TIM MUST be at the end of the beacon frame,
- 	 * because it'll be overwritten!
- 	 */
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	size_t ie_start = offsetof(struct ieee80211_mgmt, u.beacon.variable);
- 	u8 *tim;
- 	u8 dtim_len;
- 	u8 dtim_period;
- 	u8 *next;
- 
--	tim = p54_find_ie(skb, WLAN_EID_TIM);
-+	if (skb->len < ie_start)
-+		return 0;
-+
-+	tim = (u8 *)cfg80211_find_ie(WLAN_EID_TIM, mgmt->u.beacon.variable,
-+				    skb->len - ie_start);
- 	if (!tim)
- 		return 0;
- 
-diff --git a/drivers/net/wireless/intersil/p54/txrx.c b/drivers/net/wireless/intersil/p54/txrx.c
-index 9f491334c8d04..7f952fcf16da7 100644
---- a/drivers/net/wireless/intersil/p54/txrx.c
-+++ b/drivers/net/wireless/intersil/p54/txrx.c
-@@ -293,9 +293,11 @@ static int p54_rssi_to_dbm(struct p54_common *priv, int rssi)
-  */
- static void p54_pspoll_workaround(struct p54_common *priv, struct sk_buff *skb)
- {
--	struct ieee80211_hdr *hdr = (void *) skb->data;
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	size_t ie_start = offsetof(struct ieee80211_mgmt, u.beacon.variable);
- 	struct ieee80211_tim_ie *tim_ie;
--	u8 *tim;
-+	const u8 *tim;
- 	u8 tim_len;
- 	bool new_psm;
- 
-@@ -310,7 +312,11 @@ static void p54_pspoll_workaround(struct p54_common *priv, struct sk_buff *skb)
- 	if (!ether_addr_equal_64bits(hdr->addr3, priv->bssid))
- 		return;
- 
--	tim = p54_find_ie(skb, WLAN_EID_TIM);
-+	if (skb->len < ie_start)
-+		return;
-+
-+	tim = cfg80211_find_ie(WLAN_EID_TIM, mgmt->u.beacon.variable,
-+			       skb->len - ie_start);
- 	if (!tim)
- 		return;
- 
--- 
-2.47.3
+Cheers,
+Christian
 
+PS: Is there also a patch for rtl_find_ie (isn't that pretty much the same as all the others?)
