@@ -1,95 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793028597;
-	b=E1N6KgDWKXqsqya90+MeyPz42zsePrg0XH5uBNmE7M91NCkg3z0slTd/zriSu0J8/57E
-	 B397siWa24KHnsxTQl1GZNEEpVDQHvnChQ392+bhjIfnhl++z9UiHgmAdOhA8hW1Edx+J
-	 5shbh4AdMecpZVI+eQyMOR2nCjdG8IkQVbuIZvFgomE4MbgosCJnpdNMPcCwolZG1oP1+
-	 CLM9H/3ZoWtOWLxyLUCEZjL7GxrVQ2mQrqUi9If/BvJAmNVRf9FGExOaSIJ7st+hhHyor
-	 YfXYyqQXNyLrewIj4AT9rsUerJ0RPpdp5iiF+uEVj52vWYZd2n4pV50STequrtFBuWg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793028597;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=52rsN+P0RqpEFf5O2HXjmwx5luMSAaqLDyiXEcr10so=;
-	b=Pq2ELQKfiuHBQXbUxWQMq//NQo2rDPS38y96PkKyB/As1lUODNq3LQ/Owv0PrPUMlXgx
-	 WiYtaPZ7pHqhQ5Nf8RX1TzyZ0YSws4t9xmNCUFKE+JWVWf8g+wTHZ36lBx7U8+01yIs78
-	 ccg41B9drwaN49PfTTX8YVyjTfcBeQSkDQ/ZIJ7QtsV+GQzszuTKzXO+KV8Wo1i6Rpod+
-	 RLWkh69wF3dwmbzLJFG9LgM7cdi8bJJRRWOQUYxyyyopfVpSKxL4IUIuK1qh8KzgrLUO3
-	 YgHl92zD7Y/n/XKMZ+VCij7pJQuoJIeHhxNwWpDONdl4JM6O/TuYHjXCgg3U2UW5EOg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Jl0fg0OX;
-	arc=none smtp.remote-ip=209.85.128.52
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793032583;
+	b=E6TrcLVAJ8Yh5aT8CclcmFsMSmzl/YY/aqO7lcjIkGF/CWqmrwvQ4MnDxdD3mwayO5LF
+	 Ljt9pIPgvKKMrl6ATkRk4ykHM3F0FaqvhxoatlCGdCyFWrG3CSAku2RJVSQxMmRvX6kij
+	 q+0CG0NTsJaIC7F0diW0DRt86P7WMHPLmwYwjTilEUG9m9MCG81mPb3TxizzVt8Q55ihJ
+	 EPtK9dlH09AmXe/rN/PrVwEUdfYjLWTQNryeuqWxvbUST1L7gbzstnhDneqB7tZqyGlRR
+	 DCYBbD9oncx1MZkTR+diPKzAiPolNGy3jJdI2sCysjJtxazgHkZO//yij8oDRgQVVrQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793032583;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=nG8uf9L3dGpTFleKCef2uV8VMx4fAFJMuFsO3TS08vk=;
+	b=ZSabG94mFurAa7FTGQ4VXjTOQZzPEwFImrj3NEoGFycIdrjEW7u5mzaWv8V65WIsDYEG
+	 9MlCgbTPOGMCrZpnhuR3m4gQNZu7OgH8/AovTttE36jrEJp6q7Noq8xhKmRGOieQUzzHB
+	 QNgfl/DeOjlcxf9fDiw3Ft4BN99e3xESMKZiayCQZQDY6khPI27Mt7Jzo0X0TteUU+MRT
+	 y2G80A756r+QZGndUBAUVmjV+BrmBuuoIDalXI+S2fFTAAsHTZNuPBmx0BI/biCjfL0QV
+	 fzpNW9QLBGQV76Zg4AQGKlTnwAaSiwNApo0qDv5EEwHyUVkEn2A0B+5FHoEUtcEwVOQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aq3XWV6z;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7EB606A31A;
+	Mon, 26 Oct 2026 16:36:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aq3XWV6z
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793032582;
+	b=uqIdM91adgts8vtIoUqVjzJ/ZtbojVL8muHNTvbRQD6nTo7fccbibW2iRPCC7DUdQFY2
+	 dUyGmmyLPlqsVG0a0s9wBPgMsyb/S87IXiyYPZ2n5cw7OqIrTr/2KoeqRPnTY41Kkgpss
+	 UoPDe/YheFHY3syAYwGhYqE1xiCYBU4gK+4gw1HC/2I6b9c3EdU/oK+7gfW8yTeo8wzvO
+	 DF41KGBLSczFwxqP8vI+MyfQ9dE3AIxikmcEtGYKUhAQusuYF64aIXbkgxfBzNCmciUHv
+	 T1KFEKsKEhBESlMXW9iJaujtFzmyt8lwFQTp1jgAOyqA446pu1blMW53i4u8ltwnEog==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793032582;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=nG8uf9L3dGpTFleKCef2uV8VMx4fAFJMuFsO3TS08vk=;
+	b=qboL/PNPDhVqvoYB2ekxr7ptVC0ckryzr9gzeFx5kx3+AIxz5Bi0OU1PxDBVR5eiTgjZ
+	 O9Ffph8JLvbVUQfnBqg6e3hvY+eX8kifsDJZ9EPBwgtFlKr9hfo6B7oNRCG0+H+dtHRd5
+	 qD9RUnSesILIQIAnVXyl3BmrIAkFp+GnSnKVx29QcxEWq5PA2W7dBfnLuWRZ/v2IhPB7y
+	 QP7T0Ct0m9TTIz9YobV6mWtaKMMs5FDS7UZWpKyWUYXMD5jyyTS0iR34BaEyKbiylWhER
+	 xz9/u0T/Tx9A3nWE38AvJ3E/EjpctkgUBaLeR6HLaoGNM4gu9Xwu8rd5UB982JzO4vg==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32556606A31F
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 15:29:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 32556606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Jl0fg0OX
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a1fbd52ab6so20092605e9.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 08:29:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793028585; x=1793633385; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=52rsN+P0RqpEFf5O2HXjmwx5luMSAaqLDyiXEcr10so=;
-        b=Jl0fg0OX5NQsOHFm5iAlcwsq8gq516N68xqYGBEOJwDrpz5PaZ4wyn0LLfI//tXDDt
-         xKyo9SPS7aQjfBdBNw6S7bYWv3j0UqdOYx15fYBKdEq8Yy4NgNEpuPcNBqIh0s158Qan
-         HsbsSim3a2wyy6+BU4WWOPEXzpJdODtEMdQkOisx4JNfjnCl78sskWuF8TZkXaIPzUAa
-         Z9zAVhUFouRRMpaJrDBM/UuKmMkWQoHR6v6zpO52Ms3Av4bhZblKMJoTlFycC+Sdz81i
-         3x9SCXlAyHRiCxOH7ZJm4TXGwzMK7O+/jCFoTuDm5vpQyNiGkpaJ0Occl3eoebNab/73
-         auyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793028585; x=1793633385;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=52rsN+P0RqpEFf5O2HXjmwx5luMSAaqLDyiXEcr10so=;
-        b=jgRiAkwUcF5l0s2zRH7PQbTn5VDcvMcUBMnmrjUQH+WfzKkg0DMTVSc/ykiFufnrFP
-         ToTw0qzeE00smDLXecxU44bo+XWyCIPpRNleT/Kd8oXgZgDi093CVitlXjxbXg4A8w07
-         SCdD6X3YbQE5tGZuASFWhVAmtxC0wFtx7hpYBsxndX42XeBHs3Uz7iBwzqqkD65zHld7
-         gym+tqO0iRRCsYYdbhxOIkri+YNARgOzMr/gcYjg55BfyyhJwZo1E6fYvIJ5hQb/7vTf
-         Hg0x5oQgR3Str3GMfM2DY97CjZ4SP6PHhPTX5GoMLotgevE/4n7XDojFB6UsUZVoFo7g
-         iiwg==
-X-Forwarded-Encrypted: i=1; AKwUvBzV3eKYwzRt9HXaWVsAvJxuRaZ7G+sOhZGIp9pyodhex2yJpf1+vmGOay4Q40Pa3Y1sMFCRPNig+T9GPsz8Ow==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLIoM21ubbxJMIY2qVu6NUW8dnHeEyRiY/Gw3bFfCw1sAncrqa+
-	zCjFGke5I9yQB77d76FU2TwKPf1e7vbgg+EoQ7g7Q3m7JoqbUOTaxoX1
-X-Gm-Gg: AYBFou2TU5A9GONku2iHaYmcA8wrqUcEXgHWhhZsPsOH6JU/D8kCVt+J9XRel646BKN
-	dWnFEor3dx7kjCVvpLpYsqOD5FssxVJjx/X1D9c3wlpk5WgyKIznMP8bOB47yvYX/Pe1sUnsP05
-	BmHg4TaEBycfWHIgz9ybIfAv/sXncrHZ+HdJMMWWRKc/Kr+jRXRv0gn2DJoKPXnnXDA/zXsyPhP
-	3pBFYWU50q0u6Ajr3qLDC7KvQKMv68BmiSgf9FbuaSmndoW1DbWrMs8lacG+U7dkeNtv+CHVwzz
-	MJ3XWrvSTivwQBUypNfiUeoNGHK+DxuTbfrTTFFEvhf664jhr1Wr1MBRjZjvuevmQs1TJjM9RIg
-	Xx/CojIGs6n/yUrsiwLfsCu7Vt7JES88JdT+Yg6BUulAvRYYr6cFHcbmuAFMk43PxkbGGWRvTm7
-	4sYsboIKfc10lr/40nj2z0VHCujRbmB+lXJiXlRQTk/1zMvRRr0lcNmfF4yEC/3kPW+u5zkw8PL
-	6nCG32X5tsQHY6xsvP7WZz+Kr0/KoANt6++1Mwk9udDXoYZkG872zKi5y0Kiw==
-X-Received: by 2002:a05:600c:4e87:b0:4a2:cbe:beac with SMTP id 5b1f17b1804b1-4a35aca73dfmr134781025e9.23.1793028584438;
-        Mon, 26 Oct 2026 08:29:44 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebd4ba7sm17255244f8f.33.2026.10.26.08.29.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 08:29:43 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Luka Gejak <luka.gejak@linux.dev>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: [PATCH rtw-next v9 3/3] wifi: rtw88: time the countdown downloads from the TBTT
-Date: Mon, 26 Oct 2026 16:29:40 +0100
-Message-ID: <20261026152940.1274382-4-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261026152940.1274382-1-mehmet.fide@gmail.com>
-References: <20261026152940.1274382-1-mehmet.fide@gmail.com>
+	by smtp.kernel.org (Postfix) with ESMTPS id 160F01F01825;
+	Mon, 26 Oct 2026 16:36:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793032582;
+	bh=nG8uf9L3dGpTFleKCef2uV8VMx4fAFJMuFsO3TS08vk=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=aq3XWV6zocNnCKYxSIwRv8NGDxPdHoFi6u9x1s3zu6t1jfXIB43iR9O/rHsMKwuLt
+	 LyZrWLIvxmxu3fAphv8egF4rpnq5A644nYj8vtVzB0+kIfDQF1TGm1LPfxmAV+wPdo
+	 yzofl21HitwJoSxva+SmOI1Lq1YaTouWjd6KIGNhF0VJBDDTDFsrReOA6Iqc8inuI/
+	 s3DdX+hZ5BTy68FPmI38bWuDuzGnWbLzf/3L4meYakoSzl+4YI6fveo+yF91PBx5hI
+	 gjM6jiKHRneED9aGo4vwSyVroSuMNUZNaSPdJfhKP9mWLyl1w62oKEvLshEgm5EogR
+	 maxIgKXjdo6LA==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 981FC44D9D;
+	Mon, 26 Oct 2026 16:36:21 +0000 (UTC)
+From: Filippo Falezza via B4 Relay <devnull+effeffe99.gmail.com@kernel.org>
+Date: Mon, 26 Oct 2026 16:36:18 +0000
+Subject: [PATCH] wifi: ath10k: Stop unanswered temperature reads
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,163 +82,148 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261026-ath10k-temperature-v1-1-e5cd6fde7f1e@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQqDMBBG4avIrBvIDCjUq5QuYvytY6mVSRRBv
+ HvTdvkt3jsowRSJ2uogw6ZJ33MBXyqKY5gfcNoXk3hp2Iu4kEf2T5fxWmAhrwYn0jFfh77hOlI
+ JF8Og+296u/+d1m5CzN8TnecHw2p5hnYAAAA=
+X-Change-ID: 20261022-ath10k-temperature-22b119fd615c
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org, 
+ ath10k@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ Filippo Falezza <effeffe99@gmail.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793032581; l=5266;
+ i=effeffe99@gmail.com; s=20261022; h=from:subject:message-id;
+ bh=dwxGaee4fItm4yw5npM2dzYMmeRZJveGMalugLg36eQ=;
+ b=oDrvPeHUioisacqWVSHL44zmXPpkmrzfqqSI7Yprj+QBr3dRziYEl2zpBlt64PhqHoU8pbwAS
+ oj251B6r7RrD0I66WzVYVQkzpBcOynmrCNtqfraCoiNdvKRfMQZBEa7
+X-Developer-Key: i=effeffe99@gmail.com; a=ed25519;
+ pk=7PPwl4QILojrh+ATB5QOpvXVmmoxaxyLQhrLRLWEL0I=
+X-Endpoint-Received: by B4 Relay for effeffe99@gmail.com/20261022 with
+ auth_id=1327
+X-Original-From: Filippo Falezza <effeffe99@gmail.com>
+Reply-To: effeffe99@gmail.com
+Content-Transfer-Encoding: 7bit
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+From: Filippo Falezza <effeffe99@gmail.com>
 
-The countdown downloads are queued one beacon interval apart, with no
-relation to the TBTT. A download that runs late past the next TBTT
-leaves a count out of the air.
+Reading the ath10k hwmon temperature sends WMI_PDEV_GET_TEMPERATURE and
+waits up to 5 s (ATH10K_THERMAL_SYNC_TIMEOUT_HZ) for the reply event,
+holding conf_mutex. Not all firmware answers: the WCN3990 firmware
+WLAN.HL.3.3.1-00694-QCAHLSWMTPLZ-1 on a Motorola Moto G 5G Plus
+codename nairo (SM7250) never sends the event, so every read of
+temp1_input stalls for 5 s, logs
 
-Queue each download 10 ms after the next TBTT, read from the TSF, so it
-may run late by almost a beacon interval; a later one is followed by
-the next at once. A TSF jump, an IBSS merge or a reset, restarts the
-schedule from the next TBTT.
+  ath10k_snoc 18800000.wifi: failed to synchronize thermal read
 
-A TBTT just before the start may already have sent the first count; it
-is taken as the one that did, so no count is sent twice.
+and returns -ETIMEDOUT. Tools that read all hwmon sensors, such as
+lm-sensors, hang for 5 s on every run, and configuration changes of the
+interface wait for conf_mutex in the meantime.
 
-The USB chips raise no TBTT interrupt, so the TSF register is read. The
-beaconing interface is always on port 0: rtw_core_port_switch() moves
-an AP there, an IBSS runs alone.
+Whether the firmware answers cannot be told from the chip: firmware that
+answers and firmware that does not both advertise
+WMI_SERVICE_THERM_THROT, and WCN3990 firmware differs between devices.
+Instead, remember that the running firmware did not answer, and return
+-EOPNOTSUPP right away on later reads. Forget it when the firmware
+starts, so that a restarted or updated firmware is asked again.
 
-Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+The first read after each firmware start still takes 5 s when the
+firmware does not answer. Reads on firmware that answers are unchanged.
+
+This change was written with the help of an AI coding assistant; see
+the notes below.
+
+Fixes: e98199a8c27f ("ath10k: enable QCA6174/QCA9377 to read the chip temperature")
+Signed-off-by: Filippo Falezza <effeffe99@gmail.com>
 ---
+Notes, not for the changelog:
 
-Notes:
-    Changes in v9:
-    - Acked-by from Ping-Ke (on v8) and Reviewed-by from Luka
-    
-    Changes in v8:
-    - the TSF read retries once, if the high word changed, instead of
-      looping (Ping-Ke)
-    - rtw_fw_csa_queue() takes a start argument and reads the TSF once,
-      also on start (Ping-Ke)
-    - the port 0 comment is gone, the commit message says it (Ping-Ke)
-    - empty lines where asked (Ping-Ke)
-    
-    Changes in v7:
-    - new patch, from Ping-Ke's review of the countdown pacing in v6
+- Tool: Claude Opus 5.5 in Claude Code wrote the code and this changelog
+  during an interactive bring-up session for the Moto G 5G Plus. The
+  request was to fix `sensors` hanging on every run because of ath10k.
+  A first version disabled the read for all WCN3990 through a hw_params
+  flag; it was replaced by this one so that it does not assume all
+  WCN3990 firmware behaves the same, as Loic Poulain asked of another
+  WCN3990 firmware workaround ("ath10k: WCN3990 firmware workarounds for
+  WLAN.HL.3.2", March 2026).
+- Tested on: Moto G 5G Plus (SM7250, WCN3990, firmware
+  WLAN.HL.3.3.1-00694-QCAHLSWMTPLZ-1), linux-next next-20261021 plus
+  device support patches, with this patch in place of a local WCN3990
+  quirk. First read of temp1_input: 5065 ms, -ETIMEDOUT, one warning;
+  next reads: 8 ms, -EOPNOTSUPP; a full `sensors` run: 25 ms (5 s or
+  more before). After switching Wi-Fi off and on, which restarts the
+  firmware session, the first read waits 5 s again, then -EOPNOTSUPP.
+- Not tested: firmware that does answer the request (QCA6174, QCA9377,
+  other WCN3990 firmware); for them only reads after a timeout change.
+  Not run: sparse.
+- Build: W=1 for arm64, no warnings; checkpatch --strict clean.
+  Applies to ath-next (cd026e68f).
+---
+ drivers/net/wireless/ath/ath10k/core.c    | 1 +
+ drivers/net/wireless/ath/ath10k/thermal.c | 9 ++++++++-
+ drivers/net/wireless/ath/ath10k/thermal.h | 2 ++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/realtek/rtw88/fw.c   | 51 +++++++++++++++++++----
- drivers/net/wireless/realtek/rtw88/main.h |  2 +-
- drivers/net/wireless/realtek/rtw88/reg.h  |  1 +
- 3 files changed, 46 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 2d81aaeed0d7..9ba4f1c244ec 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -3,6 +3,7 @@
-  */
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7c2939cbde5f..9467e4c3099a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2985,6 +2985,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
  
- #include <linux/iopoll.h>
-+#include <linux/math64.h>
+ 	ar->running_fw = fw;
++	ar->thermal.temperature_unanswered = false;
  
- #include "main.h"
- #include "coex.h"
-@@ -1809,14 +1810,50 @@ bool rtw_fw_csa_active(struct rtw_dev *rtwdev)
- 	return !!rtwdev->csa_vif;
- }
- 
--/* paced from the first download: a late one does not delay the next */
--static void rtw_fw_csa_queue(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+#define RTW_CSA_TBTT_MARGIN_US	10000
-+
-+static u64 rtw_fw_read_tsf(struct rtw_dev *rtwdev)
-+{
-+	u32 hi, lo, tmp;
-+
-+	hi = rtw_read32(rtwdev, REG_TSFTR + 4);
-+	lo = rtw_read32(rtwdev, REG_TSFTR);
-+	tmp = rtw_read32(rtwdev, REG_TSFTR + 4);
-+	if (tmp != hi) {
-+		hi = tmp;
-+		lo = rtw_read32(rtwdev, REG_TSFTR);
-+	}
-+
-+	return ((u64)hi << 32) | lo;
-+}
-+
-+static void rtw_fw_csa_queue(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+			     bool start)
- {
- 	u32 interval = ieee80211_tu_to_usec(vif->bss_conf.beacon_int);
-+	u64 tsf = rtw_fw_read_tsf(rtwdev);
- 	s64 delay;
-+	u32 rem;
-+
-+	if (start) {
-+		div_u64_rem(tsf, interval, &rem);
-+		rtwdev->csa_tbtt = tsf - rem + interval;
-+		/* a TBTT just passed may have sent the first count */
-+		if (rem < RTW_CSA_TBTT_MARGIN_US)
-+			rtwdev->csa_tbtt -= interval;
-+	} else {
-+		rtwdev->csa_tbtt += interval;
-+	}
-+
-+	delay = rtwdev->csa_tbtt + RTW_CSA_TBTT_MARGIN_US - tsf;
-+	if (delay > interval + RTW_CSA_TBTT_MARGIN_US ||
-+	    delay < -(s64)interval) {
-+		/* the TSF jumped: restart from the next TBTT */
-+		div_u64_rem(tsf, interval, &rem);
-+		rtwdev->csa_tbtt = tsf - rem + interval;
-+		delay = rtwdev->csa_tbtt + RTW_CSA_TBTT_MARGIN_US - tsf;
-+	}
- 
--	rtwdev->csa_due = ktime_add_us(rtwdev->csa_due, interval);
--	delay = ktime_us_delta(rtwdev->csa_due, ktime_get());
- 	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->csa_beacon_work,
- 				     usecs_to_jiffies(max(delay, 0)));
- }
-@@ -1829,8 +1866,8 @@ void rtw_fw_csa_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
- 		return;
- 
- 	rtwdev->csa_vif = vif;
--	rtwdev->csa_due = ktime_get();
--	rtw_fw_csa_queue(rtwdev, vif);
-+
-+	rtw_fw_csa_queue(rtwdev, vif, true);
- }
- 
- void rtw_fw_csa_stop(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-@@ -1880,7 +1917,7 @@ void rtw_fw_csa_beacon_work(struct work_struct *work)
- 	if (!ieee80211_beacon_cntdwn_is_complete(vif, 0)) {
- 		rtw_fw_download_rsvd_page(rtwdev);
- 		rtw_send_rsvd_page_h2c(rtwdev);
--		rtw_fw_csa_queue(rtwdev, vif);
-+		rtw_fw_csa_queue(rtwdev, vif, false);
- 	} else {
- 		ieee80211_csa_finish(vif, 0);
+ 	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
+ 		      ar->running_fw->fw_file.fw_features)) {
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index 9bb486f8e920..1079d552cff4 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -75,6 +75,12 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
+ 		goto out;
  	}
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index bc3ebfec11ae..3be0a96d1186 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -2096,7 +2096,7 @@ struct rtw_dev {
- 	struct work_struct update_beacon_work;
- 	struct delayed_work csa_beacon_work;
- 	struct ieee80211_vif *csa_vif;
--	ktime_t csa_due;
-+	u64 csa_tbtt;
  
- 	/* used to protect txqs list */
- 	spinlock_t txq_lock;
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index afcdb66fdb9a..3ff4ae0885ef 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -506,6 +506,7 @@
- #define REG_USTIME_TSF		0x055C
- #define REG_BCN_MAX_ERR		0x055D
- #define REG_RXTSF_OFFSET_CCK	0x055E
-+#define REG_TSFTR		0x0560
- #define REG_MISC_CTRL		0x0577
- #define BIT_EN_FREE_CNT		BIT(3)
- #define BIT_DIS_SECOND_CCA	(BIT(0) | BIT(1))
--- 
-2.55.0
++	/* Don't stall every read on firmware that never answers */
++	if (ar->thermal.temperature_unanswered) {
++		ret = -EOPNOTSUPP;
++		goto out;
++	}
++
+ 	reinit_completion(&ar->thermal.wmi_sync);
+ 	ret = ath10k_wmi_pdev_get_temperature(ar);
+ 	if (ret) {
+@@ -90,7 +96,8 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
+ 	time_left = wait_for_completion_timeout(&ar->thermal.wmi_sync,
+ 						ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
+ 	if (!time_left) {
+-		ath10k_warn(ar, "failed to synchronize thermal read\n");
++		ath10k_warn(ar, "failed to synchronize thermal read, not asking again until the firmware restarts\n");
++		ar->thermal.temperature_unanswered = true;
+ 		ret = -ETIMEDOUT;
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
+index 1f4de9fbf2b3..cb930da5c04a 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.h
++++ b/drivers/net/wireless/ath/ath10k/thermal.h
+@@ -19,6 +19,8 @@ struct ath10k_thermal {
+ 	/* protected by conf_mutex */
+ 	u32 throttle_state;
+ 	u32 quiet_period;
++	/* the running firmware did not answer a temperature request */
++	bool temperature_unanswered;
+ 	/* temperature value in Celsius degree
+ 	 * protected by data_lock
+ 	 */
+
+---
+base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
+change-id: 20261022-ath10k-temperature-22b119fd615c
+
+Best regards,
+--  
+Filippo Falezza <effeffe99@gmail.com>
+
 
