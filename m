@@ -1,88 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.231.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.231.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793041845;
-	b=dYtG+lxdF2HeADfpAwKoRAzB+5w9LgS7fB+LJq7jxsgWih366PDSNKt6Qr3s+w8Ojsw+
-	 ADQsqqcBFzIn+EjHIgN2YPkLPqOfiy2FZPfGi1CPKOSFVWaHT4mb0sbxdvVlUU9cq2/j1
-	 n33SLJ81Vvn0j7Fme/cA8u3YigrCrP9qY/mGvGstzpzhPZGhaD2qw76mU5FGDamSoP2/j
-	 JYO4hr0pn0/K+M7akw3lP+fr1Wo+6ERLpSoqz44f32iQ3pndTohmBC+8Zq9fjw1/iVBGB
-	 auu2h4MAZdR/mSRk1zflj3BvmUma+54fKvr6yMBavgIeZuDfTnYlfsbMYG1epTJ4o6A==
+	t=1793041847;
+	b=uIHNW5CwkGqAmAN9R3spRbjeiLnDNQ8tH7YthkmEhZ32Ob0f1wCLoKlimQHzzdAm0mrT
+	 7TaUspWO27FwAhH9dnw2ekOu4AJdMQWWfIneWpaoT9tv35kmBBK8VYxphKhHY3eG+NL8d
+	 kpiscDbFwmm8sN9iUn28RJ/gXM2YnJXDZ+vaVI1qjXkbWnqUXTRXdQdqiZ8tmkzH+SiLJ
+	 3mCW9QI08zhaMLn+LyZnDks3i6xSnFlkveDMndAWlx4ItjO+7n5T7k5+5Zlxc+iMbklVU
+	 4GWSuH863rgS6B3Wg5mWLzaxN5dOAx00GyXRSYnwnx5lPIbktkynncuMR5oYx26IGTA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793041845;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793041847;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Date:Subject:
 	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
 	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
 	 X-Developer-Key;
-	bh=618ppnTTAMIe+DoCnrNMfZTILgIDF8MyT0GWuzKsSm0=;
-	b=R5tBgYs/Yyz5SYE7hMDIE2JLjWyRYfU9APc1ngNA9X+6xbe7GO2dFVbKZrJpJWTFVVqI
-	 6gMSe9ploDod1gFCirwNpFLxkZ73MF9f+IU8++wywAm4Cf9A22xSqPUfONXfYU9L+K5g+
-	 GweOSUYAN4CjBijFZi3bEDekew2rylcJ4i4PXW5anJKJr8kRArP21hwQQxL5U765EviUr
-	 vs/D+YEwFLh8gjR9KN0PTq1YoL2zek3hPrecwWqY94KlwElkx00+cE4sjKR+E5Pw0I920
-	 8P3bFKtgxWF/eJIQOCk62sv5iSTqwlVASWqQhsndIEs1L/76LtuU8E9ao6pYMOFuDlQ==
+	bh=DMuTtuJ1h4xjmqX6Q6LPbxG38lJtzTTle+6VtZKNkrY=;
+	b=BeRrR2QTGbR7bE2PNgUz1dyoHcnAuylevBTOSXYGCR45HtlAvu20hIHxM44jl6R3XCDT
+	 co409D/+8jyQtouFR2uQfNTY65GkFoXNdjvmCaSEAAiOolb43pDHtygScyR89qtQbAOfc
+	 1iU7rPm0BdQkzx5mH/hxNooBkhB4WWVKdA0QD6XAgf+PzVOHgCpWoqBfT2Butlk8xhWTu
+	 G93L1los/V/DDJlCX0yb1qRxaelueUJbMDwMHXT8P9SybfAfhZx0B46KU3S08lCgCM6P3
+	 ITqi8AY5E/D0vrfJRAs3kpd07EcWdefr95FMdmlaR4n8g/xQZ9luHw1Wq2UmX2OQzXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=GEf0g2kO;
-	arc=none smtp.remote-ip=74.125.231.198
-Received: from mail-oi2-f6.google.com (mail-oi2-f6.google.com [74.125.231.198])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=TN4ytapC;
+	arc=none smtp.remote-ip=74.125.231.133
+Received: from mail-oo2-f5.google.com (mail-oo2-f5.google.com [74.125.231.133])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33CA606A323
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 19:10:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C33CA606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0B3C606A321
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 19:10:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0B3C606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=GEf0g2kO
-Received: by mail-oi2-f6.google.com with SMTP id 5614622812f47-545a4fb8d5dso410128b6e.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 12:10:44 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=TN4ytapC
+Received: by mail-oo2-f5.google.com with SMTP id 46e09a7af769-8458555b6a8so949822a34.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 12:10:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793041844; x=1793646644; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1793041846; x=1793646646; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=618ppnTTAMIe+DoCnrNMfZTILgIDF8MyT0GWuzKsSm0=;
-        b=GEf0g2kOp+3P7dWWSNiQJ7BcKpjD+/HmM2WdKR4ppwelkhCkkP2KI3jYvMw+iX4ALk
-         z+PPgRd891GJqxS3DrxwdyWCud9lN8uth+9Af1u5ZK10decCdrxFOD1YTf0GVy8qRoNq
-         p9i73cc60vLnqKlM1CECcdvHgGohQt4LNK0DQ/XTViWADdoD5sBokVHEUFE3zDqqILwa
-         WSkZBa32qxhpZdQhDfIzEPw4A15GgnoR3oPSWmCYGQOc0O56x8/AxWFadZY5YTzJyOVq
-         9kzRK8gHGUu5mKtwWqja+H5cex8OwGwdibBgJo0jhCuTcLhfCh8uZQlVQ9wjlp4L3LcO
-         Pa/g==
+        bh=DMuTtuJ1h4xjmqX6Q6LPbxG38lJtzTTle+6VtZKNkrY=;
+        b=TN4ytapCI4BrQ3ZcXC8tKkhy7BXjIBziqzswKTCOUIfrvA35hhHia2p3KheIpZjwrf
+         SxOT0QbjpA2ZKqVlh393VYXOpgIeM7vTyDbBktRHrX4ygwbU9MxAyF76VFS5z/BPpeJg
+         I2Up2uSxn1h0EcNtFjGbUkz1+vtRSMGtbAgmhBxtrc+scShGOOgLtdk2AR2lCGdOaDLT
+         Tx4DyOwqqsWFAlLIXplEPEaU/zr0q0Q1gTQWs4Vykn52/h7uEHW9WQUU7OsgjXgFNyrH
+         3/LJaxmKsOi02epciAyHVg4kiJ5sq/VS9485eIVngpjmlxC876tjA4LPVyvrQyKhcvmc
+         khPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793041844; x=1793646644;
+        d=1e100.net; s=20260707; t=1793041846; x=1793646646;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=618ppnTTAMIe+DoCnrNMfZTILgIDF8MyT0GWuzKsSm0=;
-        b=FbuSFjtYoQ7EpnOtpWMDOA5Ph3j4S0yWRQ6yh/21wGyq0YVABbeeK42SrSLWk3uKF/
-         Fs0eNMgbxZf0YQY9P0lPofis1RbnOif17eCK/OorIPxpkbkr8GAVTBJyLX3cMfWIWzij
-         /mkdrp7+mQPVmNeANsSRtbNbWpXld5IOQH43yaXFx9uMowpoGeHL7ejv0DwMKfAki/AH
-         wP8P7/1o4svZ2x5r/OONOIq2Vh5Iqxe87NDPFuAqRDQvgZ0sxRup7DbSGDQSFZfQO1wJ
-         NZRXVz2yfcRgzkbnWANBhVnfZhAc6NZKwv0HvvUEpUKdI/SzjF78SFNNMNwWO2hDPCL0
-         gBzA==
-X-Gm-Message-State: AFq9FYJuDpWFk162ddjAeT2dq/X2/eHEtvBAQ5ZibtHqgtcln4ezUkD5
-	ODi7VOXibT9dIoIbiOVZvWxjcvYRXqdI/kewPyAG9sNxt+x4o1anR8Dl
-X-Gm-Gg: AYBFou2OlMqJVO1BiXl5UvJCMGHlhf1GtBvWPWRUCqyIDLl1csGiSxrLKWuSWVQZUMq
-	7SGlDxWHMPXqED4lwR33nJ8y4cb9DTWMyd9Kcysv9A6e2HQSlQc/pk9pupsm+r832RstCHCCsWz
-	cUk4PKsNinNcACx0GvKEz+/7WlwnKcmxqMT9r/A6NXEnwvuAqdLQ0BslZn08nOwZz7WzJLDOim2
-	ElFY5+0DPIiJeSQbspujNrQCmcOmpCpgZodKJSs4oxD7CW10g1aGENXOvxPi2tZ6LkcHFFI06Cj
-	Twjpvnmi1NTnYdUQnd/hWnhUKZegTTSkZ2ksfcgh/bB2tUj7WSaHqqf4VXp4EJUJApFlcfiSrZ9
-	46vTyDiqjaYeMOvrtXU1wYMehRob8HVF6UI+nphfICpQDpLS5iTs1BDKoENYkjdAt3GtPk/SXEE
-	uR6gAwJy8sQJD6AxzTJ1OHM/KDim0yK2F9GMi0DGifbqNCOWEus0iZaHXfnMATz03YPu09I+pDj
-	Hq/vNZXeKBqYQ1Egq0uFx7mUpThaxTrrflyHzKb+ShDyYs1gBhHobIF0aPDXvYFIx8NIXoIp9Jo
-	5K9FOVsgc6Dj07g2zMZ/W/roP0RIK5AM2TRn/W4xk5iUrFQqbRkm1Un7rc3tr0gL1EM=
-X-Received: by 2002:a05:6808:1209:b0:4d6:90f3:74a3 with SMTP id 5614622812f47-55c003118bemr5492504b6e.46.1793041843805;
-        Mon, 26 Oct 2026 12:10:43 -0700 (PDT)
+        bh=DMuTtuJ1h4xjmqX6Q6LPbxG38lJtzTTle+6VtZKNkrY=;
+        b=nmEx3+dRbZCDEJW9JEBgDOxGgIC2mUWiO/dxxjXMNkTY96S93yoBJGct+irA0gBbBJ
+         3v3FcejgHRcDs7ncxU+agNcEP2gHk1fOh0E6Nsg6MCTXviwaGzpTS+J93ZX6+leX8k+e
+         hxbbB9eQYxQ1c47TY5M7C5voTcH6K7nEW7h78/0apfytITKwxA/K3H5T5CJ48F7HGvxD
+         3oK/CrBpPNIqy50WClHisF+GoatGyBBFifeS/0K3sgw3PXunDkVFnhlpzLYSdRFC1btk
+         RL4HG3u651mbj5bWSj7+/pAsAxdcR3I4Dw8y4H+jGcuCJzvqiRf6bfOlfR4Cr3XIqsy6
+         ZmXA==
+X-Gm-Message-State: AFq9FYKkXlWpSoHq9kPsFnQqtXkRhLCwBJbRAbog2/ey3Vk4wHuzB6ch
+	QLrq+N55H7Bbi2tbfKYrB999eEHHUy3DH6e2BoajtarJ8qgQc24DQTop
+X-Gm-Gg: AYBFou2s5nZYi8ZCb6sMGsPPRDZDCzNqTjsYftCEyAvSsSzmFB+zRc1rQR489587n4x
+	Qu7MZjkBgoSI8oKMYpVGS6ZAdr//jHMnDEeoXXi0gGe/8efCku7owvZv+dslr5sfKBTC4mRhvVQ
+	qYTKm2/w8ZPCoe3oRJMflDNXTkoFjeshZL9SKKouZzXdkDNjVYPdgGjLI+uo8pI2ZVwU5jnG3D1
+	l5SiLl3Hx5suKxBWZUAaBCf0wDPHjEytRSD4qpCzHFHey4U7cDI9VaVVHM+tVxoWUzMeOL0wDS0
+	IQmvuBXNVqmg1V0wJP3pwChlddp6AA3ggIG9TU/jFos4VGp90C0AAxvOCFx/zU7Xx5au5EEO+QD
+	41SbXOFVPkZ63i+VEPdwlyA+k3jlCjepbUwElYdQeLT1ddRTKLp7rqrKykU2WC0Ig/L+k/4aHaG
+	nNc8HybFB2CnwkjBgSFCCOyi+gA5QzH0MBWCo3itwzKWvkTPO/reKlihfJewDOGxT3gTbdFYmuD
+	ULxzzLHwnHEqAm481QHqEm+3tBSy0GLH6ufVSSv+MWLW6sejzR//kayNM61a+Qez4PfSzZgi2tD
+	IHNyh/6uReiQ8x3V+kJ5aUliSl8eJZe/GTkrk1X2ffqJxJ5r2ijWF8lg10Pg8+cFjjs=
+X-Received: by 2002:a05:6808:1919:b0:4d6:90d4:6bc with SMTP id 5614622812f47-55c002d9eb8mr6575517b6e.46.1793041845770;
+        Mon, 26 Oct 2026 12:10:45 -0700 (PDT)
 Received: from [10.10.18.223] (wsip-64-207-253-118.tu.ok.cox.net. [64.207.253.118])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-55c03dc3524sm5740834b6e.0.2026.10.26.12.10.41
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-55c03dc3524sm5740834b6e.0.2026.10.26.12.10.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 12:10:42 -0700 (PDT)
+        Mon, 26 Oct 2026 12:10:45 -0700 (PDT)
 From: Ryan Brue <ryanbrue.dev@gmail.com>
-Date: Mon, 26 Oct 2026 14:10:36 -0500
-Subject: [PATCH 1/4] wifi: mt76: mt7663s: don't advertise random MAC
- address scans
+Date: Mon, 26 Oct 2026 14:10:37 -0500
+Subject: [PATCH 2/4] wifi: mt76: mt7615: wait while Bluetooth downloads the
+ MT7663 patch
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -94,7 +94,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-1-944b1f7e63a8@gmail.com>
+Message-Id: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-2-944b1f7e63a8@gmail.com>
 References: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-0-944b1f7e63a8@gmail.com>
 In-Reply-To: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-0-944b1f7e63a8@gmail.com>
 To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, 
@@ -106,56 +106,65 @@ Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
  Ryan Brue <ryanbrue.dev@gmail.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793041838; l=1887;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793041838; l=2027;
  i=ryanbrue.dev@gmail.com; s=20260906; h=from:subject:message-id;
- bh=ZxzBWCMIVzBy2zHcQbyAGCsHpmwqwCbczZ1Y+dIdAUw=;
- b=JQfaph5OJQ4fE5sflHyc3YV9ljMuTh+tTrOIW1IgQQ0aFKTtqLSEtsrcaemUK4HFew0sfFGir
- 3w4+xgm3WyyBDexS52kgyrjuzRFqDFkswzrbmOnDeL9cZqTcguX/7yc
+ bh=HkEhUCJzkwct3RuygSMeROndtW02Wv2ZhGyJ5rVshHo=;
+ b=Xp3Ukesylfb4khPHpZ11/Jn435KT1nrvFR8ZhqyM/mUHsf6//IDNqy25niqgUN/TogKP5/5MO
+ H4QgjZPCBcVCwSr69a0/W6h771CNP1sQjSp1Qa2GvYgSEJiwTO2+/Pa
 X-Developer-Key: i=ryanbrue.dev@gmail.com; a=ed25519;
  pk=KsUvVaP//v/2q+ZBuacc7cLbsyEYn+AD71Sn28oZWKo=
 
-With the MT7663 offload firmware (N9 3.1.1, build 20200604161656) on
-SDIO, a hw scan with NL80211_SCAN_FLAG_RANDOM_ADDR completes in about
-50 ms with no results, while the same scan without the flag takes about
-5 s and finds every BSS in range:
+On MT7663 the Bluetooth SDIO function (btmtksdio) shares the ROM patch
+with Wi-Fi, guarded by a semaphore in the firmware. When Bluetooth wins
+the race at boot and is downloading the patch, the semaphore request
+returns PATCH_NOT_DL_SEM_FAIL and mt7663s gave up:
 
-  iw dev wlan0 scan flush            -> 17-23 BSSes in 5 s
-  iw dev wlan0 scan flush randomise  -> 0 BSSes in 0.05 s
+  mt7663s mmc2:0001:1: Failed to get patch semaphore
+  mt7663s mmc2:0001:1: failed to load mediatek/mt7663pr2h_rebb.bin
 
-NetworkManager randomizes the scan address by default, so on an
-mt7663s it lists no networks, or only the few whose beacons happen to
-arrive during a scan, and it can't find the network it is configured
-for.
-
-Stop advertising NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR on SDIO, so user
-space falls back to the device address. Scheduled scans have their own
-MT7663 request layout and are left alone. Only the SDIO variant was
-tested; the PCIe and USB ones load the same firmware and may need the
-same treatment.
+Retry every 100 ms, for up to 5 s, while the semaphore is held, then
+find the patch downloaded. Tested on an MT7663 SDIO module with
+btmtksdio built in: across repeated boots, whichever function downloads
+the patch, both come up.
 
 Fixes: a66cbdd6573d ("mt76: mt7615: introduce mt7663s support")
 Signed-off-by: Ryan Brue <ryanbrue.dev@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/init.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 665b0f1e939f..e6685c51fa6e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -200,6 +200,12 @@ mt7615_check_offload_capability(struct mt7615_dev *dev)
- 				   WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
- 				   NL80211_FEATURE_P2P_GO_CTWIN |
- 				   NL80211_FEATURE_P2P_GO_OPPPS;
-+		/*
-+		 * On SDIO the firmware ends a hw scan with a random source
-+		 * address at once, with no results.
-+		 */
-+		if (mt76_is_sdio(&dev->mt76))
-+			wiphy->features &= ~NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
- 	} else {
- 		dev->ops->hw_scan = NULL;
- 		dev->ops->cancel_hw_scan = NULL;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 152b75178b27..e5c2ad5fb458 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1241,7 +1241,7 @@ static int mt7615_load_patch(struct mt7615_dev *dev, u32 addr, const char *name)
+ {
+ 	const struct mt7615_patch_hdr *hdr;
+ 	const struct firmware *fw = NULL;
+-	int len, ret, sem;
++	int i, len, ret, sem;
+ 
+ 	ret = firmware_request_nowarn(&fw, name, dev->mt76.dev);
+ 	if (ret)
+@@ -1253,7 +1253,17 @@ static int mt7615_load_patch(struct mt7615_dev *dev, u32 addr, const char *name)
+ 		goto release_fw;
+ 	}
+ 
+-	sem = mt76_connac_mcu_patch_sem_ctrl(&dev->mt76, true);
++	/*
++	 * On MT7663 the Bluetooth function shares the ROM patch, and the
++	 * semaphore is refused while it downloads the patch: wait for it.
++	 */
++	for (i = 0; i < 50; i++) {
++		sem = mt76_connac_mcu_patch_sem_ctrl(&dev->mt76, true);
++		if (sem != PATCH_NOT_DL_SEM_FAIL)
++			break;
++		msleep(100);
++	}
++
+ 	switch (sem) {
+ 	case PATCH_IS_DL:
+ 		goto release_fw;
 
 -- 
 2.55.0
