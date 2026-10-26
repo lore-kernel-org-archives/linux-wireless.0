@@ -1,91 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793038554;
-	b=jOOFI4gyKlQblcchrg47p0xQcPlNS8t1c+0oq4AcRrgdwM/+5K4sB1Ed5SLHZ6SvcWpj
-	 kMNvqDbLoWUC/bBGsItIVvqj/3KYjjU14qLC3TuqLgKCsPV3jSH2gqLrk+m1RGCqFGz77
-	 RUWsOas6mXHuW3hRISnwaLXsHmwItL82/4F17NLspulhB6+EhLePBnJabSCKCSCugx4Dd
-	 V6CiSaSFnRrSrjfFw7FCGXqoQAHv8VVh3FNEnC9QTOyO0FW8BUTGlI8dkHKOZy6i0wrWf
-	 DkoxN+dQJ/zOcYYGcquwNliCpQyHwY+9SQZqStehPfF353gazpsrOCR2VrH9UQajO7g==
+	b=urGeTYDKziPUoMrcPs+fMdzcpkycn/cFvc6A+AvF9GAj5VG0GfqanfZZqImMefBo6r0t
+	 CKOBoDGUDeLAUDGZmNzYQOZsufybkuTqXSK2l96gUcvyYWIgfXWOSj+qWINVnSXIP+H9m
+	 1kDsfoVYoncSuwfQE+Mh2Ef8LDLwXegBuYb8KkYF7ToaVQRxynDLRoKOTpiXgl+j2MsYC
+	 xJdrvZ7okxik/qxVQoLlKJRsECVsT+mLdscO26ODSgLAxJH2wsu5OG7zkVjdy5zWae7hy
+	 gpXxopT28KYL6rOzW3UjKkkk9gidWw+36cPACKlXNciKs67PqDvZntfdpq2ktxrCxnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793038554;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=IXiEUIeYZfm/Z+uDz/6gAhnO088xmqngV8ebCTTry2o=;
-	b=tlIVE4bUJoPx0XqfUWFa02Kpkg0fRqk9IYFpPYDQMlGPbd7KTz7TVIgjJgI1Bv7pfVlv
-	 Ea0D188Rx5eLZPo86SPD0HUVSCU7Jxm4Vmg1O6hzJs6v/jM4KkwFoHsGnT+qMS+qA01BR
-	 6Av7VbuPzMvbPqd5kcfz4sjLvck3KJjrCrsRnCxEi8QMRlMXuoDFP/ner2nQFgZ7Wh4Wn
-	 kuPoBoHVWoeLnYd9s9GTdmgw2tBpGbzFrSvuEIO84LYY3pbOiijoi2Qe4880vB2R76SMV
-	 VL21h7aqLbdReB1rOAWKMA16YyT8jSeJgbVIhxF7ohAQjiqgBt/egN6zk4I1QT0eyQQ==
+	bh=oA2KSCCZdPSPR7+/ASoZPmv+ibMiLNh4p2Cq1FVXsDM=;
+	b=KvO8fjqx6OudD/xasMzpWUJt5pQqT7W+hBQudR/o4XUt7K0AyB9eHh085eyXQqkSQleA
+	 2qFe9XZQrfxCsse2TDs5scnt7kg4x591ern7Kfw8Pyw1mlrRvcequsauh6MLFBPiWvoCe
+	 D1lXG65xCcxASzXSLvZ25GAGuOX8CD1zqHAswTGilb5b2H8F7cZlF46YbkjZhPxrM7ga0
+	 Tno0aZc/mdD7RxKou47arun6WRKsbJddvnr6S1BNPoTC73Y93eBnxT6gGl9ZBt/Ezjdv8
+	 z3OsR0qCkaZOsci+6QXGlSN8p31TLazDhFwFxgxKaZlSuwZv+J76ygpqqGCnPXe+Y2Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=SUdwMSY3;
-	arc=none smtp.remote-ip=209.85.221.47
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ZltljWek;
+	arc=none smtp.remote-ip=209.85.221.51
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA452606A331
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 18:15:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BA452606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7D4606A339
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 18:15:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E7D4606A339
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=SUdwMSY3
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-48df4f540ebso1648543f8f.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 11:15:53 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ZltljWek
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-48e10a70540so1897953f8f.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 11:15:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793038552; x=1793643352; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1793038553; x=1793643353; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=IXiEUIeYZfm/Z+uDz/6gAhnO088xmqngV8ebCTTry2o=;
-        b=SUdwMSY3OsO5FAk/vhbWTHl8t+7qOIbnjYarWYb43vB0bJmbQlzKmIymQQtfouzo2n
-         DkK8vwRiGcPPGmjk9y2jnibiyWY6azo2FH0gm6cR2uotQt4VPcQq5pP3n9cuMQqCQzFf
-         Xmnf7rT5ffY5oaVMAk+xgpoKUCbZb8MFXUO3g6HbclP7u9UGYucClJ3rQQWomGS+CBfM
-         n0pQwUCeoNFIoHb79YnWLDU6kSrJMKfa0Sifj2TIl4fYrHANBn9yay8zqwDrSY9jTk9C
-         x0JOAeiwSdYQgPV+s3IxH6WQhDGGt0GtpbEICfTACyD9pWPQO92S8PSIlIh9EVnjhVVh
-         KNhg==
+        bh=oA2KSCCZdPSPR7+/ASoZPmv+ibMiLNh4p2Cq1FVXsDM=;
+        b=ZltljWekt9VRbbM3i9DkjeTC7lAx9hLD8rDQQCdtcceujBVnzVUD+6X7PTQ+QKxcWg
+         N0xC5D6gCIhXsdCVYcbjyDbwee5LPYVWtSSvXJWWmMnZF45/v9sBTW6CNqN5UUdqldOj
+         z6Je9EEkNh5+r3H2sEgjEKt67B6B/c594/qW8vrNDruiNhR7m+KdI9EuvU4RC62IM/uj
+         4T0m/Gf/cfJpTCPg5aCL5yNRg0I6O2YuIToWBvb8ksNd++mKX4uHagpXBYlVyT6p+yKd
+         /RHFC4wVmpzpP9Vd7CrZ+GADxOhZDgUqIzQt4FNvNsx9xjZvLoZBO7oMqTBuGS04HS6W
+         9K3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793038552; x=1793643352;
+        d=1e100.net; s=20260707; t=1793038553; x=1793643353;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=IXiEUIeYZfm/Z+uDz/6gAhnO088xmqngV8ebCTTry2o=;
-        b=nKhtV9evdluDYlaJpwbplB1O/K5tvfGMV2CTWV8HK5xfPZ7pxA1STpALW2qEKRR9Ry
-         n+vxzMjxx2rJEzb/R79RgUJiZcZJFYBdl86COX5rjve2jpSr1yOFcuhfBKpuLHBRP9iB
-         tA8YBPAn2pckXTWXYxy4CGlvqGsrGnVPdjeEElJFOtKCnXFbebs8gN4TEnIx7hUWSugt
-         2gD4q+P4dhbJp2nJiGBIroxbbFHurBXzEGv+mYpV42QhhDU3OdGogouNuYfCEtb/lKv+
-         iYXhhdoWy1/wR46dbCt7epidbU3TxGynV7lpznEknOBKIr+cMe5IHWUlxp63Lv/ul0ka
-         cSdg==
-X-Gm-Message-State: AFq9FYIAwmoI3sGeiwSa6mKfh7sRKUCYz4nFK/iF0/dy6LrNEwsb+2fA
-	7NPxLQQDR5sRZOI7keDa1B/W1IZDNJg3fvUuZIswkrrDpWfw44F+/tthyVyC1dNp
-X-Gm-Gg: AYBFou0xFXtYmUiKi07ZmmPK9HJQ6VupnBme4+sOPnvhoES4B7QX6vKW2YsUTZwboys
-	U60KzGzA90zJsIKe4HTghzBhT8kOr+ixPzEfBlgb3PtcRSfd9s45b3HQrMIPfAkCltQbTVIfRFO
-	nwVTgtIY47KydMP/otiaY+vtI2Ie3tHsVfOr5wc/rWi3frW59+TFKvysyjdAAnPbhYyUdXI/dgI
-	dT8pOmGct+NxTq5QSWaexnRn1DqdFIjkWXwFn95ytYS88bKHqBkG/2po+LEU6EheNSWlfL3o4gQ
-	GkqsKBQnwrO9Dhp4DPzJmouLdb1De2fZ5w41cJxk1bQJzzVNtmPdgGgisBDTmOSOwSDwGErZvOi
-	jYx/3n+ciXeTnLTcHYeEozKGxM5gbtNlwA2Mgsa/0QkPy3ODI++qjYdYoCg4TA1VuyYmf+W9fv3
-	QR2gG5S0CUsLclX7Wgp9Etg0ZlJn/FoUa5/fzvbjioOn2zmgrLRa7EgVwrUmYZZPGfbks6HT7tf
-	ME57HcxE/GK2z1wpHv+2FbwUAZS/hbh8zrRdl+JpHtnTpsHDfu4TOuCwQfAecmF/pbprjKWfuQ8
-	xM8G
-X-Received: by 2002:a5d:5d10:0:b0:48b:1a0:5630 with SMTP id ffacd0b85a97d-48e3eb9e397mr12917817f8f.41.1793038552064;
+        bh=oA2KSCCZdPSPR7+/ASoZPmv+ibMiLNh4p2Cq1FVXsDM=;
+        b=iwXaWMzQlQBqk6miYkH0hClf2BmbGg16uycXtVvDO5qk/XEy1caF9PWLn5C09rBOJ+
+         PTbycDaDEhGjg2ZvdPUxhFYcMbCyF6+dGfIHruuzE1D/FSZnDuEj1m7qCTWC/8jj6TAK
+         ZUCSPVmQeh6lQlm/QuhL9Twnn3keE8m+klHaibVuTPaTeMPitQYo8+fV3M3OkH9MFaL7
+         f2dOOZa0vsUeay4A44nuwW8cqrJ5MEl6t2wk4+ia+msdWWe44RAc7SWrft2sFehUdZ4h
+         YJ6JTWEGm/GZ4Qqve7YCeGxqdfqwFC0XKukbW1QfeW/4e7MykkpvZulLNHoIQHvUrNGG
+         X7wg==
+X-Gm-Message-State: AFq9FYK7gsu27VTvSK20/CFZN8d8DJqSHirg0umNuAf01pmQRoZhVAz5
+	Euty8mlYjRp7BVLMS5MOLiVfhFVuvZW56VMT6rVuQK/uZGNNYt6tN5f5ApIKXxZM
+X-Gm-Gg: AYBFou09Ctypa+8/x6PVkMFX/uSxYPsMNPJ9hwP5N6YJrV6YquGpi3r+Kq+/W3wAQZv
+	UR9ER+k5ox/MHR+rcEmlWA4GH86RO9KcinKGN9kGWDuEAVWIibD/Q3AIs5ElbAF6+DjqqZxJv/K
+	l2vIAUcfZluq7ObV3YFT8IPRB7zW8ANM5LiC7X4X9HDTpl5yYOKMxj04LBG5d1GvrU0cG7hQ1wr
+	O/WPj9ajYroRWG24NCOSwiW5E19+VYnhwyZCm0MkTI1IfyWuPfysqfJgd+5UJ5ZzRCJF4mSBAxW
+	MfS92tszzpg2dgCe0W0aEHsEpmSZcgD7rPlIO7cK6XQDYGQq1b1l9yenX74tCLe1MnKoTuRo6wd
+	vmf/2OFPSSN3WnsUPZ7rncjJCoPfyoNR4o4L7Umk8jDwBRbz/6tvEnwzTj8V5/1ZKCNrgUwMEu9
+	n4g+I1PzCA86w7IYYFZCegdd3uqb55/GBygB6kAe0z2GuLGNHZwgrBXwkgoHB5zg5sHTcaQ3u7L
+	xqGMhpRUzD1JuCx0ORHwt5VUiMdWeQp6tEJRwQF+Wvz2qRI0qsndGsMoqD1Y1k0P4OriKrdBgh9
+	FEwZ
+X-Received: by 2002:a05:6000:188e:b0:48e:3085:7cf0 with SMTP id ffacd0b85a97d-48e3eb989d2mr14700024f8f.51.1793038552780;
         Mon, 26 Oct 2026 11:15:52 -0700 (PDT)
 Received: from luca-HP-ProBook-650-G1.lan ([2001:b07:6454:c33e:6c42:b004:d90b:d191])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ecd3705sm20967847f8f.45.2026.10.26.11.15.51
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ecd3705sm20967847f8f.45.2026.10.26.11.15.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 11:15:51 -0700 (PDT)
+        Mon, 26 Oct 2026 11:15:52 -0700 (PDT)
 From: Luca Casati <luk00casati@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	arend.vanspriel@broadcom.com,
 	b43-dev@lists.infradead.org,
 	Luca Casati <luk00casati@gmail.com>
-Subject: [PATCH wireless-next 3/5] b43: N-PHY: fix rev3+ RSSI calibration
-Date: Mon, 26 Oct 2026 19:15:41 +0100
-Message-ID: <20261026181543.77763-4-luk00casati@gmail.com>
+Subject: [PATCH wireless-next 4/5] b43: N-PHY: wait for the first 2057 RC calibration run
+Date: Mon, 26 Oct 2026 19:15:42 +0100
+Message-ID: <20261026181543.77763-5-luk00casati@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261026181543.77763-1-luk00casati@gmail.com>
 References: <20261026181543.77763-1-luk00casati@gmail.com>
@@ -100,65 +100,41 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Three bugs in b43_nphy_rev3_rssi_cal():
-
-- On rev7+ the selected VCM was written using the loop counter (8 after
-  the search loop) instead of vcm_final; the 3-bit field turned that
-  into VCM 0 on every rev7+ PHY.
-- The distance used I*I + Q*I instead of I*I + Q*Q (brcmsmac
-  wlc_phy_rssi_cal_nphy_rev3()).
-- Negative W1/W2 offsets were rounded as -(abs(x + 4) / 8) instead of
-  -((abs(x) + 4) / 8).
+RCCAL_DONE_OSCCAP still shows the previous run's done bit for a few us
+after a start, and the first (SCAP) run polled it immediately, so the
+run was stopped before it happened. RCCAL_SCAP_VAL then read 0 (wl
+gets 8 on a BCM43228), which detunes the TX low-pass filter set up in
+the rev7+ workarounds. Sleep before polling, as the other two runs do.
 
 Found and fixed with the help of an AI coding assistant (Claude Opus 5.5),
 by comparing mmiotraces of b43 and wl on the same card.
 
 Signed-off-by: Luca Casati <luk00casati@gmail.com>
 ---
- drivers/net/wireless/broadcom/b43/phy_n.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/b43/phy_n.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-index cabf61870..44769dbb7 100644
+index 44769dbb7..cd50614ff 100644
 --- a/drivers/net/wireless/broadcom/b43/phy_n.c
 +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-@@ -2167,7 +2167,7 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
- 				continue;
- 			for (vcm = 0; vcm < 8; vcm++) {
- 				currd = results[vcm][i] * results[vcm][i] +
--					results[vcm][i + 1] * results[vcm][i];
-+					results[vcm][i + 1] * results[vcm][i + 1];
- 				if (currd < mind) {
- 					mind = currd;
- 					minvcm = vcm;
-@@ -2179,12 +2179,16 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
- 			results_min[i] = minpoll;
- 		}
+@@ -938,8 +938,15 @@ static u16 b43_radio_2057_rccal(struct b43_wldev *dev)
+ 	}
+ 	b43_radio_write(dev, R2057_RCCAL_X1, 0x6E);
  
--		/* Select the best VCM */
-+		/*
-+		 * Select the best VCM. (This used to write the loop counter,
-+		 * 8, which the 3-bit field turned into VCM 0 on every rev7+
-+		 * PHY.)
-+		 */
- 		if (dev->phy.rev >= 7)
- 			b43_radio_maskset(dev,
- 					  core ? R2057_NB_MASTER_CORE1 :
- 						 R2057_NB_MASTER_CORE0,
--					  ~R2057_VCM_MASK, vcm);
-+					  ~R2057_VCM_MASK, vcm_final);
- 		else
- 			b43_radio_maskset(dev, r | B2056_RX_RSSI_MISC,
- 					  0xE3, vcm_final << 2);
-@@ -2219,7 +2223,7 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
- 				if (j / 2 == core) {
- 					offset[j] = 232 - poll_results[j];
- 					if (offset[j] < 0)
--						offset[j] = -(abs(offset[j] + 4) / 8);
-+						offset[j] = -((abs(offset[j]) + 4) / 8);
- 					else
- 						offset[j] = (offset[j] + 4) / 8;
- 					b43_nphy_scale_offset_rssi(dev, 0,
+-	/* Start, wait, stop */
++	/*
++	 * Start, wait, stop. DONE still holds the previous run's done bit
++	 * for a few us after the start, so give the cal time to clear it
++	 * before polling, as for the other two runs. Polling right away
++	 * stopped this (SCAP) cal before it ran and left RCCAL_SCAP_VAL at
++	 * 0, which detunes the TX LPF on radio rev 9.
++	 */
+ 	b43_radio_write(dev, R2057_RCCAL_START_R1_Q1_P1, 0x55);
++	usleep_range(70, 140);
+ 	if (!b43_radio_wait_value(dev, R2057_RCCAL_DONE_OSCCAP, 2, 2, 500,
+ 				  5000000))
+ 		b43dbg(dev->wl, "Radio 0x2057 rccal timeout\n");
 -- 
 2.43.0
 
