@@ -1,56 +1,46 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793001375;
-	b=HkznKSqTDWP9qTN84MELE8CeDHJKZYVb8Bvs04+R/SHtdPMV3R1Pl7tvXn+/zlC+OkYg
-	 GUCCTTZ3iVVDg1JBVm8oPY/a2jGF6cOOHGUDbRc8WIBI9LXcx1YmoHt/+7EeBjMD5fM9I
-	 jopxtdXqOdtSGvpWNds3AzZuFrNuorzeZq385mj8/XCHczTzy6luH9kqNw8kBfRArygMw
-	 XqONaOLq9e+q+sqSFD/MaHFjzHn4XpKjb8U4yNJjXRDop+rHm+CZEwP2/Qo/uNHwGG64b
-	 mkQCOoNw9Rjr/yjbcZOG5HLJ7v8vNpXJfFHnB636qKuP3pW4ddH0GJEfmUx+w55PECw==
+	t=1793006176;
+	b=OZhA3KE+Tzow6IVTv31fozKmpy5trHoqPq87MfydXYbkjrxxVdPaaiawdksgA8pF332p
+	 C3/M764DeTH34QjKvLOSZkIJylHi1xiqwEqeyOnr6KJTP3gVVqfI4pnPHK5ZuIFK6jDwa
+	 HpwzMK9T4GFh52KudnKIp7z4CLaYOH1wafaTtlQ0ByMRNEop/59mIv1ncotIoZ0Iaonw5
+	 4QM7WHJE3acWoHEDuCAEkSKkZrIP0fyZowKTt18QgN7rmlUAdPnvy9Ao9GTNIlzH7CsmQ
+	 Z3hudx/I5AK8JchBhkDR7Aa5w1wne0hFBQNkGxA/O0F4d27LY7uYLHaA7iGBtfnWJaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793001375;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=u3tZOGX5uvrdqoC7dUccuRlWsX5EhE7NoULiLf5ru0A=;
-	b=vozBjswFdxahyOsBeMDGu+nH5GoIF0C7gFnOE46QEMTqq1evxVnNVxbLXAeO6hhV/uFm
-	 oxOAlUzA7g+knlJBDmHV+PCAgszm+gayw79cAyAXZeo6pY+aPdxzneQ0b46Ze7fUb2s5V
-	 GBKOh/3Hlc/NkZfFMf9J6AbcZz5xQMZjqFTNxLP6ZvaVMRESrPuZTE8JpfHeyPdq3CxHc
-	 3gi9Rn/8/R1HfIvmPLXjzo8KS+UXLZTUtyxbmyD1Jky47ElOgZoMGVmF/Q3IY9axPemyU
-	 4lZvuxA9n21j+davTrXQLbmZW/hC6lyTzYkYuB4L9sAuZ+e5fetk5yFi9z0irugA9hw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793006176;
+	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
+	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type;
+	bh=ZYKCe6tYvV59mJ9uXVzTt1y6d+rD/egvFF111uZcSdk=;
+	b=4GbgKuhyEvIcfXDnVFUWKnW2gWwnVnGVXOL1WPYyCEnRftJpPkbRDvTscJ25FtOCGr4u
+	 rX/jf5H1IT9vMMpN1M8QWxho67bIGI2ImwyXu7Hu8Q92lobKoHAvmJhGiFWVS65qEjaxE
+	 PInzK77H9P1HJJ3i2EYOybis4p60/ferzSgGXU3hAsj8+MlTm4nubocuWgs0pBIALFk4u
+	 ZtphmAwqTbim9BJAwNvBp44tDp1++LF/tkd9rtgPRIF8nmXvagRCcjHdBrMfJlJ5hojNL
+	 2Z4JQIqrIZVa62dGZKkd1/VswhStNdaiXweE6b6XXtRvLbCYuq68alW+ULtEnMdlJLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VQUVWDd5;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=toke.dk;
+	spf=pass smtp.mailfrom=toke.dk;
+	arc=none smtp.remote-ip=45.145.95.4
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C012606A31A;
-	Mon, 26 Oct 2026 07:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VQUVWDd5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66AC01F01825;
-	Mon, 26 Oct 2026 07:56:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793001375;
-	bh=u3tZOGX5uvrdqoC7dUccuRlWsX5EhE7NoULiLf5ru0A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VQUVWDd59s5jjtL5p8mDbx1VUrYzprC/+uUjUstAhihGr55nocJ5j/zXgNlkf5gph
-	 fw5jWPzzIzUsf4qwQ/NCVugz0wVGoIo54jtUlItn7D2Nf2KyDHYPbNBAFf4tbzNhiG
-	 Fs5SUL69wN6PzRJIbtFyEgcSga75LrJvbF1K14PMVwHY85jW6LBigo1K5myaxp9afw
-	 3hg1GI5fLeit4iBdO9OtWLSwagdq4dCb3463OFu3B7jDVfpoKSSPdokIQxqKq+CsWD
-	 AwtGJKyj/5IJpr/qvOJ9BMXRK8Vrjn11/igaQildOkLc9w5pYOJFr2HVqFCE9twhdG
-	 axU1I2Ngn0G/w==
-Date: Mon, 26 Oct 2026 08:56:11 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	ath12k@lists.infradead.org
-Subject: Re: [PATCH ath-next v3 01/17] dt-bindings: net: wireless: Add QCN6432
-Message-ID: <20261026-sticky-bumblebee-of-beauty-2e5ff9@quoll>
-References: <20261023-mpp-bringup-v3-0-19f3fcbf7b5f@oss.qualcomm.com>
- <20261023-mpp-bringup-v3-1-19f3fcbf7b5f@oss.qualcomm.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 031D2606A31D;
+	Mon, 26 Oct 2026 09:16:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 031D2606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Eduard Zateev <hackerowskiy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: ath9k: make sure we stop the wmi tasklet on init
+ fail
+In-Reply-To: <179297981008.47871.8854747166395230996@gmail.com>
+References: <20261021120237.481898-1-toke@toke.dk>
+ <179297981008.47871.8854747166395230996@gmail.com>
+Date: Mon, 26 Oct 2026 10:16:06 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87h5i8q0tl.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -60,26 +50,23 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261023-mpp-bringup-v3-1-19f3fcbf7b5f@oss.qualcomm.com>
+Content-Type: text/plain
 
-On Fri, Oct 23, 2026 at 12:31:04PM +0530, Aaradhana Sahu wrote:
-> Add Devicetree binding documentation for the Qualcomm QCN6432 IEEE 802.11be
-> wireless device.
-> 
-> QCN6432 is attached to the WCSS Q6 subsystem and is represented as an AHB
-> platform device, even though the Wi-Fi hardware interfaces over PCIe.
-> Document the compatible string and the resources, including the Q6 remote
-> processor phandle, MSI interrupts, SMEM states and memory regions.
-> 
-> Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-> ---
->  .../bindings/net/wireless/qcom,qcn6432.yaml        | 149 +++++++++++++++++++++
->  1 file changed, 149 insertions(+)
+Eduard Zateev <hackerowskiy@gmail.com> writes:
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> Hi Toke,
+>
+> I tested this patch with the syzbot C reproducer and KASAN on a 7.3.0
+> kernel built from upstream commit 21a7f44fd.
+>
+> On the baseline kernel, the reproducer hit the reported
+> slab-use-after-free in tasklet_action_common during ath9k_htc probe
+> failure. With this patch, the same failure path completed without a
+> KASAN report. Both kernels were run in QEMU with the syzbot config and
+> ath9k firmware extracted from the syzbot rootfs.
+>
+> Tested-by: Eduard Zateev <hackerowskiy@gmail.com>
 
-Best regards,
-Krzysztof
+Great, thanks for testing! :)
 
+-Toke
