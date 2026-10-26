@@ -1,65 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793012841;
-	b=hHID0cYJjbIjkECedBWJUzi0EEFtcZUjXYIs31QA79XilcNo00BP+sGk4sGgr+QgyFpb
-	 IxIUraTNY2j3b51SyBoDZa7WS6kxFWmzVNFzi1oj0iEvoXD0OmPxCII/Unv+QesCANDvZ
-	 hfg9JFv41DYov1kJJnO2nnqGPuyMVFPIbZCwtdT5CpduWp8ZNkHxZRwd+9rnX4RVRmstM
-	 ci869S8pYNTVKiuEdkzbLcN6/tTaOMoeH+b9GdP3LvtHieP2Ah2WitVgBPzp5grDTApzA
-	 8cLORrLhOLhIXUZdRCech8sQXsjnfetlxO/+cLqaT7OhbT/gr1rOTVSNsKXgmyzYh7w==
+	t=1793013241;
+	b=yV3OGiR1QUXjXR5gNVu8PnQ9CT3Q7WK3FoCVILF/xm6q//RQW0J5b3rXqpX3jJ6PJ5BW
+	 zfRMRO/NJClfGVTBMwTXDlG4f43AExviTj3BAgUqlLk8YcWh8PYYR5v1fra7AaxyUUuEC
+	 d8IY9wc0yyKY9s4FTgHKoVlRH4+lYmPFIl38S+yROjtc1U070JL2ww3YYO3PR4ix0EwSj
+	 XT/CrlNfmLm19l3f3y2mZJfK1Lc6riYNZ0hpXWYhUCAscHPldeOsXD51dO5XCuGA5n4ZG
+	 iHhUChZMkTJFcq4LSSPohm6f8c9XDvGVkwjT11ypnQUFrrYLIxOFTUXLv5F3PHiBE6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793012841;
-	h=DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:Date:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:
-	 User-Agent:MIME-Version:X-malware-bazaar;
-	bh=iwhaYhg950skyzyNiHbnMoeJRabwevrYhb3dfzGOLNs=;
-	b=Fzbel2zq6qosyN/asiesa2OddHwHqQqBjKYdVF3/adDViP9z26AAVzXysIOciR5lNi8q
-	 r7CtPsRrSDpZ4326b+x899Nml8d5nq7M/Y39XfTRu6kWhCcWP4Ymqz5LQz6fpXfT3OXBP
-	 NlvALG+lzwsPcn7QHaQmLzYk7rqZ+kurBVJZ8HeCzTUJI2wmmwskWBe8PPYGEBhKXem/N
-	 313NI+3L1nVnE0OAddTR2qvThcNillod/3K0MDMe5H49cJY1jkcx2ACoIrd48us/8dpUe
-	 UHcdV39Ge4kFfpmsayN9kwSTXWqrPClpcCl9QYxtmOqskRrvtjJa3BFKMr4Xt/S5qNg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793013241;
+	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
+	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=e7RGHYdV9rXqUTcpDpwn7Hl1uc0wr4bXkNL+esQxyHw=;
+	b=SUIuFDo56J/8zorglfy/bmgRc2Ge2ECXerVSxfKP+5coFH+DyjGecAruXOgOqfjqesTG
+	 2oC4bfW2/q2Jk3HxAE1YbKWThSgvF8QQRURovNce904cnpCDKIgN6BcWQ61KhQ9wjKAhg
+	 HgnffMIYpJeS+EU8u4cA8UudX3HrYKboWkB7pqrftNXkbaAUFFVJNXVnyNgR4hfxRjPIg
+	 NDZokUiyD+w41ZWKQ3Y5u02la0fCzb6BU5QXfwjAqW/q9aFT1kvZ/MOqo16b4RP5jo3AE
+	 WcKq9ww7qiXCXPPKs25KQfylugm9yR2h2Vh1ew6JOJoFFApfaVtQoVCqP/UYAlFM3Ag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=m8F1rhoI;
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	dmarc=pass header.from=toke.dk;
+	spf=pass smtp.mailfrom=toke.dk;
+	arc=none smtp.remote-ip=45.145.95.4
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADF1606A31A;
-	Mon, 26 Oct 2026 11:07:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=m8F1rhoI
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=iwhaYhg950skyzyNiHbnMoeJRabwevrYhb3dfzGOLNs=;
-	t=1793012839; x=1794222439; b=m8F1rhoIn/QwtAmntzoG1wAwi1JY7JwNZJ2y3ZynX6IdzLX
-	594wF7YJpXefjSOZ3bv5a0SfjPBVYHsN2PT2Eszpx/MOA4ID/f2rT+Pv0oNNISxZpve/wBE933e3+
-	e8tKUfGaRDva6D7fez4YgQtSxlDqSghiw7GH9MH/DX4l5uufVRCJXGCatCWOndTj0zX6gWa75+ZCf
-	EfxVuf7tS4/HGwD4euOGcnLp0UgA6yPklAaZOggBmqHtgcDDrSuvVyvuaXz+U6UL2ABNSMYf4vOgo
-	UYDd+tdXnHLLZP81GsMXZnITibwJewZEd2akSZYWrzqpuKMlvgfM/0BvSAzBWNfg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xLIXt-0000000BCCo-1qAt;
-	Mon, 26 Oct 2026 12:07:17 +0100
-Message-ID: <116e1f238e2d78817a2ac5b42b00e0faeabf16bc.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless] wifi: mac80211: use HT CCFS2 when computing
- the AP's HE and lower bandwidth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Macias <dencity7@gmail.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Mon, 26 Oct 2026 12:07:16 +0100
-In-Reply-To: <20261026040148.2633920-1-dencity7@gmail.com> (sfid-20261026_050215_574698_93BE14B6)
-References: <20261026040148.2633920-1-dencity7@gmail.com>
-	 (sfid-20261026_050215_574698_93BE14B6)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7ACC606B970;
+	Mon, 26 Oct 2026 11:13:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E7ACC606B970
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Linus Walleij <linusw@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>, Giedrius =?utf-8?Q?Statkevi=C4=8Di?=
+ =?utf-8?Q?us?=
+ <giedrius.statkevicius@gmail.com>, Kalle Valo <kvalo@qca.qualcomm.com>,
+ open list <linux-kernel@vger.kernel.org>, "open list:GPIO
+ SUBSYSTEM:Keyword:(devm_)?gpio_(request|free|direction|get|set)"
+ <linux-gpio@vger.kernel.org>
+Subject: Re: [PATCH ath-next] wifi: ath9k: release the LED GPIO after
+ ath9k_stop()
+In-Reply-To: <CAKxU2N9m58fCS1L7SQd_yzxcJV0NNyYHcj=jt_BVkrcc5rSOGA@mail.gmail.com>
+References: <20261022022343.1409432-1-rosenp@gmail.com>
+ <87o6ckqvsr.fsf@toke.dk>
+ <CAKxU2N9m58fCS1L7SQd_yzxcJV0NNyYHcj=jt_BVkrcc5rSOGA@mail.gmail.com>
+Date: Mon, 26 Oct 2026 12:13:56 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87bj8gpvd7.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -69,23 +58,63 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2026-10-25 at 21:01 -0700, John Macias wrote:
-> If the driver advertises VHT extended NSS BW support, hostapd announces
-> a 160 MHz BSS the way IEEE 802.11-2020 allows for that case: the VHT
-> Operation element has channel width 1, CCFS0 is the 80 MHz segment and
-> CCFS1 is 0, and the 160 MHz centre is in the CCFS2 field of the HT
-> Operation element.
->=20
-> ieee80211_calc_ap_he_and_lower() only looks at the VHT CCFS1, so it
-> sets bss_bw.he_and_lower to 80 MHz and ieee80211_sta_usable_bw() then
-> limits every HE and VHT station to 80 MHz. Stations parse CCFS2 and use
-> 160 MHz towards the AP, but the AP never transmits wider than 80 MHz.
->=20
-> Take CCFS2 from the HT Operation element when the VHT CCFS1 is 0, as
-> the station side already does in ieee80211_chandef_vht_oper().
+Rosen Penev <rosenp@gmail.com> writes:
 
-This, by itself, is wrong.
+> On Fri, Oct 23, 2026 at 8:30=E2=80=AFAM Toke H=C3=B8iland-J=C3=B8rgensen =
+<toke@toke.dk> wrote:
+>>
+>> Rosen Penev <rosenp@gmail.com> writes:
+>>
+>> > ath9k_deinit_device() frees the LED pin in ath_deinit_leds() before it
+>> > unregisters the hw. ath9k_stop() then switches the LED pin back to an
+>> > input with ath9k_hw_gpio_request_in(). For a SoC GPIO outside of the
+>> > WMAC, ath9k_hw_gpio_request() takes a new descriptor through
+>> > gpiod_get_index() at that point, and nothing releases it again. The
+>> > next probe fails with "request GPIO12 failed:-16" and every LED update
+>> > hits the WARN_ON() in ath9k_hw_set_gpio(). That request also runs
+>> > under sc->sc_pcu_lock, while gpiod_get_index() and
+>> > gpiod_set_consumer_name() may sleep.
+>> >
+>> > Free the LED pin after ieee80211_unregister_hw() instead. This also
+>> > frees the pin when the LED class device could not be registered,
+>> > which leaked it before.
+>>
+>> Hmm, instead of reworking the deinit code, how about we just drop the
+>> ath9k_hw_gpio_request_in() call from ath9k_stop()? It's an LED pin, why
+>> would it ever need to be reset? The commit that introduced that call
+>> says it was "for consistency", which seems entirely bogus in this case?
+> Why would it be requested and then not? I imagine on rebind it would
+> error out in such a case.
 
-johannes
+No, I don't think so?
+
+The current code does ath9k_hw_gpio_request_out() on init, and
+ath9k_hw_gpio_free() on deinit. That's nicely paired, and only breaks
+because ath9k_stop() for some inexplicable reason does another
+ath9k_hw_gpio_request_in(). Which there's no reason to do; the pin is
+never used as an input, and doing so would not make any sense anyway
+when there's an LED attached to it...
+
+In fact, the code moving you're doing in your patch ends up doing
+exactly the same thing as just removing that call. Right now the
+sequence is:
+
+ath9k_hw_gpio_free() /* frees the 'out' pin and sets ah->gpiods[gpio] =3D N=
+ULL */
+ath9k_hw_gpio_request_in() /* succeeds and re-allocates ah->gpiods[gpio] */
+
+but with your change it becomes:
+
+ath9k_hw_gpio_request_in() /* exits as no-op because ah->gpiods[gpio] is no=
+n-NULL */
+ath9k_hw_gpio_free() /* frees the 'out' pin and sets ah->gpiods[gpio] =3D N=
+ULL */
+
+so we'll end up with exactly the same thing happening as if we just got
+rid of ath9k_hw_gpio_request_in(), but the LED init/deinit code will be
+decoupled in a weird way.
+
+-Toke
