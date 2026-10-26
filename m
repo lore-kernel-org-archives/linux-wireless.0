@@ -1,54 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792978365;
-	b=hCGguoOy1JfrZ2eW57pPZSwdj4TzueRh8Tcfi53K40GNRFBV1aatgcv25MaDj/znOoZt
-	 Tf/DcV8IFqxJJ58P6zpVxFEJ5/Wz6TuwJ3cyKpCEgRmjE/2WUospqolzVeCcOFpTe5ICe
-	 +lIDYrQUt4RPF6uRE1XFkJjZ5QkSLof/BhiN/SInBC0fLmdRsm2158ZPITCct2hcRzV6N
-	 kmgMKtLqgKkH1riguTyiQpnTJLipKwmkga13Y5Tg9PuNilicU3jfU5KHadi31NzYjpALX
-	 ShuUMPcI7AUwpsLgwiFf2I0WfhUBs1fSjL7HWD8sIlmyiM9z+81v/tI/7/1wWJBuYMw==
+	t=1792979815;
+	b=yYiAe4hB231Tr086PxG34oqmsO4E3O9vCPlULHe6o1vh5dD0nMLopJVz7eAN3YcjORdY
+	 D0qHxwwtJJDpC+MbPKFcdeTfVWp9/aXrQ9UYQKS1/W8WKAf309p0Xkv7L2FcpwHTRAyyH
+	 d/aW4ERRNbbtYu4vAZEIryMhlHXNM0MSRlKW+R3PuAz8QKMqXNDXAbG0pguvbRJ4Wo5aE
+	 obEyqqOui78RsZ5SrS1UTq04hl5OlVMFRzNbWq+XzPqDlIvyoSkt9UNHLnIzQFR3xDTag
+	 iCTx7sX19gLZy30P7hDjskHHpd6BDrHIpEJCgjiuqMwZ0vYgLbKjSz7M76rwEI6Kqig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792978365;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:MIME-Version:X-Received:Date:
-	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
-	 Subject:From:To:Content-Type;
-	bh=1WrAPJVqztXGeicWZ8YmBuP6dCF2HqU/IaTH6pLRzhE=;
-	b=mgUBsYiTk83U9IDyQK3I0MGNxjpN3vTDJcFcmEx6HtzTMBqfTfego1hVdluu0pQefNk1
-	 nv8z9vcwCeBJQkpJqcO3/vFqwOl5aLID1T4pg6FBbMZmhhQiJ82qh1orji5k8CnpmR1mR
-	 kPBbp3rljBwrjO8QSavifh+tkVozCcPGOVFWSLKKaiwfQLuhIxntFLduN8xzzXtrTq54I
-	 HaGlJTYR+sr2H/BQQx0pd4FB5uX/YoLK5RRRlQ75zPmcPsOMIoVECmp8BNqCVtkmY6pny
-	 FNBB9f1EMV1u9xb+qc8sS0X1/0RtJB2c0+wjnVfIC+6qU4cwImimj60bGrIgdTK1EsA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792979815;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Date:From:To:Cc:
+	 Subject:In-Reply-To:References:Message-ID:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=SDc9vfJEDvOZ9KutnQcEZVkooC4ZxQzWj68/tktcKGU=;
+	b=XnGGZOFQbDEXw3nMiSBZOsW7sSLU18KJp9Usz+ToD8pZaRVvgVNB+XzFhLIQM9qWttXh
+	 7gailJatgUZyG5Mu/tMYSRIL8rN3ZjR14Wgt5/XGmaaXrU/Du8zSYQEAPQ/xl+4Yh1ZbF
+	 Zexw4PkG3ahijCCck/jorPYoMC5wTdwAsNHAHsCC47s1AKINWNEOoNDOtZV7Xs6u1uK0o
+	 Ly1xyTmU3SbuG7OpXPDs+EpVnSFeydJf+0EOu3rABw02LnXDc2iuhx8ur5DtuPV7gBik8
+	 OzrO/m1ntk1QNx7i0zesobpa0Ujl25167f0fV28hmR8D9nH+IJLGEa66Q7reOBrqwZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=syzkaller.appspotmail.com;
-	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.167.199
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=qrclkRgf;
+	arc=none smtp.remote-ip=209.85.219.47
+Received: from mail-qv1-f47.google.com (mail-qv1-f47.google.com [209.85.219.47])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1617C606A31D
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 01:32:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1617C606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-4c55ba309c2so4276651b6e.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 18:32:44 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED63606A31B
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 01:56:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6ED63606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=qrclkRgf
+Received: by mail-qv1-f47.google.com with SMTP id 6a1803df08f44-917a6dccc60so30256706d6.0
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 18:56:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792979813; x=1793584613; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:message-id
+         :references:in-reply-to:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=SDc9vfJEDvOZ9KutnQcEZVkooC4ZxQzWj68/tktcKGU=;
+        b=qrclkRgfOsMEvFkIVMdRXfEd2lcoY8o9dNOvaxoMTrQFTPc5o7DDMlGN+yQbh6Th0j
+         5PUw1WZX9P0G12ow8Peh3qmIdqdZ6WHkA1B2czj4ubaEKsuW5LE7K8kZDuyHvDvIhTJ5
+         Q0tRp+lDWWCZeeh10rr+WNBY25J2kRJcr2re0yxD81ZKrM4NAgBkyz8V7RVb5GFkeYoW
+         x/76pPUtf77yYlbLEnrFauoJumApj7y5cOcmmb3MbXb0moNZGnGXM0Jm/kmrsjR81kvY
+         n1dtaSyy3IhPS91RdYmfMahfGxRYQ7ct3qBp9nRE4VXxK20+bd6I8MJ1H2Iqg3KwPGtb
+         0M0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792978364; x=1793583164;
-        h=content-type:to:from:subject:message-id:date:mime-version
+        d=1e100.net; s=20260707; t=1792979813; x=1793584613;
+        h=mime-version:content-transfer-encoding:content-type:message-id
+         :references:in-reply-to:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=1WrAPJVqztXGeicWZ8YmBuP6dCF2HqU/IaTH6pLRzhE=;
-        b=z+8YvrBPWuwrCdp4K+8eAqv9+0l0ecX5eWq5lw0UdeTsxFqsmN3mFcGegwVGJcEMca
-         mGrrXy31Sns360bcStQdi/5K8BHie9xvgvL8NKE254Ev5xIVM7fQP+yHyjCywmzk4hkV
-         ElcQfDnVsUFZrflBI1AzHP7OyzTMWxrQBXbApVqi6iQQkvYU3YVyRIX45K3yWHuhPAaP
-         EiAY38/itaUjz3SGewUg0l2bnK//cqhuNa498atYvRkOoXBNmmfzMhqRYuQZc/bu7E6Q
-         iVab6kCPacNtGalXZ7ChYOvBNnjQvS0QWBAp4o8uq8Um1feA6EtKA1Ii9ToavSdD+Ebq
-         Cqww==
-X-Forwarded-Encrypted: i=1; AKwUvBy0N00j4I2xHzQssPfbEokwz0p5hD2m95Ye3C+Xlsn3FSykdr+lE7IkuoduVurLi9fOhUjsmUMIyNiGmoBXuw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJScyFTtArWvvSppsMi8m6GL1ZXCpzi0E+GKFjUaujWWTpiREkZ
-	1DVxEKbk8aMMvTic62hsFGDEz5vrf+D2ZX/rfYkicKv/eIHhrymkTEIKD0GGtmFPDF0CYko+EK3
-	rtzxXjrtA32KyEmOOD22K/Az5W7JrxuHMMKoKgx2aGK9BdKa+7QAZDJF0RXM=
+        bh=SDc9vfJEDvOZ9KutnQcEZVkooC4ZxQzWj68/tktcKGU=;
+        b=sBAO8uHs8xyxI4mMRriU35y7fc+h0TAjDQ4r+JrOa9a/P3+Ud62AGoDjwPI4LrTgju
+         /ICNMbp16rSIfjz/unW2Imoj2IVxUnRpUVq+J5pPfEuqomrLONWLcNay7Rht00M6IgKo
+         B52fpAc3sVwte41IU4JQMfGYAmjJZYAAud1gmrp//QVsGjjkbhLe8XEaX8BLFEhy6w7r
+         6669wUv68FZMDdpD+zxSv25xNamsnT8sdpms+O3A9CaR/xjIVjdvBl9pXdibCbN06olj
+         joyiJotdJN7cobUASn/XhmLYR7HHi/PN4dX31/wA3Q7hZXdGlrA96et8/E1RHD9B1GX6
+         ME2A==
+X-Gm-Message-State: AFq9FYLov4l93QhYOsqZaYFJkudoNqH0tetK5KEO8p2oJQENnsH5Jrzs
+	neyTK/wRc21hwvYwzA0wnNln402NNFo5KwiqmWRqxxIQ1v0ZHTn7Hbm7
+X-Gm-Gg: AYBFou22PgCPgZAsZtptnfbU7vrCQs7fBqKVCsynA5ekr1Ky1Tx3bNeH4fVvG8eMy7D
+	n+Vg93D0xMzv5X0Pil4k8wKJj9Xq/KXKCEkWxAUAiqACJ25OSXMpmzkQ1Th7W/i0s8y/Wc/w/sP
+	5teHSJPH9wOVgjo5SCQZVlcTXwDqEsriUqhTAxtDo4TwyKbBoDrYdW469D1cR0aN168hwV21pc4
+	CPMkcYEnBqR7CjlEA9SYS+sBmBUMjph8Jx1GKuyC7IOoI8Ebmgd/rft3PmygGR5817iYTgS+sqg
+	45iEJ8rDr/w2c+bqucWzT72IYSrDSdGa7QJDcgcKbkFw8cNogpZ5u/rCP/LYtTGkRTwBXk0OFRe
+	/T/7nD4qKA6MIzHiy5g8scFXlgSIyCF/AVoQJg/66mdeSazH6SbFc8PddIc0X8BUm6qDI9gDcUU
+	UDx4mT91+JLhclUXwT1lLAjlHEKZXV3uCMrXzJbJEO/yvPzFZzS3FE8v+B97WzAigTRQYb3+4a8
+	RIEz3qUmSdCTg61xQpfaX5Xihr9gxCufKHZZ8U3mmRTNfMyj3+tAmF/RaETAbAvCZXkaOhfHyGp
+	YdOPMW6PUYSDtNfmAL/2XKmcLn5nGM7oDVq6eOjRVXZ3ViE+lMzXaw==
+X-Received: by 2002:a05:6214:3217:b0:914:4c57:5103 with SMTP id 6a1803df08f44-91c48ecc76cmr89332146d6.8.1792979813343;
+        Sun, 25 Oct 2026 18:56:53 -0700 (PDT)
+Received: from localhost.localdomain ([217.150.74.224])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91c51eb8b4dsm42413926d6.21.2026.10.25.18.56.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 25 Oct 2026 18:56:52 -0700 (PDT)
+Date: Sun, 25 Oct 2026 18:56:52 -0700 (PDT)
+From: Eduard Zateev <hackerowskiy@gmail.com>
+To: toke@toke.dk
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject:
+ Re: [PATCH] wifi: ath9k: make sure we stop the wmi tasklet on init fail
+In-Reply-To: <20261021120237.481898-1-toke@toke.dk>
+References: <20261021120237.481898-1-toke@toke.dk>
+Message-ID: <179297981008.47871.8854747166395230996@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -58,89 +98,16 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:220a:b0:4ed:7045:d3bc with SMTP id
- 5614622812f47-55c002d9ed3mr3460748b6e.32.1792978364068; Sun, 25 Oct 2026
- 18:32:44 -0700 (PDT)
-Date: Sun, 25 Oct 2026 18:32:44 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6adeadbc.a6443767.132891.0050.GAE@google.com>
-Subject: [syzbot] [wireless?] WARNING in cfg80211_cac_event
-From: syzbot <syzbot+3df76a08d929e91e5327@syzkaller.appspotmail.com>
-To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
 
-Hello,
+Hi Toke,
 
-syzbot found the following issue on:
+I tested this patch with the syzbot C reproducer and KASAN on a 7.3.0 kernel =
+built from upstream commit 21a7f44fd.
 
-HEAD commit:    734bef548a96 Merge tag 'net-next-7.4' of git://git.kernel...
-git tree:       net-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=12a55469580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d0f4f48df8e34eb3
-dashboard link: https://syzkaller.appspot.com/bug?extid=3df76a08d929e91e5327
-compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
+On the baseline kernel, the reproducer hit the reported slab-use-after-free i=
+n tasklet_action_common during ath9k_htc probe failure. With this patch, the =
+same failure path completed without a KASAN report. Both kernels were run in =
+QEMU with the syzbot config and ath9k firmware extracted from the syzbot root=
+fs.
 
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/585a51a9cc57/disk-734bef54.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/b2888e6093ab/vmlinux-734bef54.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/74d0b6ec60eb/bzImage-734bef54.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+3df76a08d929e91e5327@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-!time_after_eq(jiffies, timeout)
-WARNING: net/wireless/mlme.c:1309 at cfg80211_cac_event+0x45b/0x6e0 net/wireless/mlme.c:1309, CPU#1: kworker/u8:3/2120
-Modules linked in:
-CPU: 1 UID: 0 PID: 2120 Comm: kworker/u8:3 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/07/2026
-Workqueue: events_unbound cfg80211_wiphy_work
-RIP: 0010:cfg80211_cac_event+0x45b/0x6e0 net/wireless/mlme.c:1309
-Code: fc ff ff e8 67 a8 7d f6 90 0f 0b 90 eb c8 e8 5c a8 7d f6 48 8d 3d 85 18 43 06 67 48 0f b9 3a e9 35 fd ff ff e8 46 a8 7d f6 90 <0f> 0b 90 e9 82 fe ff ff 89 d9 80 e1 07 fe c1 38 c1 0f 8c 24 fc ff
-RSP: 0000:ffffc9000328f918 EFLAGS: 00010293
-RAX: ffffffff8b4abdda RBX: 0000000100010317 RCX: ffff888031c13e80
-RDX: 0000000000000000 RSI: ffffffffffffffff RDI: 0000000000000000
-RBP: 0000000100011a86 R08: ffff888031c13e80 R09: 0000000000000003
-R10: 0000000000000005 R11: 0000000000000000 R12: ffff8880569213e8
-R13: dffffc0000000000 R14: 0000000100011a87 R15: 1ffff1100ad2427d
-FS:  0000000000000000(0000) GS:ffff888123b6b000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007ffd8c6a5cdc CR3: 000000007562a000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- ieee80211_dfs_cac_timer_work+0x264/0x380 net/mac80211/mlme.c:3995
- cfg80211_wiphy_work+0x29e/0x420 net/wireless/core.c:610
- process_one_work kernel/workqueue.c:3495 [inline]
- process_scheduled_works+0xc3d/0x1630 kernel/workqueue.c:3578
- worker_thread+0xa47/0xfb0 kernel/workqueue.c:3659
- kthread+0x38b/0x480 kernel/kthread.c:436
- ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+Tested-by: Eduard Zateev <hackerowskiy@gmail.com>
