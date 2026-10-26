@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793015512;
-	b=St81EPFpNvWkG8nnWSuz2yZ55A3mC/EbbBVUa0ZvHQg4x/p9PL3ypX/vya7xE7vsjS1y
-	 YAbkzQ4C9n+iFeHbR3JMWs3DYPBf48On2a0ygn7aMVv/pLFLOx4dM5re3nVzsw1N8LjZb
-	 Vgdhf2lgVbLh28oSTIE/IaPOtTK+pciBQWSf4Te5kxUMUrVQc35Zj3/qAeRFkVyjMKl7b
-	 pAf91Rr6Q8w6AVNQfy8cIpixzY0lst/9P7vYQS/C1+QD5JPbaPw+r60zvAvdipJg/z2Hg
-	 LzaDMt6w75aPuyiE+njPw56YvDr8X39Yl+7QNSDFYIsBthhayYpKIWDVXE6mHdjemYg==
+	t=1793015513;
+	b=Si5P0esH+vDj+DXHU6H6wayGpjXDzp1CuzyhUCNSVN9WNr2xetObKddVXUy9kUKsa6da
+	 RB6W2Z0+B9bKWiV5kJGSSjj82tClGGM8tG8FBTapON6MVcd8PxawgJ+c9qfJU4uJxibe4
+	 znd1V0b6Oz2QEw6QpthM1Ff2MyPDtObc3F0Wj1avJeeI9k9IgeEWyYg0kJznmHyagVL4P
+	 gyH8szi1pWAsM98oGVWWE6EOUI7/APxKLAfAuPLFdQxzuR8KeIoARmqE8vFrm//+xa+Va
+	 Tel8RXsiOh19zcJiYLC9aw5R6Sud5so34RcDk/KuncQzSgb15Z2JdCtmNENv5sNyaEg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793015512;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793015513;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=TRFv4Af/t0LvMCrKxCgGx0iNJhB/gusw/tmuQBNUcKc=;
-	b=yz/GzIdncQozO09rADG70V6Yh8cwltXj4yNkgl4vhatIfid10EkA+YZeO25ls93YGy2T
-	 CnWPJ8FEkSS48PPzLGiXngJTWV9lKVfgU15xP1mLVQqLfpQWCUoEveUCzwPy414eUufKL
-	 BeVbm1o7D5iJV1B3iVcW6f0n2ETW+qSew8UgTDgSG6KI/jiI0QgckDOhOwLPbNR01NBDg
-	 nn+CvGt0VJprUmo+IIK/87/zIxrR8MetCuiDIx4ZyCVo9oFZ+MNMk39JRMkFK0i2UrmaX
-	 j1a1dnyULUo91w23IxQ3Z+tkuPBdUHqIBUizCuDwBDdZwEzji1dURLIXBjmwJF0Y8xA==
+	bh=JfvkT5awYH+Zl7zefK97AgRup7yBoFJcS039yE1/niU=;
+	b=eB0gHjDEyq4x+uqots/4vaidtvJg8DO2c7fH7TEHg8COQtJ+beO7RtA/ZyHgVR+azkbm
+	 IkcUzkZWKUp2iXtYWaoD75CNmFAKMzS2ZB+iNFAkovletayz7+kc564pZfu3sE+LMzkl5
+	 zUhMUuf4vlNuK6hw7H8rCGa4xg6jVnJngVETsn5YB7zW8kH/MMAV6VWCpguvyp6HMPxLH
+	 hdTOtgB75FvuDh0ic2Bo7qpwDZNCi8eXigUw2Wc6BkduiBF3raBDBYhCBhzTeR6holPBk
+	 CpJQvBGTXNs/Z+IeGAhST5tl4scDbJDJ6wBO+6fgEc63nw6bYXQ8E7q9a6qaDQde65w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=qRyEfQVN;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=irqZiFzC;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA3F7606A33A
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 11:51:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6F8C60A261E
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 11:51:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=qRyEfQVN
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=irqZiFzC
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=TRFv4Af/t0LvMCrKxCgGx0iNJhB/gusw/tmuQBNUcKc=;
-	t=1793015511; x=1794225111; b=qRyEfQVNbHHosRK72EoGMPyUEj8DuOFn6AMNZiwWTI1cwOQ
-	CbN5mWN+LTg6lbxvX8WZPSaX+R56xjJbigsAE4u2UvvOeexBhkaA79RJop6Y/4AKFWcrvf/bNFqvZ
-	M5FX6lK0+fEAc0tHxHpLe+fLHNJWJTSfkJJa/55YiMCHxVT1ScPvQJuo2BW8Y5MSEn2v45rmGxUFx
-	UwpMpoBhybmp3eMo5LkLqJZmYdrqsXsg+wJZGojRi5THwoiyrEdwH5PyUigYnRBBcqF5fWMasmB27
-	xapjE9HrXE3jj75jlHRE6N3wYkk9k2Joo6Gc6Rx1zI5qXF4xWECaP2pn1/kwUjgw==;
+	Resent-Cc:Resent-Message-ID; bh=JfvkT5awYH+Zl7zefK97AgRup7yBoFJcS039yE1/niU=;
+	t=1793015512; x=1794225112; b=irqZiFzCAl0sKdEbi0/O/dl592I9tZIgEsbdsoaEyc8YiOX
+	CZ+gC+88/U/zFZuT+NKPrcykEkX/zJeo6g2OiDLyB3FEQt5c4rU0RRPtz9OGDZ8PVxM0LMf1GiW2Y
+	ggiRFEgEfNuRZKBXKGvZtft8NV+ZwldaVMrtca3IYNVXgqJxqXrwUozfXsBqDBeO8wh5I5DU7ZWa7
+	0Xs6Ul0wTYXa8x8w2FgY6mB/jfvFbhgKNYfG4eRArFH73uSImYRTeXRUfRanUPLFI5s/HQ+2WkxKp
+	pXZbQEjLqUtyBcx8LV3aeedmTiNa15jK7mOy/xZ/2/757woWXuMH3Nkco3qippCw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xLJEz-0000000BDPs-1v1j;
-	Mon, 26 Oct 2026 12:51:49 +0100
+	id 1xLJF0-0000000BDPs-0P9W;
+	Mon, 26 Oct 2026 12:51:50 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next 1/6] wifi: mac80211: handle missing tailroom in SW crypto
-Date: Mon, 26 Oct 2026 12:48:35 +0100
-Message-ID: <20261026125145.3c660a7b6c10.I96121b2c2ee72fa9246796e2ed0793cd320dd1e4@changeid>
+Subject: [PATCH wireless-next 2/6] wifi: mac80211: don't synchronize for key tailroom
+Date: Mon, 26 Oct 2026 12:48:36 +0100
+Message-ID: <20261026125145.df715456f217.I2c30a5d220d65f64a6ef9b8c82b4cc2af72d24df@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261026115144.189706-8-johannes@sipsolutions.net>
 References: <20261026115144.189706-8-johannes@sipsolutions.net>
@@ -69,157 +69,64 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The TX path reserves tailroom if crypto_tx_tailroom_needed_cnt is
-non-zero, and key control paths make sure this is always set if
-needed. However, this adds quite a bit of complexity and, in most
-cases, latency to the key control paths.
+When crypto_tx_tailroom_needed_cnt newly indicates tailroom is
+needed, we currently flush the TX path so SW crypto never sees
+frames without enough tailroom. This can be expensive when new
+keys are installed, etc., and while it can be improved, doing
+so would lead to quite a bit of complexity.
 
-In order to remove that latency (which is due to waiting for any
-concurrent TX to complete while changing the counter), prepare
-the software crypto path to just expand the tailroom if needed.
-
-In most cases, this actually can't hit: new keys will mostly be
-offloaded to hardware and then it's not needed, sometimes they
-can't actually be used by the TX path at all, etc.
+Since the previous patch the crypto code just expands tailroom
+in the (unlikely) case this race happened, so we now no longer
+need to account this as carefully and can remove the waiting.
 
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h | 11 +++++++++++
- net/mac80211/wep.c         |  4 ++--
- net/mac80211/wpa.c         | 38 +++++++++++++++++++++++---------------
- 3 files changed, 36 insertions(+), 17 deletions(-)
+ net/mac80211/key.c | 28 +---------------------------
+ 1 file changed, 1 insertion(+), 27 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d186d1274303..0cd276fb8133 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -54,6 +54,17 @@ struct ieee80211_mesh_fast_tx;
- #define IEEE80211_ENCRYPT_HEADROOM 8
- #define IEEE80211_ENCRYPT_TAILROOM 26 /* current max: GMAC/CMAC-256 MME */
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index d32c61a90d93..6904b519ef37 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -75,36 +75,10 @@ update_vlan_tailroom_need_count(struct ieee80211_sub_if_data *sdata, int delta)
  
-+/* tailroom accounting can race with TX, expand if needed */
-+static inline int ieee80211_crypto_tx_tailroom(struct sk_buff *skb, int tail)
-+{
-+	int tail_need = tail - skb_tailroom(skb);
-+
-+	if (!tail || likely(tail_need <= 0 && !skb_cloned(skb)))
-+		return 0;
-+
-+	return pskb_expand_head(skb, 0, max(tail_need, 0), GFP_ATOMIC);
-+}
-+
- /* power level hasn't been configured (or set to automatic) */
- #define IEEE80211_UNSET_POWER_LEVEL	INT_MIN
- 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 93b8668079a7..cb966ce2b5bc 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -3,7 +3,7 @@
-  * Software WEP encryption implementation
-  * Copyright 2002, Jouni Malinen <jkmaline@cc.hut.fi>
-  * Copyright 2003, Instant802 Networks, Inc.
-- * Copyright (C) 2023 Intel Corporation
-+ * Copyright (C) 2023, 2026 Intel Corporation
-  */
- 
- #include <linux/netdevice.h>
-@@ -137,7 +137,7 @@ int ieee80211_wep_encrypt(struct ieee80211_local *local,
- 	size_t len;
- 	u8 rc4key[3 + WLAN_KEY_LEN_WEP104];
- 
--	if (WARN_ON(skb_tailroom(skb) < IEEE80211_WEP_ICV_LEN))
-+	if (ieee80211_crypto_tx_tailroom(skb, IEEE80211_WEP_ICV_LEN))
- 		return -1;
- 
- 	iv = ieee80211_wep_add_iv(local, skb, keylen, keyidx);
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index be3a2e95303c..a906bdc2169a 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -3,7 +3,7 @@
-  * Copyright 2002-2004, Instant802 Networks, Inc.
-  * Copyright 2008, Jouni Malinen <j@w1.fi>
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-- * Copyright (C) 2020-2023 Intel Corporation
-+ * Copyright (C) 2020-2023, 2026 Intel Corporation
-  */
- 
- #include <linux/netdevice.h>
-@@ -45,9 +45,6 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
- 	if (skb->len < hdrlen)
- 		return TX_DROP;
- 
--	data = skb->data + hdrlen;
--	data_len = skb->len - hdrlen;
+ static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
+ {
+-	/*
+-	 * When this count is zero, SKB resizing for allocating tailroom
+-	 * for IV or MMIC is skipped. But, this check has created two race
+-	 * cases in xmit path while transiting from zero count to one:
+-	 *
+-	 * 1. SKB resize was skipped because no key was added but just before
+-	 * the xmit key is added and SW encryption kicks off.
+-	 *
+-	 * 2. SKB resize was skipped because all the keys were hw planted but
+-	 * just before xmit one of the key is deleted and SW encryption kicks
+-	 * off.
+-	 *
+-	 * In both the above case SW encryption will find not enough space for
+-	 * tailroom and exits with WARN_ON. (See WARN_ONs at wpa.c)
+-	 *
+-	 * Solution has been explained at
+-	 * http://mid.gmane.org/1308590980.4322.19.camel@jlt3.sipsolutions.net
+-	 */
 -
- 	if (unlikely(info->flags & IEEE80211_TX_INTFL_TKIP_MIC_FAILURE)) {
- 		/* Need to use software crypto for the test */
- 		info->control.hw_key = NULL;
-@@ -66,13 +63,18 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
- 	if (!info->control.hw_key)
- 		tail += IEEE80211_TKIP_ICV_LEN;
+ 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
  
--	if (WARN(skb_tailroom(skb) < tail ||
--		 skb_headroom(skb) < IEEE80211_TKIP_IV_LEN,
--		 "mmic: not enough head/tail (%d/%d,%d/%d)\n",
--		 skb_headroom(skb), IEEE80211_TKIP_IV_LEN,
--		 skb_tailroom(skb), tail))
-+	if (ieee80211_crypto_tx_tailroom(skb, tail))
- 		return TX_DROP;
+ 	update_vlan_tailroom_need_count(sdata, 1);
+-
+-	if (!sdata->crypto_tx_tailroom_needed_cnt++) {
+-		/*
+-		 * Flush all XMIT packets currently using HW encryption or no
+-		 * encryption at all if the count transition is from 0 -> 1.
+-		 */
+-		synchronize_net();
+-	}
++	sdata->crypto_tx_tailroom_needed_cnt++;
+ }
  
-+	if (WARN(skb_headroom(skb) < IEEE80211_TKIP_IV_LEN,
-+		 "mmic: not enough head (%d/%d)\n",
-+		 skb_headroom(skb), IEEE80211_TKIP_IV_LEN))
-+		return TX_DROP;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	data = skb->data + hdrlen;
-+	data_len = skb->len - hdrlen;
-+
- 	mic = skb_put(skb, MICHAEL_MIC_LEN);
- 
- 	if (tx->key->conf.flags & IEEE80211_KEY_FLAG_PUT_MIC_SPACE) {
-@@ -215,8 +217,10 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	else
- 		tail = IEEE80211_TKIP_ICV_LEN;
- 
--	if (WARN_ON(skb_tailroom(skb) < tail ||
--		    skb_headroom(skb) < IEEE80211_TKIP_IV_LEN))
-+	if (ieee80211_crypto_tx_tailroom(skb, tail))
-+		return -1;
-+
-+	if (WARN_ON(skb_headroom(skb) < IEEE80211_TKIP_IV_LEN))
- 		return -1;
- 
- 	pos = skb_push(skb, IEEE80211_TKIP_IV_LEN);
-@@ -459,8 +463,10 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 	else
- 		tail = mic_len;
- 
--	if (WARN_ON(skb_tailroom(skb) < tail ||
--		    skb_headroom(skb) < IEEE80211_CCMP_HDR_LEN))
-+	if (ieee80211_crypto_tx_tailroom(skb, tail))
-+		return -1;
-+
-+	if (WARN_ON(skb_headroom(skb) < IEEE80211_CCMP_HDR_LEN))
- 		return -1;
- 
- 	pos = skb_push(skb, IEEE80211_CCMP_HDR_LEN);
-@@ -674,8 +680,10 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	else
- 		tail = IEEE80211_GCMP_MIC_LEN;
- 
--	if (WARN_ON(skb_tailroom(skb) < tail ||
--		    skb_headroom(skb) < IEEE80211_GCMP_HDR_LEN))
-+	if (ieee80211_crypto_tx_tailroom(skb, tail))
-+		return -1;
-+
-+	if (WARN_ON(skb_headroom(skb) < IEEE80211_GCMP_HDR_LEN))
- 		return -1;
- 
- 	pos = skb_push(skb, IEEE80211_GCMP_HDR_LEN);
+ static void decrease_tailroom_need_count(struct ieee80211_sub_if_data *sdata,
 -- 
 2.56.0
 
