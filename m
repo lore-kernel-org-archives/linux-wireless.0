@@ -1,114 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792992643;
-	b=JmcZ8k/5OdHCIV7siQi4+JYIHZlpJiQ/6UBV5+DFwINlq7b/HQSDI03SpO1Hodd3iaWI
-	 LxWcQR4wLE52Z8hZoTypUIlfz3lUSZFVo3mEJRAAvQD9MJdsuZL6nTNtVo9saHkRjKV2h
-	 vXbHRpIzPfSI8UESsonxfIXNi4jAeb1cBl9y0I9Ac4MrjZSJyzkztx8adCjzFWaxjMABx
-	 ByGJaj9wbswSPq5Rt0kItyZTKG8Cv55MW+c3VTfOr537J07ItaYJ0IhxlJaWUWw7EStQ2
-	 egh3lYX91xVaNkS+ni1d+AQAQi3DMkhl4OcMR8YdkuVqiY92STWMaLKobH8Yfsdpb/w==
+	t=1792993006;
+	b=OkCOa1Z7uPE4WI+AdplgSQ5i5yd6Q/qvIq60ZwVwZW9/M7ab4UoE/5KRwo+JdYYPXwC4
+	 4h9pDe/ATX+0QXGPyTnqduhDaAwmLryODvkz4NxKKxVBURPm8vik5AS+VSR/ySW7AU+Py
+	 JmvpSNPTQZ1n188jd7IRKwgd4ox8jI2tPTS4Lhg6Wujb87qsmbtRO00rcJdLf1yu+wG/m
+	 4mIWNO9Ws2fpqAZn/cVB/y70mvL5XEyTc9EbJ4LEFWZO9rSeD+eQx8GCiPSt+nXxzrCvc
+	 Ri2EVtF7m4XR0mW3z9HNBXLBU/X+FzNTa+GW1Qq2H8MxjDJKxjLEksKQ9n0oqQ1et6Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792992643;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:
-	 Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Authority-Analysis:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=RSTZyb5+uiWzqJVObvhjIHn8jGxooKwz09y219ms2cE=;
-	b=CY7vHaOZfJ3HKMug+BmRkl3MoSdtHoHfuxWTQntJn7kXjfCS7Ihh5nyFnd9h+89o9Ygq
-	 zS5reVT4UPDX3L7b1vXp8tUygYBzvGANs8ViUMRVXY8Wt56VCFLwMXVECr7d/dCX5+UWl
-	 KE+N6+hJGYMsEh32MgM4jn122SZn+jJ3rY9/hf8rdruJUv7o/8ZabJgk4QBsTNOIQKW5g
-	 l8LeIHCj2DdrpOHqR3GyKcc0l/oxJEvclETTzxWX2rKyh4GsBI+JO/0Mb4Sbtuy19+53F
-	 gHl2JjE2m6d2VPFZQJTrWURQWcsFzD/XK2Flhs7IFwXLwmvxam417Rxx54K3p8SPw4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792993006;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=6gzFO8XXzg0k4ZAcZpWqWJXV202MH2eZbj0US5jOWjs=;
+	b=zpnid3WykMuk12ttvafp49vBpmFJq0mPauEOydzNHx+9ciutIikGCYe/S7o2V4xI2AZz
+	 01KK/MQ9YoG33tdiiUbVr/B57zX7rpyXoKl1dxuVM746oiQYOt3UkeaLCTeD27JX0dvZU
+	 cEvaG9b/f5Pr2sKLTYl9ngAXeDvVYpIQ9dO+LAQcbAH3tk7ncom5bB0xd5bG3KjzhLAAC
+	 DtU11waBp1DL6Tb8n/3tSAs5b6hX/r1bbx56tQsZC/mwRL7XxLa4OrYtJL1tbmPBK5YzO
+	 ZdA6kqC0K1my0FB7FyMKBLSMVQl3I1SguhBs4hx0dQ1SBkAykjowveDyO5rvEn7SNNQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=G6yDbX9c;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=doQ1VI0d;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bGeSbvyZ;
+	arc=none smtp.remote-ip=209.85.215.173
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80ADF606A31B
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 05:30:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 80ADF606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DA8D606A327
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 05:36:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DA8D606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=G6yDbX9c;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=doQ1VI0d
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69Q4aV622222637
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 05:30:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=RSTZyb5+uiWzqJVObvhjIHn8jGxooKwz09y
-	219ms2cE=; b=G6yDbX9cxSPMI7yM7QijxKmWIRc5a22+2XKP/PP2ogC73noKMJC
-	KtCGLxxKVSgAD4UO4n/mqbIvOGuZgqwptDTO1x8VMaAaAMsosRSLERylYkJCQ8EK
-	au8c/AocnyRrCUC19A5PeGOQ4qND6dUmBB6J+wIq4qYmUDL4sTlDQQLLbf3kFiYa
-	YCtHELfcmoex0XvCog3w5XqLIMYYT3PsBK/eSvzyfaoNgcpRDbLfsNcJmNts5iAL
-	R8wYEEz8ACTp1sufXGQTWVcr9k/oB96dHfwCjrTEQW4qJ3VV5AGHJXyuZlb+Fz6K
-	K2cXibkjh8QGrBD53QC/C0c/dPXEQqk5vmQ==
-Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hhvdd8nfp-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 05:30:41 +0000 (GMT)
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-3548cdfd2fbso4575490eec.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 22:30:41 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bGeSbvyZ
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cd67cc518a6so1771025a12.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2026 22:36:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792992640; x=1793597440; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792993005; x=1793597805; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=RSTZyb5+uiWzqJVObvhjIHn8jGxooKwz09y219ms2cE=;
-        b=doQ1VI0dre53twnEUNSeN1ALjSaSkK/gtKr9rc4IQ2HiGYJGKROdfKLRPCNvzh54c4
-         TU5Wkx6Lg+JMd7scvdHYSYjooHoDUf82VYkpX2pniHq/XnCaMh75B2IQh3jvqOs5iYw2
-         U59lmWbuo8PYVAQzaZC1X+/dG/OxmYgzeeP7RNnMV4/jc+rKU50R+IM5CxUXdU1Es+nk
-         +/LRpYLS13e7V7VGpyQzk7VB0yEIwjOB1warxKhleU1tF2+ye9YUnVhziT8YrNSCK82t
-         PukTMAauuRY9B35nzOObblH/i5UhjpnMKvmpnprHg7O4mBCjyOXLMx+yJo5xqQrLUP/i
-         jCZg==
+        bh=6gzFO8XXzg0k4ZAcZpWqWJXV202MH2eZbj0US5jOWjs=;
+        b=bGeSbvyZQxhL3k4dHxa4zpMHaEGMN9jyhC+/dCDQ3jjj3P67K4/Hk7BoltHg+jKIeo
+         /z9a5pxVM+tSlGmcoQvL+L4tW+7t4PppUDCuSfYvTRUrJYpeOESHKDh+Y/z0gYPujIWD
+         EIoOFob+bL05zi2pG4jWYoNeqZbZ1uv+e1SbHm9jd2HfKpfZUZAv6LkofjFsccPFLRt2
+         HDXbv7cdYYJhMSPWdc8RqkfpkUTsn4aEXG7wgsg1MawrqKdyC5klTir2ns0CxijnMCjd
+         dl4PdKXQJGqHNMfwj82QFPekFCMWR1emiyd/4BHVzgM4lxppwwc4WdQ4kUj5i1OeGBPA
+         U/Zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792992640; x=1793597440;
+        d=1e100.net; s=20260707; t=1792993005; x=1793597805;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=RSTZyb5+uiWzqJVObvhjIHn8jGxooKwz09y219ms2cE=;
-        b=aB8iSHKLOR7WrGKu5Ssd9xx5PgzEAgdVn+cY03VQegSZCk7zrfnmvGOhHRkhW+thol
-         5P1cuRA7F4eiEMEkezgVTI7UfifHrbWcHGicDnu1C4FCu0c6V23ksNziW70XtbKwam8d
-         IfoErlwmvVqtDJzKZJiNzLMgt1sXZynMTGd6zBR89ikZwbrfVxKf4T5+mJ/Z1QsfLWqh
-         pB50F/uAvueLD5vgUp6I62teTWVqyp4T+QICBwZPMrZIrTJ4H2B5iyNkuUFbERFQT2UI
-         EXQ3fuoXWDU+1FfwDYv0ayl7z+ePl6wdOBrd/741m1VeZ6CaUWapylMK+mAoFC5VFaIe
-         BKHg==
-X-Forwarded-Encrypted: i=1; AKwUvBwCGc5NYoDdSHDir0J4u924rTbKg/qmnA+4+41iFxHLFzAGqNdApjgF+d1+8gPxDRnBy8f1NaawF9q1zrRncw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKmhMnaPQ+b28caRGqk5B9wzD1e3ld9nD5Xd8G83ES/nAkAIS/U
-	ZSuRAdq1SUP9t6kuuMU+LlO2tAOnp6OPG//pFYmrwG+AH+zeBrI5q3Oq/n37bLa/gmxU+zNRURT
-	EFjjSI/lcfkeCMY/ghBLrVDwiAvzWUtBVjTvSZaYion3LQ1CG3/CJmgAYhbweiu6Y48adlLrhqI
-	zzAsWi
-X-Gm-Gg: AYBFou3B8gp5XuAK7303oiL0nJKk2cIweVS/BFiucaZ6/03pP0jvvrjN8e+8BzMpzoB
-	86HGWAYtsoCbV6tHpH9RoNYm41F7o8xBilNRwVbtvGP5YsopmTksNKYBejt6AUJL5XcCrxO10Fo
-	3AmS91mG2+Q5fbZlt1wZEz9LXxhkzkraK5fNpJrNOwH/XStsCaATQbcMxUtkA1q/YKfPGxQ0gfz
-	0U3Rtqch100LazQZhzOPFMMwV8N6gpcFTXiVKx4PIcIGFkMTEWCUp9mz9MyhM+TBXRg6QtMARt+
-	9NMK++pjebYGrUVfA3y677oBkzytqbKoLw31fgdqb8Wi72gHJL3hYQldn1Yx8p2nDK6HT3jxm7O
-	XRbsrUAOqpisIkWvTyLM1ls2XPDfmGNmqVlw=
-X-Received: by 2002:a05:693c:8944:10b0:36a:713:a76b with SMTP id 5a478bee46e88-36a0713b22bmr374389eec.6.1792992639980;
-        Sun, 25 Oct 2026 22:30:39 -0700 (PDT)
-X-Received: by 2002:a05:693c:8944:10b0:36a:713:a76b with SMTP id 5a478bee46e88-36a0713b22bmr374352eec.6.1792992639401;
-        Sun, 25 Oct 2026 22:30:39 -0700 (PDT)
-Received: from hu-hongchen-sha.qualcomm.com ([114.94.8.21])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a03bea5d4sm2982718eec.6.2026.10.25.22.30.35
+        bh=6gzFO8XXzg0k4ZAcZpWqWJXV202MH2eZbj0US5jOWjs=;
+        b=UnhyNrrp+dMh2ZkfM68a4JRcRtjg8pnTrYAmBL2/9e4vf/rFkcRP7HR9pvPl1dHbZb
+         YLTTsFU4KAgxRPJ660r09SwIIguEz8GPOrFMFJz7J3K32iJ0OwLFmP9bD32ZmdLui6BM
+         2Ab1eorq/+HRnofEIS9dlyhQydUa/+wtuaFIDuoCVCFzT/CrqvViXIvgI8c5Y6zkHzxL
+         id8w4SQbNr0WcDJxIft8bmmWvVmdxK+SYlZDDzra2C5Yuc+FmA8DZoxtcbcN2Vu37rkE
+         jHGQJfJwdGfiTQV9DShfuq7w8Ti5HdF+E5FiJQfT7mKLbiMa161aeOvY/E7sEAaYOARb
+         yuOQ==
+X-Gm-Message-State: AFq9FYKGL1//4i11Yv1AI5yL1gPslQOxm1Wf7XXkuGSEUto74KRkGjBD
+	zJ7osSEaDDJQz/CiThV9DMQ1+86s1neA3mZi7zodZN/ypEIca+oEnjG9wrVVlq29feU=
+X-Gm-Gg: AYBFou0VoJKQ79DWTfSqSSzGcvGyAsVbcDjr7RciMA6ev/7ZgQjf7cZ3JUpQB3cHC2u
+	x2ev92pxe77di/8LezN70Xd13JLGuN7i9WL3KhwrUrNkxb0puiD1d+FSCL/ieIbRriF3ScKYdq8
+	dC0UtIK+VwQZt1+77FfCSoCuMVF0FsqMgXwCuPXax2QeCm20meKQrq72uFuD7YCk88l8oLYUbls
+	q8cJc6rLIwDAxc/ANNGkDJAwekyas7qY6KNAMTNGamYsaUcJMEsqiYOQH1rplT4H8J5o7gZCKpD
+	w3iBNYJVzPrvWD2H6kDFoCnUJwr7sfUhh7ALcSo8l25AZdIdQE/XoCjPSCc/wqHtnnYIY7mbLPS
+	4iZB+3JctIxmZ0mngz1SQGl7crn2eJTybywIVLYeyOa+r3TrL5WYVDWNEh6nKJTmsRPak/ytPeE
+	wxQ09bnK/MXLL77XoG/zHicUPH6qCnhlqzO9/Rq19AfFWfSDIHZOMcUGOvVX1PyPqSjnGV0QO5p
+	IyPtWbGrTiw04HnN6KHeWp1ubQwbGcQm4R4ShtExZEB9/NK3DG93f2Pt64T5VBW2Xte0RQkGhuB
+	nnlo
+X-Received: by 2002:a05:6a21:4e0b:b0:3e1:8890:8400 with SMTP id adf61e73a8af0-3e7bfbdb8dcmr4954301637.15.1792993004740;
+        Sun, 25 Oct 2026 22:36:44 -0700 (PDT)
+Received: from acemagic-m1.tail4fb79.ts.net ([2401:7400:c804:b668:673b:a930:e065:eca])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a368d867a0sm927851b3a.2.2026.10.25.22.36.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Oct 2026 22:30:37 -0700 (PDT)
-From: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org (open list:MAC80211),
-        linux-kernel@vger.kernel.org (open list)
-Cc: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
-Subject: [PATCH wireless-next] wifi: mac80211: preserve disabled subchannel bitmap in 6 GHz CSA validation
-Date: Mon, 26 Oct 2026 11:00:11 +0530
-Message-Id: <20261026053012.1668561-1-hongcheng.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+        Sun, 25 Oct 2026 22:36:44 -0700 (PDT)
+From: Ragul Balaji <ragulbaby@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	brcm80211@lists.linux.dev,
+	Ragul Balaji <ragulbaby@gmail.com>
+Subject: [RFC PATCH wireless-next 00/17] wifi: add a driver for Broadcom BCM4323x USB adapters
+Date: Mon, 26 Oct 2026 13:36:06 +0800
+Message-ID: <20261026053633.361454-1-ragulbaby@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -119,87 +95,140 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: Dzy7lFG6jYybjB0UeQVPV97MHR7D730v
-X-Proofpoint-GUID: Dzy7lFG6jYybjB0UeQVPV97MHR7D730v
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI2MDAyMSBTYWx0ZWRfX+ROwoViMpeh4
- /tD1MWyL0uFI0Q4VRWs1VTwK+0HjBkXgmplK6B9pZIXIwc499dG7cuBZi2EyrXdqqMvJRpmQpnN
- 8umGD3c+aVrTgjFCPqmckp3f5I0FDU5bzEoX/H0iCzYnm+TiGNaXesE2tsve6J/PAyMzVvzaaE1
- ohQUmoAfguE9fufJ71aY4q1pdzMx4TG30aFp6soHBs1G+PNkwqPxK62jB+Au6J8zvbGP3o9I77C
- ZOkRAVCiPV2hywVJcGBPT+okNkn3l/N0aqIZFW9tl0cDjUY56bPpc7dzZmGaKMQiL+AIfh90TuV
- SAd2fGQ26y1NZO4cbkRQ3o/rH1uYpKlcTaHtRCtPLfgFxDnEnAWayM5XYYEtul8sEvxJMicC14p
- R7OTEAl/ENzbdrpzkx5jBlJUVYqbrjXNci6zQ7MUivHwiRYkKoamN0XFWgKL2fSNk1cirgEslKr
- tNqU8EiOTYcyvk6h05A==
-X-Authority-Analysis: v=2.4 cv=N8+8hG9B c=1 sm=1 tr=0 ts=6adee581 cx=c_pps
- a=Uww141gWH0fZj/3QKPojxA==:117 a=Uz3yg00KUFJ2y2WijEJ4bw==:17
- a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=EUspDBNiAAAA:8
- a=AOFKImNPUqAlGEO73toA:9 a=PxkB5W3o20Ba91AHUih5:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI2MDAyMSBTYWx0ZWRfX+uBnYEE4kxsV
- he3JwlvrShvvp34L/nrv6I+BvfUxJM3HFT5tdY+NWCR2Bb3dpDUZ7YGMVnyIPuojR6EUQRbbhtK
- T2VTH8pQV5CxZ2CLOIcDTsrDFNTdDNM=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-26_01,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 phishscore=0 priorityscore=1501 adultscore=0 bulkscore=0
- malwarescore=0 suspectscore=0 lowpriorityscore=0 spamscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610260021
 
-During 6 GHz Channel Switch Announcement (CSA) handling, mac80211
-parses the disabled subchannel bitmap from the Bandwidth Indication
-element into the new channel definition.
+This series adds support for the following 802.11n USB adapters:
+- Broadcom BCM43231 (Netgear WNA3100, Dynex DX-NUSB)
+- BCM4323 (Netgear WNDA3100v2, Belkin F9L1101 and others)
 
-The channel definition is subsequently validated by reconstructing a
-local EHT operation element and passing it to
-ieee80211_chandef_he_6ghz_oper(). However, the reconstructed element
-does not include the disabled subchannel bitmap or its presence flag.
-Consequently, ieee80211_chandef_he_6ghz_oper() overwrites the parsed
-puncturing configuration with zero.
 
-Preserve the parsed puncturing configuration by carrying the disabled
-subchannel bitmap presence flag into the reconstructed EHT operation
-element and populating its bitmap from the channel definition.
+The protocol was inferred from USB captures of the vendor's
+Windows driver, cross referenced with code from brcmsmac, brcmfmac and b43.
+The code which are copied almost as-is from the referenced drivers
+are indicated in the comments of the code
 
-Signed-off-by: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
----
- net/mac80211/spectmgmt.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+The driver supports:
 
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index f5e4970869b6..5d26291e7569 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -152,7 +152,12 @@ validate_chandef_by_6ghz_he_eht_oper(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_he_6ghz_oper *_6ghz_oper =
- 				(struct ieee80211_he_6ghz_oper *)he->optional;
- 	DEFINE_RAW_FLEX(struct ieee80211_eht_operation, eht, optional,
--			sizeof(struct ieee80211_eht_operation_info));
-+			sizeof(struct ieee80211_eht_operation_info) +
-+			/*
-+			 * Additional space for the optional
-+			 * Disabled Subchannel Bitmap
-+			 */
-+			sizeof(u16));
- 	struct ieee80211_eht_operation_info *_oper_info =
- 			(struct ieee80211_eht_operation_info *)eht->optional;
- 	const struct ieee80211_eht_operation *eht_oper;
-@@ -207,6 +212,13 @@ validate_chandef_by_6ghz_he_eht_oper(struct ieee80211_sub_if_data *sdata,
- 		eht_oper = NULL;
- 	} else {
- 		eht->params = IEEE80211_EHT_OPER_INFO_PRESENT;
-+
-+		if (chandef->punctured) {
-+			eht->params |=
-+				IEEE80211_EHT_OPER_DISABLED_SUBCHANNEL_BITMAP_PRESENT;
-+			put_unaligned_le16(chandef->punctured, _oper_info->optional);
-+		}
-+
- 		_oper_info->control = _6ghz_oper->control;
- 		_oper_info->ccfs0 = _6ghz_oper->ccfs0;
- 		_oper_info->ccfs1 = _6ghz_oper->ccfs1;
+- station, P2P client and monitor interfaces
+- HT20 and HT40, A-MPDU and A-MSDU transmission
+- 2.4 GHz channels 1-14 and, on the BCM4323, 5 GHz channels 36-165
+- hardware CCMP with management frame protection
+- the LEDs and the WPS button
+
+Power save, AP, P2P GO, IBSS and mesh interfaces and hardware
+TKIP/WEP can be added in later patches
+
+The series
+----------
+
+Patches 1-10 prepare brcm80211, so that the driver shares brcmsmac's
+and brcmfmac's code instead of copying it:
+
+- 1-2 make d11.h self-contained and move it, with the transmit frame
+  ID masks, to the shared include directory;
+- 3-4 prepare brcmsmac's rate tables and rateset helpers for brcmutil;
+- 5 fixes brcmsmac's L-SIG length of short-GI frames, which could be
+  one symbol shorter than the frame;
+- 6-7 make the PLCP and frame timing helpers take the band instead
+  of brcmsmac's state, and move them to rate.c;
+- 8 moves rate.c, with all of these tables and helpers, to brcmutil;
+- 9 moves brcmfmac's USB bootloader definitions to a shared header, as
+  these adapters boot through the same bootloader.
+- 10 exports ieee80211_get_bssid() from mac80211 again, reverting
+  391234eb4831 ("wifi: mac80211: unexport ieee80211_get_bssid()")
+Apart from patch 5, these patches change no behaviour; patch 6 only
+drops the device name from the helpers' error messages. The brcmsmac
+and brcmfmac changes are compile-tested only.
+
+Patches 11-17 add the driver, with the Kconfig, Makefile and MAINTAINERS
+entry coming last.
+
+Firmware
+--------
+
+The driver requires brcm/bcm4323x.bin. As captured from the 5.100.68.46
+version of the Windows driver.
+sha256 cc286a529396434a38e59382dcd46fa92a57f1cd1a38eea20d2b24dec028cf29
+This firmware needs to be in linux-firmware.
+
+Testing
+-------
+
+On a Belkin F9L1101 associated to a 5 GHz HT40 WPA2 access point,
+single-stream TCP ran at 107-128 Mbit/s in both directions.
+
+AI USE
+------
+Reverse engineering is done with assistance from LLMs.
+Code has been reviewed us manually.
+
+Ragul Balaji (17):
+  wifi: brcmsmac: make d11.h self-contained
+  wifi: brcm80211: move d11.h to the shared include directory
+  wifi: brcmsmac: look up OFDM rates in rate.c
+  wifi: brcmsmac: give the rate tables and helpers a brcmu_ prefix
+  wifi: brcmsmac: round short-GI L-SIG lengths up to whole symbols
+  wifi: brcmsmac: pass the band to the PLCP and frame timing helpers
+  wifi: brcmsmac: move the PLCP and frame timing helpers to rate.c
+  wifi: brcm80211: move the rate helpers of brcmsmac to brcmutil
+  wifi: brcm80211: move the USB bootloader definitions to a shared
+    header
+  wifi: mac80211: export ieee80211_get_bssid() again
+  wifi: bcm4323x: add the shared definitions
+  wifi: bcm4323x: add the USB transport and firmware setup
+  wifi: bcm4323x: add the receive path
+  wifi: bcm4323x: add the transmit path
+  wifi: bcm4323x: add the mac80211 operations
+  wifi: bcm4323x: add LED and WPS button support
+  wifi: bcm4323x: add Kconfig, Makefile and MAINTAINERS entry
+
+ MAINTAINERS                                   |    7 +
+ .../net/wireless/broadcom/brcm80211/Kconfig   |    1 +
+ .../net/wireless/broadcom/brcm80211/Makefile  |    1 +
+ .../broadcom/brcm80211/bcm4323x/Kconfig       |   12 +
+ .../broadcom/brcm80211/bcm4323x/Makefile      |    6 +
+ .../broadcom/brcm80211/bcm4323x/bcm4323x.h    |  258 +++
+ .../brcm80211/bcm4323x/bcm4323x_core.c        |  545 ++++++
+ .../brcm80211/bcm4323x/bcm4323x_led.c         |  221 +++
+ .../brcm80211/bcm4323x/bcm4323x_mac.c         | 1495 +++++++++++++++++
+ .../broadcom/brcm80211/bcm4323x/bcm4323x_rx.c |  317 ++++
+ .../broadcom/brcm80211/bcm4323x/bcm4323x_tx.c | 1386 +++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/usb.c         |   68 +-
+ .../broadcom/brcm80211/brcmsmac/Makefile      |    1 -
+ .../broadcom/brcm80211/brcmsmac/ampdu.c       |   34 +-
+ .../broadcom/brcm80211/brcmsmac/dma.h         |   27 -
+ .../broadcom/brcm80211/brcmsmac/mac80211_if.c |    2 +-
+ .../broadcom/brcm80211/brcmsmac/main.c        |  687 ++------
+ .../broadcom/brcm80211/brcmsmac/main.h        |   26 +-
+ .../broadcom/brcm80211/brcmsmac/phy/phy_cmn.c |   17 -
+ .../broadcom/brcm80211/brcmsmac/phy/phy_hal.h |    3 +-
+ .../broadcom/brcm80211/brcmsmac/pub.h         |   35 +-
+ .../broadcom/brcm80211/brcmsmac/rate.c        |  514 ------
+ .../broadcom/brcm80211/brcmsmac/stf.c         |    4 +-
+ .../broadcom/brcm80211/brcmutil/Makefile      |    2 +-
+ .../broadcom/brcm80211/brcmutil/rate.c        | 1027 +++++++++++
+ .../broadcom/brcm80211/include/brcm_usb_rdl.h |   77 +
+ .../{brcmsmac/rate.h => include/brcmu_rate.h} |  160 +-
+ .../brcm80211/{brcmsmac => include}/d11.h     |   43 +-
+ include/net/mac80211.h                        |   12 +
+ net/mac80211/ieee80211_i.h                    |    2 -
+ net/mac80211/util.c                           |    1 +
+ 31 files changed, 5649 insertions(+), 1342 deletions(-)
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/Kconfig
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/Makefile
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/bcm4323x.h
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/bcm4323x_core.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/bcm4323x_led.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/bcm4323x_mac.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/bcm4323x_rx.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/bcm4323x/bcm4323x_tx.c
+ delete mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmsmac/rate.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmutil/rate.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/include/brcm_usb_rdl.h
+ rename drivers/net/wireless/broadcom/brcm80211/{brcmsmac/rate.h => include/brcmu_rate.h} (53%)
+ rename drivers/net/wireless/broadcom/brcm80211/{brcmsmac => include}/d11.h (97%)
+
 
 base-commit: 734bef548a96e8774d6eef5dfa2026c6edc4e80b
 -- 
-2.34.1
+2.53.0
 
