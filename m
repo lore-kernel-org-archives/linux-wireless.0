@@ -1,87 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.231.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793041852;
-	b=AAOmZtZFms47vNH1FeT0QZqkWju0UBa1z7TFM8ThQczyQFkpM9lj6XP2xtAfvPF2ANio
-	 9mOjBQgGHCRAJwkhW5V/eXaj2KzrdSY94Gr1fGTH+NrIZ8VdspeLlwUUg1OW973kOSqod
-	 wsbU9eNSudNVhm+yenl3xsWqj0PKTiGRyS7wpFCHJu55VbmY/9urLqrGrpolepXSu6QbC
-	 TL1VMbLi0paAtmaUAULqR12X0vsQx4n+SZwZRejR1Q4h3sgHiub9DT7ZFv1lLBWnVFYMI
-	 7/8xO85wO+/9YcUpm2EEtZWUZzc70hartUq23FEwpNWofN+o0R1u5r2bCx2L81/ECBg==
+	t=1793045769;
+	b=MtCDfeRj+S56SAPeZHKa8CmPxDZQY8FO8wJwwKVTAyFpqV/H8dNhiicFNm0CpBqJnV6V
+	 N4EaHvXQZd31aSl47AfTZpU33evcNb7plbxsJRTl6LrJnwX+PD7VOQI0lnuBieuONzoGC
+	 xYYBLWUOcMHje7VMIhOtGvOU4N6KzOmqnB5Cgwxy/6lHM3iqnYIvz/gw55gLMwyFbWTA6
+	 DToKgmU7NEU3IxpX+ccsCVr2tIkKL4U4mwDySVs5jYyfMWWM9dmaRa8N+dLrED3TJurna
+	 H6fkfhDa8VOpGgMSsLTVL4XeZPBYdnTviWqL2f2/JEXIkTPL/SnornElev+6C5UE2bw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793041852;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793045769;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Date:Subject:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
-	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
-	 X-Developer-Key;
-	bh=QIiFmRnFhWPNQzBn5gMjyz5irv/bhFzVi5C0pT/z1+E=;
-	b=D1oOe/pdzakHWpzUOA+UAjsUc/HdJSRGDVwbTyPrxLmVeUWn7jSqae6Tsm8yMXEstn0Y
-	 wJMK2LH9v1M1Ov4UlS+Uxu2u8rB80em/3YLNWXr+Up3+VEU9KKXFd8dpSEY3f9VoAj9dJ
-	 rdICfjB6IbXXcBoIiT5drRgA9ujYVaiKRwYjqjS+hhS+27QkqYukLsCe6kJRlHyMsZL2Q
-	 kw484smtAOSGhimpjh20bTBfAa3JBbNmpw/+/KQUhSUHNmsbLuD/PyQSCJkbOGf04P3Sl
-	 y7ehZhPz+YZ6MEwXojQfGjWF23PgtfW2wQB7HvHNrk3FWKg5kt9hZeJUIn2B+L+1YHQ==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=G8ZkJMjWlhMk4Veu++rAUd1hw9BdTfvoHNAmC3I1U9k=;
+	b=SqRMK1l+TBg6drLhdx1P23gxCGYbvDT0VcLb4MDnfU5YEKu08eNqQoM9DFk8HWJ8vYab
+	 L+erMV+ERP6OX/n7DKRAXUgKPQ8hJWOwPQ+8X1Utvh8mAmKvm/uGqrCxIrLA1wGZdB9r6
+	 C5W9bYP1sd2z/1poIhiUHfrPA8ok3UXXL7hp1V91YfCM+XD8XdGMbQqSnUSQSs4kM6KIK
+	 o4c6u268Du+vtnMckgXbin2e1DpQnpOmBJX+4FRElbtnBbo9y2AszcfKFNtpE9k7tCDkP
+	 hKsm6CLSMg5c4l1vt/VwsyN9+3KsfHTcCJsjiDLfLkoIqA5Yjl8PUI1xNJeI20XaUuw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ijc2W5eY;
-	arc=none smtp.remote-ip=74.125.231.139
-Received: from mail-oo2-f11.google.com (mail-oo2-f11.google.com [74.125.231.139])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ODZHIYQz;
+	arc=none smtp.remote-ip=74.125.82.54
+Received: from mail-dl1-f54.google.com (mail-dl1-f54.google.com [74.125.82.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF12E606A321
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 19:10:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF12E606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99ADB606A31A
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 20:16:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 99ADB606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ijc2W5eY
-Received: by mail-oo2-f11.google.com with SMTP id 46e09a7af769-828912d37e6so542780a34.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 12:10:51 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ODZHIYQz
+Received: by mail-dl1-f54.google.com with SMTP id a92af1059eb24-181516de561so187772c88.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2026 13:16:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793041851; x=1793646651; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1793045768; x=1793650568; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QIiFmRnFhWPNQzBn5gMjyz5irv/bhFzVi5C0pT/z1+E=;
-        b=ijc2W5eYEB0cQuzXLKzLx8XPbifxXb8vJ9gJhxVAZCQwllNTKS/3/oysRJjn84q4m7
-         DBRAZlkNJZn/UWlCA21NXgyWNN8HAcpD8F4XPXCq1NmxZ1YPbghEOXmIHdNNyFsLAUhn
-         fzX9BvZeDqvJly30aenoLHezQDZKoFK/5K7o+NgudOjqtVl1+xdP9acBhBJDupJ3yd1o
-         kma4ocDPJqpHFheKUBPFA9oo1MFs0NZ4RGWH1t9Hzm1RQMvtsE3F+ScfRZdT8iymdEqk
-         4nb8RBaO/IcphnATawBZUSu9HsPWYOWSMlhEmYDXk2/+KuCFV7S47+PnirHXne8m/ZZc
-         8+mw==
+        bh=G8ZkJMjWlhMk4Veu++rAUd1hw9BdTfvoHNAmC3I1U9k=;
+        b=ODZHIYQz2E+WESqPCtOXOANaKxkx9uHuqZabDw6NrL3jIxjHezvUw9FbLNvlcDZh4d
+         M1fr63jjIywiS90B9wE9SoJtxO87Le26YCPrB4prfAS9gLZvdMFzB2sPAf7I+dIJ1Hk+
+         /E9067A/HcX/HQreZUCMoK0F1y3bUNrfZRBc6zwwBo1rnbSqAFVoFuxYVB1oIT/P8Cv0
+         Qwi6GmbZstmMbmtlOrfb99CmhwWsaqIoWTlPl/9yx/LAwMMuWQHCyiQ7cjQZjHNnBR7K
+         7FIg2JSwUVp2N6nF964g/SzpbykzH3NRcFVwfp2+lrLKTQkVoLH5Pv5pZHtESg5tmokA
+         hCPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793041851; x=1793646651;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QIiFmRnFhWPNQzBn5gMjyz5irv/bhFzVi5C0pT/z1+E=;
-        b=0t7EeIaKqKLnxXf9UT5iq3gI+eLJrmbnlMHLOXqTRwonKwiTCdx4Sutu7uKbN4C7np
-         yi+NHYXxogwe7TGg+R1nYkuBPV2ouP0coT29UGMNbUrDYms0xTWXRjWXIjPe1WG7aoAu
-         cTKit0xdDEZu+sK8IDOv1YH4Jj1gn7rpUCUW/N8NRf0TkGz2n0MatWO8cLQAkuN+41RC
-         bKg08eantdkx1upd4M4/flX2R6tavSnkfLq7CeN1GH+DOqn2jKpiPbgnBqPKXfkyUEzU
-         F6abVMS08jCPSzipDWfAvw6zPLdADf+xE6Lp2k40oVB71yJT6ZIzKxahg83lme0K1ZVs
-         K/Mw==
-X-Gm-Message-State: AFq9FYLRGqslgXBtuRgjjzuDDuvAFpvA4//PhaxMy4oO92AS4whH18+W
-	dBHkf+AlXmdXftSSRc5Xd+Xh5ENgdwA2IX6qsGLEguHgJM/JU+F9iI5q
-X-Gm-Gg: AYBFou2np4wfIBrklipzLKAZlqQLoE/Hjio/AwA02fYyD+z+SEX8ceO1zpkfln7ag5f
-	CHstVDwCGppsafqkIGgdY/R1Lf1VUsW9PAm2sXK2+9Zoo2kZpaK3jtXb6mQE1vIkeAEFSnzhhWB
-	blmw9XZkdMmfHX3i29NpuMkRCmuXyU5rP3lw+xoxDfKq/2E0HuX/tpc57FP/0M8Wm1mq6QjZ9N1
-	YjQpqv/I/emHInYni7PWH7ZrYY5bwyDOFVoYY+2y/rAAaPPm5R9/aDYbDQspyhlbLEJOS3UaRvO
-	g6lJ3Yzd8uWpQD8FflQ94kfzccgY16Mcq41EW1WN0vRe8z5htVy4Gs9xRA9/CfSsgKZ7ioiIlj/
-	aA1hSaPuHU5XRgEFyhC9GSKcCXgdzVbGepRju8JNl3NE0rbzSJDSGpCtERWsoyNo8DK01GrX9A0
-	VN1E83mvipMlpZB5JOrAEeYuJZIDPmQL3SZiYWTP6YL5CO3S3PEIIibJ8B0fIPFM9R1nwpD/GpM
-	qvfIB0BdmIZSv4OgqyCmQn8cSf9fWY5oUSTkMklVOPEZlmLS0Tob6ZM1Rg/IcXmB07k8mYVyomd
-	Obe2bQcPaqAdyoRkGOMLurqh0D6SQDEorPgYsYisWSJOK6k=
-X-Received: by 2002:a05:6808:150a:b0:532:6c52:9778 with SMTP id 5614622812f47-55f6af83955mr374971b6e.20.1793041850651;
-        Mon, 26 Oct 2026 12:10:50 -0700 (PDT)
-Received: from [10.10.18.223] (wsip-64-207-253-118.tu.ok.cox.net. [64.207.253.118])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-55c03dc3524sm5740834b6e.0.2026.10.26.12.10.48
+        d=1e100.net; s=20260707; t=1793045768; x=1793650568;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=G8ZkJMjWlhMk4Veu++rAUd1hw9BdTfvoHNAmC3I1U9k=;
+        b=LuZ7IRz3NiudTv2wJmMuC+CbMnbeIIY3wnwTDcxMl9OgN10gpE/Ov0ZP3ysXI2AL06
+         2xqwrBQ0BQZq8eVoos/JLh3IvNtQWmnfIl5W24S9Le2rt4L5GJcKGc+4jGY0P7xq9P2d
+         Wm7JqrgEx9ppbaCvaCdwTcLDAVMZGzxUpqB3jhsPu6enVzgarjYlk3lokwfyF4GGtx9Y
+         U5O28pG1MIoJdmSgp3jTzim7x+OiMWdW6pN4+TzpLygrQsq1fR7lJEo1kxkBEII4Y+aR
+         Q62eBEHabfsQEM2pG/Nk5zovpxHQ4dRl/hWlkYzy4kIaotpHtYvd3bztDdrKEzleHWKl
+         F4XQ==
+X-Forwarded-Encrypted: i=1; AKwUvBw5oZVOreVk+YA7Z7ts8TxfuT7pIXUAKTV81ESKx7e4riYIaDJXSfEDy9NyGSpvRLr4Y7av8IyrDss3go27iA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYI79HKgzF0YnTMbiLns4gb4CX9A2GLd3exMwBQQfFFhqvpQhaqH
+	bh0ofZFMZUBH79dawgZo1w6WeJBNqCKZQiEYUwd9ap1LFV7VOGVuv4CG
+X-Gm-Gg: AYBFou1b0RU+NGgjDtm2KxjNL3luyyiz5BWVZZhc2gwV0wB0ovOKAgMUXn5I25/u9vm
+	aha2WWjRLFC8QbAr2g9+tS1mQtGwum31A1W+ZHWzGNKqt5zDghMWR5NXHW3NiXxU2ouWl4c75O/
+	ZXJCTcQ/Q/odD5ESg80IpuEDdUO9u3Sz54V24alWrzFtHFPBbk3+T/KOb+hYqZ7LmrUQGTdPsSo
+	PB9E888zAm0fiboUtLLLs4dnlQ7g/wc0bgjZxBJHWUU8wJcn4JUYl0obP3Ncx28kMQAFTviLtRi
+	i6ccGpY+6ZZnu/Ed4z0bh65K4UxioHwccp8cuaXGWgrxvyaQtaBuqVppHHL5NwlEqKIFPEqAFt6
+	YzqRE4kcTfbEBeowbGVBK3jDZRB2EF1DAHfLnf4Nw6oNMMWSgxyuRMDAOHkwwrLHvNFjrjIZODQ
+	BF+nO6+7dSJIqRf1OTYcgUmdqxOj9oX0vyLhvOO7KUa2QGrjancZ3rBeE9wv4l1Q47ECITNIHD3
+	xfmLdVtRUtynkIc4qv6xVFwiXnb7tj1zRc+OarNZdrZYEB96PhDAj125ijB3V58HwuGMC5/e345
+X-Received: by 2002:a05:701b:455c:20b0:143:1bb1:3305 with SMTP id a92af1059eb24-1a3c9cc2353mr731661c88.22.1793045767511;
+        Mon, 26 Oct 2026 13:16:07 -0700 (PDT)
+Received: from ZephyrLabServer.internal ([165.162.64.148])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a01fa4c58sm25994089eec.21.2026.10.26.13.16.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 12:10:50 -0700 (PDT)
-From: Ryan Brue <ryanbrue.dev@gmail.com>
-Date: Mon, 26 Oct 2026 14:10:39 -0500
-Subject: [PATCH 4/4] wifi: mt76: mt7663s: use RX enhance mode
+        Mon, 26 Oct 2026 13:16:06 -0700 (PDT)
+From: John Macias <dencity7@gmail.com>
+To: johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless] wifi: mac80211: use HT CCFS2 when computing the AP's HE and lower bandwidth
+Date: Mon, 26 Oct 2026 13:15:29 -0700
+Message-ID: <20261026201529.3471565-1-dencity7@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <116e1f238e2d78817a2ac5b42b00e0faeabf16bc.camel@sipsolutions.net>
+References: <20261026040148.2633920-1-dencity7@gmail.com> <116e1f238e2d78817a2ac5b42b00e0faeabf16bc.camel@sipsolutions.net>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -91,187 +96,85 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-4-944b1f7e63a8@gmail.com>
-References: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-0-944b1f7e63a8@gmail.com>
-In-Reply-To: <20261026-rbrue-sheldon-upstreaming-mt7663s-v1-0-944b1f7e63a8@gmail.com>
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, 
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, 
- Sean Wang <sean.wang@mediatek.com>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
- Ryan Brue <ryanbrue.dev@gmail.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793041838; l=5919;
- i=ryanbrue.dev@gmail.com; s=20260906; h=from:subject:message-id;
- bh=3uU3p0eYN0gWkFjqNQLRhAPcmSmlrPjUlBG9Bxgtb3g=;
- b=4BBBF/yUowDPHwMwWDdDl2PGA2yooKLBaQvgJiKnkDgfIFukdubCZ0Lb/ZE35bsg1OP3qaTHm
- 0MGOuDWtAcRBRC1D1bDKhM5vRsE0gBXaVcupju6xvGzrzB9FXvHck+t
-X-Developer-Key: i=ryanbrue.dev@gmail.com; a=ed25519;
- pk=KsUvVaP//v/2q+ZBuacc7cLbsyEYn+AD71Sn28oZWKo=
+Content-Transfer-Encoding: 8bit
 
-In RX enhance mode (WHCR bit 16), the chip appends the next interrupt
-status block to every RX data read: after the frames come 4 bytes of
-zero padding and then the same 112-byte block a WHISR read returns.
-mt76 never enabled it, so the txrx worker read WHISR before every RX
-read, about two status reads per frame. MediaTek's own driver for these
-chips runs in enhance mode and only reads WHISR when no appended status
-is pending.
+On Mon, 2026-10-26 at 12:07 +0100, Johannes Berg wrote:
+> This, by itself, is wrong.
 
-Do the same for mt7663s: read the extra 116 bytes with the frames, keep
-the appended status when its padding is zero, and let the next
-parse_irq() use it instead of reading WHISR. Each status is used once,
-so the read-clear TX quota counts are neither lost nor counted twice.
-mt7663s reads only RX port 0, so a pass of the worker makes at most
-one RX read and no appended status is overwritten before it is used.
-A 1.5 KB frame plus the status still fits in four 512-byte blocks, so
-the reads don't grow.
+Thanks. I think I see why: CCFS2 only applies to a STA that can
+interpret Extended NSS BW, and my patch applied it to every station.
+Please drop it.
 
-Measured with ftrace on an MT7663 SDIO module under a UDP stream: 881
-WHISR reads for 857 RX reads (2.1 per RX read before), with TCP and UDP
-throughput unchanged on that air-limited link, no added loss, and no TX
-stalls over 30 s of transmit.
+I looked further and may have found the actual cause, but I'm not
+certain. Below I've separated what I measured from what I concluded
+by reading code. Corrections are very welcome.
 
-Signed-off-by: Ryan Brue <ryanbrue.dev@gmail.com>
----
- drivers/net/wireless/mediatek/mt76/mt76.h        | 10 +++++++++
- drivers/net/wireless/mediatek/mt76/mt7615/sdio.c | 28 +++++++++++++++++++-----
- drivers/net/wireless/mediatek/mt76/sdio.c        |  3 +++
- drivers/net/wireless/mediatek/mt76/sdio_txrx.c   | 15 +++++++++++--
- 4 files changed, 48 insertions(+), 8 deletions(-)
+Setup: IPQ8074 (Netgear RAX120v1), ath11k, firmware
+WLAN.HK.2.0-01792, HE160 BSS on channel 36. Clients: MT7925 and AX200.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 9e851dea71d9..9c637ebddb52 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -700,6 +700,16 @@ struct mt76_sdio {
- 	struct sdio_func *func;
- 	void *intr_data;
- 	u8 hw_ver;
-+
-+	/*
-+	 * RX enhance mode (CONNAC1): the chip appends the next interrupt
-+	 * status (intr_size bytes, after 4 bytes of zero padding) to every
-+	 * RX data read, saving a separate status read while frames stream.
-+	 */
-+	bool rx_enhance;
-+	bool intr_pending;
-+	u16 intr_size;
-+	void *intr_next;
- 	wait_queue_head_t wait;
- 
- 	int pse_mcu_quota_max;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-index 46188951ad19..f744240ebd34 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-@@ -56,12 +56,19 @@ static int mt7663s_parse_intr(struct mt76_dev *dev, struct mt76s_intr *intr)
- 	struct mt7663s_intr *irq_data = sdio->intr_data;
- 	int i, err;
- 
--	sdio_claim_host(sdio->func);
--	err = sdio_readsb(sdio->func, irq_data, MCR_WHISR, sizeof(*irq_data));
--	sdio_release_host(sdio->func);
--
--	if (err)
--		return err;
-+	if (sdio->intr_pending) {
-+		/* appended to the last RX read (RX enhance mode) */
-+		memcpy(irq_data, sdio->intr_next, sizeof(*irq_data));
-+		sdio->intr_pending = false;
-+	} else {
-+		sdio_claim_host(sdio->func);
-+		err = sdio_readsb(sdio->func, irq_data, MCR_WHISR,
-+				  sizeof(*irq_data));
-+		sdio_release_host(sdio->func);
-+
-+		if (err)
-+			return err;
-+	}
- 
- 	intr->isr = irq_data->isr;
- 	intr->rec_mb = irq_data->rec_mb;
-@@ -124,6 +131,15 @@ static int mt7663s_probe(struct sdio_func *func,
- 	if (ret < 0)
- 		goto error;
- 
-+	mdev->sdio.intr_size = sizeof(struct mt7663s_intr);
-+	mdev->sdio.intr_next = devm_kmalloc(mdev->dev, mdev->sdio.intr_size,
-+					    GFP_KERNEL);
-+	if (!mdev->sdio.intr_next) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+	mdev->sdio.rx_enhance = true;
-+
- 	ret = mt76s_hw_init(mdev, func, MT76_CONNAC_SDIO);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/mediatek/mt76/sdio.c b/drivers/net/wireless/mediatek/mt76/sdio.c
-index ba5f123f7e39..95af0a90546c 100644
---- a/drivers/net/wireless/mediatek/mt76/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/sdio.c
-@@ -269,6 +269,9 @@ int mt76s_hw_init(struct mt76_dev *dev, struct sdio_func *func, int hw_ver)
- 	case MT76_CONNAC_SDIO:
- 		/* set WHISR as read clear and Rx aggregation number as 16 */
- 		ctrl = FIELD_PREP(MAX_HIF_RX_LEN_NUM, 16);
-+		if (dev->sdio.rx_enhance)
-+			ctrl |= RX_ENHANCE_MODE;
-+		dev->sdio.intr_pending = false;
- 		break;
- 	default:
- 		ctrl = sdio_readl(func, MCR_WHCR, &ret);
-diff --git a/drivers/net/wireless/mediatek/mt76/sdio_txrx.c b/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
-index 311c31e87ee5..f15746a13991 100644
---- a/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
-+++ b/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
-@@ -9,6 +9,7 @@
- #include <linux/kernel.h>
- #include <linux/iopoll.h>
- #include <linux/module.h>
-+#include <linux/unaligned.h>
- 
- #include <linux/mmc/host.h>
- #include <linux/mmc/sdio_ids.h>
-@@ -87,7 +88,7 @@ mt76s_rx_run_queue(struct mt76_dev *dev, enum mt76_rxq_id qid,
- {
- 	struct mt76_queue *q = &dev->q_rx[qid];
- 	struct mt76_sdio *sdio = &dev->sdio;
--	int len = 0, err, i;
-+	int len = 0, data_len, err, i;
- 	struct page *page;
- 	u8 *buf, *end;
- 
-@@ -97,6 +98,10 @@ mt76s_rx_run_queue(struct mt76_dev *dev, enum mt76_rxq_id qid,
- 	if (!len)
- 		return 0;
- 
-+	data_len = len;
-+	if (sdio->rx_enhance)
-+		len += 4 + sdio->intr_size;
-+
- 	if (len > sdio->func->cur_blksize)
- 		len = roundup(len, sdio->func->cur_blksize);
- 
-@@ -117,7 +122,13 @@ mt76s_rx_run_queue(struct mt76_dev *dev, enum mt76_rxq_id qid,
- 		return err;
- 	}
- 
--	end = buf + len;
-+	/* The next interrupt status follows the frames and a zero pad */
-+	if (sdio->rx_enhance && !get_unaligned((u32 *)(buf + data_len))) {
-+		memcpy(sdio->intr_next, buf + data_len + 4, sdio->intr_size);
-+		sdio->intr_pending = true;
-+	}
-+
-+	end = buf + data_len;
- 	i = 0;
- 
- 	while (i < intr->rx.num[qid] && buf < end) {
+What I measured:
 
--- 
-2.55.0
+- Before any change, "iw phy" on the AP reports VHT Capabilities
+  0x738f09fa, prints the Supported Channel Width as "(reserved)", and
+  shows "VHT extended NSS: not supported".
 
+- In the beacon I captured for the original patch, the VHT Operation
+  element has Channel Width 1 and CCFS1 0, and the 160 MHz centre is
+  in the HT Operation CCFS2 field.
+
+- Both clients report a 160 MHz link. On the AP side the peers were
+  set up as 11ax-he80 and the AP's transmit rate to them stayed at
+  80 MHz (MT7925 download about 810 Mb/s).
+
+- With the change described below, "iw phy" prints "160 MHz, 80+80
+  MHz" and still "VHT extended NSS: not supported". The AP then
+  transmits to both clients at 160 MHz HE-MCS 11, with unmodified
+  mac80211 and without my earlier patch.
+
+What I concluded from the code, without confirming every step on the
+device:
+
+1. My reading of 0x738f09fa is Supported Channel Width Set 2 with
+   Extended NSS BW Support 1. As I read Table 9-272, that combination
+   isn't defined, which would fit iw printing "reserved".
+   ath11k_create_vht_cap() copies the firmware's value unchanged.
+
+2. ath11k sets SUPPORTS_VHT_EXT_NSS_BW and
+   IEEE80211_VHT_EXT_NSS_BW_CAPABLE only when the firmware reports an
+   NSS ratio. "extended NSS: not supported" suggests this firmware
+   doesn't. I didn't print nss_ratio_enabled itself.
+
+3. hostapd_eid_vht_operation() moves the 160 MHz centre to CCFS2 when
+   the driver's capabilities include Extended NSS BW Support. That
+   would explain the beacon above. I didn't capture a beacon after the
+   change, so I'm assuming it now uses CCFS1 because the AP transmits
+   at 160 MHz.
+
+4. ieee80211_calc_ap_he_and_lower() reads only CCFS1, so the AP limits
+   every station to 80 MHz. Since the hardware doesn't claim extended
+   NSS support, this looks correct to me, and my patch was the wrong
+   fix.
+
+The change I tested clears IEEE80211_VHT_CAP_EXT_NSS_BW_MASK in
+ath11k_create_vht_cap() when the firmware gives no NSS ratio.
+
+Questions where I may still be wrong:
+
+- Is ath11k the right place for this? Or should mac80211 or hostapd
+  ignore Extended NSS BW Support in the capabilities when the driver
+  doesn't set SUPPORTS_VHT_EXT_NSS_BW?
+
+- I also tried applying CCFS2 per station (only for STAs that set
+  Extended NSS BW Capable). On this hardware it changed nothing: both
+  clients stayed at 80 MHz. As far as I can tell, that's because
+  mac80211 clears that bit for every station when the driver lacks
+  SUPPORTS_VHT_EXT_NSS_BW. On hardware that does support it, an AP
+  that signals 160 MHz through CCFS2 would still be limited to 80 MHz
+  by ieee80211_calc_ap_he_and_lower(). Is that expected, or is it
+  handled somewhere I missed?
+
+If the ath11k change looks right to you, I'll send it to the ath11k
+list. I can also capture the beacon after the change, or print the
+firmware's NSS ratio, if that would help.
+
+John
