@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793035499;
-	b=w5pmyyXNJ2r6lcV0HRD9TjEzXJLQ9QAFlSRxei3jEG38Mak28Hhiv0T1JyK8ytqAwTU9
-	 8Ncko9d6jdtTJuXtxhggoIW8A6BoCa0v9UXTew0MNRI3gU+RsE80hwBRnQyL1ITQOW770
-	 wXDVGJ5LQgJE/U+y7HSJEA/gejl4oH3dJBP2VcBXiJIOOb7RbFlXznlXVygDLH2bWQAB0
-	 TAMrDhnUk1e5AAiOuf5dzBvi5+pk6Y/ZUg4oebdhhIWIOcSrib/C/6nheYmevXIxXepYM
-	 qj5pP2vIpE//dmw+cLnXiALpLwy2bQ7RPTBgkHx/ifD7du4sIlg/EnjKaJbwvT1lneg==
+	t=1793035540;
+	b=3mnm3m3T5/wc6ypj7tqeBMaeSL7S3EzOLaJ/fCqrt362s8gfPbQ6lGmA/MumhhEX6Lcn
+	 E/4ilE7uAtezsAIxzpb5cU1rGX2o3gMLIQvYq+ZxTwBHTB1joYJnKXttJljPCiIlBhZrA
+	 hu9/PkV5Q10e4lE/Re7jLDiZvqXNtF2ybE91U8XnwVhBFAWIYmSDTc2vftsSJsBmvt8zP
+	 b21Ni/N/5ghCnJNly4a0LFNJrF28DBz4i3+BVWJ3MOUsZHpWOVdz4cIslRFjfyejmAJKo
+	 jDHwJ96IEjnGrLvOxSkI4kIslkuQaq2ynAzASTk3YzyV5F5WcX8aEqA4r5G7a2YSLPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793035499;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793035540;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=k6TWqe6a8TrmnSxPzfBWojZNqbAoIQPtwFE2RKyIVPo=;
-	b=U3hFpPNZ0yJsA9l0b2aRh5x+iV/5tZ3afO0umWT1FOBpvHp2icgzrh5O7WzQnY+IwI72
-	 ZpyW0VriIRh+dxSOezDOo11Ghhy/0XwutiCt8fhjj7kfhlxQDq69+PyOeigT70v1MDkjr
-	 gZYDg5lHITMB+Ffmh/zIL6NjK4pTvMELlh1IL0y3rmC4bouuo+o1GCrwKIyE/19P8W5jI
-	 JIjTCz2vmqtqfXO0wGBXhcAph9nL6OUWAFgkvgENdQ7xXE//cYPTGbOhQDjRMC/4uusqg
-	 eB/QLs3/uPyBuEtVdfRE4Uezhs8BUYkgEe0AnNwOKooNb+EjXRecF4NJxviKw+NxJng==
+	bh=vtU+kBzBPd6DlQELqlotiDLJ3HaHy3LtAxD3GeegWhs=;
+	b=fHa+j+exXn2Y3BeZ5QTEMcQzyDsuHPv8Oqkal4ElWJMUYVKv0tb0Ig63DotfCIDH9EBg
+	 CziMHu66gjY7iCBBMgdXIGPW4ab98QjFvmaA1dEM6hWqQwajPvc+L+AoZ3vOQPz35HnxY
+	 IXp4aJYUuv4cT8m9t5PTRoW31q3hE5tnMy++qI+VWMU/GHz9MvhyzLeOciT4L6b0+y9mg
+	 z1sWQZS9uq6O+CbKzxtZiXtZqFNVZrboxh4xEFaMbBBhQ9ojMZMIrVYU/3Qy3wPGWZb9J
+	 WbPKw9E4q4m2HwnyoScikzUKYuuGcpc+HMI5YoAjpiGvLfiE0mvg758WFm+8gpJqkZQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S0wpvMbb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bachbU0d;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1644E606A322;
-	Mon, 26 Oct 2026 17:24:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FEDB606A323;
+	Mon, 26 Oct 2026 17:25:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S0wpvMbb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFFCA1F01825;
-	Mon, 26 Oct 2026 17:24:55 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bachbU0d
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E75F71F01825;
+	Mon, 26 Oct 2026 17:25:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793035498;
-	bh=k6TWqe6a8TrmnSxPzfBWojZNqbAoIQPtwFE2RKyIVPo=;
+	s=k20260515; t=1793035540;
+	bh=vtU+kBzBPd6DlQELqlotiDLJ3HaHy3LtAxD3GeegWhs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=S0wpvMbbVmxyhuPDPxnibJKXyr98XwfGMMYyQCZgyII0zZsb/jkU+b0YClSZ9eLzn
-	 RdNJHWwEivyLczV3NKuj+MsGaYwfFqWF3coUXb7J9OGiHbWhPYsg9BLqiNL3Q7xNBw
-	 dIVrKldAHUJNEsp9z6eIlBoa75zuUlIZbi5imjb0bt27O3BIZ+GrZapOR/wDx49ZGA
-	 H1GJNim+Gw7Nm4XOJQuloa33dSxLqjELFiwMXItMUX2+Fp8LP1TpkkFG1oTU1r7P4/
-	 pzCCDVZ1gA1Tv1vqdr0PVOFOs743YmtM9sN4XGvjloi854i6azmpsNeWutnu7nHi/x
-	 lEkcvWdGSsyPA==
-Date: Mon, 26 Oct 2026 17:24:53 +0000
+	b=bachbU0dKGwcBYfW42KWyzvr8NDrZSvBhcmnOgwCtYFmnFjXJ6X0+FhrZkBztKbMJ
+	 wQ3Nc2YGmiV/XYHQgULEdGinAd9edH/fw2ICcIESbKiWC5QnCgOZe6/jQCZdaW3UZT
+	 rJEm5UuOzb+ey2m/sOKzGmOSsvlhO2Sz+0uLRCvYAqNPlKNryYvDg3Or2UYJHh+zUi
+	 4cAoK9xZWf3sxeWch3e+H0aueN8TcrnkoQgxh2XsJteKdwYGxBfeEZ5X9jq4+8bPUo
+	 h/wxuGYbHhJ2KGcGCEeDjUcgShKUKE9oE34HweBWNHYj91p+PPxfL44szG2+KAX/yd
+	 HM8qBOExM7Wog==
+Date: Mon, 26 Oct 2026 17:25:34 +0000
 From: Simon Horman <horms@kernel.org>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
@@ -55,11 +55,10 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>,
 	Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
 	Jeff Hugo <jeff.hugo@oss.qualcomm.com>
-Subject: Re: [PATCH v4 1/4] net: qrtr: Allow the host QRTR to assign a unique
- node id
-Message-ID: <20261026172453.GH257209@horms.kernel.org>
+Subject: Re: [PATCH v4 2/4] net: qrtr: Assign unique node id for MHI endpoints
+Message-ID: <20261026172534.GI257209@horms.kernel.org>
 References: <20261022-qrtr-multi-ep-v4-0-c6fdb75fcd3e@oss.qualcomm.com>
- <20261022-qrtr-multi-ep-v4-1-c6fdb75fcd3e@oss.qualcomm.com>
+ <20261022-qrtr-multi-ep-v4-2-c6fdb75fcd3e@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -71,46 +70,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261022-qrtr-multi-ep-v4-1-c6fdb75fcd3e@oss.qualcomm.com>
+In-Reply-To: <20261022-qrtr-multi-ep-v4-2-c6fdb75fcd3e@oss.qualcomm.com>
 
-On Thu, Oct 22, 2026 at 07:43:07PM +0200, Manivannan Sadhasivam wrote:
-> Currently, QRTR identifies each remote node by the value of the
-> 'src_node_id' field in the received packet and uses the node id as the key
-> to store the node to the internal 'qrtr_nodes' radix tree.
+On Thu, Oct 22, 2026 at 07:43:08PM +0200, Manivannan Sadhasivam wrote:
+> Now that the QRTR driver allows using the unique node id for each device,
+> which is different from the node id received from the remote node, compute
+> a unique node id using a new API, qrtr_host_node_id().
 > 
-> But this approach comes with a limitation. When more than one remote node
-> share the same id, then QRTR can only add the first node to the radix tree
-> and has to drop the successive nodes with the same node id as the 'key' in
-> radix tree has to be unique. This prevents connecting identical Qcom PCIe
-> WLAN devices to a single host at the same time.
+> This API takes the 'index' parameter and adds it to QRTR_NODE_HOST_BASE.
+> The base is chosen well above the node ids in use by the remote nodes, so
+> that the host assigned ids never collide with the pre-existing ones.
 > 
-> To fix this limitation, allow the host QRTR to use the node id (nid)
-> received from the endpoint driver during qrtr_endpoint_register() as the
-> unique node id and use it as the 'key' for the internal radix tree. Also,
-> store the received 'src_id' in a new 'qrtr_node->ep_nid' field and replace
-> the 'ep_nid' with the unique 'nid' in the QRTR control packets if both
-> differ i.e., an endpoint driver has passed a unique 'nid' during
-> qrtr_endpoint_register(). To maintain symmetry, replace the 'nid' with the
-> 'ep_nid' while sending the packet back to the remote node if both differ.
+> Since the ids at and above the base now belong to the host, reject any
+> packet carrying one as the source node id or as the node id of an
+> announced server in qrtr_endpoint_post().
 > 
-> A node can also bridge other distant nodes, so the source id of an
-> incoming packet is not always the id the endpoint advertises for itself.
-> Keep adding such ids to the radix tree as additional keys for the same
-> node, as it was done before this change. Otherwise the bridged nodes would
-> lose their route and qrtr_sendmsg() would start failing with -ECONNRESET
-> for them.
-> 
-> Currently, all QRTR endpoint drivers pass 'QRTR_EP_NID_AUTO' as the 'nid'
-> during qrtr_endpoint_register(). So 'ep_nid' and 'nid' are same and the
-> routing behavior is not changed.
-> 
-> Finally, since qrtr_node_rewrite_ctrl() dereferences the control packet for
-> DEL_SERVER and DEL_CLIENT as well, extend the existing length check in
-> qrtr_endpoint_post() to cover both types.
+> Finally, call the new API from MHI endpoint driver by passing the MHI
+> controller index as the parameter. The MHI controller index is unique for
+> each controller, thereby for each MHI endpoint device.
 > 
 > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
->  net/qrtr/af_qrtr.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++-------
+>  MAINTAINERS        |  1 +
+>  include/net/qrtr.h | 22 ++++++++++++++++++++++
+>  net/qrtr/af_qrtr.c |  9 +++++++++
+>  net/qrtr/mhi.c     |  4 +++-
+>  4 files changed, 35 insertions(+), 1 deletion(-)
 
 Reviewed-by: Simon Horman <horms@kernel.org>
 
