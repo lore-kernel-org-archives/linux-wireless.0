@@ -1,123 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.142
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.118
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793081044;
-	b=blx9/YLwcB/8LLGF+So9wi/jPG6TXH1KCbUugF7andtmqbzBclgVjHp6RS8tprrMkiiI
-	 g0Mb4DDBePXaAT+YHHiZQ01sdib7vMt7Sd0b8bkrSQKcHQo9AaP/I9bezzeF3mioeVpt5
-	 /EtIKYeOWrFpwYBYlS5+Vrmx/vJObzU42ZsYjqZruGaD36WkIzPcnZWDiZ1qUKR/SlT8m
-	 MVJANEnZOMepHHxAktyE7pyzGmEypuX2W+qJ1hPgGsges7xHScpl3m75pTYXodbckrcLM
-	 EXXqkouVMaGESpcwuOwGkCYKAD8EWvEQOwNcGPH2PJCErGs3cmaT2vYsTwv4AqPiZBg==
+	t=1793084238;
+	b=S9BUUwEFEAJINzQcfpTAWA4DAiBw6lv4by6j1CiMS9tbAbEUsN/tsWZHCHFTsgKsVMls
+	 quW/oj8RcZvYjqh+DomCp5IBsYswomA47urPZF77x94Pxr7DlAKMcrs1TAdsOd7KeQZek
+	 rKWOCJEIY5S+EQ5ZwlAQD7GGRE0qJuYGlpTp7cuOJfc93b/dYV/VoBj5MLJ6AsYBJd1o1
+	 +MlPeY2WpnLeGFNvpNtS4r+W4Ru867kBntayb7ilr2RLPUkS69g9S9q40oRDdmtcMJW1T
+	 LcVSrChqUQDeBCwW938YARaYNHtfvxrd5mkrj410/p+zATJ7SdM0zYd3VrxvgvEV8Pg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793081044;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=t4OoGf5gHVzRGe+YIjw2VuUWKRz8U6K0v5JtauIuYFg=;
-	b=oQm+PWQhcTsBuh1Bd9LWp3n4VtQk7BMtM6o0fy8hN4e1V0Hml4c9psf8kKB/nukyVdTt
-	 wYe7NQtkdT9x1rNinHAr7/5cOD2Tr2p+WaktV5wmXiw3jyXZKewImmp/oJinSB+7KipYz
-	 Cs8pjgZ40dU33UsUz8L1gjJZoLJyrQra8FcQHgBKsPg2QVztnv1M7I7LDAliIccHZQ9/O
-	 HX+fuZZ1sUmxMJALwm09HZoSTXID9V801v4njJDHeCpCupiObVTgTNklNHctxIRR7PZZA
-	 3TFKjfRTm/4Pxn++zBLM+jRN/lGAf+tLz+NCaW/41WLl2MvkrHnvGiVSqGUdBydu7wg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793084238;
+	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
+	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=LA6/4oRw8oW3ydQUfPkALhXAmnLtjkboCEAbPO7HiuM=;
+	b=lwUJv0UH3Nr1PH6Rt1QI3giR1CCj5QSnBPNP9oFfkobGxBJzVu90Mwr0grnHzMm5YAXf
+	 bvqT2fYz+E36QQNYsyswJGXvqe5jNHEghUSoHPidid6+HMvCTRqzFqV8JAopEimqyS0s/
+	 4HQWnuqwZw2VpE+fhl3uAzwVdiy/aikVtMIEX81YO9hIIhXY5zfZHN9LGrOmI2jfdY6B9
+	 0Bv30yBBmJLy1LaS3CsNAwkspo36z5FHNyIVnhCpqgFcO30dVWzIP5jvUHI1J5kaCzFvZ
+	 7691ruozeK1c6JZnhHyuUPDKQRFUg6NCktdc8tlgeISsjmxPm3fbopdGY9YfO0PzOtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=kroah.com;
-	spf=pass smtp.mailfrom=kroah.com;
-	dkim=pass header.d=kroah.com header.i=@kroah.com header.a=rsa-sha256 header.s=fm2 header.b=pBmbRuK+;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=IlFiGdCd;
-	arc=none smtp.remote-ip=103.168.172.142
-Received: from flow-a7-smtp.messagingengine.com (flow-a7-smtp.messagingengine.com [103.168.172.142])
+	dmarc=pass header.from=jaeyeong.cc;
+	spf=pass smtp.mailfrom=jaeyeong.cc;
+	dkim=pass header.d=jaeyeong.cc header.i=@jaeyeong.cc header.a=rsa-sha256 header.s=protonmail2 header.b=MJflDaJl;
+	arc=none smtp.remote-ip=109.224.244.118
+Received: from mail-244118.protonmail.ch (mail-244118.protonmail.ch [109.224.244.118])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF829606A31A
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 06:04:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF829606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30C59606A322;
+	Tue, 27 Oct 2026 06:57:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30C59606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jaeyeong.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jaeyeong.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kroah.com header.i=@kroah.com header.a=rsa-sha256 header.s=fm2 header.b=pBmbRuK+;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=IlFiGdCd
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailflow.phl.internal (Postfix) with ESMTP id 0A029138035B
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 02:04:03 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Tue, 27 Oct 2026 02:04:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm2; t=1793081042; x=1793088242; bh=t4OoGf5gHV
-	zRGe+YIjw2VuUWKRz8U6K0v5JtauIuYFg=; b=pBmbRuK+RpEV9BFZTEEED1+xQn
-	QxhzwuWaStp0492F1sZlJfdb5JrjYSCV+2NYVAHtlzBHez2rPZGHA5hVzwPIReU0
-	PBLDTVnFMvFnxG1AZV9TRR631wBSiqcqUraFNCcatQe9H7+KVdS43vEmJH/IjCmZ
-	segcD9NSUwmMGgDgk0RzIRq1Us9+nZTxJ0pFEN1sxF7h3bL+Bw1xd8n/uaYXPqT9
-	omVT04BOGkvrKu/VnhPQ53HphPOrrlfa05snlpXQQp269jbsx/ijs+qitlvwPu6v
-	F2n5RJVA4zJ0ZAEuGcZEt+cqQuYI7ADvrfw/g+X2wZ5uWhG6ftAzAbq5zRbg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1793081042; x=1793088242; bh=t4OoGf5gHVzRGe+YIjw2VuUWKRz8U6K0v5J
-	tauIuYFg=; b=IlFiGdCdCTlmZWowaWNwwI5su5BcJsv/nw1U199AnPalMMXClCC
-	JvQIFOWvHlwMeYSvzJeOZZNcO6ZOGMDS25kTmYL800KodK7FH7fXwEuIT+uX4V7U
-	rVAQJ1AI5ksxoeIKCUgIxYxR8UJl8LQcz+oKvB4Es9pUur6G/j4u+wGDaQ1FW4kf
-	EiGZ3QNVlV2cyobajY0wEQB0cShOsgRHkbLUcui1oCyGlZ1g69kIaweh5EMX1/31
-	GdcCyGXRf59NPD098Nf3wePdwDKNi7p632hU9F/LXKuawSkV58au96Lo6rjtFo5f
-	AGh6URukYmKewPtpVJ3Nkg5aikN4j5BEOeQ==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
-	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
-	action=sign d=kroah.com a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1793081042; d=kroah.com;
-	mf=PGdyZWdAa3JvYWguY29tPg==;
-	rt=PGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4=;
-	s=fm2:rsa-sha256:Uk3SGaOykFowYUzWDSIg0B7gsFlOlWaUTEOzW+kbwY/cjEy
-	Bbbe+iPCp/zJqc2Aig6qPNHDNs0VLTiGQJJfMtxMgprDPSD555Z9zw11zYunn+aG
-	5dc6eWC2AEA5zioQVbhGUO7jIbLQJskoYi+zynogQ63sqYPLbpxcvJmcQnpCDObd
-	SbT2CJnhK9mrauauvrZhyZnbb2W4uJ1PwmkVJSU3qlLM8eb4CpQoow5134xYLZa0
-	1zOTsxsF6wduh/0YLQ3AT1RTno161AaKMyxjUhk1wt44hZh4VHiWwS8FvGOSS33i
-	Rzxmu/hHA3Hd4bDq1hdyPDSzhpxv2takD+Vsbvw==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
-	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-disposition,content-type,date,feedback-id,from,
-	in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:zoLwu0ba4hLP136iUKXuQNMXsdfdA3aYEIrrMD0JcHQ=:0fCBaab8hkFDDaJ/Ih1bLvqwAABT2NnP0tQ4AAZGSwY=;
-X-ME-Sender: <xms:0j7gampYv-Qepawltb_5zxAQ7r1uchBwfZZimwmO733hKQn8Cbz_mQ>
-    <xme:0j7gamToaNKCO405c8j4qnNn8oDC9GcI-bmt-9T68gkY2hk1SFn2qmEzyCKYevmlZ
-    B57DUNMtjkDDojoSiv0dO8sbVIz2ttKdhs0T9HRTjl-WiQEqg>
-X-ME-Received: <xmr:0j7gavSvZjItNm52khlx_AHH4858akhyDGWcKxwdSjhzRE-p8KbOwE2JDov5Gs8y6phc24nFABEsjebIymvUVEGZBPD73h9Tp26QQ698qbc>
-X-ME-Proxy-Cause: dmFkZTFX46FHV+PvV6KGDcfkleNK34N2X9H1Al5LrxAe53ONFm9S0IjeeWDzhKxG8Shv+2
-    2Sn379VUd+VqaQMqSNIr0RXE0+SOVRfM/Gx63Qebrl2PemtKwduXbWRECrBTGBGfJrULBQ
-    YffivZZeuaqa6DZI7pcpaDtiOVdw5kIrTCL6r+s1lX0EQtvi5KXdkVtZXgpLmiCeQhkyo5
-    0RBDkNxGhRvHg45S2izMhkaFcV0863KLldUCedNcqH3+jgrZBCN9SeN2y6dCFRcMN42C1t
-    u00FOS5PhnGCWh3LVzWtg7Y9UnqD1Eeh27e8Hg6l3YKmlHNF7H1Kh+vihbmSX9fAbHYDo0
-    vqvwH4vETUN8Zr4DxgJ4QOvXhjERnzK77P9A+IdCgjx+wiWLtKkc6LZFFD5Bs6Z1sqZuVz
-    ckKV1E0wb9arx8YX8MtEsQsRkZeuM118FdGNbvrDBaRqe0x0rhL+VYYeX+8ZFBGdMjUawJ
-    tKIyqkzcz7czfyfY6rW9sNJyuz8PObfbf9f+DG/Wm/50xB7NDGRNqMS0hrstNZ3Z4TQGvn
-    In1zUasPgunc5Wwdo3htDug2OGygn9eWE+LyMfxwElu7DqFy//jpxmpCS/DqHVPA/Mtm6Q
-    rFKbHh41mZeRGHIV2EfmG7gi/NY8DRdJ/daoTWFCIqbRlpCr+MY0uSnnyS8A
-X-ME-Proxy: <xmx:0j7gasXJz0oNMX2i5_bjE9RmmTYq1qyKsyja06RKL9Hq3lr_R_tPSQ>
-    <xmx:0j7gak2DVi_NcPVHQg6hlEYpymXWNP0b7tuqiwndvmNWu3vC3cUm_g>
-    <xmx:0j7gaj8JGrWmpkvDmF71-9Qhk9DLNlB9oR-l6Rg1izzFGDRuZ_9BHw>
-    <xmx:0j7gaqeapAAVpdYV6w0VCFpM8W2Hnjk4hM-u81q3-PiIB6n2GiqYyg>
-    <xmx:0j7gahODWA6oPkTa3xcC561pcBpZh3fFk_WjMo6To3dGYrlK1o2PazpU>
-Feedback-ID: i787e41f1:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 27 Oct 2026 02:04:01 -0400 (EDT)
-Date: Tue, 27 Oct 2026 07:04:00 +0100
-From: Greg KH <greg@kroah.com>
-To: Tristan Madani <tristmd@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Stanislaw Gruszka <stf_xl@wp.pl>, Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Kees Cook <kees@kernel.org>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	tristan@talencesecurity.com
-Subject: Re: [PATCH v2 wireless 0/3] wifi: replace open-coded IE searches
- with cfg80211_find_ie()
-Message-ID: <2026102756-geometric-swept-9e61@gregkh>
-References: <20261026223153.2087218-1-tristan@talencesecurity.com>
+	dkim=pass (2048-bit key, unprotected) header.d=jaeyeong.cc header.i=@jaeyeong.cc header.a=rsa-sha256 header.s=protonmail2 header.b=MJflDaJl
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jaeyeong.cc;
+	s=protonmail2; t=1793084233; x=1793343433;
+	bh=LA6/4oRw8oW3ydQUfPkALhXAmnLtjkboCEAbPO7HiuM=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=MJflDaJljxkWNzxZaN2k63BkUdYnF0HSlOVgzh77W51H1DV6kP7CcBKuEebHfznOR
+	 4+1RVcsbSp6m5toOwKPLJh7HcSeNd569RDNZcGHXOpuekBRWkaQk7HptZRqW9DB0oQ
+	 wcfbaS3EEIE2P1DN83qX6dVUxvAL2ZKqnj+eKrEaFpaC1ND2Ib+x7VKcNMRIFoxaDu
+	 pZPOjC5mo4qZqy7iFx11aYUZWngkb+3cJ43S/T11gzKP/QPXjxy1vQlfa67Tvmr2Eu
+	 h0lx+ByUXpBnW0lmr2x3apH6lLPPuz++WxCs/RDxmqnaMGUwM5qDf6dmtjcdHA69PT
+	 I+Ww+sAZTam1Q==
+Date: Tue, 27 Oct 2026 06:57:07 +0000
+To: Brian Norris <briannorris@chromium.org>, Francesco Dolcini <francesco@dolcini.it>
+From: Jaeyeong Lee <lee@jaeyeong.cc>
+Cc: Jeff Chen <jeff.chen_1@nxp.com>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Jaeyeong Lee <lee@jaeyeong.cc>, stable@vger.kernel.org
+Subject: [PATCH] wifi: mwifiex: serialize synchronous command buffer access
+Message-ID: <20261027065700.918360-1-lee@jaeyeong.cc>
+Feedback-ID: 177356447:user:proton
+X-Pm-Message-ID: 25e874ea2cb111f1d31322a2e1152856e3d2a4cd
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -127,43 +61,359 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261026223153.2087218-1-tristan@talencesecurity.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 26, 2026 at 10:31:52PM +0000, Tristan Madani wrote:
-> Three wireless drivers (carl9170, rt2x00, p54) each hand-roll their own
-> TIM IE search function.  Replace them with cfg80211_find_ie(), which
-> already provides a correct and well-tested IE search.
-> 
-> Changes in v2:
->   - Replace the entire open-coded functions with cfg80211_find_ie()
->     instead of only tightening the loop condition, per Johannes Berg.
->   - Add pre-subtraction length guards in p54 to prevent unsigned
->     underflow on truncated beacon frames.
-> 
-> Tristan Madani (3):
->   wifi: carl9170: replace open-coded IE search with cfg80211_find_ie()
->   wifi: rt2x00: replace open-coded IE search with cfg80211_find_ie()
->   wifi: p54: replace open-coded IE search with cfg80211_find_ie()
-> 
->  drivers/net/wireless/ath/carl9170/rx.c        | 27 ++++-------------
->  drivers/net/wireless/intersil/p54/lmac.h      |  3 --
->  drivers/net/wireless/intersil/p54/main.c      | 30 +++++--------------
->  drivers/net/wireless/intersil/p54/txrx.c      | 12 ++++++--
->  .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 30 +++++--------------
->  5 files changed, 29 insertions(+), 73 deletions(-)
-> 
-> -- 
-> 2.47.3
-> 
-> 
+Commit ef06882c7d8a ("wifi: mwifiex: Detach sync cmd buffer on
+interrupted wait") clears a synchronous command data_buf after an
+interrupted or timed-out wait. The response side does not hold
+mwifiex_cmd_lock while using that pointer, however. It can cache
+data_buf before the clear, then write to the caller stack after the
+waiter returns. If the clear wins, three response handlers instead
+dereference NULL.
 
-<formletter>
+The normal cfg80211 path is affected. An unprivileged
+NL80211_CMD_GET_INTERFACE request on a connected HT interface reaches
+get_channel, which passes a stack channel_band to a synchronous
+STA_CONFIGURE command. Its response writes through data_buf. Raw host
+commands have the same check/use window.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
+Move the detach into mwifiex_cancel_all_pending_cmd() while
+mwifiex_cmd_lock is held and before completing the command. Dispatch
+only the short, non-sleeping response handlers that copy to data_buf
+under the same lock through their final write. Protect the VERSION_EXT
+copy separately because its other branch queues a command. Serialize
+the raw host-command copy as well, and let the three unconditional
+handlers discard a detached buffer.
 
-</formletter>
+If cancellation wins the lock, a later response observes NULL. If the
+response wins it, cancellation cannot wake the buffer owner until
+copyout has completed.
+
+Compile-tested with LLVM 22.1.8 and W=3D1. Runtime testing was not possible
+because no supported mwifiex hardware was available.
+
+Fixes: 3d026d09b28d ("mwifiex: cancel pending commands for signal")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jaeyeong Lee <lee@jaeyeong.cc>
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c |   8 ++
+ .../wireless/marvell/mwifiex/sta_cmdresp.c    | 119 ++++++++++++------
+ .../net/wireless/marvell/mwifiex/sta_ioctl.c  |  12 --
+ 3 files changed, 89 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wi=
+reless/marvell/mwifiex/cmdevt.c
+index 6e04d7da6217..bf462dd17c52 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -838,11 +838,14 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *a=
+dapter)
+ =09=09mwifiex_dbg(adapter, INFO,
+ =09=09=09    "info: host cmd resp size =3D %d\n", size);
+ =09=09size =3D min_t(u16, size, MWIFIEX_SIZE_OF_CMD_BUFFER);
++=09=09/* Serialize against cancellation of the caller-owned buffer. */
++=09=09spin_lock_bh(&adapter->mwifiex_cmd_lock);
+ =09=09if (adapter->curr_cmd->data_buf) {
+ =09=09=09hostcmd =3D adapter->curr_cmd->data_buf;
+ =09=09=09hostcmd->len =3D size;
+ =09=09=09memcpy(hostcmd->cmd, resp, size);
+ =09=09}
++=09=09spin_unlock_bh(&adapter->mwifiex_cmd_lock);
+ =09}
+=20
+ =09/* Get BSS number and corresponding priv */
+@@ -1050,6 +1053,8 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter=
+ *adapter)
+ =09spin_lock_bh(&adapter->mwifiex_cmd_lock);
+ =09/* Cancel current cmd */
+ =09if ((adapter->curr_cmd) && (adapter->curr_cmd->wait_q_enabled)) {
++=09=09/* Do not wake the owner while a response can still use its data. */
++=09=09adapter->curr_cmd->data_buf =3D NULL;
+ =09=09adapter->cmd_wait_q.status =3D -1;
+ =09=09mwifiex_complete_cmd(adapter, adapter->curr_cmd);
+ =09=09adapter->curr_cmd->wait_q_enabled =3D false;
+@@ -1702,6 +1707,9 @@ int mwifiex_ret_wakeup_reason(struct mwifiex_private =
+*priv,
+ =09=09=09      struct host_cmd_ds_command *resp,
+ =09=09=09      struct host_cmd_ds_wakeup_reason *wakeup_reason)
+ {
++=09if (!wakeup_reason)
++=09=09return 0;
++
+ =09wakeup_reason->wakeup_reason =3D
+ =09=09resp->params.hs_wakeup_reason.wakeup_reason;
+=20
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/n=
+et/wireless/marvell/mwifiex/sta_cmdresp.c
+index 85512f526c5f..e59f52e97d7c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -691,12 +691,14 @@ static int mwifiex_ret_802_11d_domain_info(struct mwi=
+fiex_private *priv,
+  * to application.
+  */
+ static int mwifiex_ret_ver_ext(struct mwifiex_private *priv,
+-=09=09=09       struct host_cmd_ds_command *resp,
+-=09=09=09       struct host_cmd_ds_version_ext *version_ext)
++=09=09=09       struct host_cmd_ds_command *resp)
+ {
++=09struct mwifiex_adapter *adapter =3D priv->adapter;
+ =09struct host_cmd_ds_version_ext *ver_ext =3D &resp->params.verext;
++=09struct host_cmd_ds_version_ext *version_ext =3D NULL;
+=20
+-=09if (test_and_clear_bit(MWIFIEX_IS_REQUESTING_FW_VEREXT, &priv->adapter-=
+>work_flags)) {
++=09if (test_and_clear_bit(MWIFIEX_IS_REQUESTING_FW_VEREXT,
++=09=09=09       &adapter->work_flags)) {
+ =09=09if (strncmp(ver_ext->version_str, "ChipRev:20, BB:9b(10.00), RF:40(2=
+1)",
+ =09=09=09    MWIFIEX_VERSION_STR_LENGTH) =3D=3D 0) {
+ =09=09=09struct mwifiex_ds_auto_ds auto_ds =3D {
+@@ -716,6 +718,9 @@ static int mwifiex_ret_ver_ext(struct mwifiex_private *=
+priv,
+ =09=09return 0;
+ =09}
+=20
++=09spin_lock_bh(&adapter->mwifiex_cmd_lock);
++=09if (adapter->curr_cmd)
++=09=09version_ext =3D adapter->curr_cmd->data_buf;
+ =09if (version_ext) {
+ =09=09version_ext->version_str_sel =3D ver_ext->version_str_sel;
+ =09=09memcpy(version_ext->version_str, ver_ext->version_str,
+@@ -726,6 +731,8 @@ static int mwifiex_ret_ver_ext(struct mwifiex_private *=
+priv,
+ =09=09/* Ensure the version string from the firmware is 0-terminated */
+ =09=09priv->version_str[MWIFIEX_VERSION_STR_LENGTH - 1] =3D '\0';
+ =09}
++=09spin_unlock_bh(&adapter->mwifiex_cmd_lock);
++
+ =09return 0;
+ }
+=20
+@@ -1024,6 +1031,9 @@ static int mwifiex_ret_robust_coex(struct mwifiex_pri=
+vate *priv,
+ =09u16 action =3D le16_to_cpu(coex->action);
+ =09u32 mode;
+=20
++=09if (!is_timeshare)
++=09=09return 0;
++
+ =09coex_tlv =3D (struct mwifiex_ie_types_robust_coex
+ =09=09    *)((u8 *)coex + sizeof(struct host_cmd_ds_robust_coex));
+ =09if (action =3D=3D HostCmd_ACT_GEN_GET) {
+@@ -1194,6 +1204,9 @@ static int mwifiex_ret_get_chan_info(struct mwifiex_p=
+rivate *priv,
+ =09struct host_cmd_ds_sta_configure *sta_cfg_cmd =3D &resp->params.sta_cfg=
+;
+ =09struct host_cmd_tlv_channel_band *tlv_band_channel;
+=20
++=09if (!channel_band)
++=09=09return 0;
++
+ =09tlv_band_channel =3D
+ =09(struct host_cmd_tlv_channel_band *)sta_cfg_cmd->tlv_buffer;
+ =09memcpy(&channel_band->band_config, &tlv_band_channel->band_config,
+@@ -1203,6 +1216,54 @@ static int mwifiex_ret_get_chan_info(struct mwifiex_=
+private *priv,
+ =09return 0;
+ }
+=20
++static bool
++mwifiex_process_sta_cmdresp_data_buf(struct mwifiex_private *priv,
++=09=09=09=09     u16 cmdresp_no,
++=09=09=09=09     struct host_cmd_ds_command *resp,
++=09=09=09=09     void *data_buf, int *ret)
++{
++=09lockdep_assert_held(&priv->adapter->mwifiex_cmd_lock);
++
++=09switch (cmdresp_no) {
++=09case HostCmd_CMD_802_11_PS_MODE_ENH:
++=09=09*ret =3D mwifiex_ret_enh_power_mode(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_802_11_GET_LOG:
++=09=09*ret =3D mwifiex_ret_get_log(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_802_11_SNMP_MIB:
++=09=09*ret =3D mwifiex_ret_802_11_snmp_mib(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_REMAIN_ON_CHAN:
++=09=09*ret =3D mwifiex_ret_remain_on_chan(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_P2P_MODE_CFG:
++=09=09*ret =3D mwifiex_ret_p2p_mode_cfg(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_MAC_REG_ACCESS:
++=09case HostCmd_CMD_BBP_REG_ACCESS:
++=09case HostCmd_CMD_RF_REG_ACCESS:
++=09case HostCmd_CMD_PMIC_REG_ACCESS:
++=09case HostCmd_CMD_CAU_REG_ACCESS:
++=09case HostCmd_CMD_802_11_EEPROM_ACCESS:
++=09=09*ret =3D mwifiex_ret_reg_access(cmdresp_no, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_HS_WAKEUP_REASON:
++=09=09*ret =3D mwifiex_ret_wakeup_reason(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_ROBUST_COEX:
++=09=09*ret =3D mwifiex_ret_robust_coex(priv, resp, data_buf);
++=09=09break;
++=09case HostCmd_CMD_STA_CONFIGURE:
++=09=09*ret =3D mwifiex_ret_get_chan_info(priv, resp, data_buf);
++=09=09break;
++=09default:
++=09=09return false;
++=09}
++
++=09return true;
++}
++
+ /*
+  * This function handles the command responses.
+  *
+@@ -1214,13 +1275,27 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_priv=
+ate *priv, u16 cmdresp_no,
+ {
+ =09int ret =3D 0;
+ =09struct mwifiex_adapter *adapter =3D priv->adapter;
+-=09void *data_buf =3D adapter->curr_cmd->data_buf;
++=09void *data_buf;
+=20
+ =09/* If the command is not successful, cleanup and return failure */
+ =09if (resp->result !=3D HostCmd_RESULT_OK) {
+ =09=09mwifiex_process_cmdresp_error(priv, resp);
+ =09=09return -1;
+ =09}
++
++=09/*
++=09 * Cancellation clears data_buf and wakes its owner under this lock.
++=09 * Keep it held through copyout so the owner cannot release the buffer.
++=09 */
++=09spin_lock_bh(&adapter->mwifiex_cmd_lock);
++=09data_buf =3D adapter->curr_cmd ? adapter->curr_cmd->data_buf : NULL;
++=09if (mwifiex_process_sta_cmdresp_data_buf(priv, cmdresp_no, resp,
++=09=09=09=09=09=09 data_buf, &ret)) {
++=09=09spin_unlock_bh(&adapter->mwifiex_cmd_lock);
++=09=09return ret;
++=09}
++=09spin_unlock_bh(&adapter->mwifiex_cmd_lock);
++
+ =09/* Command successful, handle response */
+ =09switch (cmdresp_no) {
+ =09case HostCmd_CMD_GET_HW_SPEC:
+@@ -1265,9 +1340,6 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_privat=
+e *priv, u16 cmdresp_no,
+ =09case HostCmd_CMD_RF_ANTENNA:
+ =09=09ret =3D mwifiex_ret_rf_antenna(priv, resp);
+ =09=09break;
+-=09case HostCmd_CMD_802_11_PS_MODE_ENH:
+-=09=09ret =3D mwifiex_ret_enh_power_mode(priv, resp, data_buf);
+-=09=09break;
+ =09case HostCmd_CMD_802_11_HS_CFG_ENH:
+ =09=09ret =3D mwifiex_ret_802_11_hs_cfg(priv, resp);
+ =09=09break;
+@@ -1284,32 +1356,20 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_priv=
+ate *priv, u16 cmdresp_no,
+ =09case HostCmd_CMD_802_11_AD_HOC_STOP:
+ =09=09ret =3D mwifiex_ret_802_11_ad_hoc_stop(priv, resp);
+ =09=09break;
+-=09case HostCmd_CMD_802_11_GET_LOG:
+-=09=09ret =3D mwifiex_ret_get_log(priv, resp, data_buf);
+-=09=09break;
+ =09case HostCmd_CMD_RSSI_INFO:
+ =09=09ret =3D mwifiex_ret_802_11_rssi_info(priv, resp);
+ =09=09break;
+-=09case HostCmd_CMD_802_11_SNMP_MIB:
+-=09=09ret =3D mwifiex_ret_802_11_snmp_mib(priv, resp, data_buf);
+-=09=09break;
+ =09case HostCmd_CMD_802_11_TX_RATE_QUERY:
+ =09=09ret =3D mwifiex_ret_802_11_tx_rate_query(priv, resp);
+ =09=09break;
+ =09case HostCmd_CMD_VERSION_EXT:
+-=09=09ret =3D mwifiex_ret_ver_ext(priv, resp, data_buf);
+-=09=09break;
+-=09case HostCmd_CMD_REMAIN_ON_CHAN:
+-=09=09ret =3D mwifiex_ret_remain_on_chan(priv, resp, data_buf);
++=09=09ret =3D mwifiex_ret_ver_ext(priv, resp);
+ =09=09break;
+ =09case HostCmd_CMD_11AC_CFG:
+ =09=09break;
+ =09case HostCmd_CMD_PACKET_AGGR_CTRL:
+ =09=09ret =3D mwifiex_ret_pkt_aggr_ctrl(priv, resp);
+ =09=09break;
+-=09case HostCmd_CMD_P2P_MODE_CFG:
+-=09=09ret =3D mwifiex_ret_p2p_mode_cfg(priv, resp, data_buf);
+-=09=09break;
+ =09case HostCmd_CMD_MGMT_FRAME_REG:
+ =09case HostCmd_CMD_FUNC_INIT:
+ =09case HostCmd_CMD_FUNC_SHUTDOWN:
+@@ -1363,15 +1423,7 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_priva=
+te *priv, u16 cmdresp_no,
+ =09=09ret =3D mwifiex_ret_ibss_coalescing_status(priv, resp);
+ =09=09break;
+ =09case HostCmd_CMD_MEM_ACCESS:
+-=09=09ret =3D mwifiex_ret_mem_access(priv, resp, data_buf);
+-=09=09break;
+-=09case HostCmd_CMD_MAC_REG_ACCESS:
+-=09case HostCmd_CMD_BBP_REG_ACCESS:
+-=09case HostCmd_CMD_RF_REG_ACCESS:
+-=09case HostCmd_CMD_PMIC_REG_ACCESS:
+-=09case HostCmd_CMD_CAU_REG_ACCESS:
+-=09case HostCmd_CMD_802_11_EEPROM_ACCESS:
+-=09=09ret =3D mwifiex_ret_reg_access(cmdresp_no, resp, data_buf);
++=09=09ret =3D mwifiex_ret_mem_access(priv, resp, NULL);
+ =09=09break;
+ =09case HostCmd_CMD_SET_BSS_MODE:
+ =09=09break;
+@@ -1416,22 +1468,13 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_priv=
+ate *priv, u16 cmdresp_no,
+ =09case HostCmd_CMD_SDIO_SP_RX_AGGR_CFG:
+ =09=09ret =3D mwifiex_ret_sdio_rx_aggr_cfg(priv, resp);
+ =09=09break;
+-=09case HostCmd_CMD_HS_WAKEUP_REASON:
+-=09=09ret =3D mwifiex_ret_wakeup_reason(priv, resp, data_buf);
+-=09=09break;
+ =09case HostCmd_CMD_TDLS_CONFIG:
+ =09=09break;
+-=09case HostCmd_CMD_ROBUST_COEX:
+-=09=09ret =3D mwifiex_ret_robust_coex(priv, resp, data_buf);
+-=09=09break;
+ =09case HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG:
+ =09=09break;
+ =09case HostCmd_CMD_CHAN_REGION_CFG:
+ =09=09ret =3D mwifiex_ret_chan_region_cfg(priv, resp);
+ =09=09break;
+-=09case HostCmd_CMD_STA_CONFIGURE:
+-=09=09ret =3D mwifiex_ret_get_chan_info(priv, resp, data_buf);
+-=09=09break;
+ =09default:
+ =09=09mwifiex_dbg(adapter, ERROR,
+ =09=09=09    "CMD_RESP: unknown cmd response %#x\n",
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net=
+/wireless/marvell/mwifiex/sta_ioctl.c
+index 1d3874734851..51cdaecca2a2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -57,18 +57,6 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *=
+adapter,
+ =09=09mwifiex_dbg(adapter, ERROR, "cmd_wait_q terminated: %d\n",
+ =09=09=09    status);
+ =09=09mwifiex_cancel_all_pending_cmd(adapter);
+-
+-=09=09/* The command response path writes through cmd_node->data_buf.
+-=09=09 * On an interrupted wait, the caller can return and release a
+-=09=09 * stack-allocated data_buf before a late firmware response is
+-=09=09 * processed. Detach the caller-owned buffer from the current
+-=09=09 * command so a late response cannot corrupt freed stack memory.
+-=09=09 */
+-=09=09spin_lock_bh(&adapter->mwifiex_cmd_lock);
+-=09=09if (adapter->curr_cmd =3D=3D cmd_queued)
+-=09=09=09adapter->curr_cmd->data_buf =3D NULL;
+-=09=09spin_unlock_bh(&adapter->mwifiex_cmd_lock);
+-
+ =09=09return status;
+ =09}
+=20
+--=20
+2.43.0
+
+
