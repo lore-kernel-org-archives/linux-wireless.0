@@ -1,64 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.156.102
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.155.149
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793129158;
-	b=ucV+79rD9lCEf4tJYYCeAf5ij1ZyB31rxWoTVdaRekEHTh+8IX+uwIlRhFk7wp4dnw1e
-	 Sittgn4+gbvjX1Ly9+/4zZW9iOZO1KuJ7CqE0vxJPpeqR9Upu5M5XZIoNJXBMmq47I6B+
-	 upAoUqPl64A6mqLjQ+Qm3ydZJw7lK27Pmc6FgSxjqIyJ0rEPN6+VKJSVX/R+KHRGxsxge
-	 W6Dhmw3gKfIq7S5U3WidbaktiPHtwumTdQI1OlQFv97AFBrhUEbXcXhmlaldJZdcQU5V+
-	 AoP6ZTFUiRpPVxqkhJMQPWRg7PgL95b22itLAecxZvi+RchOrPEdjP8C3EwiPXOio1Q==
+	t=1793129226;
+	b=uGrXvPy3lfoA/iBwLk1G0gWLM5Z+jWvGRtSMJuRJHS/78xJMIIJX6EUfmt0h9T0VNJsG
+	 8JCNlkliu6LxVNzWAt/eIXJNQUtFa0VFW7Sp4Fm3QnPfs5Im4J6C/8cgBfNdD0Qun9UNh
+	 qLFAW0gz03olDnec487iFWSUL4tqESdblCll7f3/gtzVdorLkxp5gyYnRuBflMiGQJ6Jf
+	 XQsmWgfwkGWcgCe9u3g5Ol4wAZizADr/1RdONi4EVvurwUFLnblRsoj7HO8+hJiDkvYDQ
+	 qtnS4f4lm5rSoQKhEE08KRHK+D1Dh3iINP8F4i16pjEBok7vxnvLvXY787NSYwT5NRQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793129158;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793129226;
 	h=DMARC-Filter:Received:DKIM-Signature:Date:From:To:Cc:Subject:
 	 Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:X-CMAE-Envelope;
-	bh=tEogqM6cDAZusNLmJc5Pb9iz70oEFEFrHnh7w79Hiwk=;
-	b=aKbnHzRR2WXwDqIzENKaX110vBFym+/u0O311NIEUOmknV1RbaDXR77UltLw3jhBT2JF
-	 ljt9nJaOb8kg6kXbPGGoPDU27RA5R6CXy5K26FtJ7rC1vHQJDVUwNDLsAURNDZHMaSF3/
-	 MIxxQajGpv+24CnBcfM/AJQXLoBOcTq5Ccg7WZ15HnDUkt/P9tkl2Lu9Rt2D7JPMwj+Mn
-	 RtuE0eXwHrXSrKmZlQ6EJ0Lg561G3m/dJc7YMF3VgP2be0dASZR6px6HqGV5EcVNR0NRk
-	 Fr4frMjIZAEPAvYlPHFtnq23NedMuRLtMsE4xiJdvnsHxKu2rEDImSh71c0WSNpGboA==
+	bh=3OeRqug9an4f9JeH+7A+ciKWBCrOmqQOxohMWMpsR54=;
+	b=XlcgyT1qnZ3TC1uhqz6+iW52a6BQgM+XmEVqdzXxCn5qMHP+yD4chhxb50GbA/XymAZP
+	 GiK6KsjzZIqO1lrwJE9dNhiF5k/5bX36S2gc3WH1mY8wbcbkEEIlsaAS3F/LoLJqlNADo
+	 zi7c34C8GjCBWW751Ch+SRCCLHt2+kV7W4nXsCCzYJX+O87645HmdhSSW+IFH9PVesWVA
+	 cY1MWdB8mwr7wIEvxtUW/xvj+5gmOButyJoJqUmNJRjOsQtyCI99wqNwrOtj1+hrwkaim
+	 ZGNVuYz21/uU650JX0z3HdrkI0s9+JZ0Arqs8PskIP00dkvuuUjEYT4lQMvW3AK7G6A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=mythread.it;
 	spf=pass smtp.mailfrom=mythread.it;
-	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=PX017VZB;
-	arc=none smtp.remote-ip=62.149.156.102
-Received: from smtpcmd10102.aruba.it (smtpcmd10102.aruba.it [62.149.156.102])
+	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b="l/WieYsh";
+	arc=none smtp.remote-ip=62.149.155.149
+Received: from smtpdh19-2.aruba.it (smtpdh19-2.aruba.it [62.149.155.149])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57780606A31E
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 19:25:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57780606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 545CC606A324
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 19:27:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 545CC606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=PX017VZB
+	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=l/WieYsh
 Received: from fedora ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id Lmntx3q1VW41bLmntxqI5u; Tue, 27 Oct 2026 20:25:49 +0100
+	id Lmp4xaNNib24ZLmp4xQRCY; Tue, 27 Oct 2026 20:27:03 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1793129149; bh=GDOI0xW3OjzJgooa36QpDQuuemC8QFwMBSGIM4ayZdI=;
+	t=1793129223; bh=ydd4JzHCHSW/D/rNq55GJ+0dNek5/zgfZP8r+ktQeAA=;
 	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=PX017VZBdHtuwgydU+pi0Jb/DqzK+cj1xCHoxJ69yoHDnjbuXSu7cQ3uu5BPfwVZ6
-	 DDgQLLVzvDrkFfpw1dY73AoEnOmcQDrzQx4RuFt7AGleERiy9ssdsV80hKQu/DCgJ9
-	 dWP2OZgW9jFSZ4u7ocDb5bjlg63aYWoOyyyJPggF/lc6ZJcyEbE8HYOnXV5s+Sbw7k
-	 mHvKB4M9Q7K4FlRWy0xDeA9K7N5tTYfo6y+zkD9jFEYrNfoRo4MXcohcJWyirry7sc
-	 ygJhEsqi71dXemfmzh+OERef/Z0C52Pz1H2M0mqU45PHKRb9yg0DYZcFdOiNd8vtjC
-	 cJ/T90Yuu1YHw==
-Date: Tue, 27 Oct 2026 20:25:48 +0100
+	b=l/WieYshVQrGL+tueTQL/5Cg4xBoeu+WavhbhwySXTQfGZezCqAJp9VbEI6damWh1
+	 z+KjKqKZD4Ryo9SAFD1mjaeC2iYJgrIjM0S3Dhv8hOa7pMHoLoYPQTnrUZOtx5x0x6
+	 ki7aKCHhsesQ6kTBr6QyHwmWPls31b/cEmzezxqmG9Yqf+kqBEeGN2InWngXt0B02N
+	 NFR5Ogb0ZeeVoj6bTQXCW2MdXjYPzghyu9McWa9/so36oxf+gsCpavd2odMD/EDzYo
+	 ils1J09FDEimCkhsJQGB7cRcdSwnZYTQhTbAx+T4B7W3ag/fkW2jPKvyxjP4cwnmVY
+	 CuAL1RvXUO3bQ==
+Date: Tue, 27 Oct 2026 20:27:02 +0100
 From: Alessio Ferri <alessio.ferri@mythread.it>
 To: Andreas Wendleder <gonsolo@gmail.com>
-Cc: julian.calaby@gmail.com, kvalo@kernel.org,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- b43-dev@lists.infradead.org, Michael Buesch <m@bues.ch>, Johannes Berg
- <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Johannes Berg
+ <johannes@sipsolutions.net>, b43-dev@lists.infradead.org, Michael Buesch
+ <m@bues.ch>, kvalo@kernel.org, julian.calaby@gmail.com,
+ jpeisach@ubuntu.com, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH wireless-next 1/2] wifi: b43: reprogram the MAC filter
  after an interface restart
-Message-ID: <20261027202548.704378e9@fedora>
-In-Reply-To: <20261027202151.7dcdfe4e@fedora>
+Message-ID: <20261027202702.1c6902d8@fedora>
+In-Reply-To: <20261014143225.82149-2-gonsolo@gmail.com>
 References: <20261014143225.82149-1-gonsolo@gmail.com>
 	<20261014143225.82149-2-gonsolo@gmail.com>
-	<20261027202151.7dcdfe4e@fedora>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -71,69 +70,51 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfPlu6URVniRZ4SPGlOnRS2FmnTO9SM12PPiq9x5/EKVvirC3WRbMvkUS4PHV3wSmPIyyiOflRoYooILKKBXuLQedXOkpTK8pOwLO+obzca1VSoMRrc4s
- mQ74Sfl2VWhVpMUpCqXjna8Yj439uNznjJk9GafkxMNJzDtwmdIeMO4srNgjVYzzZRQ34IghwfQr/inkALn9LMrWMcV0DHYsvIkold8QfkToPwZDVzTjZDHh
- OnsrXLjQruPtesXyx/w5Jjab+tdLbA8RPLuC10PWAdh2Xysu4WRO473bWSWPMiBsMcNhnncwCjEtzdkD4ukNUfKVu6dppZIMtP/49ZEKEITIkusi3GYf0/JS
- IGU5ZxZSJI2iAYPllaWgWe7HgxiE7FEtwgQPlD3LH1SNll3AVamE5l/DNHrleELgG8tdPxhI
+X-CMAE-Envelope: MS4xfBRL4N5AHK0FLusPkHBO9Nt1tEejrk7JIJ6QhI+1QP7K/1U14BgCaPrdTIkBbNLTqptQ0j05oYkFEKhifbuvdv3huPNZ8bJjzqqGUxaQSxna4CsNoP0A
+ kYCJpujPBTORLdKPxU9McjsztjhJTY4/ruL/p4VY1SJtZ37YTFyAJMf/QDmPkoJUoTQKagXPJX62lnKZoNNL6eY9RMYsr8T7+c+8Jb/dDobisDtyS+76Y/Nk
+ r1116KIo90Qa7Qg3ntaicT87S4FboyX7OdOMmT9UUFyGtJ9qDevGar+lc7UqlKNtw9Y8hCF02rfDapIlnEsBGzhYL7ZAMwYF/gjUHXQlokJ26k8Ni4F7qXfe
+ PNVFPZW8JteqN1ds2tPln6tZHvfuiH8gh79VcV9VZCi2kl7Vg1JZ5bphzclUKHxbm9Tu5eLDInBnFxU1r2vsOsSjNHuc4/rlevLOm3qvc8DBwexg5wQ=
 
-Il giorno Tue, 27 Oct 2026 20:21:51 +0100
-Alessio Ferri <alessio.ferri@mythread.it> ha scritto:
+Il giorno Wed, 14 Oct 2026 16:32:24 +0200
+Andreas Wendleder <gonsolo@gmail.com> ha scritto:
 
-> Il giorno Wed, 14 Oct 2026 16:32:24 +0200
-> Andreas Wendleder <gonsolo@gmail.com> ha scritto:
+> b43_op_start() clears wl->filter_flags, but mac80211 computes @changed
+> for b43_op_configure_filter() against the flags it cached from the
+> previous run. After a down/up it can report no change, so
+> b43_adjust_opmode() is not called and MACCTL keeps the cleared filter.
 > 
-> > b43_op_start() clears wl->filter_flags, but mac80211 computes
-> > @changed for b43_op_configure_filter() against the flags it cached
-> > from the previous run. After a down/up it can report no change, so
-> > b43_adjust_opmode() is not called and MACCTL keeps the cleared
-> > filter.
-> > 
-> > Compare the requested flags with what the hardware was programmed
-> > with and add the difference to @changed.
-> > 
-> > Signed-off-by: Andreas Wendleder <gonsolo@gmail.com>
-> > ---
-> >  drivers/net/wireless/broadcom/b43/main.c | 8 ++++++++
-> >  1 file changed, 8 insertions(+)
-> > 
-> > diff --git a/drivers/net/wireless/broadcom/b43/main.c
-> > b/drivers/net/wireless/broadcom/b43/main.c index 8f4aff3..57a5935
-> > 100644 --- a/drivers/net/wireless/broadcom/b43/main.c
-> > +++ b/drivers/net/wireless/broadcom/b43/main.c
-> > @@ -4318,6 +4318,14 @@ static void b43_op_configure_filter(struct
-> > ieee80211_hw *hw, FIF_OTHER_BSS |
-> >  		   FIF_BCN_PRBRESP_PROMISC;
-> >  
-> > +	/*
-> > +	 * b43_op_start() zeroes wl->filter_flags, but mac80211
-> > computes
-> > +	 * @changed against its own cached flags, so after an
-> > interface
-> > +	 * restart it reports no change and MACCTL kept the zeroed
-> > filter.
-> > +	 * Compare against what the hardware was actually
-> > programmed with.
-> > +	 */
-> > +	if (wl->filter_flags != *fflags)
-> > +		changed |= wl->filter_flags ^ *fflags;
-> >  	wl->filter_flags = *fflags;
-> >  
-> >  	if (changed && b43_status(dev) >= B43_STAT_INITIALIZED)  
+> Compare the requested flags with what the hardware was programmed with
+> and add the difference to @changed.
 > 
-> Tested on DSL 3580L, with 4352 chip on 5Ghz, the chip transmit and no
-> dma error arise. Without the patch the dma engine report an error on
-> the descriptor. Earlier in June i wrongly asserted that the DMA on AC
-> chips was needing 64 Kb segments, it was a wrong conclusion: going
-> 64kb did stop the error, but for the wrong reason.
+> Signed-off-by: Andreas Wendleder <gonsolo@gmail.com>
+> ---
+>  drivers/net/wireless/broadcom/b43/main.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> Tested-by: Alessio Ferri <alessio.ferri@mythread.it>
-> 
-> _______________________________________________
-> b43-dev mailing list
-> b43-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/b43-dev
+> diff --git a/drivers/net/wireless/broadcom/b43/main.c
+> b/drivers/net/wireless/broadcom/b43/main.c index 8f4aff3..57a5935
+> 100644 --- a/drivers/net/wireless/broadcom/b43/main.c
+> +++ b/drivers/net/wireless/broadcom/b43/main.c
+> @@ -4318,6 +4318,14 @@ static void b43_op_configure_filter(struct
+> ieee80211_hw *hw, FIF_OTHER_BSS |
+>  		   FIF_BCN_PRBRESP_PROMISC;
+>  
+> +	/*
+> +	 * b43_op_start() zeroes wl->filter_flags, but mac80211
+> computes
+> +	 * @changed against its own cached flags, so after an
+> interface
+> +	 * restart it reports no change and MACCTL kept the zeroed
+> filter.
+> +	 * Compare against what the hardware was actually programmed
+> with.
+> +	 */
+> +	if (wl->filter_flags != *fflags)
+> +		changed |= wl->filter_flags ^ *fflags;
+>  	wl->filter_flags = *fflags;
+>  
+>  	if (changed && b43_status(dev) >= B43_STAT_INITIALIZED)
 
-Ops, i meant to send it for PATCH 2/2, sorry to all
+Tested on my DSL 3580L with a 4352 5Ghz, the chip transmit ok.
 
-Sorry again
-Alessio
+Tested-by: Alessio Ferri <alessio.ferri@mythread.it>
