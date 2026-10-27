@@ -1,101 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793125118;
-	b=chH86oznhKZ9M/UJHBPH10iaMqwOymsBQPRHjq5qIehShbrV6mhKL0G55ZDsY7cNdzyz
-	 +Fz0nzldIgnULl8mX2HeKO3gqOtsFJn533K+NlyqJc3aqI7d08mb919rTKYeWe9s0jZJ8
-	 +WlDnzABUCvpTPmf6i+zZFMYatsfrJ9sdG23vjPO0OVAwiINwZqNSQT1tv7ITK+ctqpEn
-	 n1Q60cONYI4cUoD11uXgx8erVoPn2vQG/luOgGrOysxLN0tPx5zuWoGxGxDz2HoMMMnWA
-	 XP95kU9Y9hyNl+SeXg+7bWoU8+dP5BJ3j1lhNAMw7bW7uSFlAD3gyiPUESeo4XEdA8Q==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793125118;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:From:
-	 MIME-Version:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type;
-	bh=9w8avXhEQnt+ubfLntLAY5OD7jP+c5wq6VSJzsxGAQU=;
-	b=lJQoLtU9cNfr/9eo4Vocp7BUfBQtkbHUrMqvYm20btk6X+3/QWZKtWQIpVaxh/6WPRcJ
-	 xOAbH2P0dURyLpiCkUmCTdFIOk47fhL7vKgCUMbq/UrV1ceccTQMM5mP6AxIJC0go7d5Z
-	 wD6tKuhRuNVradRr2qiTz9vQ6Ue8MYun4bkHpO1k9Bh5s8wl2cgm8APb9PjhwEQXRmswM
-	 mTRi28go5nSsHZRbXmlyQeju+E5+sJ3zCujUUo2ZBR2OVo5Nvx9YUQNE5C8TD+XHoVHBB
-	 Rq+50dqJo5Ad27OPDM8YOKwlnNWTKK7sY1KF1Ns6FoLOXck72ZLbnDScwXN42eIzCpQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lBJuhnhx;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.54
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793125772;
+	b=efjlm7bAKgY0ZgKZVKPFM1K5CHiBF/FypXQ5Y2zo9YYDQdGorstz/Ygfi2rTV6AYb0BY
+	 +k0ayujMzFe18KQWAwAtpEanx5aWWOBgZs3+ueu1SgJv9eEUwEwyvKveaVlvfwnIXwGhm
+	 CwlPI8cqBAJmd7o0A1lNxReYX4qhwuK2OdocsWRk2gjl8O/2BC+43/OBevPBXnyExm9Ol
+	 ByT7fUxs1hWPGI0uit05jE+/zl2h30w1Sd9+gjmapRIiWqdwhZSBYL3sTtdqAx90TY1Ag
+	 qBdGnBuofvgOe44tmwxWhMj4UZ28C20UvuWI3f/SnCYT6SxDHBPUb5ty6GbZRY0hVEw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793125772;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-GUID:X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=PqLkIufQPtFaogpRWn+QjK4zZ4JekDLRMB+hfurWJXI=;
+	b=yrHsT2XX41VUfleSYpb+2DjlKh9BlRPIwiNywn07d9HYqMfrV66dA/kqm+UkEUQI8m6Y
+	 b5mITrbmOrKVv0blLSdEHU7T/P1DCI0blTIDWSkYmAhNO8O32g81Bm5trYDgfWpqhp32m
+	 rhIOYd6m5T6PuyAZKLmLPd6pAKXoxQcP2kEv4OtUJst66bUv31VNIF8zf+m0dIhB9gTSE
+	 djBqu58HqmslTbX1ht+Eah9M1rw/F+iYvZ2tdjTRSjWttb+vHlS848vVYmUo/GusJ5f48
+	 Y9tkEg2u4+MkPfTCDuyqpT2sq7Sqi54RVbL2AOkqxsjL/NCRO0c/Ulre63xLwNTMBpg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Pum+jOci;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=hVxStZ9+;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76C97606A320
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 18:18:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76C97606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77676606A31D
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 18:29:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 77676606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lBJuhnhx
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c2e8c710847so17753966b.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 11:18:38 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793125117; cv=none;
-        d=google.com; s=arc-20260327;
-        b=JjVsTMHzZqmDlvgJZyiVb5owubDmQcgTvcFl2Oq+pruCUMVwYl6jg4yE4jgF12q5YG
-         EVXWqDA1avPsSCYwRXr3CgAdzdIOrto1kAs100hrqfDC8m7HQrgHoGS74+mXupOaILQ0
-         Yn3eU6s0cp7vJAWLb0CqfRR0V4gt9j9SB1u0PUz7iVeR0+Bxojm4oi2nVlIw2Zj7yRED
-         iUDt3iLO78ZgoKv8aUkOmFIphyt3Gj78bUcX1rR6XYCb/nDuArp8OYHsHnOdN+R0WGi9
-         AznHNXl0Up7Nm9CcA6w9T3WLxuaCR6paw2TMV+2Zg4dpMpPqu7PmXx/fLqgfAbREmFly
-         8VgA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:mime-version:from:dkim-signature;
-        bh=9w8avXhEQnt+ubfLntLAY5OD7jP+c5wq6VSJzsxGAQU=;
-        fh=CH4nd+rWz3U0ddHU8IfQPLeqruXXmWSUt5Sj2Tt1rH4=;
-        b=asW8xyRPRJT7Azqtedi1L6iNxvlU4ya4Ksq7bpTdEQGFCXzPLol6rP8zHye01LADVF
-         ioHGgZlyn+Qz0LReF2L8XbsiuD+0Fbu2QbUvF3fG8IMYxC4yd4DgozrxlEaxVfKszmaA
-         c1GECyoIc+TYGVrXGUFaUny3JFIHcv5q1wdIbCKSyB3FmJckQfR9xsvobmas7lZ6ODsf
-         P2b+yXGSCUF5Xo7C6UWPIepyO4uFoopbCgCGoH7tPJPhn7+jy3e0adeRR23KS/aVsEsJ
-         aOBvUw/NDctOFWFNL8ZXuDq+qUzaN9/8rjuq8B6m2r/pUGaRCvbDF+QhE5JTuFm+5Ihm
-         PeJA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Pum+jOci;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=hVxStZ9+
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69RIIDon3486476
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 18:29:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	PqLkIufQPtFaogpRWn+QjK4zZ4JekDLRMB+hfurWJXI=; b=Pum+jOciu3R7fVsS
+	4TJb0W5bYs2wH/pLEU35a3fE+qbDbQA7SZl/Z994Vxl8D2bTWeBAp/asbvF0Banl
+	PU7jj2rfOtXHTDanQSXPCS55pr4QpCPOz1LXiUNLB4H8sglmAL4UtawS9bxYdPpA
+	Q/QOJQnDSMcQ4+MtWaFbtC70vPQgK+CmTUU9GneelIwWUFf3HGBKpXeBFoGgg8WF
+	LTQs+0rILYZIWpvaqwNNzuUkie1zWJFVwkz9MJ6wGwdTKSDmUZC5Vd1ACAt34Nq5
+	s0GLyBVJDgqkArrIe8ok4Cl4/63daDdiPSvfQLpyf0elRyqLVKziduVqMZdxHyKs
+	Lejutw==
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hjjbtbv1e-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 18:29:30 +0000 (GMT)
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-36a1e2485fdso295039eec.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 11:29:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793125117; x=1793729917; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:mime-version:from:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=9w8avXhEQnt+ubfLntLAY5OD7jP+c5wq6VSJzsxGAQU=;
-        b=lBJuhnhxKlD/Z4+tEsvPXpB16/c/H3pPU6r5Ji96cx9WVotX9CC1zIKKhoVaZcZWVo
-         vtOUqtZ/QFPcvkrrDTHNRSCZ1QQBNMugBYYmoPD0nb/odwqGoexHhw4uEM0LIknYx7Vw
-         K/lD+Z2SluLNrZgEvmWCWiStQCKjuc4b5TGd2lOgRIF97Lb6xN9fJvYSAat3idjBsGhT
-         e5msTCv28ZsA4Mz0LLE8rb/mdPCXo4mgVR8+ENKpF1cPb8/65ZxLDkdzIj78g1+dC6na
-         tB6pUlmcUhYzaXzi5jtH2A3NTorPZGZPeRnkkYBTd2ZegMOz6KNvVHDfU+NtB3eh+yFB
-         428A==
+        d=oss.qualcomm.com; s=google; t=1793125769; x=1793730569; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=PqLkIufQPtFaogpRWn+QjK4zZ4JekDLRMB+hfurWJXI=;
+        b=hVxStZ9+Np1rIJ4GsIAnPb4fAp97FgRbeaAJjQ3SS3PKU1r61Djt/OXgXJuCWHyJBQ
+         oF6BJMmV+BKe6cKF+WL+Pq0eQdVK5JRO/je/STcAC5gtNDWQ8ZPChr28HtreCLHZiAU6
+         9sscLYjR7XEU5EQ8FojKIHEElvIwfVWJsFbo7ibA+j/G/V/DwRUg6M9PL8UZdWGkrUtF
+         WYrKmpvFBpcXp8c+8alkSM9GMvdv2T4hxQBl++LnTT7D6tfFL1ydjslNDS/7VYhvVFQJ
+         7xy/fQmO8n3jsugRGyho8CpMYyKzLbvAiqEoq9MWjTIdzZnuNZCuDKEbSy86J1HM0nsg
+         vhPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793125117; x=1793729917;
-        h=content-type:cc:to:subject:message-id:date:mime-version:from
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=9w8avXhEQnt+ubfLntLAY5OD7jP+c5wq6VSJzsxGAQU=;
-        b=B6ZsVLfPUqUGKt0yosaodVVuNn44Fatqjnv36q2sFo3fLy0VgTTPBQc6Rm5I3iNz+n
-         uW/Abn8XN170KLnvvtHEP2Jvov5qA8tzg1tY2zrnBnNDwFD4ySA9GA2L3JdEeb35F+Yz
-         pGax+okarxRihritZDky9yN9BihER0hoogFB4Ea1NrpQ0iqgiwaJ6x8JmnWSZNXDpJxA
-         S6nu+hji4oVX7Kc0K+PxrCoUj8G7Q8flAAvNDlzQV3R6BglBS7seZtm3OEMjSp4d1hUN
-         jjdB0SwV/GDCj15JSIlwSevftx4/suOIzWGDdPdwHtqpoXPqAcyz55vJmTqGTFoy2odh
-         9ZmQ==
-X-Gm-Message-State: AFq9FYK+jw2h+jAykB56oHg67SglEQTG7lEsxOL4/XQUcQtWx9EOmo7c
-	ZzMYx5EbQoNsh0ycNgQ0HIvKgIi2/VptOct9e9TM7iQ198E1ehWl1TsrtHPnio+HN/GtNoYx/2S
-	MO32iRJyKlfcmzsY5NkWoDgbiBK25FSv8WP9K
-X-Gm-Gg: AYBFou2jgdE2l+49InBLNO73DgE1pgsYBGM6il0u8P+qMBc2w2iczGTaOvakoIfmvUn
-	VGjRYGDDiqhJan2D410T+D/tAZdyGlVZ7OaC7Leat++eMAYHfdXRtwUdOvR5EIAc3BdqDrpHGca
-	8/wmjCSs9KySV45yN/8MpalCkvl6NjoS2Yd0NjQsoiXxQ2V3Nvug240Y5DJ/QM8YjVBxPCgCS6x
-	Ptgy0J5A3SlQvnIo4m87a3POomxBPZDaDBd/oU3OLeWb9Qx1IS2z2Ybyn5NhJz2G/LLIfZ0t1mE
-	TP+d0a1rkVhBVtr71DxRLt+HZeZCkM3ApsSwT/VO+8FjAKjaloUvjjo2f7lJ1YM4blxaUzQs1mt
-	o1Ke6dtg/G9o+Pg3CbluVrQ2eKYINdrj+yQ==
-X-Received: by 2002:a17:907:2da3:b0:c33:392f:7ca1 with SMTP id
- a640c23a62f3a-c49bdf37690mr5486266b.17.1793125116635; Tue, 27 Oct 2026
- 11:18:36 -0700 (PDT)
-Received: from 511566560828 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 27 Oct 2026 11:18:35 -0700
-Received: from 511566560828 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 27 Oct 2026 11:18:35 -0700
-From: Ivan <ivan.vin.ctf@gmail.com>
+        d=1e100.net; s=20260707; t=1793125769; x=1793730569;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=PqLkIufQPtFaogpRWn+QjK4zZ4JekDLRMB+hfurWJXI=;
+        b=LLPwZsaH5QRM/jgC+tMvzlXimjUKoftV6xtTCHu4PXnJNShXzBWmNfKHuWYDd0lmtW
+         FxoiZQmcyxvuJupU5xUHfnPzn1cH2bHUVNFQmmAYDQ5EG/Ua22Wseen6s1wVC51NIxJd
+         HqAC74A2ySW6jJIRUmMi5ooHZdGF3NiC9MxHtXwH2zPRSPleoyTtT/BgR9dh9RpYfw3I
+         TqYvqkH+QdtYYTSERQBTJhXlR9qSIYNPBflV4qGX0itxDqCgV3jhteBZBuYl/KbZ2MAI
+         Je407TQ+No0sL5niUtdg1xIlEXb9Xsq0Sgm/zc1OnHid2gLGjimmKka2J55vYvyEInzb
+         xHKw==
+X-Gm-Message-State: AFq9FYKrNpj7kCrQ5N0uH4hF14PZEQdQTtjPHgdqSYyzqT4A+9+dOAeB
+	jr+/VCF4jrzkUG8OU9JB/0BpRWp175iS1AagU1GSIyN28CyiRuuWk/bolq7oGF2O0R1XHNemt6h
+	SPk70exZG/um2GOowofpyqxYgOgRpi0dH94tf3hpF1J5LW35TJ1YxNdqhkmVcHHq1InLCgw==
+X-Gm-Gg: AYBFou1PZXOaEdGp2x0kZF6hYqPsO5JYUtjh9W5m+uHpJoD58Ko99Ti5xnjINW1rrmX
+	Brw4qXCCZpWxREy81x7W+5e3UYUlxQos0FusDJ8JoGEh1viNalfJaD6B5sKqzdn+cPHovc5GYhR
+	HMF8jFUJJSfhKrdWnCfbPZ+HBVAGq4JmUfL+MUNbSARNwbUgvhw53r66QSYP/nAZLFSgy/KquUD
+	2NvEkfli/Fj9+YmrGxs139P6gzBXEInGp+po44k4vYtrJO8qxGCW4udNAgGE672BjgSTm8eZ8QM
+	/eCsndChF6WP9UzU6Zx8pTNlFpBVmlg/PgcKCkyhGKcE5T8GNYswRmAXTBwLCDZle0gZc1OM5DY
+	sz/kw6REL2LRJJL9qdmVse7tOWETlMcZvG1tewdl/OsPtGJb+Fkmm3Jl8yQ==
+X-Received: by 2002:a05:7300:fb0e:b0:367:68c:860d with SMTP id 5a478bee46e88-36a203fda47mr326469eec.29.1793125768838;
+        Tue, 27 Oct 2026 11:29:28 -0700 (PDT)
+X-Received: by 2002:a05:7300:fb0e:b0:367:68c:860d with SMTP id 5a478bee46e88-36a203fda47mr326430eec.29.1793125768171;
+        Tue, 27 Oct 2026 11:29:28 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8d845ddsm35584312eec.11.2026.10.27.11.29.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Oct 2026 11:29:27 -0700 (PDT)
+Message-ID: <d3f34291-bed2-4ddd-af2f-fd994a2d409f@oss.qualcomm.com>
+Date: Tue, 27 Oct 2026 11:29:26 -0700
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -105,74 +112,132 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Tue, 27 Oct 2026 11:18:35 -0700
-X-Gm-Features: AclHuK-7col2tica1Q9cSyDhBzPWi36C52EjDkeF-7ZQ36mXdtwPLYrHG4CuaeA
-Message-ID: <CA+hZKYJsbtLf1UR0SrGLd+HchCPhPEFksp3fMzF-+w6a5-VR6g@mail.gmail.com>
-Subject: Re: wifi: mac80211: two more check-sdata-in-driver WARN sites
- (drv_bss_info_changed, __rate_control_send_low) - same family as the 2026
- set_bitrate_mask fix
-To: linux-wireless@vger.kernel.org
-Cc: sashal@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next] wifi: ath12k: fix IRQ disable imbalance in AHB
+ ext interrupt handler
+To: Karthikeyan Periyasamy <karthikeyan.periyasamy@oss.qualcomm.com>,
+        P Praneesh <praneesh.p@oss.qualcomm.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20261015084445.3045925-1-praneesh.p@oss.qualcomm.com>
+ <5e64ab52-c8b3-4b42-81b1-dea844bea6d9@oss.qualcomm.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <5e64ab52-c8b3-4b42-81b1-dea844bea6d9@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI3MDA3MiBTYWx0ZWRfXwr6avP/yP425
+ zSUifZrm9QaS4QJoSM4+QhUEj1+a9Wovrq+cfl3tXhy/mAynWLrdGzuoM173GuUp2KHQH2KTfXU
+ /QXeNLRLuaPV5ftNs/VuEF4ZnRP+aqU=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI3MDA3MiBTYWx0ZWRfX1kF25JFeTviM
+ zxOQX9C+94KOPym5XBO6L3XzamwUAH4/VXpbh6aX8g/gQz2bjguuodMKsgnFOoSP0cxB7gONXUV
+ r+Sc7k0wqFojXPi7p+SksrJ/Dy/WK9aqem1E0YgFN2cR2+aKmB2gTIFEYRB+DloxiXW7rsASLoX
+ sMHq3nhWLwvlNXp15Q7XzwvywS9kA8RlG7qg/QH0VvB4c7gjQu6ihQKug907C/F8ggZNAABVKpD
+ WfSdrJsOkVMlHg1Yw4loEPn+2va3WqXFzpvnzxWHJVhu5eokTy/y69U1JX8HpOa3pcuIHdW5rsR
+ JHBIJd3+YdjId6IcU2dmAKaZ5BBDh635mEgboh5XteHwl+GR3wsN+TZ7ObQMHpdop8v0QJeW0jy
+ vQ5/ivdQgET2T4ksuu1UOrI6vk+UpU5a0fviTnNQMV3PHtVbnaIJVZUC/ryA2iQOJSirxT9g9qB
+ cM2Se4neT+mBjZT1c4w==
+X-Proofpoint-ORIG-GUID: mWyapdlnTOP8WV8slMDOVCjTwgEcZjXv
+X-Proofpoint-GUID: mWyapdlnTOP8WV8slMDOVCjTwgEcZjXv
+X-Authority-Analysis: v=2.4 cv=XaIcX455 c=1 sm=1 tr=0 ts=6ae0ed8a cx=c_pps
+ a=Uww141gWH0fZj/3QKPojxA==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=EUspDBNiAAAA:8 a=yjVnOKY9XYp-XMnnHIcA:9 a=QEXdDO2ut3YA:10
+ a=PxkB5W3o20Ba91AHUih5:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-27_05,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 phishscore=0 spamscore=0 bulkscore=0 priorityscore=1501
+ clxscore=1015 lowpriorityscore=0 suspectscore=0 impostorscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610270072
 
-On Mon, Oct 26, 2026 at 10:56:01PM +0000, Sasha Levin wrote:
-> For this one we need the full call trace to see which path gets there, and
-> the reproducer. Could you send both, from current 5.15.y (5.15.223) if
-> possible?
+On 10/20/2026 10:07 PM, Karthikeyan Periyasamy wrote:
+> 
+> 
+> On 10/15/2026 2:14 PM, P Praneesh wrote:
+>> On AHB platforms such as IPQ5332, IRQ group 3 maps multiple hardware
+>> rings to a single NAPI instance. Each ring is assigned its own IRQ
+>> line, but all IRQs in the group share one napi struct and one poll
+>> function.
+>>
+>> When two IRQs from the same group fire simultaneously on different
+>> CPUs, both handlers call ath12k_ahb_ext_grp_disable(), which invokes
+>> disable_irq_nosync() for every IRQ in the group. This increments the
+>> interrupt controller's disable reference count for each IRQ twice. The
+>> single NAPI poll that runs calls ath12k_ahb_ext_grp_enable() once,
+>> decrementing each count from 2 to 1. Because the count never reaches 0,
+>> all IRQs in the group remain permanently masked by the interrupt
+>> controller.
+>>
+>> With no further interrupts, TX completions stop being reaped from the
+>> WBM release ring. The pending TX descriptor count grows until the WBM
+>> idle link descriptor pool is exhausted. Once full, TX ring allocation
+>> fails and no new packets including management frames can be enqueued.
+>> This causes stations to disassociate with reason 34 (DISASSOC_LOW_ACK)
+>> and ath12k_mac_flush() to time out:
+>> "failed to flush transmit queue, data pkts req N pending N"
+>> where N equals ATH12K_NUM_POOL_TX_DESC(ab).
+>>
+>> Fix this by using napi_schedule_prep() to atomically test-and-set
+>> NAPI_STATE_SCHED before disabling IRQs. Only the first CPU to win the
+>> atomic operation disables the group and calls __napi_schedule(). Any
+>> concurrent handler that loses the race skips the disable entirely,
+>> keeping the reference count balanced. Guard the enable_irq() call in
+>> the poll routine with the return value of napi_complete_done() to
+>> prevent an unbalanced enable if the NAPI instance was re-scheduled
+>> before the poll completed.
+>>
+>> Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.7-00587-QCAHKSWPL_SILICONZ-1
+>>
+>> Fixes: 6cee30f0da75 ("wifi: ath12k: add AHB driver support for IPQ5332")
+>> Signed-off-by: P Praneesh <praneesh.p@oss.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath12k/ahb.c | 11 ++++++-----
+>>   1 file changed, 6 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+>> index 2c55aae06dd0..e5bbfca2b2ac 100644
+>> --- a/drivers/net/wireless/ath/ath12k/ahb.c
+>> +++ b/drivers/net/wireless/ath/ath12k/ahb.c
+>> @@ -602,8 +602,8 @@ static int ath12k_ahb_ext_grp_napi_poll(struct napi_struct *napi, int budget)
+>>   
+>>   	work_done = ath12k_dp_service_srng(dp, irq_grp, budget);
+>>   	if (work_done < budget) {
+>> -		napi_complete_done(napi, work_done);
+>> -		ath12k_ahb_ext_grp_enable(irq_grp);
+>> +		if (likely(napi_complete_done(napi, work_done)))
+>> +			ath12k_ahb_ext_grp_enable(irq_grp);
+>>   	}
+>>   
+>>   	if (work_done > budget)
+>> @@ -619,9 +619,10 @@ static irqreturn_t ath12k_ahb_ext_interrupt_handler(int irq, void *arg)
+>>   	/* last interrupt received for this group */
+>>   	irq_grp->timestamp = jiffies;
+>>   
+>> -	ath12k_ahb_ext_grp_disable(irq_grp);
+>> -
+>> -	napi_schedule(&irq_grp->napi);
+>> +	if (napi_schedule_prep(&irq_grp->napi)) {
+>> +		ath12k_ahb_ext_grp_disable(irq_grp);
+>> +		__napi_schedule(&irq_grp->napi);
+>> +	}
+>>   
+>>   	return IRQ_HANDLED;
+>>   }
+>>
+>> base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
+> 
+> Reviewed-by: Karthikeyan Periyasamy 
+> <karthikeyan.periyasamy@oss.qualcomm.com>
+> 
+I think you meant...
+Reviewed-by: Karthikeyan Periyasamy <karthikeyan.periyasamy@oss.qualcomm.com>
 
-Reproduced on 5.15.223 -- and this time with a minimal reproducer.
+by posting that my tooling will now pick it up.
 
-First, a correction to my previous message: auto-extraction had in fact
-failed on the original crash logs (the bug is flaky under broad fuzzing),
-so what I called a "repro package" was really 16 crash logs. Apologies for
-the imprecision. We then ran a focused campaign on 5.15.223 (only the
-nl80211 race surface, procs=2): the same WARN appeared 4 times in ~80
-minutes, and this time syzkaller extracted a clean single-program
-reproducer:
+/jeff
 
-    # {Threaded:false Repeat:false Procs:1 ...}
-    r0 = socket$nl_generic(0x10, 0x3, 0x10)
-    r1 = socket$nl_generic(0x10, 0x3, 0x10)
-    ioctl$sock_SIOCGIFINDEX_80211(r0, 0x8933,
-&(0x7f0000000080)={'wlan0\x00', <r2=>0x0})
-    r3 = syz_genetlink_get_family_id$nl80211(&(0x7f00000001c0), r1)
-    sendmsg$NL80211_CMD_NEW_INTERFACE(r1, &(0x7f00000002c0)={0x0, 0x0,
-&(0x7f0000000280)={&(0x7f0000000200)={0x58, r3, 0x1, 0x70bd29,
-0x25dfdbfd, {{}, {@val={0x8, 0x1, 0x4a}, @val={0x8, 0x3, r2},
-@val={0xc, 0x99, {0x40, 0x4}}}}, [@NL80211_ATTR_IFNAME={0x14, 0x4,
-'vlan1\x00'}, @NL80211_ATTR_SOCKET_OWNER={0x4},
-@NL80211_ATTR_IFTYPE={0x8, 0x5, 0xb}, @NL80211_ATTR_4ADDR={0x5}]},
-0x58}, 0x1, 0x0, 0x0, 0x800}, 0x4000000)
 
-C reproducer (syzkaller-generated, 13KB) available on request.
-
-Confirmed on: 5.15.223 (KASAN), "Not tainted 5.15.223 #1", 4 instances
-in ~80 minutes of focused fuzzing. Crash report excerpt:
-
-    wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
-    ------------[ cut here ]------------
-    vlan1: Failed check-sdata-in-driver check, flags: 0x0
-    WARNING: CPU: 0 PID: 346 at net/mac80211/driver-ops.h:172
-drv_bss_info_changed+0x4d8/0x580
-usr/src/linux-5.15.223/net/mac80211/driver-ops.h:172
-    Call Trace:
-     ? ieee80211_get_mesh_config+0x40/0x40
-     ieee80211_bss_info_change_notify+0xae/0xd0
-     ieee80211_set_mcast_rate+0x41/0x50      <- (original 5.15.216 trace)
-
-Shape of the bug is slightly wider than one call site: in this minimal
-repro a single NL80211_CMD_NEW_INTERFACE creating an AP_VLAN (iftype=0xb)
-with 4ADDR on top of wlan0 already drives bss_info_change_notify /
-drv_bss_info_changed on an sdata that is not (yet) in the driver
-(flags: 0x0). The original 5.15.216 logs had the SET_MCAST_RATE /
-SET_INTERFACE flavor (flags: 0x4) with both task and kworker victims, so
-the class covers several entry points -- consistent with the family the
-recent set_bitrate_mask fix belongs to.
-
-So: still present on current 5.15.y. Happy to test any patch against the
-fleet and provide before/after traces.
-
-Regards,
-Ivan Vinichuk
-
-Reported-by: Ivan Vinichuk <ivan.vin.ctf@gmail.com>
