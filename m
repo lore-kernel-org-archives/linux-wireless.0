@@ -1,85 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793087747;
-	b=Q+qWlkTiLi/NGztuyqDYnpOEMk76imilnpeLpL0DdAi6DHzeJTuiA5MXEWvsZEc7P3Pn
-	 Jgxy/qQUvZX1TJrZybVMyFypbjjKCcO14k9CfNvh56A4HM04yEBCcCgRmng9GQV9cXjxH
-	 EOC3CxioXlbsOLM4WLdFQHGQGiLxHHU1c+dx71/pHVvRMlvxjpc8IotLGVPuBlXNDTGF4
-	 Kc9myfKkGh+ur67wsWX63RuEmq+od9M/oEOWh6XBrXWr/lRJzDRKCRtmRCXGjMJaT0DmG
-	 R6Xo7n/jG1LOPmI2zF28NzmJ2Kwb3LpbQLCQvKnbS1tz0DrznHr/NnBRRKO31a/GrsA==
+	t=1793087750;
+	b=TvlkcjEzKPJCJ2umzFv79IDNwgk0M+aySR+EWTBMAWniy0rqCK02kwluv6pS5R0h7oh0
+	 IlspFpxsjbdH8fSOWWwSsYuNaLGS5EGUYW478O0Z3BxUcjY7AweiEgtBzNRtQK3U4N9kW
+	 e7dp7QAdjua8spzCHRi7gXDQ6RdqVXLHn0zse9G48baGCDt83ieSsSPTX3Cl1moWCyrUL
+	 eN+f5MGf3+lz0Ks01jb9NyEYEwG99hbfw4lyzzFQhXSsKrBankqS9BTh0hxrc8DKbBQtY
+	 /yAXaKcnY0Jh0mrNqOX1SEqjHHeGhYiWHC92ZZ8svLTZMIQTjwFzXnRbX3m91osIk+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793087747;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793087750;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=cSQTlLG50jQwGPTwtgCEXwH2UrPpxUH5zGtovPPmNz4=;
-	b=QMZA1frKQjvAHlcEfDEwdE4ayddNlFKhHTA40JiqDZ7Mf0tGppgBXgjUC1hXo4sl9b0y
-	 kLy2Vk2syd4G2Y3HuJ1VG8lhfGtcpQYuSuIQoXchVaUWQYQ2pWymCwZ3J14pOiOZB9++E
-	 1GF/r4MtmCwHUTPgHsFq/NrMDtpl5BM5qKPS+bAKKYWrK5s11y7ep8SDgv9hjESW8I3qZ
-	 eh8MD4Rg2Np2KceISTqce7S/QEYTjrOnBU4kLzv9kCzMMBfBC1J6JazJd+WymQX5RTO9d
-	 r7UNC1FGu2ed9YKdLo1c2rpnpUYlFp7A4z/1ppz+WHMC80aSopxhLu/tLFTrT0bQ0Wg==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=OnjgAO2S1SeHeUnZwhglBquHq1CKNVlZfv2BuRKP7G4=;
+	b=45XSwJOgXxym7SgBiJGROJroKgx2IKnBt+6Y3dAcdkxP60eJg1VFeNlVUjAU43i/iZ7+
+	 /yoos/32PTKtXpfD+DlHTdx42CBQZfKW0dLNHH/aBLa1xKl5NlAmQvm6h463uorPZKD5p
+	 9BaSKMfNckJ3zPxKVE13b1pD9TlqrpT++FOdNHGXsn8zL7W5dGTJhEz4XkfaH9WCS3OJ5
+	 IzH6P7ebTLej+BnYz0bDBX/OsFr+gDWaA9wnXjYSL9wOUZ65OlcEmjA80AznYG2AFsFP5
+	 mizgpuCWzFVUb9p59AhvQyMMC69h+Dk0Dlpsbclnbe3ZU+SvZBL7qcflXo7Jn4MXHiw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=bairaktaris.de;
 	spf=pass smtp.mailfrom=bairaktaris.de;
-	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=HzDJhZxV;
-	arc=none smtp.remote-ip=209.85.208.50
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=fIati4go;
+	arc=none smtp.remote-ip=209.85.208.42
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5909606A323
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 07:55:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E5909606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E58A4606A31E
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 07:55:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E58A4606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=HzDJhZxV
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6b3dd83e779so6544029a12.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 00:55:46 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=fIati4go
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-6b45f9ec1ceso2152237a12.2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 00:55:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1793087745; x=1793692545; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cSQTlLG50jQwGPTwtgCEXwH2UrPpxUH5zGtovPPmNz4=;
-        b=HzDJhZxVmtoQCAIggABmVlcSobIRd0cIL4P2kRfRYD/60boqaR67vwUxeWu0eDUx8r
-         sLCkB8xmm7Lei0wUk8Dk3pl+Sx9KJNH+Qb03JhgXh6SlKX9Kep+TrvS5nzczwIPfPbFG
-         mUrrGXQm1L5LA+MiotqMX6uKlHe61wCO3sP9JXle/nS38aub8Zy+6JcOFzPuGk/y//3o
-         OgE94EAukQeGnYeILirR2O8nuvp+F8HxR2XmK6OXILvdpCd9K3pWOXfbV7TAtzSer0bg
-         nSZvil1UCqh9siPkmM/tC4eAr6KjGLE3h2EDNoi4KirWpPu78gafAP5caeDY7eVghR5j
-         DNRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793087745; x=1793692545;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=bairaktaris.de; s=google; t=1793087748; x=1793692548; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=cSQTlLG50jQwGPTwtgCEXwH2UrPpxUH5zGtovPPmNz4=;
-        b=2fIP2SR9mVr6JawzNWTOjIjPI1leB2IC4Ed+DbdD3cFDp3t4uYGnW8ZXVJg6UUflHA
-         PDgFdsvh2u0DPHuD305Zg9Y/3rNVCj0PRsMiFe9D6FSqumRn4AQj+T1rbC6VhjklMA/D
-         JxZdQD9ROCQ40rPFp8IZ7NfoTWqQ6gaL/Tvq3XlEAhZsinSycVMKyC+OA+VTTdHjcAaK
-         2KxB+jpavvJiAm1e3jB6hKcfYF6qtLYDsIirSO01P+AO5xQH5UyS4hZbKz9DkXXRL4GO
-         t9zvFnG8JPco1b3p3wbC+iLfkjLvWX6kAMqJuTq6tJJ7hbBIxy8Fy3EqjKJMREuvm0jU
-         Y++Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxf9i7rpuSMYWWomUHoi1152yXCFb1GiJwCXukNuczTb6TdoLpMDUs+Rrmj+QvCH2bstcDlJ41V6Le5akoVzw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYI08WGx3PrvsmpHWRbHQnpvZdRAUaysW7mmr/3YMIz8A7mrZYBt
-	QvwjPeXAtUpR149HXqMFwnHUFkK0K6mvNoLoos6WfvPRm2TmuRHPbLw8C93eXcotKg==
-X-Gm-Gg: AYBFou2TAIHp+Nxj3H75JRa5F4rsChvblxbylrpPVZav2KI6A6mRIwfPak9gtTfYfqD
-	EjtG1SEU4fwJ7NnS6D8K70M1XkdiQBBupTHuWd6aDwuwHFjst4LNp0AL5PRFzLnELz/LHMrZ13o
-	aw//3rFPV4757FyNAOctBQ2l6AiqXVxTtYLqzsjncLs/H46EOLLAGz2QAtvC27G5G0Oz9yemGEs
-	L4uKb9SXgNx3BRb/gqYKEwFID8CNmqMVUMeJkaZokYR72rxr/D3IkVPW7JkoTOI9Foc/MZmFZFc
-	m5Q+bKHiUb48q4GNF3ggcn2ooOPMhzxBTnAON5mBoIitp2Hsbqtxr7z0ts/R7rxYG4LBTL5pWOn
-	RE9Nb/u+JjXXtXCN6QVOq248PfDhv1jSFDkA6WMkD4fg7791a9pcbW/0D9hQqhmU2zf48J7kJRT
-	4yt2IBR8N2CNCCTsgnnydEe1n5jLxkBqJpHlbRgIq9bBODSSNhGIgayKDKP6TW3Tkj+eGcbz1Ca
-	7WMO2+PO3W46evGzosmdN9mCg93x7WhowO8jFksuPLZAFDBbSkLsdJxySjma7ZpDT07dqE26sb8
-	KUdjMVYNwrPd2BDG52HS6Wyu64vaJwoDD5NA90pzKzSGujzztTNVjMfes7SI+J8ijZdvb6UvICd
-	c66iEK2Y0rtndyqarQ+txCL8p5gJveigS56zSaDW5bBSJERQZSa5uujgeZH9gSDfkRefDoXyyTH
-	NETVuo0Jl/HeL1LQiIRfOsQML/Cyso6vhFIaZfv5lfekvh73QAEqrdKt7NPlPTntDFm4skmsP8e
-	ryXSggVFdMwlfprQTaAztviwMGRGA==
-X-Received: by 2002:aa7:c405:0:b0:6b1:c930:652a with SMTP id 4fb4d7f45d1cf-6b442fcbaf4mr7007086a12.7.1793087745215;
-        Tue, 27 Oct 2026 00:55:45 -0700 (PDT)
+        bh=OnjgAO2S1SeHeUnZwhglBquHq1CKNVlZfv2BuRKP7G4=;
+        b=fIati4go/bYB9eSeVe1UvlGHHtQAjaFS/HqN+tmOfODSCAV7d0b7tG5X6jJIHTdZ93
+         UphzDs/PYSsCPAGcv6VhD4noEFF5nPuMH46QFY65/MZsIK/T7K0kSTy1ptfppEJJoQgX
+         skjIwx5Hz7gxEiA2FU5xB/t4MdLU5Pd/VLk3/1bp7MM330Djf8w3vo4hxwi8tSpypMFD
+         AuJdsVMsh4uMy8Rp2bPWmJmKpDVuBAeqKhdD+Voe53WI5e2SGEzIb4p/PG2+ug15s2Wo
+         GPT+JBV+y9oqzbAovSxbEJ71WNU84cYrYqtQ9lFUrBhhQB1XCRz2su/ddPHJ3Fh6KoMB
+         9Fjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793087748; x=1793692548;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OnjgAO2S1SeHeUnZwhglBquHq1CKNVlZfv2BuRKP7G4=;
+        b=qCnqY58+B6Ffnv58UXE9OKf4qt+EbMyKWFCxWeveMRF2GR7y1Pn7bhlIW9wRk+pyNu
+         o/1IzQBSh+bcjxhubbOr3uy831eNNX/m9s0ZYt3h4JguAjFOlmxfKSQJWou41IvfDeuH
+         AK/2aNnW6fJJ8HXECAfR5hb//rsXgBlG/ekyWHuuhIfg9gXLqC/3LpKgz5T/3iVZ4bUM
+         fxzMRxLGj5oUkuLrI18SqI8bsoCGUiXU6xn7UYTm++pPPid+aCA5s+atDDIcZr+WaTxo
+         pafTQlnQDfRuCi5eRHl/6dgF91dQ4fUu4fuI8McVQteoOt6beiwF3PSD3+/dwORLg6fZ
+         7Sng==
+X-Forwarded-Encrypted: i=1; AKwUvByFFTEEeRqrH4j//Cv1JL/gC6qlCSR5Xww5XCjD3UN0yuAPqA2eITAvbJt3f0rvkfx3jDtfy1dJswNDl0TzIw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLaFJj28yncGLU3jP0V+7nJKcVCijgom2eiGJBmBcKBAlXQcgt4
+	WOBHGXz6/y9/qaQQ0KNB/aQ8U32wTeXUweznb9p+S/49RgvaRYejPI/RyGXBm2aYyvLtYyySXb4
+	+y8ei6I0T
+X-Gm-Gg: AYBFou0g+GL4F1SZi4PvtGfyE6t9nyUJ4kZJJKtpuA1Ia1jCZ4Tovpg1lR6EHQ7tyM/
+	CE6L5ofazyDtCZ5FakJ/cOC84PdFIVWYljRZBEuSA/uaZZO29l4dRVMad9big0kdX1dEWeUevcp
+	V92xxa1gFeEvRlyabvAJvzZFBCiOlNGShf3SWWqhCKIpPsD23m1w1qYUwlvdCZnwlsJbj3V02mn
+	tA1rnsVSFy/NiChdmpkpd4H3gs/M+GV91I6P2fK7kUpba7hjyMjtoxwfg69FsZHsVXe7lBqpdc2
+	upspiZGSPNgKfdDFfQDhinB8a4ydOxnwZkjMXgR+PCzGzDi/mLlKWQVmlAIlz0qXRyFD8XQQGO/
+	uXCM80HlI1Al366ibWRuieazkX/dt8ldZQ7OGh4yzXvEXyYaUvvaIxitozLpDGQWM/cxvY+y0O/
+	96NWIqcJjaQVcEAbmItsj24Lq6cHKO2Asy59lpnqnEeuDOHGEsKnLGyQeHLHhV0kT/S4cZATzhk
+	Ms12Y19WMCCl+/gOnSESObvwi9IehiWnSAnplP22YPGxrUcjKX5W3HK5frZ2f1BvMePprIHhF0a
+	9F6k9Bzy+eJGVVhJehqZeuRDUrFOMlK/9vWfkatSwIAQSh/Rsy4GeM8iGwuBZwjTTPKjrcOfoxw
+	aEc+4uqZ30hZJVQIAD5CNMslUR+FS03geBKCjRg1VrsuGRR1+9w6OMANKd70iZBdCZpnoo9YdOH
+	KX0uy8zA7KoB2rBeJkj3z7x9J/vNPT5e7mc7KkatTHyT/JWM1jlwZx9NJt1koIhVhtbUReUlorX
+	QuPa+KIgmi1/cFa50WeOV9r6kCAeA==
+X-Received: by 2002:a05:6402:1502:b0:6b4:2b70:4a7d with SMTP id 4fb4d7f45d1cf-6b443110fbemr6982638a12.40.1793087748266;
+        Tue, 27 Oct 2026 00:55:48 -0700 (PDT)
 Received: from Desktop (pd9513dae.dip0.t-ipconnect.de. [217.81.61.174])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b445971a9esm4669251a12.19.2026.10.27.00.55.44
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b445971a9esm4669251a12.19.2026.10.27.00.55.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 00:55:44 -0700 (PDT)
+        Tue, 27 Oct 2026 00:55:47 -0700 (PDT)
 From: Julius Bairaktaris <julius@bairaktaris.de>
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: ath11k@lists.infradead.org,
@@ -87,10 +89,12 @@ Cc: ath11k@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
 	Semih Baskan <strst.gs@gmail.com>
-Subject: [PATCH ath-next 0/3] wifi: ath11k: select the hardware mode
-Date: Tue, 27 Oct 2026 08:55:41 +0100
-Message-ID: <20261027075544.19144-1-julius@bairaktaris.de>
+Subject: [PATCH ath-next 2/3] wifi: ath11k: ignore regulatory info of phys outside the hw mode
+Date: Tue, 27 Oct 2026 08:55:43 +0100
+Message-ID: <20261027075544.19144-3-julius@bairaktaris.de>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261027075544.19144-1-julius@bairaktaris.de>
+References: <20261027075544.19144-1-julius@bairaktaris.de>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,45 +106,64 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ath11k always takes the highest priority hardware mode the firmware
-advertises. On the Zyxel NBG7815 (IPQ8074) that is DBS+SBS: three
-radios, with the eight 5 GHz chains split between two radios and no
-160 MHz. With Zyxel's own board data the firmware also advertises DBS,
-which gives one 5 GHz radio with all eight chains and 160 MHz, the
-layout Zyxel specifies for the board. There is no way to ask for it.
+From: Semih Baskan <strst.gs@gmail.com>
 
-1/3 adds the range check on the firmware's mode IDs that ath12k has.
-2/3 drops the regulatory events the firmware sends for phys outside the
-selected mode; with DBS on the NBG7815 the event for phy 2 hit the
-WARN_ON() in ath11k_reg_handle_chan_list() on every firmware start.
-3/3 adds a hw_mode module parameter; without it nothing changes.
+The firmware sends a regulatory event for every phy it reports, also
+for phys the selected hw mode does not use. On the Zyxel NBG7815
+(IPQ8074) the firmware advertises DBS with phy_id_map 0x3 and DBS_SBS
+with phy_id_map 0x7, and its events always carry num_phy 3. With DBS
+selected num_radios is 2, so the event for phy 2 takes the fallback
+path in ath11k_reg_handle_chan_list() and hits its WARN_ON(1) each time
+the firmware starts:
 
-Tested 1/3 and 3/3 on a Xiaomi AX3600, whose firmware advertises only
-DBS: no change without the parameter, and hw_mode=0, 4 and 7 warn with
-the advertised modes (0x2) and keep DBS. Semih Baskan tested the series on an NBG7815
-(modes 0x12): hw_mode=1 gives two radios, the 5 GHz one with eight
-chains and a 160 MHz AP, without the warning from 2/3; no parameter and
-hw_mode=4 give the three radios as before. Both tests ran on OpenWrt's
-ath11k (Linux 6.18 with backports 7.2); on ath-next the series is
-build-tested.
+  WARNING: CPU: 0 PID: 0 at drivers/net/wireless/ath/ath11k/reg.c:828 ath11k_reg_handle_chan_list+0x230/0x2e0 [ath11k]
+  ath11k c000000.wifi: failed to process regulatory info -22
 
-I used Claude (Anthropic) to help write these patches.
+There is no radio to apply the rules of an unused phy to, so drop the
+event, as the single_pdev_only case already does. A phy ID at or above
+the num_phy of the event still goes to the fallback.
 
-Julius Bairaktaris (2):
-  wifi: ath11k: skip unknown hardware modes
-  wifi: ath11k: add a module parameter to select the hardware mode
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
 
-Semih Baskan (1):
-  wifi: ath11k: ignore regulatory info of phys outside the hw mode
+Signed-off-by: Semih Baskan <strst.gs@gmail.com>
+Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+---
+ drivers/net/wireless/ath/ath11k/reg.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath11k/core.c |  6 ++++++
- drivers/net/wireless/ath/ath11k/core.h |  1 +
- drivers/net/wireless/ath/ath11k/reg.c  | 14 +++++++++++++-
- drivers/net/wireless/ath/ath11k/wmi.c  | 25 ++++++++++++++++++++-----
- 4 files changed, 40 insertions(+), 6 deletions(-)
-
-
-base-commit: 2c50cd5d10e8723797f28c7978f1f61688e0c0d2
+diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
+index 1030e119fd903..37be563d8de68 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
+@@ -910,15 +910,27 @@ int ath11k_reg_handle_chan_list(struct ath11k_base *ab,
+ 	if (pdev_idx >= ab->num_radios) {
+ 		/* Process the event for phy0 only if single_pdev_only
+ 		 * is true. If pdev_idx is valid but not 0, discard the
+-		 * event. Otherwise, it goes to fallback. In either case
++		 * event. The firmware also sends the rules of phys that
++		 * the selected hw mode does not use, discard those too.
++		 * Otherwise, it goes to fallback. In either case
+ 		 * ath11k_reg_reset_info() needs to be called to avoid
+ 		 * memory leak issue.
+ 		 */
++		u8 num_phy = reg_info->num_phy;
++
+ 		ath11k_reg_reset_info(reg_info);
+ 
+ 		if (ab->hw_params.single_pdev_only &&
+ 		    pdev_idx < ab->hw_params.num_rxdma_per_pdev)
+ 			return 0;
++
++		if (pdev_idx < num_phy) {
++			ath11k_dbg(ab, ATH11K_DBG_REG,
++				   "ignoring regulatory info of unused phy %d\n",
++				   pdev_idx);
++			return 0;
++		}
++
+ 		goto fallback;
+ 	}
+ 
 -- 
 2.53.0
 
