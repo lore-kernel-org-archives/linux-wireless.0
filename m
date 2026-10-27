@@ -1,52 +1,123 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.153
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.142
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793078565;
-	b=hfhiM+63d2G5rX72C6qYHSTifpxu77XwnoXuoiKzljexkb3LrGxiwIyn2ASV3paRnHAI
-	 6TgT/zd759Kr2yA+sdKjxao9uGxlhuXTQOwngsdgTl3Rj08hA2RufYaxx8UDql6bXDaR2
-	 w+Lhvp+qqcxHk0ZnBeAuYyQf1wmpYV+yjVziXy160ZXfouG5Xcwwq/KS5ZvFITlX+kI2m
-	 DWh8PqZvBKIAGF4O3NXOXXuFqDv8gB+zFEU0OQ9Y5PXCMDUpID3IXPjUxta44sjEKGFC7
-	 fKVpNTC+BFDVk5xMYbHDC5xODKjKWmDg6TU/by9BHGauaFm+vvvUbIC3itLDksfXMKQ==
+	t=1793081044;
+	b=blx9/YLwcB/8LLGF+So9wi/jPG6TXH1KCbUugF7andtmqbzBclgVjHp6RS8tprrMkiiI
+	 g0Mb4DDBePXaAT+YHHiZQ01sdib7vMt7Sd0b8bkrSQKcHQo9AaP/I9bezzeF3mioeVpt5
+	 /EtIKYeOWrFpwYBYlS5+Vrmx/vJObzU42ZsYjqZruGaD36WkIzPcnZWDiZ1qUKR/SlT8m
+	 MVJANEnZOMepHHxAktyE7pyzGmEypuX2W+qJ1hPgGsges7xHScpl3m75pTYXodbckrcLM
+	 EXXqkouVMaGESpcwuOwGkCYKAD8EWvEQOwNcGPH2PJCErGs3cmaT2vYsTwv4AqPiZBg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793078565;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=3h0bipYQ30NNkirag0tbhJOK8kCMDwuO36JyJaVg3b4=;
-	b=py8k3728/trYGW3EJ1HYNVcobKeZtCdZos8at2o6526P6FG/QtLMZ1QKs26tuNGrn2fl
-	 bWSO61SfCTIuUmGh7JU3Fncb2m/prZ9/auek9oQheiwJHOHVivXVFefpI1/5SH6tKr5R7
-	 FAG2ZT7Ufq0MkcTsRaaTfq1VLyYcj18wK/Ws3BcVpYAP4SN6nDlZcHd7uLF04QLF5qAS2
-	 Sv6v4dWNp5AE1C8o8VCPOKjai5Z7IHNYM2LPOMcKluRCmrxh5KOfF9HX5xGCICKX/zxdj
-	 G7s2ZWCPocFz477F8SfIUlGciTYv72L2/+tBbcyCHMJ86ZEwyk4ZLPN+RcMxi/d7V7g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793081044;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
+	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
+	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=t4OoGf5gHVzRGe+YIjw2VuUWKRz8U6K0v5JtauIuYFg=;
+	b=oQm+PWQhcTsBuh1Bd9LWp3n4VtQk7BMtM6o0fy8hN4e1V0Hml4c9psf8kKB/nukyVdTt
+	 wYe7NQtkdT9x1rNinHAr7/5cOD2Tr2p+WaktV5wmXiw3jyXZKewImmp/oJinSB+7KipYz
+	 Cs8pjgZ40dU33UsUz8L1gjJZoLJyrQra8FcQHgBKsPg2QVztnv1M7I7LDAliIccHZQ9/O
+	 HX+fuZZ1sUmxMJALwm09HZoSTXID9V801v4njJDHeCpCupiObVTgTNklNHctxIRR7PZZA
+	 3TFKjfRTm/4Pxn++zBLM+jRN/lGAf+tLz+NCaW/41WLl2MvkrHnvGiVSqGUdBydu7wg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=NE9h1eJZ;
-	arc=none smtp.remote-ip=95.215.58.153
-Received: from mta1.migadu.com (out-153.mta1.migadu.com [95.215.58.153])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=kroah.com;
+	spf=pass smtp.mailfrom=kroah.com;
+	dkim=pass header.d=kroah.com header.i=@kroah.com header.a=rsa-sha256 header.s=fm2 header.b=pBmbRuK+;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=IlFiGdCd;
+	arc=none smtp.remote-ip=103.168.172.142
+Received: from flow-a7-smtp.messagingengine.com (flow-a7-smtp.messagingengine.com [103.168.172.142])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23FBA606A31A
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 05:22:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23FBA606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF829606A31A
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 06:04:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF829606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=NE9h1eJZ
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Fw6OyKP01k2g85iAwsOvqZrzw8/2cM1lYr4mwckRXJ0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793078562; v=1; x=1793683362;
- b=NE9h1eJZuSeE3+tazspnMNV37YFIazbCt0cbUuAKiNnUEkOqL50G+Cv4ne8Amp3vJBEI6RVh
- 9Ev5KY9SQYCvw7fjyWOgk2LWGOXVGJtV7Rb/fIFjJyAsySNzXPlDLVLJ74A7gLDV2SvuqFdByrd
- wWY8kXadj7FCfX9Syojs+bUc=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 563f3a0cdc2a19d7;
-	Tue, 27 Oct 2026 05:22:41 +0000
-X-Mizu-Trace-ID: 563f3a0cdc2a19d7
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=kroah.com header.i=@kroah.com header.a=rsa-sha256 header.s=fm2 header.b=pBmbRuK+;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=IlFiGdCd
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailflow.phl.internal (Postfix) with ESMTP id 0A029138035B
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 02:04:03 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Tue, 27 Oct 2026 02:04:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm2; t=1793081042; x=1793088242; bh=t4OoGf5gHV
+	zRGe+YIjw2VuUWKRz8U6K0v5JtauIuYFg=; b=pBmbRuK+RpEV9BFZTEEED1+xQn
+	QxhzwuWaStp0492F1sZlJfdb5JrjYSCV+2NYVAHtlzBHez2rPZGHA5hVzwPIReU0
+	PBLDTVnFMvFnxG1AZV9TRR631wBSiqcqUraFNCcatQe9H7+KVdS43vEmJH/IjCmZ
+	segcD9NSUwmMGgDgk0RzIRq1Us9+nZTxJ0pFEN1sxF7h3bL+Bw1xd8n/uaYXPqT9
+	omVT04BOGkvrKu/VnhPQ53HphPOrrlfa05snlpXQQp269jbsx/ijs+qitlvwPu6v
+	F2n5RJVA4zJ0ZAEuGcZEt+cqQuYI7ADvrfw/g+X2wZ5uWhG6ftAzAbq5zRbg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
+	1793081042; x=1793088242; bh=t4OoGf5gHVzRGe+YIjw2VuUWKRz8U6K0v5J
+	tauIuYFg=; b=IlFiGdCdCTlmZWowaWNwwI5su5BcJsv/nw1U199AnPalMMXClCC
+	JvQIFOWvHlwMeYSvzJeOZZNcO6ZOGMDS25kTmYL800KodK7FH7fXwEuIT+uX4V7U
+	rVAQJ1AI5ksxoeIKCUgIxYxR8UJl8LQcz+oKvB4Es9pUur6G/j4u+wGDaQ1FW4kf
+	EiGZ3QNVlV2cyobajY0wEQB0cShOsgRHkbLUcui1oCyGlZ1g69kIaweh5EMX1/31
+	GdcCyGXRf59NPD098Nf3wePdwDKNi7p632hU9F/LXKuawSkV58au96Lo6rjtFo5f
+	AGh6URukYmKewPtpVJ3Nkg5aikN4j5BEOeQ==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
+	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
+	action=sign d=kroah.com a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1793081042; d=kroah.com;
+	mf=PGdyZWdAa3JvYWguY29tPg==;
+	rt=PGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4=;
+	s=fm2:rsa-sha256:Uk3SGaOykFowYUzWDSIg0B7gsFlOlWaUTEOzW+kbwY/cjEy
+	Bbbe+iPCp/zJqc2Aig6qPNHDNs0VLTiGQJJfMtxMgprDPSD555Z9zw11zYunn+aG
+	5dc6eWC2AEA5zioQVbhGUO7jIbLQJskoYi+zynogQ63sqYPLbpxcvJmcQnpCDObd
+	SbT2CJnhK9mrauauvrZhyZnbb2W4uJ1PwmkVJSU3qlLM8eb4CpQoow5134xYLZa0
+	1zOTsxsF6wduh/0YLQ3AT1RTno161AaKMyxjUhk1wt44hZh4VHiWwS8FvGOSS33i
+	Rzxmu/hHA3Hd4bDq1hdyPDSzhpxv2takD+Vsbvw==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
+	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-disposition,content-type,date,feedback-id,from,
+	in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:zoLwu0ba4hLP136iUKXuQNMXsdfdA3aYEIrrMD0JcHQ=:0fCBaab8hkFDDaJ/Ih1bLvqwAABT2NnP0tQ4AAZGSwY=;
+X-ME-Sender: <xms:0j7gampYv-Qepawltb_5zxAQ7r1uchBwfZZimwmO733hKQn8Cbz_mQ>
+    <xme:0j7gamToaNKCO405c8j4qnNn8oDC9GcI-bmt-9T68gkY2hk1SFn2qmEzyCKYevmlZ
+    B57DUNMtjkDDojoSiv0dO8sbVIz2ttKdhs0T9HRTjl-WiQEqg>
+X-ME-Received: <xmr:0j7gavSvZjItNm52khlx_AHH4858akhyDGWcKxwdSjhzRE-p8KbOwE2JDov5Gs8y6phc24nFABEsjebIymvUVEGZBPD73h9Tp26QQ698qbc>
+X-ME-Proxy-Cause: dmFkZTFX46FHV+PvV6KGDcfkleNK34N2X9H1Al5LrxAe53ONFm9S0IjeeWDzhKxG8Shv+2
+    2Sn379VUd+VqaQMqSNIr0RXE0+SOVRfM/Gx63Qebrl2PemtKwduXbWRECrBTGBGfJrULBQ
+    YffivZZeuaqa6DZI7pcpaDtiOVdw5kIrTCL6r+s1lX0EQtvi5KXdkVtZXgpLmiCeQhkyo5
+    0RBDkNxGhRvHg45S2izMhkaFcV0863KLldUCedNcqH3+jgrZBCN9SeN2y6dCFRcMN42C1t
+    u00FOS5PhnGCWh3LVzWtg7Y9UnqD1Eeh27e8Hg6l3YKmlHNF7H1Kh+vihbmSX9fAbHYDo0
+    vqvwH4vETUN8Zr4DxgJ4QOvXhjERnzK77P9A+IdCgjx+wiWLtKkc6LZFFD5Bs6Z1sqZuVz
+    ckKV1E0wb9arx8YX8MtEsQsRkZeuM118FdGNbvrDBaRqe0x0rhL+VYYeX+8ZFBGdMjUawJ
+    tKIyqkzcz7czfyfY6rW9sNJyuz8PObfbf9f+DG/Wm/50xB7NDGRNqMS0hrstNZ3Z4TQGvn
+    In1zUasPgunc5Wwdo3htDug2OGygn9eWE+LyMfxwElu7DqFy//jpxmpCS/DqHVPA/Mtm6Q
+    rFKbHh41mZeRGHIV2EfmG7gi/NY8DRdJ/daoTWFCIqbRlpCr+MY0uSnnyS8A
+X-ME-Proxy: <xmx:0j7gasXJz0oNMX2i5_bjE9RmmTYq1qyKsyja06RKL9Hq3lr_R_tPSQ>
+    <xmx:0j7gak2DVi_NcPVHQg6hlEYpymXWNP0b7tuqiwndvmNWu3vC3cUm_g>
+    <xmx:0j7gaj8JGrWmpkvDmF71-9Qhk9DLNlB9oR-l6Rg1izzFGDRuZ_9BHw>
+    <xmx:0j7gaqeapAAVpdYV6w0VCFpM8W2Hnjk4hM-u81q3-PiIB6n2GiqYyg>
+    <xmx:0j7gahODWA6oPkTa3xcC561pcBpZh3fFk_WjMo6To3dGYrlK1o2PazpU>
+Feedback-ID: i787e41f1:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 27 Oct 2026 02:04:01 -0400 (EDT)
+Date: Tue, 27 Oct 2026 07:04:00 +0100
+From: Greg KH <greg@kroah.com>
+To: Tristan Madani <tristmd@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Stanislaw Gruszka <stf_xl@wp.pl>, Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Kees Cook <kees@kernel.org>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	tristan@talencesecurity.com
+Subject: Re: [PATCH v2 wireless 0/3] wifi: replace open-coded IE searches
+ with cfg80211_find_ie()
+Message-ID: <2026102756-geometric-swept-9e61@gregkh>
+References: <20261026223153.2087218-1-tristan@talencesecurity.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,75 +127,43 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Tue, 27 Oct 2026 05:22:40 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <55c325ace9b8cbc9af7ad7fa57a664d63e48d12e@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v2 1/2] wifi: rtw88: move the bmc high queue
- decision to tx.c
-To: "Ping-Ke Shih" <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <d6af5cebfa1a46e2bc2da662634766d7@realtek.com>
-References: <20261021124318.15993-1-luka.gejak@linux.dev>
- <ac6d8824bdeb45148ffd6b5dee7da313@realtek.com>
- <5235fd68b703f756cc2ee1e7471339a512db59b8@linux.dev>
- <875b4e96891a2bf256ca1805140b57aeccee4aed@linux.dev>
- <ec4065a1cf2c4d0ea357694a1a73ede8@realtek.com>
- <eaaa18cd9f23a3731bd1f8f17eb0885d1a17049f@linux.dev>
- <d6af5cebfa1a46e2bc2da662634766d7@realtek.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261026223153.2087218-1-tristan@talencesecurity.com>
 
-October 27, 2026 at 2:19 AM, "Ping-Ke Shih" <pkshih@realtek.com> wrote:
+On Mon, Oct 26, 2026 at 10:31:52PM +0000, Tristan Madani wrote:
+> Three wireless drivers (carl9170, rt2x00, p54) each hand-roll their own
+> TIM IE search function.  Replace them with cfg80211_find_ie(), which
+> already provides a correct and well-tested IE search.
+> 
+> Changes in v2:
+>   - Replace the entire open-coded functions with cfg80211_find_ie()
+>     instead of only tightening the loop condition, per Johannes Berg.
+>   - Add pre-subtraction length guards in p54 to prevent unsigned
+>     underflow on truncated beacon frames.
+> 
+> Tristan Madani (3):
+>   wifi: carl9170: replace open-coded IE search with cfg80211_find_ie()
+>   wifi: rt2x00: replace open-coded IE search with cfg80211_find_ie()
+>   wifi: p54: replace open-coded IE search with cfg80211_find_ie()
+> 
+>  drivers/net/wireless/ath/carl9170/rx.c        | 27 ++++-------------
+>  drivers/net/wireless/intersil/p54/lmac.h      |  3 --
+>  drivers/net/wireless/intersil/p54/main.c      | 30 +++++--------------
+>  drivers/net/wireless/intersil/p54/txrx.c      | 12 ++++++--
+>  .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 30 +++++--------------
+>  5 files changed, 29 insertions(+), 73 deletions(-)
+> 
+> -- 
+> 2.47.3
+> 
+> 
 
+<formletter>
 
->=20
->=20Luka Gejak <luka.gejak@linux.dev> wrote:
->=20
->=20>=20
->=20> October 25, 2026 at 3:49 AM, "Ping-Ke Shih" <pkshih@realtek.com> wr=
-ote:
-> >=20
->=20>  Luka Gejak <luka.gejak@linux.dev> wrote:
-> >=20
->=20>  >
-> >  > I was thinking, as staging got removed, for 10-ish weeks(until 7.5=
-)
-> >  > users of RTL8723BS won't have AP mode. So I was wondering if these=
- two
-> >  > patches could pass as fixes into rc2 release(or whatever is the fi=
-rst
-> >  > rc into which rtw tree is merged), as this would be DHCP stall fix=
-. To
-> >  > elaborate: when this driver was merged it, was exposingAP mode to
-> >  > userspace, due to RTW88 doing it globally. Therefore AP mode exist=
-ed,
-> >  > but wasn't working properly. So maybe it's a bit of a stretch, but=
- I
-> >  > think it's a valid proposal to send it as a fix into next rc relea=
-se.
-> >  >
-> >  Did you think people use staging driver with AP mode?
-> >=20=20
->=20>  It appears so. I saw on forums and articles about the new driver t=
-hat
-> >  some people were complaining because only station mode is working
-> >  because they exclusively or mostly use it as an AP point.
-> >=20
->=20This lets me think if I merge RTL8723BS to rtw88 and delete rtl8723bs=
-=20
->=20from staging too early. The staging rtl8723bs is a vendor driver whic=
-h
-> mostly implements "full" functions, but rtw88 should be not. To smoothl=
-y
-> migrate from staging to rtw88, we should implement equivalent functions
-> before merging, at least functions people are using.=20
->=20
-> But I really don't want to go back to staging driver. Let's pick the
-> fixes of AP mode. I hope no more functions needed to be picked.=20
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read:
+    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+for how to do this properly.
 
-That=20is the only thing needed to pick. Other things are already impleme=
-nted.
-
-Best regards,
-Luka Gejak
+</formletter>
