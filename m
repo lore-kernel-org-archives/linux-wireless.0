@@ -1,64 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.155.149
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.203
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793129226;
-	b=uGrXvPy3lfoA/iBwLk1G0gWLM5Z+jWvGRtSMJuRJHS/78xJMIIJX6EUfmt0h9T0VNJsG
-	 8JCNlkliu6LxVNzWAt/eIXJNQUtFa0VFW7Sp4Fm3QnPfs5Im4J6C/8cgBfNdD0Qun9UNh
-	 qLFAW0gz03olDnec487iFWSUL4tqESdblCll7f3/gtzVdorLkxp5gyYnRuBflMiGQJ6Jf
-	 XQsmWgfwkGWcgCe9u3g5Ol4wAZizADr/1RdONi4EVvurwUFLnblRsoj7HO8+hJiDkvYDQ
-	 qtnS4f4lm5rSoQKhEE08KRHK+D1Dh3iINP8F4i16pjEBok7vxnvLvXY787NSYwT5NRQ==
+	t=1793131090;
+	b=Q0FGwDg92/LjyTrf+/5mb09zd/D6asbF5S7dIm8vj4iinuBdb5ehWP2z/TrHi5x4nfPO
+	 1M3sqjGteraTAkEN48YuEHKG58KyR8ZPkY0mwqOoNkUMiovaulROcstpgJYl5fWqzK4WY
+	 4wNViXk7IEYufqW0axT1NdnaUGphHTkwm9dz6xBiCZ9k9RrnuT+4hPiQUgS7tOfm1GzUp
+	 FlXkA9iTlUUPZcrDnpvB9oxdNs+HSfd6GdKZ+98wQc74PcHsWILpkxD0VRFYwNuN2KKoo
+	 BOIlBewOHoJrj1i8uOtI7GbwoWNyMVDb8n4ZxwcLt7yAGEKIJnMoAyFdRhtRgKcNfXQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793129226;
-	h=DMARC-Filter:Received:DKIM-Signature:Date:From:To:Cc:Subject:
-	 Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-CMAE-Envelope;
-	bh=3OeRqug9an4f9JeH+7A+ciKWBCrOmqQOxohMWMpsR54=;
-	b=XlcgyT1qnZ3TC1uhqz6+iW52a6BQgM+XmEVqdzXxCn5qMHP+yD4chhxb50GbA/XymAZP
-	 GiK6KsjzZIqO1lrwJE9dNhiF5k/5bX36S2gc3WH1mY8wbcbkEEIlsaAS3F/LoLJqlNADo
-	 zi7c34C8GjCBWW751Ch+SRCCLHt2+kV7W4nXsCCzYJX+O87645HmdhSSW+IFH9PVesWVA
-	 cY1MWdB8mwr7wIEvxtUW/xvj+5gmOButyJoJqUmNJRjOsQtyCI99wqNwrOtj1+hrwkaim
-	 ZGNVuYz21/uU650JX0z3HdrkI0s9+JZ0Arqs8PskIP00dkvuuUjEYT4lQMvW3AK7G6A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793131090;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=cJlwniNIJ0xDoWOsli3cb6MLnfn7HwEBdaBmsbX5UP4=;
+	b=R6htaQmnByLk0tXLw1rwoMFGtsMfBVVCCBrSG8SDKB1xjuqoxDWEZQnQdUk3rlnEjreu
+	 iW7zEnuqrJUZ+x/TVeMqC4QG0XQfvYSyXbo+ty/ON7v9wo72LN9O8ynovSbVMW4f0DqMg
+	 WUfEYpPHOcOwXvalGFxcTvQmYpOHaOvR5WXYqSyJgLNi7n6NWBtM85uU3Q2f56CO54ygb
+	 PoJpAcx8KWsWuL/c9ayhjsNy4FKPSkqUSJilmilOzR+XVBnQpa1LOlykdQ8YQQ2V7hJRy
+	 5ErfcOQgdi3sCtbPflwgA605d5lggHfQ6SStwWh7Jky2rZWTtetPfcjdrid5O7filcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mythread.it;
-	spf=pass smtp.mailfrom=mythread.it;
-	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b="l/WieYsh";
-	arc=none smtp.remote-ip=62.149.155.149
-Received: from smtpdh19-2.aruba.it (smtpdh19-2.aruba.it [62.149.155.149])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=justthetip.ca;
+	spf=pass smtp.mailfrom=justthetip.ca;
+	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=VoKI9kGO;
+	arc=none smtp.remote-ip=91.218.175.203
+Received: from mta0.migadu.com (out-203.mta0.migadu.com [91.218.175.203])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 545CC606A324
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 19:27:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 545CC606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDAB1606A31A
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 19:58:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EDAB1606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=l/WieYsh
-Received: from fedora ([94.34.125.0])
-	by Aruba SMTP with ESMTPSA
-	id Lmp4xaNNib24ZLmp4xQRCY; Tue, 27 Oct 2026 20:27:03 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1793129223; bh=ydd4JzHCHSW/D/rNq55GJ+0dNek5/zgfZP8r+ktQeAA=;
-	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=l/WieYshVQrGL+tueTQL/5Cg4xBoeu+WavhbhwySXTQfGZezCqAJp9VbEI6damWh1
-	 z+KjKqKZD4Ryo9SAFD1mjaeC2iYJgrIjM0S3Dhv8hOa7pMHoLoYPQTnrUZOtx5x0x6
-	 ki7aKCHhsesQ6kTBr6QyHwmWPls31b/cEmzezxqmG9Yqf+kqBEeGN2InWngXt0B02N
-	 NFR5Ogb0ZeeVoj6bTQXCW2MdXjYPzghyu9McWa9/so36oxf+gsCpavd2odMD/EDzYo
-	 ils1J09FDEimCkhsJQGB7cRcdSwnZYTQhTbAx+T4B7W3ag/fkW2jPKvyxjP4cwnmVY
-	 CuAL1RvXUO3bQ==
-Date: Tue, 27 Oct 2026 20:27:02 +0100
-From: Alessio Ferri <alessio.ferri@mythread.it>
-To: Andreas Wendleder <gonsolo@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Johannes Berg
- <johannes@sipsolutions.net>, b43-dev@lists.infradead.org, Michael Buesch
- <m@bues.ch>, kvalo@kernel.org, julian.calaby@gmail.com,
- jpeisach@ubuntu.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless-next 1/2] wifi: b43: reprogram the MAC filter
- after an interface restart
-Message-ID: <20261027202702.1c6902d8@fedora>
-In-Reply-To: <20261014143225.82149-2-gonsolo@gmail.com>
-References: <20261014143225.82149-1-gonsolo@gmail.com>
-	<20261014143225.82149-2-gonsolo@gmail.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=VoKI9kGO
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=6ZXRmxti2ps4BKs1nT0dZJAbH3VLUW48J2CzoUJpFrU=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793131086; v=1; x=1793735886;
+ b=VoKI9kGOLKUgH3r4mJg5XJR2IwRqtY1D0510c0CenSUhc+bwzMIAriNQX6cruHVeJdTPgt0A
+ cQ/gG/fjqdk7EZOJO1ggRJcB7w/klUaxljtYTjPvmivQ8DXcI/6MU+e84iNZeoux4hEa0vYwmCi
+ RTYrC3t3kzX80tGkTt0zEX/pThlrdwh50eHS8bpXN0eKTHQ8JJt4OBIDCrBx02SKoMR8GWv7+dW
+ mC2P+L1Ed8HZTcGdHvRpgV4/KhqapKz36lPjywoBDv20Omz1Bo2FhImxZYqYUb2Glp1wKxQtYOk
+ qct1Ct+762v0a6HQ57bw6yuMkYHP+50ZO8QE4SCcD6UzA==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id c273b73cd2621e85;
+	Tue, 27 Oct 2026 19:58:06 +0000
+X-Mizu-Trace-ID: c273b73cd2621e85
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Deren Wu <deren.wu@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+	Fedor Pchelkin <pchelkin@ispras.ru>,
+	Mark Anthony Agarro <markanthonyagarro@gmail.com>,
+	Alex Gavin <a_gavin@icloud.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH wireless 0/4] wifi: mt76: mt792x: make active monitor work
+Date: Tue, 27 Oct 2026 12:57:59 -0700
+Message-ID: <20261027195803.711995-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -68,53 +74,51 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfBRL4N5AHK0FLusPkHBO9Nt1tEejrk7JIJ6QhI+1QP7K/1U14BgCaPrdTIkBbNLTqptQ0j05oYkFEKhifbuvdv3huPNZ8bJjzqqGUxaQSxna4CsNoP0A
- kYCJpujPBTORLdKPxU9McjsztjhJTY4/ruL/p4VY1SJtZ37YTFyAJMf/QDmPkoJUoTQKagXPJX62lnKZoNNL6eY9RMYsr8T7+c+8Jb/dDobisDtyS+76Y/Nk
- r1116KIo90Qa7Qg3ntaicT87S4FboyX7OdOMmT9UUFyGtJ9qDevGar+lc7UqlKNtw9Y8hCF02rfDapIlnEsBGzhYL7ZAMwYF/gjUHXQlokJ26k8Ni4F7qXfe
- PNVFPZW8JteqN1ds2tPln6tZHvfuiH8gh79VcV9VZCi2kl7Vg1JZ5bphzclUKHxbm9Tu5eLDInBnFxU1r2vsOsSjNHuc4/rlevLOm3qvc8DBwexg5wQ=
+Content-Transfer-Encoding: 8bit
 
-Il giorno Wed, 14 Oct 2026 16:32:24 +0200
-Andreas Wendleder <gonsolo@gmail.com> ha scritto:
+Active monitor on MT7921, MT7922 and MT7925 never gets a channel, and
+since 7.3 every mt792x refuses it.
 
-> b43_op_start() clears wl->filter_flags, but mac80211 computes @changed
-> for b43_op_configure_filter() against the flags it cached from the
-> previous run. After a down/up it can report no change, so
-> b43_adjust_opmode() is not called and MACCTL keeps the cleared filter.
-> 
-> Compare the requested flags with what the hardware was programmed with
-> and add the difference to @changed.
-> 
-> Signed-off-by: Andreas Wendleder <gonsolo@gmail.com>
-> ---
->  drivers/net/wireless/broadcom/b43/main.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43/main.c
-> b/drivers/net/wireless/broadcom/b43/main.c index 8f4aff3..57a5935
-> 100644 --- a/drivers/net/wireless/broadcom/b43/main.c
-> +++ b/drivers/net/wireless/broadcom/b43/main.c
-> @@ -4318,6 +4318,14 @@ static void b43_op_configure_filter(struct
-> ieee80211_hw *hw, FIF_OTHER_BSS |
->  		   FIF_BCN_PRBRESP_PROMISC;
->  
-> +	/*
-> +	 * b43_op_start() zeroes wl->filter_flags, but mac80211
-> computes
-> +	 * @changed against its own cached flags, so after an
-> interface
-> +	 * restart it reports no change and MACCTL kept the zeroed
-> filter.
-> +	 * Compare against what the hardware was actually programmed
-> with.
-> +	 */
-> +	if (wl->filter_flags != *fflags)
-> +		changed |= wl->filter_flags ^ *fflags;
->  	wl->filter_flags = *fflags;
->  
->  	if (changed && b43_status(dev) >= B43_STAT_INITIALIZED)
+Patch 3, Mark's change from the morrownr/mt76 tree, passes every mt792x
+monitor to the driver as its own vif, as MT7927 already does. Patches 1
+and 2 keep the sniffer armed for such a monitor, and patch 4 offers
+active monitor again. This replaces the revert I sent in September [1].
 
-Tested on my DSL 3580L with a 4352 5Ghz, the chip transmit ok.
+	active otherbss monitor, channel 6    stock      with the series
+	MT7921AU (USB)                        refused    87 beacons, passive 87
+	MT7922 (PCIe)                         refused    88 beacons, passive 86
+	MT7925 (USB)                          refused    87 beacons, passive 87
+	MT7925 (PCIe)                         refused    88 beacons, passive 88
+	MT7927 (PCIe)                         refused    86 beacons, passive 88
 
-Tested-by: Alessio Ferri <alessio.ferri@mythread.it>
+Passive capture is unchanged, and on MT7927 it now survives a scan.
+
+Patch 1 needs 180b57e3a455 ("wifi: mt76: bypass DPD on a scan channel
+while a monitor is active") from mt76, not yet in mt76-fixes.
+
+[1] https://lore.kernel.org/linux-wireless/20260903200947.27051-1-lucid_duck@justthetip.ca/
+
+Devin Wittmayer (3):
+  wifi: mt76: mt7921: keep the sniffer on for real monitor vifs
+  wifi: mt76: mt7925: keep the sniffer on for real monitor vifs
+  Revert "wifi: mt76: mt792x: do not advertise active monitor"
+
+Mark Anthony Agarro (1):
+  wifi: mt76: mt792x: pass monitors to the driver as real vifs
+
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  5 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  1 -
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 82 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   |  5 +-
+ .../wireless/mediatek/mt76/mt7921/testmode.c  |  4 +-
+ .../wireless/mediatek/mt76/mt7925/debugfs.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 70 +++++++++++++++-
+ .../wireless/mediatek/mt76/mt7925/testmode.c  |  4 +-
+ drivers/net/wireless/mediatek/mt76/mt792x.h   | 10 +++
+ .../net/wireless/mediatek/mt76/mt792x_core.c  |  6 +-
+ 11 files changed, 167 insertions(+), 24 deletions(-)
+
+-- 
+2.56.0
+
