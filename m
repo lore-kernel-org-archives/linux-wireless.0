@@ -1,52 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.194
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.38.247.119
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793085932;
-	b=RByHnnYkkw8RFwkYDlJwTv3lrs7hAQLPBXHiF2zl+e3zSdHMok9Z9yJxmtm9zPRfU9Fd
-	 zxOZp+YfdjqzPEV3PX0njFPl+Bogu7whlAD/xEKGGGC57Ys8In/QPz/JmRorXtOiRZhh0
-	 JR6xKeBzmbi3j2ihYO7vMfIn3NWT0RtMoMNhygj1lsJtohtYhYnZi/jbBxIDP3U+xxkIf
-	 4Ypu2VotjNULIJVHJrci5jcLb7hV2KB7gEHSdQVjCRLlBBEIl0iyeSzg73MIXymPFC4D5
-	 nKf6nRXqShlg8Yxg/PjInxXLIfK8YR7l6OcM44GVLiGDJcwK3Ooo+cuw1ZySv2FBrfg==
+	t=1793087724;
+	b=TDbNz4TFKXR1u7td1XwcB4NNz/VzbvUPa5vrKWhR2mMk4BjUNEetnHmdOKH/NZc+5Y8C
+	 tprGrLitQ66YylgNgRDV451KIrBKwL3mx6nxnBYCf6sPoBKeuS6x4SfRNdIEcDL4nvFB+
+	 dmMvoJeLk+jWLKsQSLaCRJ/f/5Iq5Hu71P6NvhiABGVAifyUsnm+cIDn5inKx8qsSWHGg
+	 29gBhRBg1KMs86hKYEqMTACsH/31sVF4TNKiMWhO15IV2ojs5BeS1Bs17fDMSL+0k1ass
+	 UWNkCkc15VuQzid2G29r5usdzY6ZVHCjLkAbiGzbJVNFrisGPkHpmL9QUtiHV5l/h9A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793085932;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:
-	 In-Reply-To:References;
-	bh=CtKam3sSyIGLgg9QQ+MQwapz2ZSQkS/wL4dGVqGAiJM=;
-	b=A/sqr4moqoYZhUNsjI7Z9DgM6E1aCZ1N4/b4pWTA1LuDkAp2CRGaqMjqz+aZLr3s2HCl
-	 LkWv2HKX0h2w8SyyIvHNt5R2fp7nACZyWpoC/Xzgr5iKTn1JRmY8zMAsq0kNakTS4Mekj
-	 sp8vF3ufMq8D6WjdvcRb5z4Sey46kNV/euhvb/RfrPAAShEBucH/ap1VkXkZhLVyWrzwJ
-	 ADQ+JlqsE9SEIqwoShs4egn/QPHvixi7zbwKeI2K0/44QTvdb/2OwP1BSmr1WYn2plOUS
-	 cdkcXtgsBule5W5CkEh/SE6MrOj0op92VlCEvTbljDdu8PHvHJujq4xMekscLe7HcBw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793087724;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:X-Virus-Scanned:
+	 X-Spam-Flag:X-Spam-Score:X-Spam-Level:X-Spam-Status:Received:Received:
+	 Received-SPF:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:From:Content-Language:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-PPP-Message-ID:X-Rspamd-Server:
+	 X-Rspamd-Queue-Id:X-NC-CID;
+	bh=jhgLB/G+bnU+2NF4b/GbQk/18YkilOwbFiadUiWuDC4=;
+	b=RPKFUpsWRzj/I+DQqIUh/eodproiBj5a3C/+ZOwPclqbXsV2HMEYaJ0Dt1g+IUkCBbam
+	 kDvppbholgnjwsXW9gEyQCJFv0miccwyT/9NMT5JocdoklEtGTg56kujYCFq9Pw6IaeIv
+	 wU4D+y4bl9YvofJ3codwACcDv3sa8Ljh79KXmXUollAhhcYrofzazb5N9IVpGQsqi7UPX
+	 cmZIQsvXNDx+6eIvjsseYMWnfV5Ko/6lB9tskgAkt3TFBXkuWOkkMo8p41MCJqBFA3jbI
+	 ElsA+ZWxYWsuGcRM50n6GDuZRBKN8CKB36HaORkjBAyV8F6x4GIfhSsDCiXOU+iDntQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=X9c+5Zyl;
-	arc=none smtp.remote-ip=91.218.175.194
-Received: from mta0.migadu.com (out-194.mta0.migadu.com [91.218.175.194])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=leemhuis.info;
+	spf=pass smtp.mailfrom=leemhuis.info;
+	dkim=pass header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=BNuy2gTW;
+	arc=none smtp.remote-ip=46.38.247.119
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [46.38.247.119])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA2C606A31A
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 07:25:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ACA2C606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B9D606A31D
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 07:55:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C2B9D606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=X9c+5Zyl
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=/rny5X7TU9diJBxFZTUgnFMxD3SZtOisXApj/KuHmaE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793085929; v=1; x=1793690729;
- b=X9c+5Zylc5hyQLBiCnS8D90RuEQAteXAWA+3pdnfN320gtl9ZDkvBubWkAFV59AHAfyw75Mk
- sUG/VXSL07Ah3q5zE1RbquvnM7cgSYC5mK/r7bw5SGhUxtFYlCVrzh6UMBCt9MyUlYnsV5RBVfo
- dcsZr9iVtobF1YK3YSNvcncM=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 7bf874dff0951ae0;
-	Tue, 27 Oct 2026 07:25:17 +0000
-X-Mizu-Trace-ID: 7bf874dff0951ae0
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=BNuy2gTW
+Received: from mors-relay-8404.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8404.netcup.net (Postfix) with ESMTPS id 4jDN831lNcz8YgS;
+	Tue, 27 Oct 2026 08:55:15 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1793087715;
+	bh=Ijsej1QAoO/3PN6iWABBfAJJaRGLph/2eyq6W4qoBw8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=BNuy2gTWo8ujB+fFm9ZYpDfx/SrVsQuki/5zYZ/9OBY0m39PH4FZ5vAJb9wzsqH69
+	 ieTnTyL3xg08xv8eqACies5rHlWlmchY+W2e6+CD6AFcFk8tMDSJN1SrpI0uTuc2T1
+	 yHl3hT4LEp2SVORrxsZVApMI4iGf+hGtpTBmVl8Klr6Dojfv4XCRwG//vAdwaZBhuw
+	 80eeilzNoztfm382It8JM99+G7kpvYnOehaz5zc4DIBq+uysiy3ttxI2xmtrNGfyTW
+	 6Aw1YEt3X+GzNZ4SIBvpF72D+kI/fD3b2//abuWAcqpbK6prjVbmDxortgCaS0dvsZ
+	 +ffTmkH1PE8og==
+Received: from policy01-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8404.netcup.net (Postfix) with ESMTPS id 4jDN8312MTz502k;
+	Tue, 27 Oct 2026 08:55:15 +0100 (CET)
+X-Virus-Scanned: Debian amavisd-new at policy01-mors.netcup.net
+X-Spam-Flag: NO
+X-Spam-Score: -2.898
+X-Spam-Level: 
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy01-mors.netcup.net (Postfix) with ESMTPS id 4jDN822v70z8tk9;
+	Tue, 27 Oct 2026 08:55:14 +0100 (CET)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 9034E5F98B;
+	Tue, 27 Oct 2026 08:55:09 +0100 (CET)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <9a92165c-93dd-42a1-b61c-b494008f45b7@leemhuis.info>
+Date: Tue, 27 Oct 2026 08:55:09 +0100
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,137 +79,187 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Tue, 27 Oct 2026 07:25:16 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <fc98b0719bad6282083133041e80136a7215359f@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next 0/5] wifi: rtw88: pci: Support an older design,
- like RTL8821AE/RTL8812AE
-To: "Ping-Ke Shih" <pkshih@realtek.com>, "Bitterblue Smith"
- <rtl8821cerfe2@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
-References: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
- <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH iwlwifi-fixes 3/5] wifi: iwlwifi: honor the per-channel
+ 320 MHz regulatory flag
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+ Linux kernel regressions list <regressions@lists.linux.dev>
+References: 
+ <20260930122439.f8a1ea3af242.I282fab02ab2f183633df0f070229fb5a2d5c9ec3@changeid>
+ <20260930122439.08094e4c344f.Ic0a4bf544fd6ebaf1fc62b40bf463bd289e58cf0@changeid>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: 
+ <20260930122439.08094e4c344f.Ic0a4bf544fd6ebaf1fc62b40bf463bd289e58cf0@changeid>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <179308770986.901241.14769111465113550766@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: 9034E5F98B
+X-NC-CID: OkT08XUM0Ix4ZJ6JWXsJjg+ncpKuZ6jSmPowZaZN+cT/fdNzIeU=
 
-Hi Ping-Ke,
+On 9/30/26 11:25, Miri Korenblit wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> When support for the MCC update response version 8 was added, the API
+> change was implemented only partially. That version introduced two new
+> pieces of information about 320 MHz: the global capability
+> REG_CAPA_V5_320MHZ_ALLOWED and a per-channel bit, BIT(12), in the
+> channel flags carried by the response. Only the former was picked up.
+> BIT(12) kept its previous meaning in the driver, NVM_CHANNEL_DC_HIGH,
+> a leftover from old devices that nothing used, so the new bit was
+> silently dropped.
 
-October 27, 2026 at 2:52 AM, "Ping-Ke Shih" <pkshih@realtek.com> wrote:
+Just wondering: what happened to this regression fix? It from what I see
+seems to sit in iwlwifi fixes branch for a while already, but missed
+both 7.3 final and also the main net merge in this merge window. Did it
+fell trough the cracks?
 
+Ciao, Thorsten
+> The two are not equivalent, the per-channel bit can be more restrictive
+> than the global capability. When that happens, cfg80211 is told that
+> 320 MHz is allowed, mac80211 builds a 320 MHz channel context, and the
+> firmware rejects the resulting PHY_CONTEXT_CMD and asserts with
+> 0x200014FC.
+> 
+> Rename the bit to NVM_CHANNEL_320MHZ and set NL80211_RRF_NO_320MHZ for
+> the channels that don't have it, so that we cap the bandwidth at
+> 160 MHz instead of asserting the firmware. The bit is checked in every
+> band, so that a future band that supports 320 MHz is covered as well.
+> 
+> Fixes: e9b63341dc15 ("wifi: iwlwifi: update response for mcc_update command")
+> Assisted-by: GitHub-Copilot:claude-opus-5
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221675
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+> ---
+>  .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  6 ++---
+>  .../wireless/intel/iwlwifi/iwl-nvm-parse.h    |  7 ++++--
+>  .../wireless/intel/iwlwifi/tests/nvm_parse.c  | 24 +++++++++++++++----
+>  3 files changed, 28 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> index 863d5e358152..f4df00514fb1 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> @@ -106,8 +106,6 @@ static const u16 iwl_unii9_nvm_channels[] = {
+>  #define IWL_NVM_NUM_CHANNELS_EXT	51
+>  #define IWL_NVM_NUM_CHANNELS_UHB	110
+>  #define IWL_NVM_NUM_CHANNELS_UNII9	ARRAY_SIZE(iwl_unii9_nvm_channels)
+> -#define NUM_2GHZ_CHANNELS		14
+> -#define NUM_5GHZ_CHANNELS		37
+>  #define FIRST_2GHZ_HT_MINUS		5
+>  #define LAST_2GHZ_HT_PLUS		9
+>  #define N_HW_ADDR_MASK			0xF
+> @@ -280,7 +278,7 @@ static inline void iwl_nvm_print_channel_flags(struct device *dev, u32 level,
+>  		      CHECK_AND_PRINT_I(40MHZ),
+>  		      CHECK_AND_PRINT_I(80MHZ),
+>  		      CHECK_AND_PRINT_I(160MHZ),
+> -		      CHECK_AND_PRINT_I(DC_HIGH),
+> +		      CHECK_AND_PRINT_I(320MHZ),
+>  		      CHECK_AND_PRINT_I(VLP),
+>  		      CHECK_AND_PRINT_I(AFC));
+>  #undef CHECK_AND_PRINT_I
+> @@ -1631,6 +1629,8 @@ u32 iwl_nvm_get_regdom_bw_flags(const u16 *nvm_chan,
+>  		flags |= NL80211_RRF_NO_80MHZ;
+>  	if (!(nvm_flags & NVM_CHANNEL_160MHZ))
+>  		flags |= NL80211_RRF_NO_160MHZ;
+> +	if (!(nvm_flags & NVM_CHANNEL_320MHZ))
+> +		flags |= NL80211_RRF_NO_320MHZ;
+>  
+>  	if (!(nvm_flags & NVM_CHANNEL_ACTIVE))
+>  		flags |= NL80211_RRF_NO_IR;
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+> index 9ebb72d3726a..7b11682f5d45 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+> @@ -10,6 +10,9 @@
+>  #include "iwl-nvm-utils.h"
+>  #include "mei/iwl-mei.h"
+>  
+> +#define NUM_2GHZ_CHANNELS		14
+> +#define NUM_5GHZ_CHANNELS		37
+> +
+>  /**
+>   * enum iwl_nvm_sbands_flags - modification flags for the channel profiles
+>   *
+> @@ -82,7 +85,7 @@ struct iwl_reg_capa {
+>   * @NVM_CHANNEL_40MHZ: 40 MHz channel okay
+>   * @NVM_CHANNEL_80MHZ: 80 MHz channel okay
+>   * @NVM_CHANNEL_160MHZ: 160 MHz channel okay
+> - * @NVM_CHANNEL_DC_HIGH: DC HIGH required/allowed (?)
+> + * @NVM_CHANNEL_320MHZ: 320 MHz channel okay
+>   * @NVM_CHANNEL_VLP: client support connection to UHB VLP AP
+>   * @NVM_CHANNEL_AFC: client support connection to UHB AFC AP
+>   * @NVM_CHANNEL_VLP_AP_NOT_ALLOWED: UHB VLP AP not allowed,
+> @@ -101,7 +104,7 @@ enum iwl_nvm_channel_flags {
+>  	NVM_CHANNEL_40MHZ			= BIT(9),
+>  	NVM_CHANNEL_80MHZ			= BIT(10),
+>  	NVM_CHANNEL_160MHZ			= BIT(11),
+> -	NVM_CHANNEL_DC_HIGH			= BIT(12),
+> +	NVM_CHANNEL_320MHZ			= BIT(12),
+>  	NVM_CHANNEL_VLP				= BIT(13),
+>  	NVM_CHANNEL_AFC				= BIT(14),
+>  	NVM_CHANNEL_VLP_AP_NOT_ALLOWED		= BIT(15),
+> diff --git a/drivers/net/wireless/intel/iwlwifi/tests/nvm_parse.c b/drivers/net/wireless/intel/iwlwifi/tests/nvm_parse.c
+> index 853911900bfd..5a50807e3181 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/tests/nvm_parse.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/tests/nvm_parse.c
+> @@ -2,7 +2,7 @@
+>  /*
+>   * KUnit tests for NVM parse
+>   *
+> - * Copyright (C) 2025 Intel Corporation
+> + * Copyright (C) 2025-2026 Intel Corporation
+>   */
+>  #include <kunit/static_stub.h>
+>  #include <kunit/test.h>
+> @@ -12,7 +12,9 @@ MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
+>  
+>  static const struct nvm_flag_case {
+>  	const char *desc;
+> +	int ch_idx;
+>  	u16 nvm_flags;
+> +	struct iwl_reg_capa reg_capa;
+>  	u32 reg_rule_flags;
+>  	u32 set_reg_rule_flags;
+>  	u32 clear_reg_rule_flags;
+> @@ -36,6 +38,20 @@ static const struct nvm_flag_case {
+>  		.clear_reg_rule_flags = NL80211_RRF_ALLOW_6GHZ_VLP_AP |
+>  					NL80211_RRF_NO_6GHZ_VLP_CLIENT,
+>  	},
+> +	{
+> +		.desc = "Allow 320 MHz on a 6 GHz channel that reports it",
+> +		.ch_idx = NUM_2GHZ_CHANNELS + NUM_5GHZ_CHANNELS,
+> +		.nvm_flags = NVM_CHANNEL_320MHZ,
+> +		.reg_capa = { .allow_320mhz = true, },
+> +		.clear_reg_rule_flags = NL80211_RRF_NO_320MHZ,
+> +	},
+> +	{
+> +		.desc = "Restrict 320 MHz on a 6 GHz channel without the bit",
+> +		.ch_idx = NUM_2GHZ_CHANNELS + NUM_5GHZ_CHANNELS,
+> +		.nvm_flags = 0,
+> +		.reg_capa = { .allow_320mhz = true, },
+> +		.set_reg_rule_flags = NL80211_RRF_NO_320MHZ,
+> +	},
+>  };
+>  
+>  KUNIT_ARRAY_PARAM_DESC(nvm_flag, nvm_flag_cases, desc)
+> @@ -43,11 +59,11 @@ KUNIT_ARRAY_PARAM_DESC(nvm_flag, nvm_flag_cases, desc)
+>  static void test_nvm_flags(struct kunit *test)
+>  {
+>  	const struct nvm_flag_case *params = test->param_value;
+> -	struct iwl_reg_capa reg_capa = {};
+>  	u32 flags = 0;
+>  
+> -	flags = iwl_nvm_get_regdom_bw_flags(NULL, 0, params->nvm_flags,
+> -					    reg_capa);
+> +	flags = iwl_nvm_get_regdom_bw_flags(NULL, params->ch_idx,
+> +					    params->nvm_flags,
+> +					    params->reg_capa);
+>  
+>  	if ((params->set_reg_rule_flags & flags) != params->set_reg_rule_flags)
+>  		KUNIT_FAIL(test, "Expected set bits:0x%08x flags:0x%08x\n",
 
->=20
->=20Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
->=20
->=20>=20
->=20> This series extends rtw88_pci to support an older design, like
-> >  RTL8821AE, RTL8812AE, RTL8723BE, etc.
-> >=20
->=20The older design is own-bit ring, and the new is read/write index rin=
-g
-> with buffer descriptor. Can we use 'own-bit' instead of 'old' as the fi=
-le
-> name ?
-
-I agree with this name proposition.
-
->=20
->=20>=20
->=20> After this, another ~20 small patches can enable support for RTL882=
-1AE
-> >  and RTL8812AE.
-> >=20
->=20Will you plan to implement RTL8723BE (you listed it above) in rtw88?
->=20
-
-As=20far as I know Bitterblue hasn't commited to implementing RTL8723BE
-in rtw88. That development is being done by WillyHB on github. This
-series is requirement for future implementation of RTL8723BE in rtw88.
-
-> >=20
->=20> Then rtl8821ae can be deleted from rtlwifi.
-> >=20
->=20Luka asked me to merge AP mode for RTL8723BS, because the AP mode of =
-staging
-> rtl8723bs can work well. If you decide to delete it from rtlwifi, pleas=
-e
-> make sure all features are implemented before deleting. However, I can'=
-t
-> say what the exactly all features are.=20
->=20
-> [1] https://lore.kernel.org/linux-wireless/d6af5cebfa1a46e2bc2da6626347=
-66d7@realtek.com/T/#maa2a3e897d5d488d0219399f9555d88b9ef6504f
->=20
->=20>=20
->=20> rtw88 is not without problems, but in my experience it's more relia=
-ble
-> >  with these two chips. In the 6-8 months I used this code, I observed
-> >  these problems with rtw88:
-> >=20=20
->=20>  * The top speed is a bit lower: ~220 Mbps instead of ~300 Mbps. In=
- the
-> >  case of TX, the difference is due to the EDCA parameters. rtw88 uses
-> >  the ones from mac80211 (rtw_conf_tx()), whereas rtlwifi uses its own
-> >  "turbo" values when there are not too many non-BE packets
-> >  (rtl8821ae_dm_check_edca_turbo()). Not sure why the RX speed is
-> >  lower.
-> >=20
->=20Maybe you can try to compare them by VO or VI packets?
->=20
->=20>=20
->=20> * RTL8821AE RX speed gets limited to 70-100 Mbps sometimes. If I wa=
-tch
-> >  a Youtube video with Bluetooth headphones for 10 minutes and then
-> >  switch to another wifi adapter while the video is playing, leaving
-> >  the RTL8821AE's wifi side idle, usually within 20 minutes it will
-> >  start to raise IMR_RDU when it reaches the end of the RX ring and
-> >  goes back to the beginning.
-> >=20
->=20Does it still happen without Bluetooth? IIRC the rtw88 BT-coexistence=
-=20
->=20mainly supports RTL8822BE and RTL8822CE. I believe the algorithm can
-> share with other chips, but control registers or additional settings mi=
-ght
-> be missing.
->=20
->=20>=20
->=20> It uses RX descriptor number 511, then number 0, then it doesn't
-> >  want to use number 1 for "a while". It raises IMR_RDU once or twice,
-> >  and only then it moves on to number 1, 2...
-> >=20=20
->=20>  Usually when it raises IMR_RDU there are 510 or 511 RX descriptors
-> >  available (out of 512), so it has no excuse.
-> >=20=20
->=20>  Once it has raised IMR_RDU the RX speed doesn't exceed 70-100 Mbps
-> >  anymore.
-> >=20
->=20If driver can receive packets on time, how does it raise ISR_RDU?=20
->=20Is RX interrupt triggered on time?
->=20
->=20>=20
->=20> Powering off and on again, which happens a lot when the wifi
-> >  interface is idle, doesn't help.
-> >=20=20
->=20>  The only thing that seems to help is reloading the driver, but eve=
-n
-> >  that may not always work.
-> >=20
->=20I think reloading the driver and interface idle are very similar (alm=
-ost
-> the same). No idea why they have different results.=20
-
-Maybe=20firmware reload?
-
->=20
->=20>=20
->=20> Switching to another wifi adapter while playing some video is the
-> >  most reliable way to trigger the problem, but it can also happen
-> >  randomly, it just takes many hours.
-> >=20
->=20Thanks for your effort.=20
->=20
-> Ping-Ke
->
-
-Best regards,
-Luka Gejak
