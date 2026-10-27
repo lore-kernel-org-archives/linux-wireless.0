@@ -1,109 +1,124 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793090073;
-	b=04agy05mB24+xzJwkpyQKlOrWis0VHRx6SHsewdbgz8m3jnSbO7+B+IPfrPvNRAxFJqH
-	 MG2fQT4hoIwQpnK4b3woPEQzcGXIEkX5twlqFrETT2IRJR/FHWbyG4UTYe+unUkiuT7vA
-	 q5IpFERBzuy2w3YLHbIrmUNgb9FAfXCtU2tC7EvkmbyMbuZ7cE6W1HLagkniat05wuQSr
-	 fwHcZj/KjS8rUOzsul2yK5jmFf/mZwkheDmHvy0KuKwciMZBgLjUjXnEAAojpPyz5tYvM
-	 evaz0i1v6K/mns9+e7Qf/udADqVJuvbuhC4wQyrNI3zB/NHgEFPMAsh7pyFm8Z2cMyg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793090073;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.168.131
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793090596;
+	b=ugeEaHDiXvY2BatPln6/BsBaA/XN+/nUrOJoBqNI11Gv97mJPs/aQ7pVeS7RuJVodNJX
+	 m8XMsBDyya2iyMzrZx1nLVEprDG93dMtQPlE8+PcFJBVTRXodFKdSX//QQtXGw7VaCWmK
+	 VuxTJGwMHEigwMqQu9NOwu20G/nuhns0LO9VrKkdNrG3RiKzSrJQYqTIzQfDvQJG3Oa/x
+	 M+IB/6t3kLCMPaeNOrG+MVXfyV2CP2lVNhA9gugQM2GuzuC+LwpbJYzhAirR2baL5O/VH
+	 HABJ6Y0GFJewSIkNBXd/wH1/r33/kfR0ui7azgcpeZ7wAgtVOuRlRPQd0IKdWfRSM9A==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793090596;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
-	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Authority-Analysis:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=4wrQkMaK+dW/8z6fl3qfa+S+gShoibCmJmmER0g7vrM=;
-	b=D32RV5B9DVE1QuTZ3WRdTipI4HbQpX0DJYEyDR/54BmPgUnKSc57w97ESZRcdfiGcXAI
-	 sqtdM92JBbgkzyzjlmPXuTC8sblX0jtc5qm4YqJY1P20QT2D4d3h0i0uwc35gNJmiEI+Q
-	 i2xD0E1pETNTs93HIynV0ZzpLfRUWyu2b+KD/eN5hrUkmpXR3ap2f/UGY2JkoIZ8XttZK
-	 zANL5BI6MGgopUbdatOzs+T2kVlowxojbokZCyyoVh1jlTxdL3vMjgmIMSsVIWLZxbfC5
-	 7LZISJl+6iVtj4STDg00VAtab4VGbfnHliY1HmEo76OrUhhV1GxRyqEDM8yZbzCSkkg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:MIME-Version:
+	 References:In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:
+	 Cc:Content-Type:Content-Transfer-Encoding:X-Authority-Analysis:
+	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=UXBwzkS199L7NkdUYAGclEKe9jKh2QWMzyu5AbccAZ4=;
+	b=S8BU3Z+4agtH7exqIMGG+VL2+R8FJU7xCaat5kX+qDlSZfRvvUyZLU7kvXqXVp6pvzB2
+	 jT0zS22RdPf5jINk+mXvYI8O+Iq1NApacz22RNPONWxpJMxo/iebUWFmS/9/7dv3mZaDD
+	 P0iLhOgcFYWamU8bHDaNHsQ20qgtMzHNlhfPxNUPwON0lXlE8MNOeJPh07fx9XiIGtc9Z
+	 BVo8ppxZihuOivzB1FVa6TjGRmy5hSsyEggLQbGghUcxk7tln6bw+KSuPTlSjmCLYBnzo
+	 hdWz9TDcHWcvcbgLgeXwcOTqVLRsJN7IwHmpgiSxPuaBvjcLmU7JaVGUaGieYDXu7eg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=kF5My7A2;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=WkZ3Opre;
-	arc=none smtp.remote-ip=205.220.168.131
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=hyfYhr3s;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=ILJuOFTa;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.168.131
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E38E606A31B
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 08:34:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2E38E606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BBEA606A32D
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 08:43:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3BBEA606A32D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=kF5My7A2;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=WkZ3Opre
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69R5YsRH2336765
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 08:34:32 GMT
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=hyfYhr3s;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=ILJuOFTa
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69R8g7ej797332
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 08:43:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	4wrQkMaK+dW/8z6fl3qfa+S+gShoibCmJmmER0g7vrM=; b=kF5My7A2IRd6QUBi
-	LDTYgdiZ/J3U/lZ/GtNQZpoNmIiPeD/WZfJ2vEo+v5WVHLqxlGvePKQH8aOLYeB/
-	JNQ7aOJzzqefKSquofAmkbedrb5n2jlEQvZSxXa9tkajc+Ku2+BqMjz9IkEb/9tP
-	CjgoVSDwqgLw1/H/4j6gu45p5MUH/4XoiH4djvxfGAhaZ+txFJ6DRxcLm0wmE8Pz
-	Ii0eD6WaM92n9RQdEqhrgpBocvY90oLPn1OX5k0n/AzxtGukDq8xYvipujlZrbnw
-	F1Owy/Qb1vLiVqIARITwyXQvCI33laY3SizEWol549pAazrsgAN0gBvGIN67KjM0
-	eAWY5g==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hje3da4bh-1
+	UXBwzkS199L7NkdUYAGclEKe9jKh2QWMzyu5AbccAZ4=; b=hyfYhr3sB5rRyhN+
+	23nEsrpt8HS0WRGRdV7i0iqxj0rBxhoY3LIJLxjzwhs5+gJUbN8YXXMLXHHYbkOo
+	ouOYOL/iY8yGW9plgrCovP4NistIzyu4JJj91NxJ1W/EjLmnjAGtpA5pHYZr8+91
+	W2mW0wj+DMTgPcM0go70BtRp5v4vR1J81RWtwaHADYRSfeXLjwJ91FZRGKZuhJCZ
+	uffr8h5MpH9E6mCjTu/OUjd0DDKDQWradsRhEHy63q3LGMhrSHVxZa/f3dhcdLP5
+	ps3RCMQJtzwX5rZNbrGBqaMAkviEzO0RVFoJH7LbKmFh1NvkOdT0vNqk2l0oBbyE
+	nZ0CDw==
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com [209.85.219.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hjp2t8msh-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 08:34:32 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-89e05d31e54so2661155b3a.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 01:34:32 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 08:43:15 +0000 (GMT)
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-91c6207ae10so38203846d6.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 01:43:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793090594; cv=none;
+        d=google.com; s=arc-20260327;
+        b=J3MOMP2XSsvMj6/OCHGXeftF5rvDytNEnFVYZUgtFN1dMIJJFwFEhIUV4iHl6P4MYS
+         y39VOPJMxL5DJ8ZqNz2Bg4h1+yjsXimCnZNSkyhsjL27x1HZxEreZy+t1jW0XiaseuE/
+         2EglaI8bk1lYHCHZrilFtZmUzll1VUQM46r+pQ9QcZxYcynnPGTg1SHzj/dUpkMmNkRD
+         wN3j4C2Ps+q03GWojrmkO6tj/IsL7nmF/pdwH6dGFp9K17l8bOHTdGu5ZKXG4uTM/nEg
+         607OPkuwHPG5tbaGrHpHRrc7wNtlEQ7qIV0fVzbqw5151LXOFK9beVOJ44YRaDkD7OzZ
+         n+4Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=UXBwzkS199L7NkdUYAGclEKe9jKh2QWMzyu5AbccAZ4=;
+        fh=RWq75KI0XlbnGsylDivqT/8Vy1mIqlovCQ6g+dlAS6M=;
+        b=sjL9qS5IehntWKfyaSfRPvXi6imgW058T1ZE8e8rB4YmWcbLa9/dtpZWYJdvntzO2F
+         stRlIb304HkREniOan7az/yOd0HT5LmbWCAj3rZyquBqFOv7mXk5qyzFq4h5xSaLRYUN
+         jUqO6KvChvbXIclhr4b8EeobPJf/qU9Q8qmgr4hDE66rK0JhK7kQaq3698r27tiN3DHE
+         cmrDdsMuOrS4rgZs1XiZKTsZg99iQJVIE6ZXZoO0HPtzj2e8pEwZbnSRnkFLXCNYEBWX
+         vQXSvw8oqfEeYQBlmvgGuXgIOAGj5xpQzoBUwqO5dP3xl0ng+KTIF9/zOUgFlX5426cn
+         kTjQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793090072; x=1793694872; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4wrQkMaK+dW/8z6fl3qfa+S+gShoibCmJmmER0g7vrM=;
-        b=WkZ3OpreAQb8BVy4LA27hGCZAGNgGCGbi9Jl4i3eoSIA6QinNB6dw+zEiuvI7fNM3q
-         5O2LqR65CO1qNKs+POfMM+gzrAWr/4+HhI+uS0TchA2wGexh71gZLwm4uklTkuoD+xVx
-         /xNmU1n/tk9eJNUpftST7IGfm3BNLY0a/7qgMMS/T4WAPoBpBQLuNx2Bx9i/yPqC+NPP
-         t1zRBMmcgaj8VL9NkU0KzUCfvjDb/GVcM9R3XFgqbxf1Fn82nr9Wiwt+PZazKDshTpq2
-         qwo90GDjXXCDkbYkgD/J4UBnRvRl+cY7wifGAWBexIQfUEa4XAblu9MzZqcCVukmYq0e
-         MizA==
+        d=oss.qualcomm.com; s=google; t=1793090594; x=1793695394; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=UXBwzkS199L7NkdUYAGclEKe9jKh2QWMzyu5AbccAZ4=;
+        b=ILJuOFTayjq5R2rXMCfcoMe49tp7zQbnJyY0XZuJUyKp2lQ3r/uZgM+Qt75m5nxDYB
+         S+PVA/UMC7QiAU6OD7o78JF31zFsTK9N01hTWvwR/DsY+G98uoFSW9Q7kWWgOiKdKlwz
+         iDCLtRu4E/BHAzQmHaUMKrqEYCPQNduU25fGc9JG/9se29JAnjMUTnEED4ea6UNn1Hve
+         LInuRFjGQ+Sb4EHw7NxnUd/XseexLX0Qn3qXA3qvHhmTvIUeqrzAtvY0e3OuHN0ibdLv
+         QhK1R8rfkvHa+qQllcQrTngJkRDNLMQGXuOzf1ZbVKchl7Dhaz0tdmarvcmdCnt8ElzZ
+         AT0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793090072; x=1793694872;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=4wrQkMaK+dW/8z6fl3qfa+S+gShoibCmJmmER0g7vrM=;
-        b=ua+d/2qoUNnVGc5k896YpK/FTktiHVV8avEjOsZ941HfHuwtli9eWtlQWzeKf/h+Tr
-         EJ+Vt8gpUPpv3oEI20+lMKcnxsx602yAGR4GNzLVXEEnOPduMYOzolEXdEtaWvwY1qWG
-         ETFrT/NrpSMuPJLUMdmfK3zI860nsOn7hhdyLisBXCj0/VKKuesf3lKLcpeUlq2cBkh2
-         et7kvSzf7SB1Thc9mEhtgQskketRpDb82xsb2K4YzfCqLE/hswJgEUL8S247AiinnaGZ
-         9jksUbJ8nOHVFw5iS01ijsn/v9RriD7EbVA1PbKZHftt7AHdjji3JxdpJgaQZNCVIXYk
-         Ipkg==
-X-Gm-Message-State: AFq9FYLcpvYmH3jh9HRWMN/KYbeXdP8tqI2fJWWO3SrKgYev+z1b3m06
-	qW1DB7uYDYOwy5jWVSMWZmH732V64CZCrmo+2eiB+MdaJxuEGhxJB5IVxl5PNkIn7uAc9KIRF+p
-	JJnUwnlEtpuLrL+wwAzr61b7zY/hTUSGWVRUWyoaUxEml4SQHlzzOK8e2S4lFfHDPr0pCaw==
-X-Gm-Gg: AYBFou1Nspo0sOK0rHJVxP+NirUDPWA8tznWj0VB3H2fUgPEl5h3S75QtMvZ+s3FyhW
-	5suggMQvGSso7yymm2BKGU4wyFedZGAqgPQTI6XgwMVumhHYwL8TqxKevLjP7IaTKQA9E5/4xXc
-	YRWKPZoDRyv1cASdyWflIbRTpq7RSdunFC4DS8BD9tYikBenGsY90HmBXdGN+YqIR3WwbrV4pjm
-	xwzUCAB+2VJXnpEiOAqtO8vdplkuAOIUGue0g0K2IMTLVnpMgSlZLg4vum3NFikfQcYHqZHnCU9
-	SUMgpVuK1Rl+xZynva6PIRqGxbi79TzMidfzPccCotMO1G42OcLAF01vqjmWGBqOGwfvLy13nyg
-	YwQDdHJMvghYcNvUlUfD7FzvWiEs0r1yepwvi7QxFI7g7UkcFdTcuAmAV35nNvO0+u/2dD0/bFA
-	==
-X-Received: by 2002:a05:6a00:1889:b0:89e:7bfa:f884 with SMTP id d2e1a72fcca58-8a367a3cf01mr7107764b3a.18.1793090071591;
-        Tue, 27 Oct 2026 01:34:31 -0700 (PDT)
-X-Received: by 2002:a05:6a00:1889:b0:89e:7bfa:f884 with SMTP id d2e1a72fcca58-8a367a3cf01mr7107751b3a.18.1793090071132;
-        Tue, 27 Oct 2026 01:34:31 -0700 (PDT)
-Received: from [10.133.33.161] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a368d87afasm2119266b3a.7.2026.10.27.01.34.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Oct 2026 01:34:30 -0700 (PDT)
-Message-ID: <87eb6978-74fe-4ec6-b76a-b09210ceea7a@oss.qualcomm.com>
-Date: Tue, 27 Oct 2026 16:34:27 +0800
+        d=1e100.net; s=20260707; t=1793090594; x=1793695394;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=UXBwzkS199L7NkdUYAGclEKe9jKh2QWMzyu5AbccAZ4=;
+        b=PsoAGVNUhFkzP9Xi6wJMYEyBWNaEIC4ZoVz55iD7ULCynhfu4dIwPj9vfbr9dj+KLI
+         aXqYu1+Dgf5uRF8nFjKkZsIUWk5KM2EbhJEgY9B2f8Ewv39Dkod1qL2xm7Mqf+Vi5J1l
+         xlAra/EuVRfOE16xesvMvzt8zzM5UvxKt1prNFUFrg9zx9LjGbhcDWv/nycl6UlTzGiX
+         ayIH+VLaFGZbpj5eLC+oMFpUc5hRtpJeLPPawKspGMz6SE11Z+gOfjKbsMPZahd8rUDe
+         JqagsTL96w/tXnv7LNZGT37OZ1X+tODF2DRVG1t7gozGpvjfgcq0lf90/v+JFk025U1U
+         JKqA==
+X-Forwarded-Encrypted: i=1; AKwUvBwZzEf7wq8bPI4i+dbfoBBR3dT0W9VoESRFOAnT1FY9+8C5XVfnWFH3i7z+jNI3mlSlD2ooSt/VQ0PsYAI9ng==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJm7m7xRo2SiGe8qIqjUok6F1JFje2k6PECXdQ0FDRdQ6YIkZJ0
+	UCJwh/y0i0OcZCdiCQR5lm6dffbg8W6wLV+ICRXGX1MVxuhzsxcbqavUysoZpWPQPgaqFjP/ccL
+	5NZIQ34oLxpJqz5aKUdE19/MoednNZ4F9scaKk1+zB9c/JOPgqiUC2k+LOOjEb4Jw2JTXSLZZpj
+	zK6vX04ya8EzsUpT6Z1z9VQ3hQ1Z1+TLTtYAPOoEtaHsUR
+X-Gm-Gg: AYBFou11dGju2aXzyqWCAbA4zx94bX1+NEqwWGx6CI5643pRpR/VJRdYfIbpk5JUGWO
+	mwosSfq8pjFfyz7mi1gLnYrZOWRp12+tlZ1EpATDfGex4ICNDuXv8N4ZMzptZPDgQP3jWfOln1j
+	ZyFPYQFJK0hIgJ4uh4C/y4aA/Z2j3C6SSTqYD8z/9nwGCeUpH9D5K+hEKBbceyWMwdVpwTbQ/nx
+	dz8Ekw2Rz9Xzca6NZKdw2XxkGDtDNESGI+jVz0Ppherd6iAFaRIqAo+zDGn+HZ1DjCMWecRvr1R
+X-Received: by 2002:a05:620a:6605:b0:93b:d7ed:ff3d with SMTP id af79cd13be357-940ef98797amr1274816485a.63.1793090593947;
+        Tue, 27 Oct 2026 01:43:13 -0700 (PDT)
+X-Received: by 2002:a05:620a:6605:b0:93b:d7ed:ff3d with SMTP id
+ af79cd13be357-940ef98797amr1274814285a.63.1793090593496; Tue, 27 Oct 2026
+ 01:43:13 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -113,116 +128,183 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-current] wifi: ath12k: fix lost 5 GHz range by
- tracking reg ranges per radio
-To: Ahmed Essam <mrmrmidoessam@gmail.com>, Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Shenghan Gao <gsh20040816@gmail.com>,
-        Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>,
-        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-        stable@vger.kernel.org
-References: <bbd65b93-816b-427b-8abe-1d1fd1cf4e70@oss.qualcomm.com>
- <20261027015919.277156-1-mrmrmidoessam@gmail.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20261027015919.277156-1-mrmrmidoessam@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI3MDAzMyBTYWx0ZWRfX/q1B/mw/OMFN
- jv18J54vCu9UEEHlfF93JRyvsQW21HVy98Ed8uWKwwnYSAtcE+b+n1bmWw14BvXLfH8nOvXU/ZP
- dMq2kG3rPEBLBXR+CAFEHXcIqEIF8gY=
-X-Proofpoint-GUID: wcckwNx2k0VZWC8rviHJDNHcvmaJEySI
-X-Proofpoint-ORIG-GUID: wcckwNx2k0VZWC8rviHJDNHcvmaJEySI
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI3MDAzMyBTYWx0ZWRfXwZf50t5r6ARe
- 384mB+uAwbhYuKjGUg0crjYGnjXZmxO+Jf3XAniwybPgj7j6o1sHVMXexkImasvZfYE2GNNsFjd
- K8eXAus5fKf4OCIiiAybJzxzIH1tOHpkE/wIwH9LKoIxjXQWKysrV1DPvgHI8BFxb7/1zMiv5ar
- GfRuhRyk/djrnqnBKEbZEwR1T2Coe6DvZlZDXGxKKUAqbniYHc6M3A/PufR/zYAAVCbkQLj1G/w
- cljjuCvPM7nKGo54U6kB5UYLMj6jwLjVRUhAcxuFB3VOJivaVpSmQvOb1HHbe9uwvn/JBV3SZb4
- 9i83my0IT1CNvZphQoZAXMR9aROTiNWLqLg8BpeK3O840o8bhuF0/LpVzebWKSMUaRm0bxyMIMV
- 2hDq+kqYiDfVRLuyglw1ioBDlLhoczNtYXlJie/2GDdsIUtPROJ4nYySqms9zFXmWnylcfNniDf
- 2WREonuLx6GKlu0u3vg==
-X-Authority-Analysis: v=2.4 cv=SN/Xx+vH c=1 sm=1 tr=0 ts=6ae06218 cx=c_pps
- a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=JLF8xD7Yat_ry6Ihdo8A:9
- a=QEXdDO2ut3YA:10 a=IoOABgeZipijB_acs4fv:22
+References: <20261027-ath10k-temperature-v2-1-0793e80d73bc@gmail.com>
+In-Reply-To: <20261027-ath10k-temperature-v2-1-0793e80d73bc@gmail.com>
+From: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Date: Tue, 27 Oct 2026 09:43:02 +0100
+X-Gm-Features: AclHuK_5pFygU_jzn-hqcPuz9wQNMws9wc2uom00ym03C3O7qRCxHLEYDup8Xvk
+Message-ID: <CAFEp6-0UXd_YLG77tM9k=wtZ6Q5f0Q0wOr5jrkMM3nPe=Ky7-g@mail.gmail.com>
+Subject: Re: [PATCH v2] wifi: ath10k: Stop unanswered temperature reads
+To: Filippo Falezza <effeffe99@gmail.com>
+Cc: Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Authority-Analysis: v=2.4 cv=AJjzCM5L c=1 sm=1 tr=0 ts=6ae06423 cx=c_pps
+ a=7E5Bxpl4vBhpaufnMqZlrw==:117 a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=YMgV9FUhrdKAYTUUvYB2:22 a=bC-a23v3AAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8
+ a=pn2aKBgt1YT2jw1FRdIA:9 a=QEXdDO2ut3YA:10 a=pJ04lnu7RYOZP9TFuWaZ:22
+ a=FO4_E8m0qiDe52t0p3_H:22
+X-Proofpoint-GUID: 4WJcb-ppA2Y9idh6gJbu3lU-1qodxWb4
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI3MDAzNCBTYWx0ZWRfX/VK7skUDi4sh
+ 4fLn3lO96NtwRHo0iRPHn5QcH413jpy19uJ7TkTptJLT2NW3if/5qxiVDTiJImUrRjYv9H46WJc
+ AKkmhDLfjYxNH2yqhTdW2f4PD9B/UlE=
+X-Proofpoint-ORIG-GUID: 4WJcb-ppA2Y9idh6gJbu3lU-1qodxWb4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI3MDAzNCBTYWx0ZWRfX0r93gzJzLsMI
+ kUS6r9eKqNAkOPV0eLKil+TBg9vJuU3cYsMAfG8NuzFseogdf/7xMD+3AqgJ87hlFFIi6IxAU++
+ 7vjT3GW3fMZicdPWv+HALGsXGG6aBClRnk8SrrGg8fQZE6UgmukyEnWH9QmoQUQ9n1DUFw2nkyp
+ rqOS23Xi8j/sFDLDVgMsoZCmPcDGHkJG7tXK06GjGonjBR2Jwb43koH94JvZvLYGXiUsrJB6Xu0
+ eRoG3UGfVch0lAGdqdGqzpIHailIVWDH45NODsxWyx/8smniSLZLvjb12tQ8VulwIeZk8m/rtIL
+ ZGaOEeZiRF1GoRCMbUtOFsi61HF63hugs2axPqR0J1RBwRsmOs3iFulKePOQPnzxg0eKtK+bDls
+ Pn6LNIoZqEBV/6OD1Z3zAd/cozXCTymkoh8CWQ6Wgn2v0GTNufwjlWBHtjr9QEY5UI8bES03FAU
+ LAca2GsFQL/IRP7n5KA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-10-27_02,2026-10-21_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 malwarescore=0 phishscore=0 adultscore=0
- lowpriorityscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610270033
+ impostorscore=0 suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0
+ clxscore=1015 priorityscore=1501 adultscore=0 lowpriorityscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610270034
 
+On Tue, Oct 27, 2026 at 2:56=E2=80=AFAM Filippo Falezza <effeffe99@gmail.co=
+m> wrote:
+>
+> Reading the ath10k hwmon temperature sends WMI_PDEV_GET_TEMPERATURE and
+> waits up to 5 s (ATH10K_THERMAL_SYNC_TIMEOUT_HZ) for the reply event,
+> holding conf_mutex. Not all firmware answers: the WCN3990 firmware
+> WLAN.HL.3.3.1-00694-QCAHLSWMTPLZ-1 on a Motorola Moto G 5G Plus
+> codename nairo (SM7250) never sends the event, so every read of
+> temp1_input stalls for 5 s, logs
+>
+>   ath10k_snoc 18800000.wifi: failed to synchronize thermal read
+>
+> and returns -ETIMEDOUT. Tools that read all hwmon sensors, such as
+> lm-sensors, hang for 5 s on every run, and configuration changes of the
+> interface wait for conf_mutex in the meantime.
+>
+> Whether the firmware answers cannot be told from the chip: firmware that
+> answers and firmware that does not both advertise
+> WMI_SERVICE_THERM_THROT, and WCN3990 firmware differs between devices.
+> Instead, remember that the running firmware did not answer, and return
+> -EOPNOTSUPP right away on later reads. Forget it when the firmware
+> starts, so that a restarted or updated firmware is asked again.
+>
+> The first read after each firmware start still takes 5 s when the
+> firmware does not answer. Reads on firmware that answers are unchanged.
+>
+> This change was written with the help of an AI coding assistant; see
+> the notes below.
+>
+> Fixes: e98199a8c27f ("ath10k: enable QCA6174/QCA9377 to read the chip tem=
+perature")
+> Signed-off-by: Filippo Falezza <effeffe99@gmail.com>
 
+Reviewed-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
 
-On 10/27/2026 9:59 AM, Ahmed Essam wrote:
-> ath12k_reg_build_regd() records the frequency span covered by the
-> received reg rules in ab->reg_freq_{2,5,6}ghz. Those fields live in
-> struct ath12k_base, but firmware sends WMI_REG_CHAN_LIST_CC_EXT per
-> radio, and ath12k_regd_update() uses them to compute the frequency
-> range of a single radio (ar->freq_range). This causes two problems.
-> 
-> First, ath12k_regd_update() cannot tell which bands a radio received
-> rules for, so it uses ar->supports_6ghz as a proxy: the 5 GHz range is
-> skipped for any radio that supports 6 GHz. That is only valid for
-> split-pdev devices. On single-pdev devices such as WCN7850 one radio
-> covers 2 GHz, 5 GHz and 6 GHz. When firmware switches to a country
-> without 6 GHz rules, for example after an 11d update to CN or EG,
-> ar->freq_range collapses to 2402-2482 MHz and
-> ath12k_reg_update_chan_list() drops every 5 GHz channel from the list
-> sent to firmware. From then on firmware no longer scans 5 GHz, a
-> 5 GHz-only scan request fails ("received scan start failure event"),
-> and 5 GHz networks disappear from scan results, typically shortly after
-> boot. They stay gone until the driver is reloaded or firmware moves to
-> a country that has 6 GHz rules.
-> 
-> Second, by code inspection, build_regd() resets all three per-device
-> ranges on every event, so on multi-radio devices an event for one radio
-> can wipe the range of another radio whose regd_update_work has not run
-> yet, silently dropping a band.
-> 
-> Move reg_freq_{2,5,6}ghz into struct ath12k_pdev and fill them for the
-> radio identified by reg_info->phy_id. In ath12k_regd_update(), include
-> a band only if this radio registered that band and received reg rules
-> for it, instead of guessing from ar->supports_6ghz. Checking the
-> registered band is needed because a radio can receive rules for bands
-> it does not operate on, e.g. the 6 GHz radio of a split-pdev device.
-> 
-> Also fix the reg_cap lookup for single-pdev devices: pdev->cap.band[]
-> is indexed by enum nl80211_band, but was indexed with the
-> WMI_HOST_WLAN_*_CAP bit flags, so the 2 GHz lookup used the 5 GHz
-> entry and the 5 GHz lookup used the unset 60 GHz entry. Refresh
-> reg_cap for the 6 GHz band as well, as is done for 2 GHz and 5 GHz.
-> 
-> With ATH12K_DBG_MAC enabled on WCN7850 and the firmware switching to
-> EG, the range before this change is:
-> 
->   mac pdev 0 freq limit updated. New range 2402->2482 MHz
-> 
-> and after it:
-> 
->   mac pdev 0 freq limit updated. New range 2402->2482 MHz
->   mac pdev 0 freq limit updated. New range 2402->5330 MHz
-> 
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> 
-> Fixes: 657b0c72c4ad ("wifi: ath12k: Fix frequency range in driver")
-> Fixes: 13324cecbb2c ("wifi: ath12k: Update frequency range if reg rules changes")
-> Fixes: 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update")
-> Cc: stable@vger.kernel.org
-> Reported-by: Shenghan Gao <gsh20040816@gmail.com>
-> Closes: https://lore.kernel.org/all/20260715065218.41232-1-gsh20040816@gmail.com/
-> Suggested-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-> Assisted-by: Claude:claude-opus-5-5 sparse
-> Signed-off-by: Ahmed Essam <mrmrmidoessam@gmail.com>
-
-Ah, I have an almost-identical fix pending internal review, but I think yours is better.
-Thanks.
-
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-
+> ---
+> Hello there,
+>
+> this is v2 of the fix for ath10k temperature reads that stall for 5 s
+> on firmware that never answers the request, as on the WCN3990 firmware
+> of a Motorola Moto G 5G Plus (SM7250).
+>
+> The only change from v1 is the name of the flag: it is now
+> ath10k_thermal.broken, as Loic suggested, instead of
+> temperature_unanswered. The behaviour is the same, so the testing from
+> v1 still applies: on the phone, the first read after the firmware
+> starts times out once after 5 s, every later read returns -EOPNOTSUPP
+> within milliseconds, and a full `sensors` run takes 25 ms instead of
+> 5 s or more. Restarting Wi-Fi makes the driver ask the firmware again.
+> I have not tested firmware that answers the request.
+>
+> v2 builds with W=3D1 for arm64 and is checkpatch --strict clean, on top
+> of ath-next (cd026e68fdbf).
+>
+> As with v1, I wrote this with the help of an AI coding assistant
+> (Claude Code); the testing is on the phone.
+>
+> Thanks,
+> Filippo
+> ---
+> Changes in v2:
+> - Rename temperature_unanswered to broken, as suggested by Loic Poulain.
+> - Link to v1: https://patch.msgid.link/20261026-ath10k-temperature-v1-1-e=
+5cd6fde7f1e@gmail.com
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c    | 1 +
+>  drivers/net/wireless/ath/ath10k/thermal.c | 9 ++++++++-
+>  drivers/net/wireless/ath/ath10k/thermal.h | 2 ++
+>  3 files changed, 11 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireles=
+s/ath/ath10k/core.c
+> index 7c2939cbde5f..a749ae582b0a 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -2985,6 +2985,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10=
+k_firmware_mode mode,
+>         clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
+>
+>         ar->running_fw =3D fw;
+> +       ar->thermal.broken =3D false;
+>
+>         if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
+>                       ar->running_fw->fw_file.fw_features)) {
+> diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wire=
+less/ath/ath10k/thermal.c
+> index 9bb486f8e920..9ff7de0abd12 100644
+> --- a/drivers/net/wireless/ath/ath10k/thermal.c
+> +++ b/drivers/net/wireless/ath/ath10k/thermal.c
+> @@ -75,6 +75,12 @@ static ssize_t ath10k_thermal_show_temp(struct device =
+*dev,
+>                 goto out;
+>         }
+>
+> +       /* Don't stall every read on firmware that never answers */
+> +       if (ar->thermal.broken) {
+> +               ret =3D -EOPNOTSUPP;
+> +               goto out;
+> +       }
+> +
+>         reinit_completion(&ar->thermal.wmi_sync);
+>         ret =3D ath10k_wmi_pdev_get_temperature(ar);
+>         if (ret) {
+> @@ -90,7 +96,8 @@ static ssize_t ath10k_thermal_show_temp(struct device *=
+dev,
+>         time_left =3D wait_for_completion_timeout(&ar->thermal.wmi_sync,
+>                                                 ATH10K_THERMAL_SYNC_TIMEO=
+UT_HZ);
+>         if (!time_left) {
+> -               ath10k_warn(ar, "failed to synchronize thermal read\n");
+> +               ath10k_warn(ar, "failed to synchronize thermal read, not =
+asking again until the firmware restarts\n");
+> +               ar->thermal.broken =3D true;
+>                 ret =3D -ETIMEDOUT;
+>                 goto out;
+>         }
+> diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wire=
+less/ath/ath10k/thermal.h
+> index 1f4de9fbf2b3..d1fb5b958c37 100644
+> --- a/drivers/net/wireless/ath/ath10k/thermal.h
+> +++ b/drivers/net/wireless/ath/ath10k/thermal.h
+> @@ -19,6 +19,8 @@ struct ath10k_thermal {
+>         /* protected by conf_mutex */
+>         u32 throttle_state;
+>         u32 quiet_period;
+> +       /* the running firmware did not answer a temperature request */
+> +       bool broken;
+>         /* temperature value in Celsius degree
+>          * protected by data_lock
+>          */
+>
+> ---
+> base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
+> change-id: 20261022-ath10k-temperature-22b119fd615c
+>
+> Best regards,
+> --
+> Filippo Falezza <effeffe99@gmail.com>
+>
