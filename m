@@ -1,93 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.19
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793068689;
-	b=uWrgWeMpbj2PKGbPyxSExSafJ5Y37vB1c4xYC9MUNBcIAzBak05So9Nw2hFlmDDboZG0
-	 xAAMYRlgnyMkzdmxDmeuWuApAMCJqX6TfInkvCiGo+eog7gfeiEFfwMvBfqYkJ7slcRuo
-	 /pzefi0Ocus9BNbJ4oaHJh4AL3iyxhFP8xL98Wu/QvOonMHraxJM8MEzAHgWBzsypSwUP
-	 ad5kJP0PY3a2iDVZgdtWsxk2cAYCOHGj1kl+1HXo1kTeyPcM+hliwTBHPozTOwQrTNudx
-	 bTTKM2MKOKIU2X3Lc6m823nTUwlBn519bx6lyv879JaUfhk0CHxmojHp3YJoBRkE7tA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793068689;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
-	 Date:Message-Id:X-Mailer:In-Reply-To:References:
-	 Content-Transfer-Encoding:Content-Type:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=r+kSOr8i+qg4SFUc6eEHl9d/nXbsBxYepRNPQna1YEc=;
-	b=YeSiQ1r4xhVhI91MxcN1ksvNgYH/bhxLLjxJXht3JufUos7D9DH5N/6KPl0ygso463E1
-	 IutDggiRxm4DZIQ9XRDjAg7bGd+lnGedMZls3U57ge7qQULBJVm1WwMec/RCFJDTFj22x
-	 mX+SCh9w/spaCS9jTDmb5sGEC+02JdUUhdfdcejtPrXCE5mwu5T5BeZBS1a39U6RkAVML
-	 MVLbtNV0JqbpsduUQWq56Z2VSQehAVxCwnKftIPsN+zJAD6Jg0i6Fn6youNHMIO19hy6N
-	 K4gKBJiMEQ+XPn9iHwNaKfuwgnzUdxqMnoNWKswWi4rhNfvSB2cVCQXPwDqZHCeW7mg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=EcsyeTj8;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.19
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012019.outbound.protection.outlook.com [52.101.66.19])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793071974;
+	b=orEBBp/7KEW0wD8yrYqWhC1Y2oQ7Usx+2TlCzcWhZhhoDRMH6ra9ZTVkpFoHTm/N6AZ5
+	 FLdJDnbUybpe/HX45mMS97ziw97WZjcyP79mvDjaYUjPGUlDu4vx9KUXc8qpbSoV2l2MH
+	 KnyuuVc6SIvfKtCxAHanD9mY3uc71mwm+mxG7C2M00YlgQYG+zyqo/ubFZmUqXyeLuWUg
+	 U7BosFFHLUBGXCmHTRel9rMZwqKMci9r5rk0BnO2EEdAB/ZGBl2hGkJPjc4v87mg0CdtW
+	 4+f1Uhds/DghWePYLARvY/agw0R3c56GnzVBU26wHsfbK9IIV0q6hcV49uab4e56L8w==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793071974;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-MTK;
+	bh=0IS8bvbb4WV+8sGmQv90uDMel32JWDdTT4z51qDcK3k=;
+	b=gH/mPKj88FiL7i93HbvEW310S0QyRR1Rv1qlrtrQ0V/8nA6YnNuePD8NuJaDpKUW5eBz
+	 89iL3XPEn0RehalN3sEStOv3hbRRS6viSjFqmVWGRNtbYSooxi8BM7P4HLjimgaViGfbH
+	 r2p/cl4nUsl7YdNdU5i4lE6yWQ/HXagiypeQudDZEVRqdM3gFVPLiNYJttBLUemP/C7Qc
+	 Gmv5+IVJkQvfpfxX2quUBjQTs/X9GZ5HseTYolAGF+Go+VQmvaWtc3Sk7NUiB/7WcHhk6
+	 huPUsM/yUw+s/HulS6yMOArVoa8GSM/juIDN8frv0bRkse1xbJW3HwvQE3BDS0KMWTw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=C1Xw80g6;
+	arc=none smtp.remote-ip=60.244.123.138
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73947606A31A
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 02:38:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73947606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF796606A31A
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 03:32:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF796606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=EcsyeTj8
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pYFjBJ0G5QY5H/OxC69c49R6WgSLCKwUsTXDzP/SY21cjhewKlGaDJcQQL+520JaSR2rOkzGBByfl6I78C9EB2AglWbALzXw/A+3Z6XzN52e2DoCzSj0kmC1BJQy1IRgtE26EA3FkGhFFlCVC3dXCo1jHBH3iMN+CW5f0uH9ohX64ysfn6W1/Fe7rqA8AVHeBBmItD67x6S+vSlJruKpgPs/XaKpHQmHu0+mXppKhPIW0HuWleIEvxjUsnPKyQ0g/+uA3bHNqHlJctsttdo7O8F/gMYtjkaP0zfUYQVbyO5vO5fmcWQOx3Jou0+E/H2t+fQCkULZ5Lto+BEtq4dzqA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=r+kSOr8i+qg4SFUc6eEHl9d/nXbsBxYepRNPQna1YEc=;
- b=SWGJBcKQq4jQpRjiejXZ3zNxgLZ//kaf8mpZDZMZF+yrnFfOM9Eb11n4LudbEhaD8Q6ATcT9Izg3lgTcYxPHe0K5t8oYqkWbkduG6WYY3y5rgy1Uk4OrXTRb0bgS1E59wZeCNao9jOh9bC5KIDFeOFzE6dqb3byp9fKI+8+7fjs8VjzFDAWVQilqqcZctVk67thIRZd/e9/KLT8K2vGhhzDd7nmIxlPzUzB661QIwzCksetAEibgLg8yMceT8IWIdnG22KZEGvNQBmMGYGoK++iYEUIN8DY2qYhH91cZD1fy/ry9zRojeCBkwjoRXYbJto8dII9Ea6i1/OTVbP+J7Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r+kSOr8i+qg4SFUc6eEHl9d/nXbsBxYepRNPQna1YEc=;
- b=EcsyeTj8QPJVSmSVZOjrwIYcJiULhAQgPzz6FmAeQXDalNy5WUssgBZP8BmrzVah6mVLBoLPXrKu7wLwFbVTLoe7cpqCvpZ0eFAYkn/qfe88Kul9COO92HSU0gAyUnJmfk9urnPhdVe5q9eMU4UCB6bKW9M39m/HB4Jt3D72/+yiGOW1cNSpZDrKyDJu/s5vXONJ22Ew9c5AAfF1Ei7w1aSfX9H5wTc1LG9dRxmHYANd1wgg5uLxzFbx0r5RX9yeJcF+65Ckp68ApRnXvZt/cOXvDRBSomBZaRj0lTz2lTvJH0iNDJJK8Z15Pvd5gkRhmpUoxyCrDHc38kYfKjw/lQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
- by DBBPR04MB7947.eurprd04.prod.outlook.com (2603:10a6:10:1f1::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Tue, 27 Oct
- 2026 02:38:05 +0000
-Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
- ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
- ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0546.021; Tue, 27 Oct 2026
- 02:38:05 +0000
-From: jeff.chen_1@oss.nxp.com
-To: Tristan Madani <tristmd@gmail.com>
-Cc: Jeff Chen <jeff.chen_1@oss.nxp.com>,
-	linux-wireless@vger.kernel.org,
-	jeff.chen_1@nxp.com
-Subject: Re: [PATCH wireless] wifi: nxpwifi: validate scan response TLV sizes before indexed access
-Date: Tue, 27 Oct 2026 10:37:21 +0800
-Message-Id: <20261027023721.3847100-1-jeff.chen_1@oss.nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261025181531.3744345-1-tristan@talencesecurity.com>
-References: <20261025181531.3744345-1-tristan@talencesecurity.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: FR4P281CA0011.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:c8::8) To VE1PR04MB7280.eurprd04.prod.outlook.com
- (2603:10a6:800:1af::22)
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=C1Xw80g6
+X-UUID: 0ff3206ad1b711f1b1788b6acf885367-20261027
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=0IS8bvbb4WV+8sGmQv90uDMel32JWDdTT4z51qDcK3k=;
+	b=C1Xw80g6vmOdnnF/q++Pf8tmg6laNkql5iEyw/XPpGK5H3OXbyg7dLS8M2OEaz5dH0zNr6mW6lXZ/tOj4yOhqvnhEdCxId1lHxBpFbOz/4YEHqtSbk2sjyrBGKIy+Z9WCiu8QaUHKu/IMYD+7+K2QkCahHETp/dXakUfxfztEe0=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.20,REQID:0cb5add7-2562-43a4-9fb0-60e017ab7f46,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:291e20b,CLOUDID:ebb66e3d-7132-4bd9-9ada-f79a4f8833bf,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 0ff3206ad1b711f1b1788b6acf885367-20261027
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 683280670; Tue, 27 Oct 2026 11:32:40 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Tue, 27 Oct 2026 11:32:38 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Tue, 27 Oct 2026 11:32:38 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <Yung-lun.Chien@mediatek.com>,
+	<jb.tsai@mediatek.com>, allen.chien <yung-lun.chien@mediatek.com>
+Subject: [PATCH] wifi: mt76: add set_chip/get_chip debugfs for chip_config
+Date: Tue, 27 Oct 2026 11:32:37 +0800
+Message-ID: <20261027033237.288611-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -97,78 +81,235 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|DBBPR04MB7947:EE_
-X-MS-Office365-Filtering-Correlation-Id: 78c10a86-38a5-445a-98b4-08df33d353fd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|23010399003|1800799024|19092799006|366016|261021121427099003|11063799006|56012099006|261022105027099003|10067099003|18002099003|22082099003|261026140227099003;
-X-Microsoft-Antispam-Message-Info:
-	m+Zs6j/+WMYHJaXcaARS8XnKH5H9idYwHKavi/RN7Aabsp/x7K+LQZLSYfWT1hoq5VtHu4hun2aB70U4AvuVRz+WLgux99ZZ0DfX/R8ik+ZifPNs0q6DhZzOGafnBxXMMOsA0NiKA39+2YoGcG8P+460K+o/pfOhgZv2Xwiz+Qf1ohW4+NLYoNur4q0R+qlGtBiJql4yXoINynpQFKI1vlu5IF278XCDSKWt+s6Ia8x1b0IU76Kbaw+ja0hjmkhSy7wcuiAGwjzbCO4LB4EevfRAQ4XX126360YYTo7BUymddeLI4ZKAhgi4+stEVhW8O+PaL4RQIiezb9Cl0Hm/HZN563yacI0AxFLuBJmaB/iKA1UkXI20PNjnpByHQN1Gjf8mbqyinWtf1dB1gkQlm7e1Eck95Vbx4CQ4DnX2ZqE7T27sMsmeIWAYtkMzWpk0SieuV4axL2K09drtOSZKO5KZ23ucx19M8McCO4qwc20GrqNVUc0EvTJZwakrrWllqi8YZTLyjoANstRn6qpWbYN4M6l7cBPM/HtJpsPPmjV5lWaWhh7q8pK0IbGLt/dkU9gr+FgfX+kVfY2XDTbC4Rsp323KSf8G9gG5jQ+Wh5esl7KJYRnf6MYRXjfyjqs6EjlgDeXPSE/MoaFHpR4OVSgEPJUuTMKI2O0yQWRPGb0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(19092799006)(366016)(261021121427099003)(11063799006)(56012099006)(261022105027099003)(10067099003)(18002099003)(22082099003)(261026140227099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?7dlCdh5eOrzyoXqYhk/11zom2piEpFMN6X6HMd/6AJSch9DAbtUDf0hswtrU?=
- =?us-ascii?Q?0I5QRih6FFrsburVP6ZBxziBUQGftCBgP7ihZXpD9ibxs381q56849AEWfxf?=
- =?us-ascii?Q?n3shyWYDHdTJOG7chpBivX5jvGvoTu92dGYbr5BgYKY0COKxAqE1poaXFvAW?=
- =?us-ascii?Q?79HxzOl5pOKdRkaOmf26AoVRfFjiIOF5bFntosr1/z/7zeSb2GgDM1TAawTr?=
- =?us-ascii?Q?gZ034PoMzrCBaCG3MpuolYUqy8npXoG37IEueI6UNWT5ooe+j30PHPUgzVu2?=
- =?us-ascii?Q?XfV5tyE3OsbCY20Du6kYYr9bZoDivFrqICodg9hsc32wB6WWFrg8S/1KCQ3W?=
- =?us-ascii?Q?3rljaeJ/EQzPHu0wTqzAN/Wm77zL7xOxPbOYZDNEmveZieEhLuttZbHc55xu?=
- =?us-ascii?Q?wXkfuN4fG588Z7pReLrt8Oe86SqBWrAP/w2PRUa5wqR1lWWY8TUN4E1LtdpL?=
- =?us-ascii?Q?XU+ksFbr6K+Rbwxg5taU/PpfhHuHPBWo36mjwGVRo9qYuWJqWwkfSsSZB1aO?=
- =?us-ascii?Q?44Ri4a9RbomWcdHrBGrjleNOyO/1AKHu1u2PEMpbCOysTsqPZIM53ly1dSa7?=
- =?us-ascii?Q?G5X4M+1v234OMTd8B0llTyXoJxrSKigkyBI4OZuAPTK+nobnk/U646hm6g8A?=
- =?us-ascii?Q?dhk3d/Ty0Yfgka2OnUg/ZZMnJqdJMBssJQh0ox3vGJgnkNIh7EK6RPZZFMnd?=
- =?us-ascii?Q?A52XopyUUjzvYpJH+cP+f2y6oVNEQTNBsh42KOYYxmF6YpTH0cncHKORwwRD?=
- =?us-ascii?Q?7Rr4TSaQNCl6G6ad79JFG7scOHSPJcsuZkuuOtiRIEUhNbdLUHsQb3nFHg+d?=
- =?us-ascii?Q?Nn0L4WULGpKtFWWq4rn/obx+NzVUYXeDiEBNrQehHh32S5hK+jIfp/fPL+2O?=
- =?us-ascii?Q?r1NAy/RCQsM/0ea36Duy6jsQ9v+o/neSwFLt0vNADTkrWueOChcrmfJsFwrw?=
- =?us-ascii?Q?fUQ0wZ11I9PODPhUg9SpHtQZEGM58jo48XJhDJNu1gaW1LFp1w7AjSaIUGlI?=
- =?us-ascii?Q?pesHNg2Aa8HcFdZOXzZAbIr9QfCETnnVrDVWlopUQ/fDyTTMoXryXJwJ9WNE?=
- =?us-ascii?Q?7LhWl4l2JDHKxfq6M0Vjzvx6Guw/zT3ELonFfCg2rmTtyIPecHjCYs/epf89?=
- =?us-ascii?Q?iKePygZzHJY1Een5KqITeZvoPBYQ86Zeyw0HCP3PhvovigT3KhBBhzLy5/DF?=
- =?us-ascii?Q?xbKKBsKzohWCRGNG1u3TpC56k7/XbTWScmhpJxrHj3vp3zP2yP+Rrj/Ex6iS?=
- =?us-ascii?Q?11UJ2dYaf3wa1UNmJLEqtOfCg/zopEq8F/3AzBbC949yJSt+l8JqBpJZG9o9?=
- =?us-ascii?Q?5Io4KTnZ1kxE+8VgpIBgsOdB/SmsfMkUOqzyoRHLibmH7I6PARtouB2be2t/?=
- =?us-ascii?Q?vZg8xx2mA/mcTkxJyDq8KisBZ5IxrTVSr/eFeNzvSzZpg3Z4zHjyKu8EbqPT?=
- =?us-ascii?Q?Pd/GyezwzpWacNZuR3meLw2LciTXCL4Ie8etd0CzSuTG3EjTDjfmv07L7ajN?=
- =?us-ascii?Q?Ven3nFQd6PsoUG80fYtGea8p1aeJAh+5dHZUKVjYO28J8dhIfmftCyuPprQ2?=
- =?us-ascii?Q?auiKkA8kRzu7MrAgbjHhcVA3ouSuiVlbMKrnPZdoau2rIv0JMhUsNkKIN88m?=
- =?us-ascii?Q?VhcghkPS2P9rosEzrFDS6mWja64vKwLPluvvKwx//+msdajJHN0sR2As7+6H?=
- =?us-ascii?Q?hv1N9SiLHQpyVMiROs9iq0Qi3qBsf9MTQxOayb36tgIQOFy/kSdEqkgivIWM?=
- =?us-ascii?Q?GPBye3LjfRfwM6AR6AtbTO/s7EB+GyJ0ep2vv+qUSiDedpSH4XVP?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78c10a86-38a5-445a-98b4-08df33d353fd
-X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Oct 2026 02:38:05.5085
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: amGzhJqnbsUe3wZ75PoOPJhCZK0Fi4wvDAbRyXC6GjdwpFm0mLxq3MjckL9beLXf2NE9xhNUm9C07jExGV2bBYX6nq6hD0YGcQ0gJ0gQnFQyigbjOfdPvVRuRH24DeQG
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7947
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-From: Jeff Chen <jeff.chen_1@oss.nxp.com>
+From: "allen.chien" <yung-lun.chien@mediatek.com>
 
-On Sun, Oct 25, 2026 at 06:15:31 PM +0000, Tristan Madani wrote:
-> The scan response handler indexes into TSF and channel-band TLV arrays
-> using a loop counter derived from the number of BSS entries, but never
-> checks whether the TLV data is large enough. A firmware response with
-> fewer TLV entries than BSS entries leads to reads past the TLV buffer.
+Add set_chip/get_chip debugfs for chip_config in mt76 driver
 
-Hi Tristan,
+Signed-off-by: allen.chien <yung-lun.chien@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt7925/debugfs.c   | 180 ++++++++++++++++--
+ 1 file changed, 169 insertions(+), 11 deletions(-)
 
-This patch looks good to me.
-
-Please address the bot warnings before resending:
-
-- Add the missing recipients reported by cc_maintainers.
-- Fix the From:/Signed-off-by: email mismatch.
-
-Thanks,
-Jeff
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+index 9a5ea12b76c7..060ab59f969d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+@@ -1,6 +1,8 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /* Copyright (C) 2023 MediaTek Inc. */
+ 
++#include <linux/seq_buf.h>
++
+ #include "mt7925.h"
+ #include "mcu.h"
+ 
+@@ -286,13 +288,172 @@ static int mt7925_chip_reset(void *data, u64 val)
+ 
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_reset, NULL, mt7925_chip_reset, "%lld\n");
+ 
++#define MT7925_CHIP_CONFIG_SIZE	sizeof_field(struct mt76_connac_config, data)
++#define MT7925_CHIP_CONFIG_COLS	16
++/* Max reply is MT7925_CHIP_CONFIG_SIZE bytes. A full binary dump is the
++ * worst form: 16 bytes/row as "%04x: %*ph" = 20 * (6 + 47 + 1) = 1080
++ * chars + NUL, well under the 4x budget below. seq_buf bounds writes.
++ */
++#define MT7925_CHIP_CONFIG_DUMP_SIZE	(MT7925_CHIP_CONFIG_SIZE * 4)
++
++struct mt7925_chip_config_dbg {
++	struct mt792x_dev *dev;
++	int len;
++	char resp[MT7925_CHIP_CONFIG_DUMP_SIZE];
++};
++
++static char *
++mt7925_chip_config_copy_cmd(const char __user *userbuf, size_t count,
++			    char *buf, size_t buf_size)
++{
++	if (!count || count >= buf_size)
++		return ERR_PTR(-EINVAL);
++
++	if (copy_from_user(buf, userbuf, count))
++		return ERR_PTR(-EFAULT);
++
++	buf[count] = '\0';
++	buf = strim(buf);
++
++	return buf[0] ? buf : ERR_PTR(-EINVAL);
++}
++
++/* Format a firmware chip_config reply into buf; returns the number of bytes
++ * written (not counting the NUL seq_buf appends). An empty reply prints
++ * "no reply", an ASCII reply is printed verbatim, and a binary reply is
++ * dumped in MT7925_CHIP_CONFIG_COLS-byte rows. seq_buf tracks the write
++ * offset and stops on overflow, so the caller never has to budget bytes.
++ * Shared by get_chip and coex_info so the formatting logic lives in one
++ * place.
++ */
++static int
++mt7925_chip_config_format(char *buf, size_t size, u8 resp_type,
++			  const u8 *resp, int ret)
++{
++	struct seq_buf s;
++	int i;
++
++	seq_buf_init(&s, buf, size);
++
++	if (!ret)
++		seq_buf_puts(&s, "no reply\n");
++	else if (resp_type == CHIP_CONFIG_TYPE_ASCII)
++		seq_buf_printf(&s, "%.*s\n", ret, resp);
++	else
++		for (i = 0; i < ret; i += MT7925_CHIP_CONFIG_COLS)
++			seq_buf_printf(&s, "%04x: %*ph\n", i,
++				       min_t(int, MT7925_CHIP_CONFIG_COLS,
++					     ret - i), resp + i);
++
++	return seq_buf_used(&s);
++}
++
++static ssize_t
++mt7925_set_chip_write(struct file *file, const char __user *userbuf,
++		      size_t count, loff_t *ppos)
++{
++	struct mt792x_dev *dev = file->private_data;
++	char buf[MT7925_CHIP_CONFIG_SIZE];
++	char *cmd;
++	int ret;
++
++	cmd = mt7925_chip_config_copy_cmd(userbuf, count, buf, sizeof(buf));
++	if (IS_ERR(cmd))
++		return PTR_ERR(cmd);
++
++	mt792x_mutex_acquire(dev);
++	ret = mt7925_mcu_chip_config(dev, cmd);
++	mt792x_mutex_release(dev);
++
++	return ret ? ret : count;
++}
++
++static ssize_t
++mt7925_get_chip_write(struct file *file, const char __user *userbuf,
++		      size_t count, loff_t *ppos)
++{
++	struct mt7925_chip_config_dbg *ctx = file->private_data;
++	u8 resp[MT7925_CHIP_CONFIG_SIZE], resp_type;
++	char buf[MT7925_CHIP_CONFIG_SIZE];
++	int ret;
++	char *cmd;
++
++	cmd = mt7925_chip_config_copy_cmd(userbuf, count, buf, sizeof(buf));
++	if (IS_ERR(cmd))
++		return PTR_ERR(cmd);
++
++	mt792x_mutex_acquire(ctx->dev);
++	ret = mt7925_mcu_chip_config_query(ctx->dev, cmd, &resp_type, resp,
++					   sizeof(resp));
++	mt792x_mutex_release(ctx->dev);
++
++	ctx->len = 0;
++	if (ret < 0)
++		return ret;
++
++	ctx->len = mt7925_chip_config_format(ctx->resp, sizeof(ctx->resp),
++					     resp_type, resp, ret);
++
++	return count;
++}
++
++static ssize_t
++mt7925_get_chip_read(struct file *file, char __user *userbuf, size_t count,
++		     loff_t *ppos)
++{
++	struct mt7925_chip_config_dbg *ctx = file->private_data;
++
++	return simple_read_from_buffer(userbuf, count, ppos, ctx->resp,
++				       ctx->len);
++}
++
++static const struct file_operations fops_set_chip = {
++	.write = mt7925_set_chip_write,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++static int mt7925_get_chip_open(struct inode *inode, struct file *file)
++{
++	struct mt792x_dev *dev = inode->i_private;
++	struct mt7925_chip_config_dbg *ctx;
++
++	ctx = kzalloc_obj(*ctx, GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	ctx->dev = dev;
++	file->private_data = ctx;
++
++	return 0;
++}
++
++static int mt7925_get_chip_release(struct inode *inode, struct file *file)
++{
++	struct mt7925_chip_config_dbg *ctx = file->private_data;
++
++	kfree(ctx);
++
++	return 0;
++}
++
++static const struct file_operations fops_get_chip = {
++	.read = mt7925_get_chip_read,
++	.write = mt7925_get_chip_write,
++	.open = mt7925_get_chip_open,
++	.release = mt7925_get_chip_release,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static int
+ mt7925_coex_info(struct seq_file *s, void *data)
+ {
+-#define MT7925_CHIP_CONFIG_RESP_SIZE	320
+ 	struct mt792x_dev *dev = dev_get_drvdata(s->private);
+-	u8 resp[MT7925_CHIP_CONFIG_RESP_SIZE], resp_type;
+-	int i, ret;
++	char out[MT7925_CHIP_CONFIG_DUMP_SIZE];
++	u8 resp[MT7925_CHIP_CONFIG_SIZE], resp_type;
++	int ret;
+ 
+ 	mt792x_mutex_acquire(dev);
+ 	ret = mt7925_mcu_chip_config_query(dev, "coexBwcGetModeInfo 0",
+@@ -302,14 +463,8 @@ mt7925_coex_info(struct seq_file *s, void *data)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	if (!ret)
+-		seq_puts(s, "no reply\n");
+-	else if (resp_type == CHIP_CONFIG_TYPE_ASCII)
+-		seq_printf(s, "%.*s\n", ret, resp);
+-	else
+-		for (i = 0; i < ret; i += 16)
+-			seq_printf(s, "%04x: %*ph\n", i,
+-				   min_t(int, 16, ret - i), resp + i);
++	ret = mt7925_chip_config_format(out, sizeof(out), resp_type, resp, ret);
++	seq_printf(s, "%.*s", ret, out);
+ 
+ 	return 0;
+ }
+@@ -339,6 +494,9 @@ int mt7925_init_debugfs(struct mt792x_dev *dev)
+ 	debugfs_create_file("chip_reset", 0600, dir, dev, &fops_reset);
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "coex_info", dir,
+ 				    mt7925_coex_info);
++	debugfs_create_file("set_chip", 0200, dir, dev, &fops_set_chip);
++	/* pass dev as data: mt7925_get_chip_open() reads it from i_private */
++	debugfs_create_file("get_chip", 0600, dir, dev, &fops_get_chip);
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "runtime_pm_stats", dir,
+ 				    mt792x_pm_stats);
+ 	debugfs_create_file("deep-sleep", 0600, dir, dev, &fops_ds);
+-- 
+2.45.2
 
