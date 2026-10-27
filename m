@@ -1,73 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.227
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793131100;
-	b=ZW4zqYezK5is4Uot0M58VjR3YghXkuieD66IwKWzeoU2aUg5HMdHqE4Jvr2+G0a40ym8
-	 wXkd7xX9hLDo50ngDfSxrGxnhTT36vB4On8fjJt/HW2K7lvh4ayIkaBy5bGpg9cZNhxAz
-	 HfsCbtzHa/PY26mRVqCUwq8IZENkJSo5PITmnHiVR/0TT5t7O3yjviYiX6vtJX0Tw+/fl
-	 id8VofQpX+KTzpyx0+ejZzRxqsSZ2CcL6H0YMDdYc+oAWmtglUxVC3ATcjYT7breNAvIT
-	 +z4hv20WX9azaHPkansmleE/l0TpXiy42gQvq7mcm9uZJqcUQdihOv0TRYzZ989U7nA==
+	t=1793143632;
+	b=SOQw208Hft5KbM4G/YvlKSHzjy6wsCucMEsnOeXvAlXZdLkWOl3FaoUN+5oQl3oePBsD
+	 3bOsCPFm6KEtk+i3a6njQpVwwVozP085B/3Lb10vvCUqmF+crVoTNfC8HEFA5HG14K3NS
+	 xDg4piy76guTHc4LfA22sCBIV2byTCL0CncUr2b5soo+iRtptswc0mh6gmi10ENPKoikR
+	 0bTVhV5We6OqaVPTC2bugMWA75B3gFMutEA2g6vVYKwtMjENoB9wEjX9nHRXLYsltooy1
+	 KOeffsK1tM4oOMjbawozNpuBNediL/XLQU0ZKsHa3NIWB1ulk52C819w/m+brX144tw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793131100;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793143632;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=YmSeWrLDHug5hmREEl4v75tbJwuivcm3EZ4Ale97CmY=;
-	b=LcS2AhXZQQHS8rFex1YUNkx7t0zcAwONRxPgo7U7fnJafTd9XQuy6rKZOA3RhAJgge7v
-	 sN1DMZwIQD6TWUgfD2QHXxcXQt7khEa4SzBlcP8CLCE62u0imOrmd+KvBELlTDHE7bJjo
-	 yiX8Vn4H4mfbFzi69mO47a73/AVxBnNfe1QTN6/Jt2edJ7jSPKiX6v9PGyKwYbU7RFtyE
-	 xAZVqb9yeQKJcCzU6pBhR/T3JY1l0XOyHGDBhQBa+ObEO3WrUkMZJ9PbBnBChe/B00F82
-	 w/wqt9ou0hvH6FU30owEhp+P7ElOljDjO/MUQn9otnL6oPE7k+HE/CrJdZ3g7b2oUGQ==
+	bh=6PiYxlEEX0HQs1enBKQ/4zeLAPHx1PfbUOEoP+WBVLo=;
+	b=cd1zlw8gt+kS9x7qPo3yXkh/Q47HeTaVyWgrFiySTyho0hamKBrEg5FeItkYoxuDqKh0
+	 35y3preCguL6Inu7Ad2/6KAdE4Kl8nYHKg1gQQaHe+cGBeTR3ZHmFGM6ILv4HciyfinKB
+	 c7I5KVdfD5G7eL0a2D9+/8/MIqY2n1kffkMcQN36JdF4N2g/TyjsU3OVUxeQWnpdbePuG
+	 qtOWCsB7W8VZtWrUtE0pD7D+l/Oy7G2wRyX1fQ1dsxrV6f7AMiYobye1DKiIQ8zsBzK3d
+	 9W2FeXIKPWFi96Us9IYz6VtWiMW336LqNXalhw9+5RWhBwV1KeJ00rJq2hEv3R4VFKw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=justthetip.ca;
-	spf=pass smtp.mailfrom=justthetip.ca;
-	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=UssE6PxP;
-	arc=none smtp.remote-ip=91.218.175.227
-Received: from mta0.migadu.com (out-227.mta0.migadu.com [91.218.175.227])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QWMkrCgA;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E172606A324
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 19:58:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0E172606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7319D606A31A;
+	Tue, 27 Oct 2026 23:27:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=UssE6PxP
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=JU7SOCtUHUHndWZYZOTVOVh2PhRQ269t0wVq8ONFpg4=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793131098; v=1; x=1793735898;
- b=UssE6PxPzMBvFhdg1JSHI3jxhXpgMN+WoAUCBzlR8gOabgp8ONZuhR8tykBdlI/1b0qfme8n
- kFCff/mWhKCKN/lnlRSB9KLAG30l+0lidqBDL9cGaQgA8LtFEmcDbh2AvcufBfVm6Q9gzARrrep
- 0+96/A22JJAnCgqPg0HYD9+jpzhBKDqSIJ2ct4wj5hLoiFRRURbyCmxDLkuq7JBaR8Vr3/1xcve
- 3zwzmckvXctUdYefoV+wZB6INXhVZfRBs9COtbSySnmb+JXb3zMcTp0VnyD6pdEzN8aMgZGnLFg
- UALMI05dz/Wxjjx/4LcsIyDMI8gXv4xnWMDlScyGx1nYw==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f57e996020db06b4;
-	Tue, 27 Oct 2026 19:58:17 +0000
-X-Mizu-Trace-ID: f57e996020db06b4
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Deren Wu <deren.wu@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	Fedor Pchelkin <pchelkin@ispras.ru>,
-	Mark Anthony Agarro <markanthonyagarro@gmail.com>,
-	Alex Gavin <a_gavin@icloud.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH wireless 4/4] Revert "wifi: mt76: mt792x: do not advertise active monitor"
-Date: Tue, 27 Oct 2026 12:58:03 -0700
-Message-ID: <20261027195803.711995-5-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261027195803.711995-1-lucid_duck@justthetip.ca>
-References: <20261027195803.711995-1-lucid_duck@justthetip.ca>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QWMkrCgA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B60D31F01825;
+	Tue, 27 Oct 2026 23:27:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793143632;
+	bh=6PiYxlEEX0HQs1enBKQ/4zeLAPHx1PfbUOEoP+WBVLo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=QWMkrCgAZV0PjW43souxOJIGFHjjAKD6FO1vIC2Uhw2W6YQJaCgcdJ/cUqogWd/8g
+	 NylE37jKgsHEFuq2D7pxCrPKzt5NsqVTaxrI9UARVAt8lUBEQqk0ir2kOad/Xpv7Ft
+	 TsbGd8MvFlaMK349wO2PB+0LPa0nDhNL3XDQR3pVXZ0ku9Bm6b7U//GsNpeqoaVnWE
+	 S4hpJcMpULzC1NxSJTmv3FCrN1j8C+CwLWKOGOU1l4lg76wXxmMJB0tdYaB3hHfgaN
+	 tNJ+Mulsbv6gcNCv7nNP5GbgSRpRQ3FbjHFE5oM/4wgjGOJDFw2Ga0q3YgMWMuMOv+
+	 vEiklsRVlCYmA==
+Date: Tue, 27 Oct 2026 16:27:10 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: Cosmin Ratiu <cratiu@nvidia.com>
+Cc: <linux-wireless@vger.kernel.org>, Johannes Berg
+ <johannes@sipsolutions.net>, Tariq Toukan <tariqt@nvidia.com>, Carolina
+ Jubran <cjubran@nvidia.com>, Dragos Tatulea <dtatulea@nvidia.com>,
+ <netdev@vger.kernel.org>
+Subject: Re: [PATCH wireless v2] wifi: wext: Limit notifier event flushes to
+ the device's netns
+Message-ID: <20261027162710.34e0e17c@kernel.org>
+In-Reply-To: <20261023081044.728500-1-cratiu@nvidia.com>
+References: <20261023081044.728500-1-cratiu@nvidia.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -77,68 +61,39 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-This reverts commit 6f6c9800e54c ("wifi: mt76: mt792x: do not advertise
-active monitor").
+On Fri, 23 Oct 2026 11:10:44 +0300 Cosmin Ratiu wrote:
+> With mlx5 netdev instance locking enabled, registering an IPoIB netdev
+> calls the WEXT notifier while holding the instance mutex. Its call to
+> wireless_nlevent_flush() takes net_rwsem to walk every namespace,
+> completing the following lockdep dependency cycle:
+> 
+>   netdev instance mutex -> net_rwsem (read) -> GID table mutex
+>     -> event_handler_rwsem (read) -> netdev instance mutex  
+> 
+> RoCE GID enumeration takes the GID table mutex under net_rwsem. GID
+> updates dispatch events under the table mutex, taking event_handler_rwsem.
+> The IPoIB event handler takes the netdev instance mutex in
+> ipoib_queue_work() to traverse child interfaces.
+> 
+> The all-namespace walk originated in the single global worker servicing
+> per-namespace WEXT queues. The ordering fixes later reused that routine
+> in netdevice notifiers to prevent delayed WEXT RTM_NEWLINK messages from
+> following RTM_DELLINK or reporting stale interface flags. A notifier only
+> needs to drain the affected device's namespace; there is no reason for it
+> to walk and flush all namespaces.
+> 
+> Pass dev_net(dev) from both notifier callers and make the flush helper
+> operate on that namespace. Keep the all-namespace walk and net_rwsem in
+> the existing worker. This removes the instance-mutex -> net_rwsem
+> dependency while retaining synchronous flushing from the notifiers.
+> 
+> It may seem strange that the fix for a lock cycle across multiple
+> subsystems lies in a completely unrelated part of the code, but this
+> seemed the most justified lock cycle edge to break.
 
-That commit hid active monitor, saying the firmware stops receiving in
-that mode. The monitor was missing a channel, which the previous commit
-gives it. Since 7.3, tools that ask for one, like owly and hcxdumptool
--A, are refused.
-
-Advertise it again. Without the previous commits a lone active monitor
-is accepted but hears nothing.
-
-Fixes: 6f6c9800e54c ("wifi: mt76: mt792x: do not advertise active monitor")
-Link: https://github.com/t4t5/owly/pull/24
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 5 ++---
- drivers/net/wireless/mediatek/mt76/mt76.h        | 1 -
- drivers/net/wireless/mediatek/mt76/mt792x_core.c | 1 -
- 3 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 89f289ac57a9..08876ed2dfe4 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -440,9 +440,8 @@ mt76_phy_init(struct mt76_phy *phy, struct ieee80211_hw *hw)
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	SET_IEEE80211_PERM_ADDR(hw, phy->macaddr);
- 
--	wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
--	if (!phy->no_active_monitor)
--		wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
-+	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
-+			   NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
- 	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH |
- 			WIPHY_FLAG_SUPPORTS_TDLS |
- 			WIPHY_FLAG_AP_UAPSD;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 9e851dea71d9..b591fb3e3b7e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -871,7 +871,6 @@ struct mt76_phy {
- 	struct cfg80211_chan_def main_chandef;
- 	bool offchannel;
- 	bool radar_enabled;
--	bool no_active_monitor;
- 
- 	struct delayed_work roc_work;
- 	struct ieee80211_vif *roc_vif;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
-index dcb244a3f8ea..674007dc4266 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
-@@ -821,7 +821,6 @@ int mt792x_init_wiphy(struct ieee80211_hw *hw)
- 
- 	wiphy->features |= NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
- 			   NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
--	phy->mt76->no_active_monitor = true;
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SET_SCAN_DWELL);
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_BEACON_RATE_LEGACY);
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_BEACON_RATE_HT);
--- 
-2.56.0
-
+If Johannes thinks this scoping is good for other reasons - SGTM.
+But my knee jerk fix would be to skip all the wifi processing
+for ops-locked devices since no wifi device is ops locked.
