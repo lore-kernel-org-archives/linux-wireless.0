@@ -1,62 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.28
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793190257;
-	b=v/j6takSUab/bA1nY4QJewUXSJu5lxJb2xbvJ0nES5joTaiTcWCyABYQYujn0/aaPT/d
-	 xJmGrDZVH/AgI4Gnl36536nxSTGNeHloXKuwjwKzUsji9ECGEQezcWwYNV4Csm/WauzI4
-	 le0sUp1Fh4KF9gh0nxTUG69PxQ7GOmFe2QM69YWEB5qqbsdVOQ15c6jgPVA4YPTEMW1F2
-	 SUVQ+aj0utNvU4q18w+ZBy/jIofCb2QqoKrCIqPMDsr2fYXjeWKFHQo41ZdCB92yWFuSC
-	 ZobV6qAvaGT1cEpj0N8VC1CzP1DK83I5ewiDzPQUHh1fRi1goS2UDrdb3sJZSbIJNcw==
+	t=1793191395;
+	b=K+6j7Y0ipdUwMJXRdzkpzpyUGIS+U24sibuOiz0QxMYXpj3CR5fnxlKg0XpSKXB/tD0e
+	 N6FOKjSutjGUy5vnKJqARtPBodmSnZubZSoMCOaEFWjmAMHAFwWrYHaPApQI2/Kdl5r6Z
+	 FZZiEz8PwEbtOooEnZ1dBKIVTRqltclfdSuNa3+Jc+8gGafZTMWPnovySqBoqA/4L+pLt
+	 T7R7QlGZbBWtpd8l7ycOs+fFRNyU5fnSl8lxZReSCgQP6nVma4xgllCis4i8HbR+wW75M
+	 cYu99hd4q5U+CBe54rhwa/f7+WHOzseWMxbl1pK41qo39/fcUR3tVoB4SwvtwPVpapA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793190257;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=DG0luWcBfQWIMODHMFJU1ZAQ85XYfsZLy/J0XWbpVe4=;
-	b=OS557QKmvhzlE4JBrMXHpLlL6XTzMgoExlw7jZCztsZ3Hq2ILaJEH8zk5X8BHI2xwYdH
-	 5ntbaogYzMvSCGJFq9PXRSKMgeIeS4x016xmm38RZVwtFCcuoLVQBkkn/w2ZDSvAURb5Y
-	 lN10bIMggiqwJZxIkKRYN1UJNja3fdUAKBN4V/M946aJurBHVnDCGUa3wwDP+vjVCFHyT
-	 TlEKRjk37smn7YAPlqivqEIgn9+7gMTVrnKaFv4gyQMM2ZbC+W5m4SC63X2c58oq0yr7+
-	 C7AFuXwjfG/F9dbcfmtZc6KDzYZoP83nqBJv2DxaNk+1aH8uiSlNCBRi0yhoKbZY45g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793191395;
+	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
+	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
+	 Content-Type;
+	bh=rPtVDj0xwOVJpoIRUE07XELbiv1KYq5Ib220WAkiYto=;
+	b=cdIw+jI8Lg8rl7aMrjeuuITmKnX30w6/wLSAQnlmwtXS+ObjiDNoUpEZ81C8SnwsAUGz
+	 pr3SVvRV6D6Iuw+WFxlGrdp9rDpeunS+mjHRjUfd51TVFzeEz1DRym/o3DaI6A4OW1p7f
+	 1a8VBlWBy+B4yUsbYeJha/ri4xVH2bx1Skx7I+X470sQuz6N3BaH/cQRZy11YqQ3haQDy
+	 IPX/rFXyctxDqcXcG5NkIRVD+4GnRjA/kL1Eh+5q7Z1iluFZfyTYSWyC+zViC3KCQPU58
+	 xgYLhHxiEfJa/IzPjvHBIDWO0plL93jerSwiuPx8lcjUVzNoqaW5JkpMjCRC2lrzcKw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nbd.name;
-	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b="ln/S4D/F";
-	arc=none smtp.remote-ip=46.4.11.11
-Received: from nbd.name (nbd.name [46.4.11.11])
+	dmarc=pass header.from=protonmail.com;
+	spf=pass smtp.mailfrom=protonmail.com;
+	dkim=pass header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=AGM1wk93;
+	arc=none smtp.remote-ip=79.135.106.28
+Received: from mail-10628.protonmail.ch (mail-10628.protonmail.ch [79.135.106.28])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27DDD606A337
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:24:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 27DDD606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF24606A31C
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:43:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EBF24606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=ln/S4D/F
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=DG0luWcBfQWIMODHMFJU1ZAQ85XYfsZLy/J0XWbpVe4=; b=ln/S4D/FO/trJ9i2oY03ZuVuPI
-	6rUbtRjSUS7JYOTzrFWC6teAJtTvzOrKl+x+TXvoEMhAxM5Mp4IAhxliqmGx4ukKSFQw9keThqRCT
-	OUOJNIL2i54UN03xzf8LSB2+wYuYpKrUZvAyTGcWxdkW+zsR4Zn3XellM8lGWBQ4hvt0=;
-Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1xM2hN-00C8Bw-29
-	for linux-wireless@vger.kernel.org;
-	Wed, 28 Oct 2026 13:24:09 +0100
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 21/25] wifi: mt76: mt7996: keep rx header translation off while a monitor runs
-Date: Wed, 28 Oct 2026 13:23:59 +0100
-Message-ID: <20261028122403.796394-21-nbd@nbd.name>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261028122403.796394-1-nbd@nbd.name>
-References: <20261028122403.796394-1-nbd@nbd.name>
+	dkim=pass (2048-bit key, unprotected) header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=AGM1wk93
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1793191392; x=1793450592;
+	bh=rPtVDj0xwOVJpoIRUE07XELbiv1KYq5Ib220WAkiYto=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=AGM1wk939Vod3ABnDykCMMpNlIMZO9ZYQYgemk6N4N6jC9kKMv+l/S8BnyG0wV6Nz
+	 PCKLcdETdgicbsuQCn4jkLr7WFSkJKT/ygzAE5kRs+oDF62zqxnQ1tp5Ji0pS6xNEK
+	 J/TH4niYsjEJwK0F727el4nib37dy+bt5cjU9iKv1L5dtLWKhcjuJHBm6v1dQVf7t4
+	 iI3rpYCF/XKj8/D1XmxrLKmAycb0KPQ3PAkIjrhAb9VwNygMK7JGT0iSKN8V2pZzCi
+	 YLoKMvzblIIuVFReFrksoGBdeLSHTJ4LrBawEhYXKgNN+rAFU3i/wB3bjTL5c0NhYZ
+	 AIhc92AFz3xMQ==
+Date: Wed, 28 Oct 2026 12:43:05 +0000
+To: Alessio Ferri <alessio.ferri@mythread.it>
+From: vit9696 <vit9696@protonmail.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org
+Subject: Re: [PATCH wireless-next v2 6/8] firmware: bcm47xx_sprom: read ledbh4..ledbh15 from NVRAM
+Message-ID: <024A939C-939E-4C36-81A5-60D84DA0AA09@protonmail.com>
+In-Reply-To: <20261027-bcma-ac-rev1-v2-6-b69b61c31920@mythread.it>
+References: <20261027-bcma-ac-rev1-v2-0-b69b61c31920@mythread.it> <20261027-bcma-ac-rev1-v2-6-b69b61c31920@mythread.it>
+Feedback-ID: 739018:user:proton
+X-Pm-Message-ID: 0886d8a1f30d5638ebb904e13b002c39c00b72c5
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,57 +64,200 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha256; boundary="------ff4c29d6f96438e751f778a80f42ab70689aafbe692ab7ce2034fe8a73abeb44"; charset=utf-8
 
-MT_MDP_DCR0_RX_HDR_TRANS_EN is one bit for the whole chip, but
-mt7996_set_monitor() writes it from the state of one radio. When a
-monitor interface goes away that covers a radio no other monitor
-covers, mt7996_remove_interface() turns sniffer mode off on that radio,
-and header translation comes back on while a monitor of another radio
-still runs. Frames translated to 802.3 do not reach monitor interfaces,
-so that monitor stops receiving the data frames addressed to the
-device.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------ff4c29d6f96438e751f778a80f42ab70689aafbe692ab7ce2034fe8a73abeb44
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.4\))
+Subject: Re: [PATCH wireless-next v2 6/8] firmware: bcm47xx_sprom: read
+ ledbh4..ledbh15 from NVRAM
+From: vit9696 <vit9696@protonmail.com>
+In-Reply-To: <20261027-bcma-ac-rev1-v2-6-b69b61c31920@mythread.it>
+Date: Wed, 28 Oct 2026 15:42:47 +0300
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+ Michael Buesch <m@bues.ch>,
+ linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-mips@vger.kernel.org
+Message-Id: <024A939C-939E-4C36-81A5-60D84DA0AA09@protonmail.com>
+References: <20261027-bcma-ac-rev1-v2-0-b69b61c31920@mythread.it>
+ <AgtUu3ZjiWVws8MLmu_wWG3sfoRDJz6iEpykvQkallguflWWPuH0kI6qYTu1BeAymKTslopitIRl1jtSMNLjQQ==@protonmail.internalid>
+ <20261027-bcma-ac-rev1-v2-6-b69b61c31920@mythread.it>
+To: Alessio Ferri <alessio.ferri@mythread.it>
+X-Mailer: Apple Mail (2.3864.700.51.1.4)
 
-Turn header translation off while any radio of the device is in monitor
-mode, like mt7915_config() does with dev->monitor_mask.
+VGhpcyBjaGFuZ2UgbG9va3MgY29uZnVzaW5nIHRvIG1lLg0KDQpXaGlsZSBJIGJlbGlldmUgaXQg
+bm90IGNsZWFybHkgZG9jdW1lbnRlZCBpbiBwdWJsaWMsIGZyb20gbXkga25vd2xlZGdlIHRoZSBn
+ZW5lcmFsIGFwcHJvYWNoIGlzIGFzIGZvbGxvd3M6DQotIEJyb2FkY29tIHN1cHBsaWVzIFNQUk9N
+IHdpdGggY29uZmlndXJhdGlvbiBkZWZhdWx0cy4NCi0gVmVuZG9yIG92ZXJyaWRlcyB0aGVzZSBk
+ZWZhdWx0cyB2aWEgTlZSQU0gd2hlcmUgU0RLIGFsbG93cyBpdC4NCg0KSSBiZWxpZXZlIGFsbCBj
+dXJyZW50bHkga25vd24gU1BST01zIGhhdmUgY29uZmlndXJhdGlvbiBmb3IgWzAsIDNdIEdQSU8g
+cGlucyB3aGVyZWFzIE5WUkFNIG92ZXJyaWRlcyBjb3ZlciB0aGUgd2hvbGUgWzAsIDE1XSBHUElP
+IHJhbmdlLg0KDQpXaGF0IEkgZW50aXJlbHkgbWlzcyBpcyB3aHkgdGhpcyBwYXRjaCBtb2RpZmll
+cyBiY21hX3Nwcm9tX2dldCBhbmQgbm90IGp1c3QgYmNtNDd4eF9zcHJvbV9maWxsX2F1dG8gKGNh
+bGxlZCBmcm9tIGJjbTQ3eHhfZmlsbF9zcHJvbSDihpAgYmNtNDd4eF9nZXRfc3Byb21fYmNtYSku
+IEkgYmVsaWV2ZSB5b3UgY2FuIHNhZmVseSBwcm9jZXNzIHRoZSByZW1haW5pbmcgb3ZlcnJpZGVz
+IHRoZXJlIG5leHQgdG8gY3VycmVudGx5IHByb2Nlc3NlZCBbMCwgM10gb3ZlcnJpZGVzLg0KDQpJ
+biBteSBvcGluaW9uLCBpdCBhbHNvIG1ha2VzIHNlbnNlIGNvbnZlcnQgZ3BpbzAvZ3BpbzEvZ3Bp
+bzIvZ3BpbzMvZ3Bpb19leHRbXSB0byBhIHVuaWZpZWQgYXJyYXksIGJlY2F1c2UgdGhpcyBpcyBh
+Y3R1YWxseSBhIDE2LWJ5dGUgb3IgYSAzMi1ieXRlIGFycmF5IGRlcGVuZGluZyBvbiB0aGUgY2hp
+cC4NCg0KQmVzdCwNClZpdGFseQ0KDQo+IE9uIDI3IE9jdCAyMDI2LCBhdCAwMjo1MywgQWxlc3Np
+byBGZXJyaSA8YWxlc3Npby5mZXJyaUBteXRocmVhZC5pdD4gd3JvdGU6DQo+IA0KPiBBZGQgZ3Bp
+b19leHRbXSBmb3IgdGhlIExFRCBiZWhhdmlvdXJzIG9mIEdQSU8gNC0xNSBhbmQgZmlsbCBpdCBm
+cm9tDQo+IE5WUkFNIGxlZGJoNC4ubGVkYmgxNSwgYm90aCBmb3IgYSBTUFJPTSBidWlsdCBmcm9t
+IE5WUkFNIGFuZCwgdGhyb3VnaA0KPiB0aGUgbmV3IGJjbTQ3eHhfc3Byb21fZmlsbF9iY21hX252
+cmFtKCksIG9uIHRvcCBvZiBhIFNQUk9NIHJlYWQgZnJvbSBhDQo+IGJjbWEgZGV2aWNlLiBUaGUg
+YmNtYSBwcmVmaXggbG9va3VwIG1vdmVzIGludG8gYSBoZWxwZXIgc2hhcmVkIGJ5IGJvdGgNCj4g
+cGF0aHMuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBBbGVzc2lvIEZlcnJpIDxhbGVzc2lvLmZlcnJp
+QG15dGhyZWFkLml0Pg0KPiAtLS0NCj4gZHJpdmVycy9iY21hL3Nwcm9tLmMgICAgICAgICAgICAg
+ICAgICAgICAgfCAgMyArKw0KPiBkcml2ZXJzL2Zpcm13YXJlL2Jyb2FkY29tL2JjbTQ3eHhfc3By
+b20uYyB8IDg2ICsrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0NCj4gaW5jbHVkZS9saW51
+eC9iY200N3h4X3Nwcm9tLmggICAgICAgICAgICAgfCAxNSArKysrKysNCj4gaW5jbHVkZS9saW51
+eC9zc2Ivc3NiLmggICAgICAgICAgICAgICAgICAgfCAgMSArDQo+IDQgZmlsZXMgY2hhbmdlZCwg
+ODMgaW5zZXJ0aW9ucygrKSwgMjIgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9iY21hL3Nwcm9tLmMgYi9kcml2ZXJzL2JjbWEvc3Byb20uYw0KPiBpbmRleCBjOThiNmZi
+NjYuLmFjNzYyMjUxMiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9iY21hL3Nwcm9tLmMNCj4gKysr
+IGIvZHJpdmVycy9iY21hL3Nwcm9tLmMNCj4gQEAgLTExLDYgKzExLDcgQEANCj4gDQo+ICNpbmNs
+dWRlIDxsaW51eC9iY21hL2JjbWEuaD4NCj4gI2luY2x1ZGUgPGxpbnV4L2JjbWEvYmNtYV9yZWdz
+Lmg+DQo+ICsjaW5jbHVkZSA8bGludXgvYmNtNDd4eF9zcHJvbS5oPg0KPiAjaW5jbHVkZSA8bGlu
+dXgvcGNpLmg+DQo+ICNpbmNsdWRlIDxsaW51eC9pby5oPg0KPiAjaW5jbHVkZSA8bGludXgvZG1h
+LW1hcHBpbmcuaD4NCj4gQEAgLTg0MSw2ICs4NDIsOCBAQCBpbnQgYmNtYV9zcHJvbV9nZXQoc3Ry
+dWN0IGJjbWFfYnVzICpidXMpDQo+IGVsc2UNCj4gYmNtYV9zcHJvbV9leHRyYWN0X3I4KGJ1cywg
+c3Byb20pOw0KPiBrZnJlZShzcHJvbSk7DQo+ICsgLyogTW9zdCBob3N0cyBoYXZlIG5vIE5WUkFN
+OiBpZ25vcmUgdGhlIHJlc3VsdC4gKi8NCj4gKyBiY200N3h4X3Nwcm9tX2ZpbGxfYmNtYV9udnJh
+bShidXMsICZidXMtPnNwcm9tKTsNCj4gfQ0KPiANCj4gcmV0dXJuIGVycjsNCj4gZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvZmlybXdhcmUvYnJvYWRjb20vYmNtNDd4eF9zcHJvbS5jIGIvZHJpdmVycy9m
+aXJtd2FyZS9icm9hZGNvbS9iY200N3h4X3Nwcm9tLmMNCj4gaW5kZXggYmNhMDNmZDg1Li43NTYw
+NGNkNzAgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvZmlybXdhcmUvYnJvYWRjb20vYmNtNDd4eF9z
+cHJvbS5jDQo+ICsrKyBiL2RyaXZlcnMvZmlybXdhcmUvYnJvYWRjb20vYmNtNDd4eF9zcHJvbS5j
+DQo+IEBAIC0yOSw2ICsyOSw3IEBADQo+ICNpbmNsdWRlIDxsaW51eC9iY200N3h4X252cmFtLmg+
+DQo+ICNpbmNsdWRlIDxsaW51eC9iY200N3h4X3Nwcm9tLmg+DQo+ICNpbmNsdWRlIDxsaW51eC9i
+Y21hL2JjbWEuaD4NCj4gKyNpbmNsdWRlIDxsaW51eC9lcnIuaD4NCj4gI2luY2x1ZGUgPGxpbnV4
+L2V0aGVyZGV2aWNlLmg+DQo+ICNpbmNsdWRlIDxsaW51eC9oZXguaD4NCj4gI2luY2x1ZGUgPGxp
+bnV4L2lmX2V0aGVyLmg+DQo+IEBAIC0xNzIsNiArMTczLDIwIEBAIHN0YXRpYyB2b2lkIG52cmFt
+X3JlYWRfYWxwaGEyKGNvbnN0IGNoYXIgKnByZWZpeCwgY29uc3QgY2hhciAqbmFtZSwNCj4gbWVt
+Y3B5KHZhbCwgYnVmLCAyKTsNCj4gfQ0KPiANCj4gKy8qIFZhcmlhYmxlcyByZWFkIGZyb20gTlZS
+QU0gd2hldGhlciBvciBub3QgdGhlIFNQUk9NIGl0c2VsZiBjb21lcyBmcm9tIGl0LiAqLw0KPiAr
+c3RhdGljIHZvaWQgYmNtNDd4eF9zcHJvbV9maWxsX252cmFtX29ubHkoc3RydWN0IHNzYl9zcHJv
+bSAqc3Byb20sDQo+ICsgIGNvbnN0IGNoYXIgKnByZWZpeCwgYm9vbCBmYWxsYmFjaykNCj4gK3sN
+Cj4gKyBjaGFyIG5hbWVbc2l6ZW9mKCJsZWRiaDE1IildOw0KPiArIGludCBpOw0KPiArDQo+ICsg
+Zm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUoc3Byb20tPmdwaW9fZXh0KTsgaSsrKSB7DQo+ICsg
+c25wcmludGYobmFtZSwgc2l6ZW9mKG5hbWUpLCAibGVkYmglZCIsIGkgKyA0KTsNCj4gKyBudnJh
+bV9yZWFkX3U4KHByZWZpeCwgTlVMTCwgbmFtZSwgJnNwcm9tLT5ncGlvX2V4dFtpXSwgMHhmZiwN
+Cj4gKyAgICAgIGZhbGxiYWNrKTsNCj4gKyB9DQo+ICt9DQo+ICsNCj4gLyogVGhpcyBpcyBvbmUt
+ZnVuY3Rpb24tb25seSBtYWNybywgaXQgdXNlcyBsb2NhbCAic3Byb20iIHZhcmlhYmxlISAqLw0K
+PiAjZGVmaW5lIEVOVFJZKF9yZXZtYXNrLCBfdHlwZSwgX3ByZWZpeCwgX25hbWUsIF92YWwsIF9h
+bGxzZXQsIF9mYWxsYmFjaykgXA0KPiBpZiAoX3Jldm1hc2sgJiBCSVQoc3Byb20tPnJldmlzaW9u
+KSkgXA0KPiBAQCAtMjA5LDYgKzIyNCw4IEBAIHN0YXRpYyB2b2lkIGJjbTQ3eHhfc3Byb21fZmls
+bF9hdXRvKHN0cnVjdCBzc2Jfc3Byb20gKnNwcm9tLA0KPiBFTlRSWSgweGZmZmZmZmZlLCB1OCwg
+cHJlLCAibGVkYmgxIiwgZ3BpbzEsIDB4ZmYsIGZiKTsNCj4gRU5UUlkoMHhmZmZmZmZmZSwgdTgs
+IHByZSwgImxlZGJoMiIsIGdwaW8yLCAweGZmLCBmYik7DQo+IEVOVFJZKDB4ZmZmZmZmZmUsIHU4
+LCBwcmUsICJsZWRiaDMiLCBncGlvMywgMHhmZiwgZmIpOw0KPiArIGlmIChzcHJvbS0+cmV2aXNp
+b24pDQo+ICsgYmNtNDd4eF9zcHJvbV9maWxsX252cmFtX29ubHkoc3Byb20sIHByZSwgZmIpOw0K
+PiANCj4gRU5UUlkoMHgwMDAwMDcwZSwgdTE2LCBwcmUsICJwYTBiMCIsIHBhMGIwLCAwLCBmYik7
+DQo+IEVOVFJZKDB4MDAwMDA3MGUsIHUxNiwgcHJlLCAicGEwYjEiLCBwYTBiMSwgMCwgZmIpOw0K
+PiBAQCAtNjQ3LDQ1ICs2NjQsNzAgQEAgc3RhdGljIHZvaWQgYmNtNDd4eF9zcHJvbV9hcHBseV9w
+cmVmaXhfYWxpYXMoY2hhciAqcHJlZml4LCBzaXplX3QgcHJlZml4X3NpemUpDQo+IH0NCj4gfQ0K
+PiANCj4gLXN0YXRpYyBpbnQgYmNtNDd4eF9nZXRfc3Byb21fYmNtYShzdHJ1Y3QgYmNtYV9idXMg
+KmJ1cywgc3RydWN0IHNzYl9zcHJvbSAqb3V0KQ0KPiArLyoNCj4gKyAqIFRoZSBOVlJBTSBwcmVm
+aXggb2YgYSBiY21hIGJ1cydzIHZhcmlhYmxlczogcGNpLzxidXM+LzxzbG90Pi8gb3IgaXRzDQo+
+ICsgKiBkZXZwYXRoTiBhbGlhcyBmb3IgYSBQQ0kgZGV2aWNlLCBzYi88Y29yZT4vIGZvciB0aGUg
+U29DJ3Mgb3duIGNvcmUuDQo+ICsgKiBSZXR1cm5zIHRoZSBwcmVmaXgsIE5VTEwgZm9yIGEgU29D
+IGJ1cyB3aXRob3V0IGFuIDgwMi4xMSBjb3JlLCBvciBhbg0KPiArICogZXJyb3IgcG9pbnRlciBm
+b3IgYSBob3N0IHR5cGUgTlZSQU0ga25vd3Mgbm90aGluZyBhYm91dC4gKmZhbGxiYWNrIGlzDQo+
+ICsgKiBzZXQgd2hlbiB0aGUgY2FsbGVyIG1heSBmYWxsIGJhY2sgdG8gdW5wcmVmaXhlZCB2YXJp
+YWJsZXMuDQo+ICsgKi8NCj4gK3N0YXRpYyBjaGFyICpiY200N3h4X3Nwcm9tX2JjbWFfcHJlZml4
+KHN0cnVjdCBiY21hX2J1cyAqYnVzLCBjaGFyICpidWYsDQo+ICsgICAgICAgc2l6ZV90IHNpemUs
+IGJvb2wgKmZhbGxiYWNrKQ0KPiB7DQo+IC0gc3RydWN0IGJjbWFfYm9hcmRpbmZvICpiaW5mbyA9
+ICZidXMtPmJvYXJkaW5mbzsNCj4gc3RydWN0IGJjbWFfZGV2aWNlICpjb3JlOw0KPiAtIGNoYXIg
+YnVmWzEwXTsNCj4gLSBjaGFyICpwcmVmaXg7DQo+IC0gYm9vbCBmYWxsYmFjayA9IGZhbHNlOw0K
+PiANCj4gKyAqZmFsbGJhY2sgPSBmYWxzZTsNCj4gc3dpdGNoIChidXMtPmhvc3R0eXBlKSB7DQo+
+IGNhc2UgQkNNQV9IT1NUVFlQRV9QQ0k6DQo+IC0gbWVtc2V0KG91dCwgMCwgc2l6ZW9mKHN0cnVj
+dCBzc2Jfc3Byb20pKTsNCj4gLyogT24gQkNNNDdYWCBhbGwgUENJIGJ1c2VzIHNoYXJlIHRoZSBz
+YW1lIGRvbWFpbiAqLw0KPiBpZiAoSVNfRU5BQkxFRChDT05GSUdfQkNNNDdYWCkpDQo+IC0gc25w
+cmludGYoYnVmLCBzaXplb2YoYnVmKSwgInBjaS8ldS8ldS8iLA0KPiArIHNucHJpbnRmKGJ1Ziwg
+c2l6ZSwgInBjaS8ldS8ldS8iLA0KPiBidXMtPmhvc3RfcGNpLT5idXMtPm51bWJlciArIDEsDQo+
+IFBDSV9TTE9UKGJ1cy0+aG9zdF9wY2ktPmRldmZuKSk7DQo+IGVsc2UNCj4gLSBzbnByaW50Zihi
+dWYsIHNpemVvZihidWYpLCAicGNpLyV1LyV1LyIsDQo+ICsgc25wcmludGYoYnVmLCBzaXplLCAi
+cGNpLyV1LyV1LyIsDQo+IHBjaV9kb21haW5fbnIoYnVzLT5ob3N0X3BjaS0+YnVzKSArIDEsDQo+
+IGJ1cy0+aG9zdF9wY2ktPmJ1cy0+bnVtYmVyKTsNCj4gLSBiY200N3h4X3Nwcm9tX2FwcGx5X3By
+ZWZpeF9hbGlhcyhidWYsIHNpemVvZihidWYpKTsNCj4gLSBwcmVmaXggPSBidWY7DQo+IC0gYnJl
+YWs7DQo+ICsgYmNtNDd4eF9zcHJvbV9hcHBseV9wcmVmaXhfYWxpYXMoYnVmLCBzaXplKTsNCj4g
+KyByZXR1cm4gYnVmOw0KPiBjYXNlIEJDTUFfSE9TVFRZUEVfU09DOg0KPiAtIG1lbXNldChvdXQs
+IDAsIHNpemVvZihzdHJ1Y3Qgc3NiX3Nwcm9tKSk7DQo+IGNvcmUgPSBiY21hX2ZpbmRfY29yZShi
+dXMsIEJDTUFfQ09SRV84MDIxMSk7DQo+IC0gaWYgKGNvcmUpIHsNCj4gLSBzbnByaW50ZihidWYs
+IHNpemVvZihidWYpLCAic2IvJXUvIiwNCj4gLSBjb3JlLT5jb3JlX2luZGV4KTsNCj4gLSBwcmVm
+aXggPSBidWY7DQo+IC0gZmFsbGJhY2sgPSB0cnVlOw0KPiAtIH0gZWxzZSB7DQo+IC0gcHJlZml4
+ID0gTlVMTDsNCj4gLSB9DQo+IC0gYnJlYWs7DQo+ICsgaWYgKCFjb3JlKQ0KPiArIHJldHVybiBO
+VUxMOw0KPiArIHNucHJpbnRmKGJ1Ziwgc2l6ZSwgInNiLyV1LyIsIGNvcmUtPmNvcmVfaW5kZXgp
+Ow0KPiArICpmYWxsYmFjayA9IHRydWU7DQo+ICsgcmV0dXJuIGJ1ZjsNCj4gZGVmYXVsdDoNCj4g
+KyByZXR1cm4gRVJSX1BUUigtRUlOVkFMKTsNCj4gKyB9DQo+ICt9DQo+ICsNCj4gK2ludCBiY200
+N3h4X3Nwcm9tX2ZpbGxfYmNtYV9udnJhbShzdHJ1Y3QgYmNtYV9idXMgKmJ1cywgc3RydWN0IHNz
+Yl9zcHJvbSAqb3V0KQ0KPiArew0KPiArIGNoYXIgYnVmWzEwXTsNCj4gKyBjaGFyICpwcmVmaXg7
+DQo+ICsgYm9vbCBmYWxsYmFjazsNCj4gKw0KPiArIHByZWZpeCA9IGJjbTQ3eHhfc3Byb21fYmNt
+YV9wcmVmaXgoYnVzLCBidWYsIHNpemVvZihidWYpLCAmZmFsbGJhY2spOw0KPiArIGlmIChJU19F
+UlIocHJlZml4KSkNCj4gKyByZXR1cm4gUFRSX0VSUihwcmVmaXgpOw0KPiArIGJjbTQ3eHhfc3By
+b21fZmlsbF9udnJhbV9vbmx5KG91dCwgcHJlZml4LCBmYWxsYmFjayk7DQo+ICsgcmV0dXJuIDA7
+DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyBpbnQgYmNtNDd4eF9nZXRfc3Byb21fYmNtYShzdHJ1Y3Qg
+YmNtYV9idXMgKmJ1cywgc3RydWN0IHNzYl9zcHJvbSAqb3V0KQ0KPiArew0KPiArIHN0cnVjdCBi
+Y21hX2JvYXJkaW5mbyAqYmluZm8gPSAmYnVzLT5ib2FyZGluZm87DQo+ICsgY2hhciBidWZbMTBd
+Ow0KPiArIGNoYXIgKnByZWZpeDsNCj4gKyBib29sIGZhbGxiYWNrOw0KPiArDQo+ICsgcHJlZml4
+ID0gYmNtNDd4eF9zcHJvbV9iY21hX3ByZWZpeChidXMsIGJ1Ziwgc2l6ZW9mKGJ1ZiksICZmYWxs
+YmFjayk7DQo+ICsgaWYgKElTX0VSUihwcmVmaXgpKSB7DQo+IHByX3dhcm4oIlVuYWJsZSB0byBm
+aWxsIFNQUk9NIGZvciBnaXZlbiBidXN0eXBlLlxuIik7DQo+IC0gcmV0dXJuIC1FSU5WQUw7DQo+
+ICsgcmV0dXJuIFBUUl9FUlIocHJlZml4KTsNCj4gfQ0KPiArIG1lbXNldChvdXQsIDAsIHNpemVv
+ZihzdHJ1Y3Qgc3NiX3Nwcm9tKSk7DQo+IA0KPiBudnJhbV9yZWFkX3UxNihwcmVmaXgsIE5VTEws
+ICJib2FyZHZlbmRvciIsICZiaW5mby0+dmVuZG9yLCAwLCB0cnVlKTsNCj4gaWYgKCFiaW5mby0+
+dmVuZG9yKQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9iY200N3h4X3Nwcm9tLmggYi9p
+bmNsdWRlL2xpbnV4L2JjbTQ3eHhfc3Byb20uaA0KPiBpbmRleCA0MGE3ZGEzZWYuLjQ3ZTk5MjJl
+YyAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9saW51eC9iY200N3h4X3Nwcm9tLmgNCj4gKysrIGIv
+aW5jbHVkZS9saW51eC9iY200N3h4X3Nwcm9tLmgNCj4gQEAgLTksNiArOSw3IEBADQo+ICNpbmNs
+dWRlIDxsaW51eC90eXBlcy5oPg0KPiAjaW5jbHVkZSA8bGludXgvdm1hbGxvYy5oPg0KPiANCj4g
+K3N0cnVjdCBiY21hX2J1czsNCj4gc3RydWN0IHNzYl9zcHJvbTsNCj4gDQo+ICNpZmRlZiBDT05G
+SUdfQkNNNDdYWF9TUFJPTQ0KPiBAQCAtMjgsNCArMjksMTggQEAgc3RhdGljIGlubGluZSBpbnQg
+YmNtNDd4eF9zcHJvbV9yZWdpc3Rlcl9mYWxsYmFja3Modm9pZCkNCj4gfTsNCj4gI2VuZGlmDQo+
+IA0KPiArLyoNCj4gKyAqIEZpbGwgdGhlIE5WUkFNLW9ubHkgdmFyaWFibGVzIG9mIGEgYmNtYSBi
+dXMgd2hvc2UgU1BST00gd2FzIHJlYWQgZnJvbSB0aGUNCj4gKyAqIGRldmljZS4gTGlrZSB0aGUg
+U1BST00gZmFsbGJhY2ssIG9ubHkgd2l0aCBiY21hIGJ1aWx0IGluLg0KPiArICovDQo+ICsjaWYg
+ZGVmaW5lZChDT05GSUdfQkNNNDdYWF9TUFJPTSkgJiYgSVNfQlVJTFRJTihDT05GSUdfQkNNQSkN
+Cj4gK2ludCBiY200N3h4X3Nwcm9tX2ZpbGxfYmNtYV9udnJhbShzdHJ1Y3QgYmNtYV9idXMgKmJ1
+cywgc3RydWN0IHNzYl9zcHJvbSAqb3V0KTsNCj4gKyNlbHNlDQo+ICtzdGF0aWMgaW5saW5lIGlu
+dCBiY200N3h4X3Nwcm9tX2ZpbGxfYmNtYV9udnJhbShzdHJ1Y3QgYmNtYV9idXMgKmJ1cywNCj4g
+KyBzdHJ1Y3Qgc3NiX3Nwcm9tICpvdXQpDQo+ICt7DQo+ICsgcmV0dXJuIC1FT1BOT1RTVVBQOw0K
+PiArfQ0KPiArI2VuZGlmDQo+ICsNCj4gI2VuZGlmIC8qIF9fQkNNNDdYWF9TUFJPTV9IICovDQo+
+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3NzYi9zc2IuaCBiL2luY2x1ZGUvbGludXgvc3Ni
+L3NzYi5oDQo+IGluZGV4IDA1NDhhZjY2NC4uMDJlNmM5MDU0IDEwMDY0NA0KPiAtLS0gYS9pbmNs
+dWRlL2xpbnV4L3NzYi9zc2IuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L3NzYi9zc2IuaA0KPiBA
+QCAtNzYsNiArNzYsNyBAQCBzdHJ1Y3Qgc3NiX3Nwcm9tIHsNCj4gdTggZ3BpbzE7IC8qIEdQSU8g
+cGluIDEgKi8NCj4gdTggZ3BpbzI7IC8qIEdQSU8gcGluIDIgKi8NCj4gdTggZ3BpbzM7IC8qIEdQ
+SU8gcGluIDMgKi8NCj4gKyB1OCBncGlvX2V4dFsxMl07IC8qIEdQSU8gcGlucyA0LTE1LCBOVlJB
+TSBsZWRiaDQtMTUgb25seSAqLw0KPiB1OCBtYXhwd3JfYmc7IC8qIDIuNEdIeiBBbXBsaWZpZXIg
+TWF4IFBvd2VyIChpbiBkQm0gUTUuMikgKi8NCj4gdTggbWF4cHdyX2FsOyAvKiA1LjJHSHogQW1w
+bGlmaWVyIE1heCBQb3dlciAoaW4gZEJtIFE1LjIpICovDQo+IHU4IG1heHB3cl9hOyAvKiA1LjNH
+SHogQW1wbGlmaWVyIE1heCBQb3dlciAoaW4gZEJtIFE1LjIpICovDQo+IA0KPiAtLQ0KPiAyLjM0
+LjENCj4gDQoNCg==
+--------ff4c29d6f96438e751f778a80f42ab70689aafbe692ab7ce2034fe8a73abeb44
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-Fixes: 947d63d8cd3b ("wifi: mt76: mt7996: Disable Rx hdr_trans in monitor mode")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 6815f5192116..ec7c5e8f3fda 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -612,6 +612,17 @@ static void mt7996_phy_set_rxfilter(struct mt7996_phy *phy)
- 		mt76_clear(dev, MT_WF_RFCR1(phy->mt76->band_idx), ctl_flags);
- }
- 
-+static bool mt7996_monitor_active(struct mt7996_dev *dev)
-+{
-+	struct mt7996_phy *phy;
-+
-+	mt7996_for_each_phy(dev, phy)
-+		if (!(phy->rxfilter & MT_WF_RFCR_DROP_OTHER_UC))
-+			return true;
-+
-+	return false;
-+}
-+
- static void mt7996_set_monitor(struct mt7996_phy *phy, bool enabled)
- {
- 	struct mt7996_dev *dev;
-@@ -632,7 +643,7 @@ static void mt7996_set_monitor(struct mt7996_phy *phy, bool enabled)
- 	mt76_rmw_field(dev, MT_DMA_DCR0(phy->mt76->band_idx),
- 		       MT_DMA_DCR0_RXD_G5_EN, enabled);
- 	mt76_rmw_field(dev, MT_MDP_DCR0,
--		       MT_MDP_DCR0_RX_HDR_TRANS_EN, !enabled);
-+		       MT_MDP_DCR0_RX_HDR_TRANS_EN, !mt7996_monitor_active(dev));
- 	mt7996_phy_set_rxfilter(phy);
- 	mt7996_mcu_set_sniffer_mode(phy, enabled);
- }
--- 
-2.47.3
+wsCpBAEBCABdBYJq4e3YCRBPsoxt7Hy0xTUUAAAAAAAcABBzYWx0QG5vdGF0
+aW9ucy5vcGVucGdwanMub3Jn598NAWJGu/Hv0SisEBf8WBYhBERSlkTqW1Te
+3v1Bj0+yjG3sfLTFAABnYQgAmaOGgD/QihS5bYDPYLihxk94kH0S+YcNYIv4
+I3+cuiyx2e1IwLKHvRSYYQ+zstPT0Zf2b405R3fza7jHhPv2C0GU9f/wU/Cb
+LpPJyeJ2isgM4TsGXScSpk0lje4DYYX+8fud7MrFztu4JQXca69B/0IWf5sk
+dMGd0ZfToYKS9bvS7DFlCxXDBfWQxUQLs4OF0DxjrdF96EdmLb+hCVhQn/bH
+pH9U+5rbFZRXSyGIlh79ZUCYFgglA9kvy5DrxVhQxApbHwkfmWSjGa/lRbco
+MotHpRN0sg38HxsE1mPXSx1/CLtelHI4MtD1Zv+uv3o6e8SbpiUXOviHZI+S
+fOat1w==
+=1Qzs
+-----END PGP SIGNATURE-----
+
+
+--------ff4c29d6f96438e751f778a80f42ab70689aafbe692ab7ce2034fe8a73abeb44--
 
