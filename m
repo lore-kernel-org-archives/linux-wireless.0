@@ -1,96 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197308;
-	b=HckgmvgnR34uT2IKepPQT/jikHxIPd+68tsWAaY9Hl6EddhCuaxw+Oz0UQ0SQoITH8Ff
-	 lFXMYV02MmlmpzWQMLZwTALUGACiMnLcVtOoHsOomjDYZVMKw2T/uCRNp3Apa6xyA6T+M
-	 OYNMi2k+l2oEyGsN0rU2UZDckClfYPj1hUoYEI6pceJuq5EKYIIFdtDgrlGKJ6aRAsenN
-	 3rtnRdEBzGTTaNbYwdSHGgg2UyRYgCsTLbj+xJqW5RxzPZbvI8+CkIlaJ4TPo9djizI6U
-	 H/ze8hG0BX2GSbdpBh1/ghYjHflsJ5nOIp4322OjKr7B1F6MtqtoDNQ3JRiskPAm0og==
+	t=1793197332;
+	b=tYd0+Vnqj5sonlbDejKbnvknof01cDYuhc5rZyuB+Mbff6QWi7hr+lgC0BvnACikWVcD
+	 hqfH8vWxRjIElKns5XCF+V9434UGjW5h+Ds4gh7yUJ6SV+OYgYqzOCzWWHqUIjQD/bBp5
+	 u4IcqxKeDQuwaZz/OZRI0NHA04Ewj5NsORyfTQQRlRWfTa/ZmEf9N5km/1WLf+e2ZqOu7
+	 4t1DChE2nZd3TF/JKyOp+31uUAELC0/Kr71GogxG1i+DwGQghdRxPYxVUZ1aTTyhz2pIG
+	 NIOI45i5Wv8Ut8L07v3zW9Gg9JC32/qjVtSn9cQ7/fnj40rNqbWYREwCFZFNyFbsBqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197308;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197332;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=jvqlznIRpcb2r5A+1FTqthWVZHsxJDeKaLsBSLtvHm8=;
-	b=KxaodCKGTo+fR4+vMNLylDqst8cCxdAkfkZLKJtQgGeH0joNmfovktSxF1YTxIPsYOu9
-	 UnsQHfQOLZnvA7ZgUy0h5lcobxHuW5/sUN7kcIpl6kztMR/ENoZtdGkMjTJG3DY2cp8Am
-	 2rreI7SUXU1sMj9VQ6o+QPKTinSYtm3n01mmZV9fAQFIxA7eemY993BdsWy4JBnGeRn3m
-	 MJBnoX/B4sRq8sQ8tB64+ek6juECAo6Kl0k1TFs0+/pQX5Nw4OQLd4nhgvf0PDj2h57cv
-	 AUhC1ExuF1WJUAx14dP1z5GeN84xU+/MAd3swEpWm8XvPIsD4yioPLH9sXqf5KgJqGw==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=gqJ0WlZJEjY1WtT7hIbPxHW5FniZwK8mIH2WvTpStXU=;
+	b=DmnruNwu6hSL+P8YwDcBF38A+gS+fs4spzoBeq+7vHZNZUa0XakkTstPxAaNlS2kBA2g
+	 YcZCS6ArlKrq4y2oQB/1Gb6L1ad7FjyTgiy0WVpqOGwlE3+VeV0WhkPHUTHSa/gSAolaA
+	 NQj3thvX/A4d0GcZ/fSvXo82PFL/nut9/UFLiV+cVoiz+tWfLAsznH4hADezw2wSvAEOk
+	 /Gy+nP4LDNOVEbj/tdwkyj0P4eFbfGzWdB55mXpwPZ2fvQbYgHtLUFssUkAUr7238erZO
+	 w9xC5Aoab4t1vVtUkVUXOgwrHtHiepD/IBpCzTFPRO4hBvYqm8NSnBWUdrkQh3H7/gQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=jYDFN1gn;
-	arc=none smtp.remote-ip=209.85.210.173
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=zGN7imdB;
+	arc=none smtp.remote-ip=209.85.210.170
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A775606A31C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:21:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A775606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87CEB606A31C
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:22:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 87CEB606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=jYDFN1gn
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-8a06c60065fso867015b3a.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:21:48 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=zGN7imdB
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-8a05e3f0d23so626033b3a.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:22:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793197308; x=1793802108; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=jvqlznIRpcb2r5A+1FTqthWVZHsxJDeKaLsBSLtvHm8=;
-        b=jYDFN1gnQmqyKqhr+ZvFYypHYGS5CGWfK+IGEporq5BRKI79QFfQPwxrSI6sn79FMo
-         NO5OBYMvH2hBAFmofJBmQZKPOTl/QGmZH3eWlx24JpmZxKYdfVx+VNXV07z1Yo9QqgN2
-         7RUn/Nm1ftPgCKZkFpIyQLYuOC8et0CqmF+P49yzbn8qCmKlS3i1oZfe2HIx6K8qR3ao
-         FTiVis+YTHzyBLz1++CfEyz80BOrOXOE4dgJZwfgDbowaAsgPzgqSPx9BwsO2Mw66ijJ
-         kOEpn+3lIWTs+yuKxKXkhf/7N/EhRCmLsdeDMRn87H48PHQfF133PmrY1IZoAOFIbpFg
-         uEyQ==
+        d=gmail.com; s=20260707; t=1793197332; x=1793802132; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=gqJ0WlZJEjY1WtT7hIbPxHW5FniZwK8mIH2WvTpStXU=;
+        b=zGN7imdB9l7Z90ZT96iLtDTKw947mg/cpOB45lxUfEVaDUFTM15+26LDyBrTG8G/N4
+         XdVAT1Gs/9WdN8gWJ+tJhsk83hT4Z2zuFu5GxOpwxbEEv8vai3TPJ77IJDNnqhYiOGEm
+         WfREZDMWnLsKTdRZwPndWNaF36kJQW4qMKwndesuARyGbx/qSejFAi2ia7Mqo2+2ABKI
+         Q2aZbDqsQflidZ2Q5vMYfILZBubAtIBuouRLnYoVZm8n7CbgZe0V2JUrjwTOMREL9zFh
+         kHuJfmhVMhFC169xRuIhdGd/JPQFGpG72OrE7XC0fvWEMuvDwaIKlkDODQjzWxs6FmK/
+         vqig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197308; x=1793802108;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=jvqlznIRpcb2r5A+1FTqthWVZHsxJDeKaLsBSLtvHm8=;
-        b=aXTd4jliJpthih7ErKaKJIB8s+3knL8rUb1ytK0t0jOGxbBMXcWEI910zRH9JVSG2w
-         IuEVYOpyY3BAcROwmlKCrK2Z7wu7AF9CbS8eqTPEo0GaQ3KEWQyL9YUglBFpTUp65RaS
-         ogwirdJc/UklJ3lwesGFvrknFpVSN0zeSuvS8bt9HLNVkKEKTrAZJ0cUCvtbqCEbHQfE
-         UUCA3EECMfMqpywy764N5w7fvbdhcrYLlDEpf9GCvzAf/4lV/gAsMLLzPpctcBDUfvWF
-         2AaZ9k15W7hdxY8yYU43DgbBRUzdM/RJo4An6RQOzmEoYhK+oKJXdvrgXgwobhWQPZNL
-         5frQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwmelW++CRfOYq4h1mxTnbpx2fo3UwX5sV6pejt0HExkqJWCS+Zm1ZOqmuqY3tHQAdxGMtAcl55JN+czzoMyg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIF30AapY5Gjqt822Jo5z3/kfTVYCmegE7Gjm+4oXoqlYfiszvu
-	xftnjhaGsDQwjxBHobfBuzWuQO8kwMuRvu1ap6xBT6SlCE8jS7eKdBrF
-X-Gm-Gg: AYBFou1Qp4o2006Lf7Xsgsir6cvgPPc8vjLCnyp2OunTCLv4f1qtX/0iNsJVUCCgUC8
-	a1hhfMG0Un+1nAAAWuX9pbGwSMlJLakg0uS3Q55CwHBzdSEegSGL24PVOfFqH0OTWBE3JiiCbfO
-	+jO62o3BvmOWd/JGCTOXzn0K5yJr3h5T+KxaNjIfUpKKX+JUeEH0Wo+GpxZ6hzwjLMsRRtT6KHC
-	oV9N9OSPKMjSjBldd/+ZcgBTXjQ1nkeFi2gJjuiQUKw7scxxTfOjWc4CQOTVHDeMl8g/sqey1qa
-	cRwtw0jnfLjszQaJ+1icEjGtykHWEVO0/O3NQakjXLK6LAPKq6BJCYPZ97GB9hniZS5CdLGOpTt
-	UQZDOXfG1CjEhlKSAmIrvNDUlp1Oi4F4/MM2GmCm5h3mWRnqhtBjBvCNfLK7/CZra1fyIPDb6Q3
-	PUyweZwsVGVG5VKe3w8NMBO4UFRjX4UU+bZXIY3FIFzyeVxlq8+Ya6C9MU4ogtJEB+i2otftF/c
-	ky3G2KBmcrtGyyZEI47qGbRMpsh6MmVYWbhVldQNcHhHGHYSKzyk6CpCT+Uqw12pLad8xATQ/65
-	THMiBI/OeZccZwyMZSzBwGdQnWbvcjDPgq09EyPdNYWtt7ID/Tk6crzOYitFGYCZ01ka
-X-Received: by 2002:a05:6a20:6a0c:b0:3e0:e400:3fd with SMTP id adf61e73a8af0-3e9023a4ca2mr2024572637.43.1793197307457;
-        Wed, 28 Oct 2026 07:21:47 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793197332; x=1793802132;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=gqJ0WlZJEjY1WtT7hIbPxHW5FniZwK8mIH2WvTpStXU=;
+        b=kVMGfcWr2WZU3d0yX7IW3rrbMKYSy6kCttRQlNHPddG0bD/vWIBDKEQ8FUnVzDjENo
+         jCc6I/hy03na8XlJPfaCpLZCrnRzL/OVlvj4n+AXOYX1/GjAtxsBnbrkTc9bsc7sZeNe
+         PtrYSlb4togQ101pgdjIpJc5S1rrK1+1IQA8BD+qAMpg4qtmlNmRAI4PlzBybpHc7wDZ
+         /iQEme6+acTX4wG7ld/YmirrsFh4aej6Mh0oCDD+/r46do+faHs68ISmfYV+evuhsMdH
+         Wd37PveAnlaOwow5k4vy0MZlIbeK/wW3i/PwbHic4CcgNd6o7NCV6ws0g18WP+rSRedf
+         1xFg==
+X-Forwarded-Encrypted: i=1; AKwUvBw1x/mYWQrb5VPu42g/vKSmL+lOY9KfBidukZ8aXPkaVppXvsqJAaOmjX3HJJ0ewcprzkuzSW799dAmTmDp/g==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLquQfzpnMtDXDNmACUVNTTadF1qdRzxEh2y+iq6Kp6Mu4nzWni
+	HLUev/pLFIO7ULIPSMDUAF6bqExxQYjiN4YvWczJYwbuycfQENUPzvHO
+X-Gm-Gg: AYBFou1oTP83QN7b0hV9rKgYbl48CzzeF/oVADBXSf6blrun8vyN/5xQhmo4EWrj314
+	oCmbDT0gq95iugS05Fhjnc2oIgp3socqWqmgVkYz4duu/gsMjM5vYcjm5VLLLeyRIY/Jvla4p1e
+	Us3FZXTNS/WJIACWewX463n02refgdyuIU33EftDSariQ5pnhZVz8etAnRmNR7XMvVtjUk+5QRm
+	+mLbvJ7Annbs174bo9wuClgLxAsvHPzpx8rhref9dFHmBVFxr1ZSAUwkk+k8u5qTqe0lMECuBkd
+	2y1uZWSmVdsXffYPwtVW3vh4LOowDi/zEi5ozhPtqzXGi7VZjbdPazHiSg9A1Ca0aTV+Rny66xW
+	7PzoS0KqOTo0km3ONHmeq/Zt3hDJH1QjdPN/4jCwMZAWU67L/t612riPEkPYNR81gstnKsEkkxh
+	AZJ4LMmenZOGS2FjqjREoXNUAm/D324ucMhcNvmwmlkQ4/wixrqQkpW6Uq4tx6UXcr6VBYT/RoB
+	MUS2X8G5FLc/MD5Ep7h9s4q4bp6hVgedus+JEYEZP4YMeOkedcG6GGzwgc/jtssz7Fz/CMb26n7
+	9iW+394yXWL0Zn035uxLN2YI5sfqAsOe9J8DkGMeXVB92WHeTUsucRmOxc6qNyVtNz6iesQH9WH
+	Cign57kdPN0h7yA==
+X-Received: by 2002:a05:6a21:4784:b0:3e2:26fc:2e06 with SMTP id adf61e73a8af0-3e9023072ffmr1926419637.26.1793197331584;
+        Wed, 28 Oct 2026 07:22:11 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a6cfc292sm1224768b3a.42.2026.10.28.07.21.43
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a7b786b4sm1271966b3a.57.2026.10.28.07.22.07
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 07:21:47 -0700 (PDT)
+        Wed, 28 Oct 2026 07:22:11 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Gregory Greenman <gregory.greenman@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Ryder Lee <ryder.lee@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: [PATCH] wifi: mac80211: restore dormant links when link updates fail
-Date: Wed, 28 Oct 2026 22:21:23 +0800
-Message-ID: <20261028142123.13072-1-enderaoelyther@gmail.com>
+Subject: [PATCH] wifi: cfg80211: preserve mesh A-MSDU lengths when adding mesh headers
+Date: Wed, 28 Oct 2026 22:21:49 +0800
+Message-ID: <20261028142149.13834-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261026152654.80697-1-enderaoelyther@gmail.com>
-References: <20261026152654.80697-1-enderaoelyther@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,59 +100,66 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A failed MLO link update can leave the interface with the requested
-dormant-links bitmap instead of its previous one. This can disable active
-links or trigger a bitmap warning during rollback.
+A malformed mesh A-MSDU subframe with a declared payload length near
+65535 bytes can pass validation against a much shorter aggregate.
 
-The error path restores the old valid-links bitmap but passes the new
-dormant_links argument to ieee80211_set_vif_links_bitmaps().
+ieee80211_amsdu_subframe_length() adds the mesh control length to the
+declared length in a u16, and ieee80211_is_valid_amsdu() stores the
+result in a u16 local. The sum therefore wraps before either walker
+compares it with the remaining aggregate length. The decomposer then
+splits and delivers the malformed aggregate instead of rejecting it.
 
-Save the old dormant bitmap before changing link state and use it when
-restoring the old configuration.
+Keep the computed length in unsigned int in both the helper and the
+validator so oversized subframes cannot wrap.
 
 LLM assistance was used to find the bug and review.
 
-Fixes: 6d543b34dbcf ("wifi: mac80211: Support disabled links during association")
+Fixes: 6e4c0d0460bd ("wifi: mac80211: add a workaround for receiving non-standard mesh A-MSDU")
+Fixes: fe4a6d2db3ba ("wifi: mac80211: implement support for yet another mesh A-MSDU format")
 Cc: stable@vger.kernel.org
 Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
-Validation: A W=1 module build with MODPOST passed on top of
-the prerequisite patch. A QEMU guest forced duplicate-address rollback: the
-old code cleared dormant and active links, while this change preserved
-dormant=0x2 and active=0x1 without a warning. The driver-failure path was
-not run. A reproducer is available on request.
+Validation: A W=1 module build with MODPOST passed. A QEMU
+guest using the real validator and decomposer accepted both malformed
+mesh formats and emitted two frames before the change; both formats were
+rejected and no frames were emitted after it. No KASAN report is expected
+or claimed.
+A reproducer is available on request.
 Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
 
-Depends on "wifi: mac80211: fix use-after-free when MLO link setup is
-rolled back", Message-ID <20261026152654.80697-1-enderaoelyther@gmail.com>.
+ net/wireless/util.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- net/mac80211/link.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index fac5a8c22596..41c1ae52e097 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -290,6 +290,7 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index f2464d2ce0d5..c510fc62d819 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -822,12 +822,12 @@ __ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
+ 	return frame;
+ }
+ 
+-static u16
++static unsigned int
+ ieee80211_amsdu_subframe_length(void *field, u8 mesh_flags, u8 hdr_type)
  {
- 	u16 old_links = sdata->vif.valid_links;
- 	u16 old_active = sdata->vif.active_links;
-+	u16 old_dormant = sdata->vif.dormant_links;
- 	unsigned long add = new_links & ~old_links;
- 	unsigned long rem = old_links & ~new_links;
- 	unsigned long sta_rem = rem;
-@@ -399,7 +400,7 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
- 		/* restore config */
- 		memcpy(sdata->link, old_data, sizeof(old_data));
- 		memcpy(sdata->vif.link_conf, old, sizeof(old));
--		ieee80211_set_vif_links_bitmaps(sdata, old_links, dormant_links);
-+		ieee80211_set_vif_links_bitmaps(sdata, old_links, old_dormant);
- 		/* drain RCU readers before cancelling work they may queue */
- 		synchronize_rcu();
- 		for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
+ 	__le16 *field_le = field;
+ 	__be16 *field_be = field;
+-	u16 len;
++	unsigned int len;
+ 
+ 	if (hdr_type >= 2)
+ 		len = le16_to_cpu(*field_le);
+@@ -849,7 +849,7 @@ bool ieee80211_is_valid_amsdu(struct sk_buff *skb, u8 mesh_hdr)
+ 		    __be16 len;
+ 		    u8 mesh_flags;
+ 		} hdr;
+-		u16 len;
++		unsigned int len;
+ 
+ 		if (sizeof(hdr) > remaining)
+ 			return false;
 
 base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
-prerequisite-patch-id: f3df0cde74cce63ac37decd81c2613cdb13f49ff
 -- 
 2.56.0
 
