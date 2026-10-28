@@ -1,60 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.122
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793148277;
-	b=G+7M6fIrNYH0Kj5A34vOKcpGwsFbOFh+H6vynVQBb+xUC6/xH2cTken++zzuTX6cCVaY
-	 DeSbFRl8s896C8R7anC0qUM6KdqMt+aGk+jFmCsV39xqYvdgwLqSFl60ADGMZeAZJG7qF
-	 Q2cAOXiRBIw6/2T7V5pfbzQwq8uEtd13cyR8zSsR+VkPYwhPidd0aN9jaI6aVISANxIsS
-	 zsZasGpEWHlUgipRE1eGjofNRH24/X5LbTEsf7NyDeuXDTrokM3wvRtwFkAylQhvtn45R
-	 dBY9ZwALM65rO+9nRzrvvv/WGxqGYYmV7tz7XLQ6rn7Etbdv/E3RnJgMN+xJGTM0mHQ==
+	t=1793150785;
+	b=LFHYnZefUtA4uLm6lp27wIThOAdrPeG9j5F7fG/MyQo8Plw9zcLvbgmzcizi1qTx+qg3
+	 nIU4wCaq9dPselVH/cKQYxX0dFcwcFI1cM9WMQ6678rbHiKWwg0pkHfA8cjO8ajhRyuTf
+	 3xKEbcZjS3hU7Dm0W/QGjuyOgTvU5eboGvuEPhaz/Zm156RxKjGuoT7zrupkOGoCUyS90
+	 cbvhdlnpMj8WCx8wFScc6ytf1t9rM2yeB+ZBjIAsjkHmuJ9+c/DcHmJ1BWFSjwlvQsq0E
+	 jU5sZsZ1ke2/uec1gQTZk2UHWlgX3ZNxBKXocqbmI48qFbwnCy8tta20n7zIbUGG/KA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793148277;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
-	 Content-Type;
-	bh=1v7Ke1XehsqZ4k0S4PNTpXWOWKd22NSdPZyeBvp/2HE=;
-	b=mVScxNlGsXpAiiy8M/TJ4cF8i1z4fECZMkIgw46xkHBD4SA4e1oys/54jwK+ooSrIJg2
-	 Egprhd6xPgkGvq1kB2fm180/YdoUhkLSojz9FCQNIVGJgSW+MskGndPWcK8Bc5vnI++vA
-	 /ZxLA0cB3lt/qbJpKFPMzWqpN2sg5rnmHacyfW3p99p4073F5T+ZuDpjO/0+eqQcdT/Ag
-	 rA3OSpg9YgyVMspgMf3GkKtVIDtGKk9uEXNnQqoW33Wp6+wfU05j8TZnm/z0ox/ANG98u
-	 f9Rm+NV2R2l3hODylcBoxQDDPoBa+IfU1TvT9gdodbzigfHNKS0FEkgRG/Gz6F8rncA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793150785;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=uOuX8lmp0xof0e0xCWW+uMkqG0cNoPc1tk+upESwVAA=;
+	b=Z3tJCo1e2hKrMW6f6Ps5atx13IF8oHhO0qttHuci9IWb/joFBj5qo7QdEXMLfZ6AaQZx
+	 q3idVNr8MKhYlnfuKiOeyuGkaUEvUZ59tGvY1cB4o8clsUiBUnKZKVyGV6uY+4UwFHP8j
+	 UUYMS8bqy/GF8glQDEKP05tGMfngWqJ3QwxqVg2jKSOLKRImpzFBV07OOutK6lxiSoTv5
+	 uqABZJJm3nfuDXUNskiiaqvq1UrlfkF/or1q8bPAEGNZ27MmqTmYPf5OrHzy/MTrYR4pZ
+	 PvBBwMbkpVzGN1OIvO8y23b9FwK5L9H+77Qaj4fcP/aFcDSFsy2TJVMMjRAsGLtVs+g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=protonmail.com;
-	spf=pass smtp.mailfrom=protonmail.com;
-	dkim=pass header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=jJkkYXza;
-	arc=none smtp.remote-ip=109.224.244.122
-Received: from mail-244122.protonmail.ch (mail-244122.protonmail.ch [109.224.244.122])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wD6nmJjk;
+	arc=none smtp.remote-ip=209.85.128.51
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78BB5606A325;
-	Wed, 28 Oct 2026 00:44:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78BB5606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDAD7606A31D
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 01:26:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EDAD7606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=jJkkYXza
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1793148274; x=1793407474;
-	bh=1v7Ke1XehsqZ4k0S4PNTpXWOWKd22NSdPZyeBvp/2HE=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=jJkkYXzaAkR0kIGxzQWDinHzGRZ/eC1jeCGL/deHP0m2Dd5RDds97PbtrhA3eIqgn
-	 uco7mRtxsJhZMQ5FtVMDrh7G3dDNyw5xPocyWacscgzKOQ8jbI7WYaJBt+57zUysZU
-	 +iZlK7ktoTeOkw6y92tmn8XcgEfQt22KNd+3oJhP4VmJDKnvz1+57ABM7cu7gGkl+x
-	 byMCJgpT8imxTnStDBCY8tg/DsVOzYPtkcA3pWvxJs8e0uLQBr27zshcz3475m9cN0
-	 fByyIK+Czpjj0SpDryUdaFP8llLQxArjKLbqAoNATz17lurOElsIDGGzZ5ZOjogWC1
-	 D6JThJ2CnFgVQ==
-Date: Wed, 28 Oct 2026 00:44:31 +0000
-To: Alessio Ferri <alessio.ferri@mythread.it>
-From: vit9696 <vit9696@protonmail.com>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org
-Subject: Re: [PATCH wireless-next v2 2/8] bcma: pmu: init PLL and resources on BCM4352/BCM4360
-Message-ID: <B511987C-C9E8-442B-89EB-6AF6E8398F38@protonmail.com>
-In-Reply-To: <20261027-bcma-ac-rev1-v2-2-b69b61c31920@mythread.it>
-References: <20261027-bcma-ac-rev1-v2-0-b69b61c31920@mythread.it> <20261027-bcma-ac-rev1-v2-2-b69b61c31920@mythread.it>
-Feedback-ID: 739018:user:proton
-X-Pm-Message-ID: e592c053d390710f13c41625893b0cef14053540
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wD6nmJjk
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4a7992e2f7dso3562645e9.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 18:26:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793150783; x=1793755583; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=uOuX8lmp0xof0e0xCWW+uMkqG0cNoPc1tk+upESwVAA=;
+        b=wD6nmJjkfOYRuScAAjWuroVnw8/yb8cS2myqAQz8AU6cn6hJkgnYxaQpjxl6D9mRMJ
+         ZcFMgRHJ5n73SPLY5hE3oPlainPIQ32aabs5/Mxinv4xNdV0R/0GdT810Kwqc9Wy/EnQ
+         qrMdqyCIlZXQ+Rux1I0L6w7iCGx6F7GJGDyF7v9+KHClhIml6bdDHOIBYwd3mJhMybRo
+         zOIVMSncRPdj2Na19D+2eikNW36sXxRY/PmjRoU1FI9D299oP4KeSoVGJa3t8mtHK8cc
+         E9J6Oj1RDgUTrpn8i3Pnmg/qojF1p5V0l2cjZOyAKigv9Z0dMRnemAUvzY9fLpGiM58T
+         bY6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793150783; x=1793755583;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=uOuX8lmp0xof0e0xCWW+uMkqG0cNoPc1tk+upESwVAA=;
+        b=yvwHw/Dh899pSOolwQPWe/PflYrnP2w4cBhaGisfubAAXJeATtDxXvxvcs/fLD7fqt
+         CSSkEQdfUQRP90l83k04U8hc7vo4dDHWJDqldHBFHz3IAFFUMB6OMeQDpVt5X8kUjT9W
+         poBitg59bYulMhZbTlfAiyx73FiSuHSRQx13U3JY3nabc3AhE/Fb8I92SbQWLwxvZVI1
+         5bugrc1GKR+/G++FIrJhm7wxzlA5eHm1XnfoJDaZ5OZDgdLowXhPLniIsLUmtMx0hjZL
+         nmc73nk+mH8PvzEuWmpjWBIZUvqnCmIMT2+f2McyIUWtW6yGkpNLR4zZXJ5piXlcLOPC
+         Tz1g==
+X-Forwarded-Encrypted: i=1; AKwUvBzfU9bQsSYq4GQDF+rW+NerGBz/nZ3/wpaP9l4hK9LElIi8nVUaYXdbGk7tJKLdYQwOSQd9NUq903ZLe5PilA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLO0STsGbmixmpezM76syWqHyZqPrRf0N0imNDzv+hsqSypzElD
+	Smu3bLxSx09Fjy3OyyPwrg3cLJjVN5hwdmW3VjSI17lB/V7NWIs10Z9d/YAR
+X-Gm-Gg: AYBFou3d00lGWSqZkT9LEFjmEdyU9u3Qz0f9Cg17fRgb07fd1cDYWQrWEY4bKTSY06X
+	e+He4mz3vWGqQYxCi6mGxf+bU4/jqgGn99LyWSugrJ9LdQ/fby8pHwFAkBTXiKQI0mqUl5CQhLZ
+	44fUiJpdJX2FprjCv2FP8N+6azf/MZRflxALVgqhGEuTB72l2dG5LrZAEPjkCpWYIDyksfNmoiU
+	NmrHqPcjAQ1FvXCk2vTf2RPXUX3P9Jb3ezv/iC6YendY/UIYoc4jALZjvwn7IwZ/lMhJMmpDi2u
+	eTR/wRhs6V91L/KX2aYu/FGvfAcGGJ4hf1XR3KRkMaQpO/DqS4n3OyyIPehYzLdgMSHoBlPxnLm
+	T1daP8pT73rSfPVUMpdRqm+dgStPAoxbTmkIW/RsIHu5TR5MngihHCiLJhkqFPLmQi3D2wwwAlj
+	nHxDSIqzXSk4244eMKahea3nhxMU7SO/o1qRTw2BZpV1rEhmI0cUBQp90ScSguOR+mBW63XbNBn
+	0DMT5n10L/Gb+fvr2brhI9O4ZWFu72f4SDLxf8kRzgU7QuV4jsxqzGPpOwRDWOMftWhR51qxpac
+	DU+d/VmKsdM=
+X-Received: by 2002:a05:600c:190a:b0:4a2:150f:1601 with SMTP id 5b1f17b1804b1-4a966586d1bmr13640805e9.12.1793150783182;
+        Tue, 27 Oct 2026 18:26:23 -0700 (PDT)
+Received: from debian.. ([2001:41d0:303:db6b::])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a97c9f150fsm7935155e9.10.2026.10.27.18.26.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2026 18:26:22 -0700 (PDT)
+From: Tristan Madani <tristmd@gmail.com>
+X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
+To: Jeff Chen <jeff.chen_1@nxp.com>,
+	linux-wireless@vger.kernel.org
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Tristan Madani <tristan@talencesecurity.com>
+Subject: [PATCH v2 wireless] wifi: nxpwifi: validate scan response TLV sizes before indexed access
+Date: Wed, 28 Oct 2026 01:26:20 +0000
+Message-ID: <20261028012620.3762590-1-tristan@talencesecurity.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261025181531.3744345-1-tristan@talencesecurity.com>
+References: <20261025181531.3744345-1-tristan@talencesecurity.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,209 +102,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha256; boundary="------c33969d8e1516fcdca326010fee8138465af6aa617ad10bcf2a92b5c644882fb"; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------c33969d8e1516fcdca326010fee8138465af6aa617ad10bcf2a92b5c644882fb
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.4\))
-Subject: Re: [PATCH wireless-next v2 2/8] bcma: pmu: init PLL and resources on
- BCM4352/BCM4360
-From: vit9696 <vit9696@protonmail.com>
-In-Reply-To: <20261027-bcma-ac-rev1-v2-2-b69b61c31920@mythread.it>
-Date: Wed, 28 Oct 2026 03:44:18 +0300
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
- Michael Buesch <m@bues.ch>,
- linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-mips@vger.kernel.org
-Message-Id: <B511987C-C9E8-442B-89EB-6AF6E8398F38@protonmail.com>
-References: <20261027-bcma-ac-rev1-v2-0-b69b61c31920@mythread.it>
- <ByO90-C2C5yWm8_jwhGnnMBETANahqas8IfQLYKE-HwzvaO9HX5BjrQEEkiBYSF2e4KtNJ0VwOL7RJ4jw8duXg==@protonmail.internalid>
- <20261027-bcma-ac-rev1-v2-2-b69b61c31920@mythread.it>
-To: Alessio Ferri <alessio.ferri@mythread.it>
-X-Mailer: Apple Mail (2.3864.700.51.1.4)
+The scan response handler indexes into TSF and channel-band TLV arrays
+using a loop counter derived from the number of BSS entries, but never
+checks whether the TLV data is large enough. A firmware response with
+fewer TLV entries than BSS entries leads to reads past the TLV buffer.
 
-Hello,
+Add bounds checks that verify each indexed access falls within the
+TLV's declared length before dereferencing.
 
-XTAL frequency on BCM4360 and BCM4352 apparently does not only depend on th=
-e revision number. It is determined by bit #0 presence in chipstatus. If bi=
-t #0 is set, then it is 40 MHz, otherwise it is 20 MHz. This logic is actua=
-lly already present in the bcma driver[1], and looks correct to me. FVCO fr=
-equency being 960 MHz for all BCM4360 and BCM4352 chips is also more or les=
-s known from the public open-source part of the Broadcom driver[2].
+Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
+Cc: stable@vger.kernel.org
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+---
+Changes in v2:
+  - Fix From:/Signed-off-by: email mismatch.
+  - Add missing Cc: recipients (Francesco Dolcini).
+  - No code changes.
 
-The nitpick here is that whereas PLL seems indeed to be only programmed on =
-revision 3 and newer[3] (with the code there assuming 40 MHz XTAL frequency=
-, probably because Broadcom migrated to 40 MHz at a certain point for all n=
-ewer chips), but there is a special case for HT clk_ctl_st bit[4], i.e. bac=
-kplane is running on HT clock.
+ drivers/net/wireless/nxp/nxpwifi/scan.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-With this in mind I believe the patch:
-- could handle revision 3 or newer, not just 3 in CTL2/3 logic;
-- could bug on BCMA_CC_CHIPST_4360_XTAL_40MZ not being set in CTL2/3 logic;
-- could check for CCS_HTAVAIL bit not being set in CTL2/3 logic;
-- perhaps could calculate resulting CTL2/3 logic values in a slightly clean=
-er way, after all si_set_bb_vcofreq_frac is open-source;
-- perhaps could handle CTL6/14 for other revisions, si_pmu_res_init is also=
- open-source, and to me it makes little sense to ignore it.
-
-Best,
-Vitaly
-
-[1] https://github.com/torvalds/linux/blob/8a36f53fd5ec3eff01f1b637d42cbdc3=
-821d0493/drivers/bcma/driver_chipcommon_pmu.c#L336-L342
-[2] https://github.com/RMerl/asuswrt-merlin.ng/blob/386_x/release/src-rt-6.=
-x.4708/shared/hndpmu.c#L3450-L3460
-[3] https://github.com/RMerl/asuswrt-merlin.ng/blob/386_x/release/src-rt-6.=
-x.4708/shared/hndpmu.c#L5142-L5143
-[4] https://github.com/RMerl/asuswrt-merlin.ng/blob/386_x/release/src-rt-6.=
-x.4708/shared/hndpmu.c#L4961C37-L4964
-
-> On 27 Oct 2026, at 02:53, Alessio Ferri <alessio.ferri@mythread.it> wrote=
-:
->=20
-> On chip rev 3:
->=20
-> - program PLLCTL2/3 for a 960.0098 MHz fractional VCO from the 40 MHz
->  crystal, except on a BCM4360 strapped for USB;
-> - set the up/down time of resource 6;
-> - with chipstatus RSRC_INIT_MODE0 clear, program PLLCTL6/14 and set
->  max_res_mask to 0x1ff.
->=20
-> The values are those of Broadcom's driver on rev 3; other revisions are
-> left as they are.
->=20
-> Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
-> ---
-> drivers/bcma/driver_chipcommon_pmu.c        | 41 ++++++++++++++++++++++++=
-+++++
-> include/linux/bcma/bcma_driver_chipcommon.h |  4 +++
-> 2 files changed, 45 insertions(+)
->=20
-> diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_c=
-hipcommon_pmu.c
-> index 263ef6fa1..ab2b2701d 100644
-> --- a/drivers/bcma/driver_chipcommon_pmu.c
-> +++ b/drivers/bcma/driver_chipcommon_pmu.c
-> @@ -145,6 +145,39 @@ static void bcma_pmu2_pll_init0(struct bcma_drv_cc *=
-cc, u32 xtalfreq)
-> /* TODO: Do we need to update OTP? */
-> }
->=20
-> +static void bcma_pmu_4360_pll_init(struct bcma_drv_cc *cc)
-> +{
-> + struct bcma_bus *bus =3D cc->core->bus;
-> +
-> + if (bus->chipinfo.rev !=3D 3)
-> + return;
-> + if (bus->chipinfo.id =3D=3D BCMA_CHIP_ID_BCM4360 &&
-> +    cc->status & BCMA_CC_CHIPST_4360_MODE_USB)
-> + return;
-> +
-> + /* Fractional VCO, 960.0098 MHz from a 40 MHz crystal. */
-> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL2, 0x0c31);
-> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL3, 0x100e);
-> + bcma_pmu_set32(cc, BCMA_CC_PMU_CTL, BCMA_CC_PMU_CTL_PLL_UPD);
-> +}
-> +
-> +/* Returns the max resource mask to program, 0 to leave it alone. */
-> +static u32 bcma_pmu_4360_resources_init(struct bcma_drv_cc *cc)
-> +{
-> + if (cc->core->bus->chipinfo.rev !=3D 3)
-> + return 0;
-> +
-> + bcma_pmu_write32(cc, BCMA_CC_PMU_RES_TABSEL, 6);
-> + bcma_pmu_write32(cc, BCMA_CC_PMU_RES_UPDNTM, 0x00200001);
-> +
-> + if (cc->status & BCMA_CC_CHIPST_4360_RSRC_INIT_MODE0)
-> + return 0;
-> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL6, 0x09048562);
-> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL14, 0x09048562);
-> + bcma_pmu_set32(cc, BCMA_CC_PMU_CTL, BCMA_CC_PMU_CTL_PLL_UPD);
-> + return 0x1ff;
-> +}
-> +
-> static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
-> {
-> struct bcma_bus *bus =3D cc->core->bus;
-> @@ -156,6 +189,10 @@ static void bcma_pmu_pll_init(struct bcma_drv_cc *cc=
-)
-> xtalfreq =3D 20000;
-> bcma_pmu2_pll_init0(cc, xtalfreq);
-> break;
-> + case BCMA_CHIP_ID_BCM4352:
-> + case BCMA_CHIP_ID_BCM4360:
-> + bcma_pmu_4360_pll_init(cc);
-> + break;
-> }
-> }
->=20
-> @@ -188,6 +225,10 @@ static void bcma_pmu_resources_init(struct bcma_drv_=
-cc *cc)
->  BCMA_RES_4314_WL_CORE_READY;
-> max_msk =3D 0x3FFFFFFF;
-> break;
-> + case BCMA_CHIP_ID_BCM4352:
-> + case BCMA_CHIP_ID_BCM4360:
-> + max_msk =3D bcma_pmu_4360_resources_init(cc);
-> + break;
-> default:
-> bcma_debug(bus, "PMU resource config unknown or not needed for device 0x%=
-04X\n",
->   bus->chipinfo.id);
-> diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/=
-bcma/bcma_driver_chipcommon.h
-> index 0cb6638b5..45c37b6bd 100644
-> --- a/include/linux/bcma/bcma_driver_chipcommon.h
-> +++ b/include/linux/bcma/bcma_driver_chipcommon.h
-> @@ -107,6 +107,8 @@
-> #define  BCMA_CC_CHIPST_4706_PCIE1_DISABLE BIT(5) /* PCIE1 enable strap p=
-in */
-> #define  BCMA_CC_CHIPST_5357_NAND_BOOT BIT(4) /* NAND boot, valid for CC =
-rev 38 and/or BCM5357 */
-> #define  BCMA_CC_CHIPST_4360_XTAL_40MZ 0x00000001
-> +#define  BCMA_CC_CHIPST_4360_RSRC_INIT_MODE0 0x00000020
-> +#define  BCMA_CC_CHIPST_4360_MODE_USB 0x00000100
-> #define BCMA_CC_JCMD 0x0030 /* Rev >=3D 10 only */
-> #define  BCMA_CC_JCMD_START 0x80000000
-> #define  BCMA_CC_JCMD_BUSY 0x80000000
-> @@ -500,6 +502,8 @@
-> #define BCMA_CC_PMU_PLL_CTL3 3
-> #define BCMA_CC_PMU_PLL_CTL4 4
-> #define BCMA_CC_PMU_PLL_CTL5 5
-> +#define BCMA_CC_PMU_PLL_CTL6 6
-> +#define BCMA_CC_PMU_PLL_CTL14 14
->=20
-> #define BCMA_CC_PMU1_PLL0_PC0_P1DIV_MASK 0x00f00000
-> #define BCMA_CC_PMU1_PLL0_PC0_P1DIV_SHIFT 20
->=20
-> --
-> 2.34.1
->=20
-
-
---------c33969d8e1516fcdca326010fee8138465af6aa617ad10bcf2a92b5c644882fb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: ProtonMail
-
-wsCpBAEBCABdBYJq4UVvCRBPsoxt7Hy0xTUUAAAAAAAcABBzYWx0QG5vdGF0
-aW9ucy5vcGVucGdwanMub3JnCldAWcWGuVJ8KVUMJFLkmxYhBERSlkTqW1Te
-3v1Bj0+yjG3sfLTFAAAxdQgAlLWjxlD5XVUa4rjN4D8KVNhh3exQvxoPfVNy
-VNjAIEyq3T51S/RoqfTSmu/IuTlyIBOqKI9vqhBso7CxQu2jN7AbLj614J6N
-jaM87v9LSmtMsZ7HgtbXPhytKX9qcXl3wxu7L3ixzMyBhzD1bx9SONsFRhDc
-QfZaBaIQM+80SQ3DzmWREu08RubXOsxnc47UCBOXjO7/Q0hqI59clvKaIy17
-5n4U4anWHOjNcAkFzZZ3vhb+i1zatey3eVXparwOXc61gORWrgswplKLcvmX
-EU7FsTqOcqQdVPoLfLtohb9JUfmydA2Yd05TVqkgWpYpna2bAu0vrPQMDely
-h2Mn5w==
-=dLS9
------END PGP SIGNATURE-----
-
-
---------c33969d8e1516fcdca326010fee8138465af6aa617ad10bcf2a92b5c644882fb--
+diff --git a/drivers/net/wireless/nxp/nxpwifi/scan.c b/drivers/net/wireless/nxp/nxpwifi/scan.c
+index 67d7ff2f10c59..a8d3387320af4 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/scan.c
++++ b/drivers/net/wireless/nxp/nxpwifi/scan.c
+@@ -1999,12 +1999,22 @@ int nxpwifi_ret_802_11_scan(struct nxpwifi_private *priv,
+ 		 * was received.
+ 		 */
+ 		if (tsf_tlv)
+-			memcpy(&fw_tsf, &tsf_tlv->tsf_data[idx * TSF_DATA_SIZE],
+-			       sizeof(fw_tsf));
++			if ((idx + 1) * TSF_DATA_SIZE <=
++			    le16_to_cpu(tsf_tlv->header.len))
++				memcpy(&fw_tsf,
++				       &tsf_tlv->tsf_data[idx *
++							  TSF_DATA_SIZE],
++				       sizeof(fw_tsf));
+ 
+ 		if (chan_band_tlv) {
+-			chan_band = &chan_band_tlv->chan_band_param[idx];
+-			radio_type = &chan_band->radio_type;
++			if ((idx + 1) * sizeof(*chan_band) <=
++			    le16_to_cpu(chan_band_tlv->header.len)) {
++				chan_band =
++					&chan_band_tlv->chan_band_param[idx];
++				radio_type = &chan_band->radio_type;
++			} else {
++				radio_type = NULL;
++			}
+ 		} else {
+ 			radio_type = NULL;
+ 		}
+-- 
+2.47.3
 
