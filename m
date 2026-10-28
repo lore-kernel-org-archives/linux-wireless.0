@@ -1,71 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793164075;
-	b=DDfV0Lj5XEWb46MSrs90aLnF17tHvHTPPiBkIK+U343KiOjRs1TqzIOF8hOlQT4QNeox
-	 xOHZd7viAzADquVz7H5sFrmmFXTNFDadF288TaspQ3U7kLP10gMruPmLXZuLqhGbQLwEj
-	 RqKUdc6AHqDbJ7u+/VziRAsRfKCg24RmbZcsEq0AFGA4R9gaFX8k2SauujTutGLlwj56J
-	 Af9tvMungy0ksPO0B+B+jLIXR3neFllsvhFDXD7NGiEq/VqgImmoE6RBr3CE8aKcLtS/a
-	 GWbFbJroP037JUtakD1MOK6I6nL52UkpAFnsTGh1SbO0xWCfrN3GQkd1SWAr0Jrn8Zw==
+	t=1793164399;
+	b=KPEhepwW5wQ2e4bBqFmiKXDYG4SulYCXmDz4c4y372vnDkmZcRIByuoCc0dzKP7SWG4x
+	 9x5aHK538i56lOMFputE80wUjlp+S3sG9kmfn5y+OwTBZQ96KyG1YE2v0G55ySx+YFxx5
+	 ES3/UJgvkqXnmoODi2yFyXSYY3HSSuuK6fxE0IPFnhg0XE3m7knCImO+BbK9UHYcaJfYn
+	 ONnqsxj47FN4P+40t1NSsTMsPI8g/WRnR7637VwXpihXSQsJmXUJoT8xmztGkQUjujjZF
+	 hIDXTOE4Vcuw1xJw05jbdNplYguYRhEYJgqFUqKu9cIQpy7tZyHqdU/9cj8NOCZG4GA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793164075;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793164399;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=MTIAVEb2k2hh86gcLrq0Ks4EmnWvWMm36zR/JvnNe0E=;
-	b=HMYPHB3aDrHpWPdNZ83AJQR8Ja1kkBPXasHi4CSaMPSZeWP+6K3gKUGhwLty0hiY4Ayz
-	 XMbseKs+wYQK9qSjbcNtrjFdE3FXtEjZ8KC1ie6gapuoHQwpSE39HeNxcSLfMGELXeRA0
-	 2nemYLm28lmyKja7Fw5bhnRAqs/DRioGn5R/uVMq7DM2ylKsGT4vJvxRB/USYcZy0soZA
-	 +2brBIswzPg4wYbYmNvLAKBHBnOXrRgiAkxCHWvyFOnn0tT+/IAAEy063+bdUDKNkyYic
-	 4Jiudnp9bhYG9hc5e1LYZD6Wv550501YZ4qiVSIk+wj91T4vd+uSS+PFsjcp8AhAv5Q==
+	bh=DVH/EBIsl3QhnmFUaGRlJxxmZd3EfkXqMccMLT5dSoY=;
+	b=XJKICce24JcTakRn+jMRtww1fTcCToJIfNTZs44MYKyqhoUwT/O+pAh5kOu+9mUBcIa2
+	 OgmraB6MSxRMwtIbkNtZlhgn3zpqfQz4m2nx0VJlvZnhE5FeWXfd6KNQFwY0xnnrO1a7T
+	 DM82BeK57+o23F7pM+isyvlDr436W8cvAIWgHJ5kaItuoHVPHepHPPfv9ltK9ES5QN69j
+	 Ptuxvqx/82RXsc7bKIj8l8g2kHgQh7fAj0LUKyT1OXfnZLo2RlE82qsvo2Zo8uNQNTOKE
+	 gpO1FKq4Wy3inXBSx7tG0Ng9CodrWdeWXe96Jq/54llabfdS2oDBimzO/hSoDh20c0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=nrNkqtu8;
-	arc=none smtp.remote-ip=220.197.31.2
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="mZbBC/IH";
+	arc=none smtp.remote-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90830606A327;
-	Wed, 28 Oct 2026 05:07:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90830606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52B9A606A31F;
+	Wed, 28 Oct 2026 05:13:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 52B9A606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=nrNkqtu8
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=mZbBC/IH
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=MT
-	IAVEb2k2hh86gcLrq0Ks4EmnWvWMm36zR/JvnNe0E=; b=nrNkqtu8fhkkFEswyo
-	5jC53CibVwNMeuTwwxIPK5GhoGBJ5QhERYZUqAh3NQg6svcqL+1EERLpf3jlDmSE
-	uh56lqO5C0w8K95PS9/wQeWbUoRmDicQkKooX4LxHUDku7w9wzO66RhNSEeIYu31
-	Z9qI5QEFvp3KltohOrzo2Fvmw=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=DV
+	H/EBIsl3QhnmFUaGRlJxxmZd3EfkXqMccMLT5dSoY=; b=mZbBC/IH74kqwctlh6
+	tW+zKItZIdn0iYkGsf7wyXLdVPFqEQ+Ge77rk9ilPO3Wj+gpdzkRbjtyUIIZBCCv
+	2eK6iALrcLCS1pNq9s9yToZhTLj7JBg+r4IwG4rlkKcmR3q6E8hr/zo1BGTa5ECV
+	cbBig3wHV5iha5wVNZ1WSnU8Y=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wDn31cMg+FqswGRDQ--.35366S5;
-	Wed, 28 Oct 2026 13:07:28 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3_3lYhOFqTkVqDQ--.14113S3;
+	Wed, 28 Oct 2026 13:12:57 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Leon Yen <leon.yen@mediatek.com>,
-	Quan Zhou <quan.zhou@mediatek.com>,
-	Rong Yan <rong.yan@mediatek.com>,
-	Hao Zhang <hao.zhang@mediatek.com>,
+To: Jeff Johnson <jjohnson@kernel.org>,
+	Kalle Valo <kvalo@kernel.org>,
+	Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
+	ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
 Cc: stable@vger.kernel.org
-Subject: [PATCH 3/3] wifi: mt76: mt7925: validate NIC capability payload lengths
-Date: Wed, 28 Oct 2026 13:07:22 +0800
-Message-Id: <20261028050722.135598-4-yaojiale02@163.com>
+Subject: [PATCH 1/5] wifi: ath11k: validate DMA buffer release TLV lengths
+Date: Wed, 28 Oct 2026 13:12:50 +0800
+Message-Id: <20261028051254.147628-2-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261028050722.135598-1-yaojiale02@163.com>
-References: <20261028050722.135598-1-yaojiale02@163.com>
+In-Reply-To: <20261028051254.147628-1-yaojiale02@163.com>
+References: <20261028051254.147628-1-yaojiale02@163.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -76,141 +67,42 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDn31cMg+FqswGRDQ--.35366S5
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWF17Kr4xJFyxZr15XrWfAFb_yoWrJr4Upa
-	yagFW5Kry8trsrWw4Iyw4fArWay3s8Kw47JFyfJwn0vws7Awn5Ga18Z34vvr1ak395ur1I
-	vr4UtFn8W34DuF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jwb18UUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7xH3MmrhgxHxmgAA3J
+X-CM-TRANSID:_____wD3_3lYhOFqTkVqDQ--.14113S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WF4UJr47Wr4xur1UWF17Wrg_yoW8Gry7pF
+	W8Ww17Cw1xWr4xJw1fAa1xZayYkanYgrW3KFWrt34fuF18CF15JFWYqFWYvFyrtr18tFyS
+	vF4jgr15AF1qy3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j5R6wUUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzRpKhGrhhFreowAA3x
 
-The NIC capability parser only checks whether a declared TLV length fits
-in the skb. It does not reject lengths shorter than the TLV header or
-ensure that known payloads contain the fields consumed by the driver. A
-truncated firmware response can therefore stall the parser on a zero
-length TLV or cause out-of-bounds reads from fixed-size payloads.
+The DMA buffer release parser counts nested entry and metadata TLVs, but
+does not ensure their payloads cover the structures later indexed by
+the direct buffer ring handler.  Short firmware TLVs can therefore lead
+to out-of-bounds reads when the arrays are consumed.
 
-Reject undersized TLVs and validate every known payload before accessing
-it.
+Add minimum-length policies for both nested TLV types.
 
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Fixes: 9d11b7bff950 ("ath11k: add support for spectral scan")
 Cc: stable@vger.kernel.org
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 43 +++++++++++++++----
- 1 file changed, 35 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index c612fda55eb7..41138203ada2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -1039,8 +1039,8 @@ int mt7925_mcu_get_temperature(struct mt792x_phy *phy)
- 	return temperature;
- }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 08fd6795ed9e..0d4481a09501 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -161,6 +161,10 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 		.min_len = sizeof(struct wmi_p2p_noa_event) },
+ 	[WMI_TAG_PDEV_CSA_SWITCH_COUNT_STATUS_EVENT] = {
+ 		.min_len = sizeof(struct wmi_pdev_csa_switch_ev) },
++	[WMI_TAG_DMA_BUF_RELEASE_ENTRY] = {
++		.min_len = sizeof(struct wmi_dma_buf_release_entry) - TLV_HDR_SIZE },
++	[WMI_TAG_DMA_BUF_RELEASE_SPECTRAL_META_DATA] = {
++		.min_len = sizeof(struct wmi_dma_buf_release_meta_data) - TLV_HDR_SIZE },
+ };
  
--static void
--mt7925_mcu_parse_phy_cap(struct mt792x_dev *dev, char *data)
-+static bool
-+mt7925_mcu_parse_phy_cap(struct mt792x_dev *dev, char *data, int len)
- {
- 	struct mt76_phy *mphy = &dev->mt76.phy;
- 	struct mt76_dev *mdev = mphy->dev;
-@@ -1064,16 +1064,21 @@ mt7925_mcu_parse_phy_cap(struct mt792x_dev *dev, char *data)
- 		WF0_5G
- 	};
- 
-+	if (len < sizeof(*cap))
-+		return false;
-+
- 	cap = (struct mt7925_mcu_phy_cap *)data;
- 
- 	mdev->phy.antenna_mask = BIT(cap->nss) - 1;
- 	mdev->phy.chainmask = mdev->phy.antenna_mask;
- 	mdev->phy.cap.has_2ghz = cap->hw_path & BIT(WF0_24G);
- 	mdev->phy.cap.has_5ghz = cap->hw_path & BIT(WF0_5G);
-+
-+	return true;
- }
- 
--static void
--mt7925_mcu_parse_eml_cap(struct mt792x_dev *dev, char *data)
-+static bool
-+mt7925_mcu_parse_eml_cap(struct mt792x_dev *dev, char *data, int len)
- {
- 	struct mt7925_mcu_eml_cap {
- 		u8 rsv[4];
-@@ -1081,9 +1086,14 @@ mt7925_mcu_parse_eml_cap(struct mt792x_dev *dev, char *data)
- 		u8 rsv2[6];
- 	} __packed * cap;
- 
-+	if (len < sizeof(*cap))
-+		return false;
-+
- 	cap = (struct mt7925_mcu_eml_cap *)data;
- 
- 	dev->phy.eml_cap = le16_to_cpu(cap->eml_cap);
-+
-+	return true;
- }
- 
- static int
-@@ -1121,36 +1131,53 @@ mt7925_mcu_get_nic_capability(struct mt792x_dev *dev)
- 
- 	for (i = 0; i < le16_to_cpu(hdr->n_element); i++) {
- 		struct tlv *tlv = (struct tlv *)skb->data;
--		int len;
-+		int data_len, len;
- 
- 		if (skb->len < sizeof(*tlv))
- 			break;
- 
- 		len = le16_to_cpu(tlv->len);
--		if (skb->len < len)
-+		if (len < sizeof(*tlv) || skb->len < len)
- 			break;
-+		data_len = len - sizeof(*tlv);
- 
- 		switch (le16_to_cpu(tlv->tag)) {
- 		case MT_NIC_CAP_6G:
-+			if (len < sizeof(*tlv) + sizeof(tlv->data[0]))
-+				goto invalid;
-+
- 			mphy->cap.has_6ghz = !!tlv->data[0];
- 			break;
- 		case MT_NIC_CAP_MAC_ADDR:
-+			if (len < sizeof(*tlv) + ETH_ALEN)
-+				goto invalid;
-+
- 			memcpy(mphy->macaddr, (void *)tlv->data, ETH_ALEN);
- 			break;
- 		case MT_NIC_CAP_PHY:
--			mt7925_mcu_parse_phy_cap(dev, tlv->data);
-+			if (!mt7925_mcu_parse_phy_cap(dev, tlv->data, data_len))
-+				goto invalid;
- 			break;
- 		case MT_NIC_CAP_CHIP_CAP:
-+			if (len < sizeof(*tlv) + sizeof(__le64))
-+				goto invalid;
-+
- 			dev->phy.chip_cap = le64_to_cpu(*(__le64 *)tlv->data);
- 			break;
- 		case MT_NIC_CAP_EML_CAP:
--			mt7925_mcu_parse_eml_cap(dev, tlv->data);
-+			if (!mt7925_mcu_parse_eml_cap(dev, tlv->data, data_len))
-+				goto invalid;
- 			break;
- 		default:
- 			break;
- 		}
- 		skb_pull(skb, len);
- 	}
-+
-+	goto out;
-+
-+invalid:
-+	ret = -EINVAL;
- out:
- 	dev_kfree_skb(skb);
- 	return ret;
+ #define PRIMAP(_hw_mode_) \
 -- 
 2.34.1
 
