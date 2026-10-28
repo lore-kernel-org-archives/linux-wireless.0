@@ -1,128 +1,132 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.255.227.205
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.255.225.202
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793207861;
-	b=w63VGX9icmfUs28h6Luy7H0CU2sORT26JidlGtDirIkTbqgWlsaG2R8L17XxejL74dUk
-	 MsebaCfQFn50iaYZhoRvPiyC+a/Br3Jo3aXlQNhbdajv6T66RQjhQmNmtZhjRhKgva9ny
-	 es/K1ilsS4EDbw2fXKQIy3yXxFmLKd8TSp7FZTAT4SjudwS70jBb6K/gI8DmrSsZpsYPY
-	 VWY8ehPtIWKck13v/y+wqelDEXkH5Jvu3gUlkNrpu1lVsgRKJTvqL8C4ZG7On1p1Bllbp
-	 o3h1tNKHGtCaL2sVvSyKWWINBX+qQ1qV4yB6f4xRaQEFa3EdN3x4PaAoR+XHQnaz6FA==
+	t=1793208929;
+	b=hYOe6XiuNCE6NYYDport6+Vsi2dKnSmuLrzgEqJOpUMNzslQHB6sMuo/Py4Ai/Aiv8/1
+	 Nxricc+K8O0knjQdvSAR1Xy7m2/sORmN6E+DbbMrhP9NK/MZg0l05SNodxUbvL+npg1GP
+	 1RF1GKhpdZqVfcWY5RjLfMkM4yyVbasMV/8QSHRhq5Iyilb4CA0QlxziObc2FrRGGM5MN
+	 JYzu9ZSo5zp2XfFaZTQd+PvTUGI+3dEeD+Bepuf0QRWqVQVf4iQIX8/PKCZ25xfA68zjH
+	 Zuw3a106XSNX1viyKHIpP3Zj1WK0+lJzdFcmhkpdQqaQLye6Z2wpcX8kDcBkre6PgCA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793207861;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793208929;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ThreatScanner-Verdict:X-IPAS-Result:IronPort-PHdr:
 	 IronPort-Data:IronPort-HdrOrdr:X-Talos-CUID:X-Talos-MUID:
-	 X-IronPort-Anti-Spam-Filtered:X-IronPort-AV:Received:Received:From:To:
-	 Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=188avWSxAb/Hx5PZoFDLB2RVYdy4a0Xx1tILZ1E7tKI=;
-	b=3LT1sRAHpwKk4zr0s8pXAIU2gf3t4+I5Obyx9iFOQ6cFLI7co96v523k83lkLC+xOHuK
-	 9FbRbG4Ei0htaDfDNdswqVnklKGCl8qok3k46/Ypm6qaXSeVUEhgrKjcHpDhBm2pZkvzF
-	 pmxG9BxG10Yfce8gSkRMtclPAQBcrjRIOL2OeeHTVfJL5LVVkxFqhH+8xTfUxIIvv9KdS
-	 OXrHFjMBOMvu7PJcdDCk6ssaFel3xtVxuhCo1UMrmOKo1VLqiZVl6rkhVORuklP/Kw4iV
-	 zhTvSA+gLuH6YQHtaI5HZk7etiurLhNZnH0WHRVvx5t8hI3hExxfYvMDVQMgd1smjaw==
+	 X-IronPort-Anti-Spam-Filtered:X-IronPort-AV:Received:Received:Date:
+	 From:To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
+	bh=trN9sfkyUF5lmYW35ov02jIT/bOiVDmYEcGexehOUmk=;
+	b=S7lKRkTfvD2uHxRbUE9u0yAwiinBZiiX2R0Jh8W583IXVs3eBqwzh3+/+NsOG7noSVKM
+	 3iUBcRAkmL45eKvnyrKe0krwvKemSPj7phF5aolJGUsDnV8vXF361j2GC36QutuYZ/Z75
+	 1DVvm+2VeOvkStxtfUv5iQlnHCPnbGcoAa6msrT/lV2hLATO7r178FV+vgLtndkxt332N
+	 6G9wAQzz4vcXDo4zMBQ7LoM1V8fYJkwWGXzzH1uH0/CTYB5+hFsWdUIqu1Bf0QeN9hIkH
+	 U0S3yxsfi0ByGCYUHqRp7EAQa0B+8AwE/bGhpgUlEHyznygq59P7q4ELrUfXWX6VexA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=pobox.sk;
 	spf=pass smtp.mailfrom=pobox.sk;
-	dkim=pass header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=OZGcXBfA;
-	arc=none smtp.remote-ip=46.255.227.205
-Received: from gmmr-4.centrum.cz (gmmr-4.centrum.cz [46.255.227.205])
+	dkim=pass header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=GbOyvRmX;
+	arc=none smtp.remote-ip=46.255.225.202
+Received: from gmmr-1.centrum.cz (gmmr-1.centrum.cz [46.255.225.202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD652606A31C;
-	Wed, 28 Oct 2026 17:17:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD652606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61573606A31D;
+	Wed, 28 Oct 2026 17:35:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61573606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pobox.sk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pobox.sk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=OZGcXBfA
-Received: from gmmr-4.centrum.cz (localhost [127.0.0.1])
-	by gmmr-4.centrum.cz (Postfix) with ESMTP id 35A162BA6F;
-	Wed, 28 Oct 2026 18:17:33 +0100 (CET)
+	dkim=pass (1024-bit key, unprotected) header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=GbOyvRmX
+Received: from gmmr-1.centrum.cz (localhost [127.0.0.1])
+	by gmmr-1.centrum.cz (Postfix) with ESMTP id D902B2BCA9;
+	Wed, 28 Oct 2026 18:35:21 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pobox.sk; s=mail;
-	t=1793207853; bh=188avWSxAb/Hx5PZoFDLB2RVYdy4a0Xx1tILZ1E7tKI=;
-	h=From:To:Cc:Subject:Date:From;
-	b=OZGcXBfAgBmySTxTU+OgLowYc1UV3g2WnnZuKrdbnuyBEzQV2eV3NC3JkYyF4b3ig
-	 p0BbcpQoxUyw9aak8bPn1Xy07xFwOSvT7e/8JDHd9QNaYcJbbKuEFo4DFgwCwCL8Ae
-	 /dyoKpi+IUPqVBW4DEZeH1lKV2fBOHQEM3EGOQlE=
-Received: from antispam66.centrum.cz (antispam66.cent [10.30.208.66])
-	by gmmr-4.centrum.cz (Postfix) with ESMTP id 32E8D202A867;
-	Wed, 28 Oct 2026 18:17:33 +0100 (CET)
-X-CSE-ConnectionGUID: ntmBdc6SR16CPXGqhyIKJQ==
-X-CSE-MsgGUID: mWkI/89ETv2xJ4m0JILrrg==
+	t=1793208921; bh=trN9sfkyUF5lmYW35ov02jIT/bOiVDmYEcGexehOUmk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GbOyvRmXT7iGVTGGmsXavM/uamnqXgLIEZUA7lQP8KpeUE+YusCBAy1arlS313Age
+	 TfbjDkNSWmmSAG30+dz8vQVdtm8znObYN000HLpWcyCY3buKTGrF8dB/rXQjmbl5mV
+	 g7P2RL7uxGzui3UkXeE572CAD9zOtLiOjUfptBms=
+Received: from antispam96.centrum.cz (antispam96.cent [10.30.208.96])
+	by gmmr-1.centrum.cz (Postfix) with ESMTP id D74D72326A;
+	Wed, 28 Oct 2026 18:35:21 +0100 (CET)
+X-CSE-ConnectionGUID: n1+mL73WTAW4rAObaix9Fw==
+X-CSE-MsgGUID: wfnk4Q5QShOOUQYpmpBZbA==
 X-ThreatScanner-Verdict: Negative
-X-IPAS-Result: =?us-ascii?q?A2FGAAC4LeJq/0vj/y5aHQEBAQEJARIBBQUBSYE0BwELA?=
- =?us-ascii?q?YNLgWyEWJF0nh+Bfg8BAQEBAQEBAQEJRA0EAQEDBDcBD4FEgnOOHyc1CA4BA?=
- =?us-ascii?q?gQDAgMBAQEBAQEBAQEBAQsBAQYBAQEBAQEGBgECgR2GCUYNjBoBgSSBJgEBA?=
- =?us-ascii?q?QEBAQEBAQEBAR0CDYEnBAsBRigNAiYCXhODAgGCOQE6FLYxfzMaAmXcfxaBN?=
- =?us-ascii?q?IFuBhWBCi4BiF4BhQN2hwhEgRWDaYQahASCagSDLpZESIECHANZLAFVEw0KC?=
- =?us-ascii?q?wcFgWgDNRIqFW4yHYEjPhcvWBsGBYEdgR6BGYEHXYErKWABISdhgXYCglGCA?=
- =?us-ascii?q?AIBSUEOB0VTCSVDEkckIggSCQETGi4LgRo1PAkmQRUMZAsaBWIIAg0MdjkQM?=
- =?us-ascii?q?SAmMgQDCRgNSBEsNxUZBD0BbgeRTIMNAYEOHBAiLQEHGiAHRlxAkmCTfZ9aB?=
- =?us-ascii?q?4QhhHOHL5U6GjOBSpY0A5JumQiMEIF6llCEaYFqA4IRTYNbEkAZjj0WiHPJK?=
- =?us-ascii?q?HoBATsHAgcPApFzNIFMAQE?=
-IronPort-PHdr: A9a23:8fyZshL3UBzg7dFgBtmcuBNgWUAX0o4c3iYr45Yqw4hDbr6kt8y7e
- hCEu7M11hSQA92KurptsKn/jePJYSQ4+5GPsXQPItRndiQuroE7uTJlK+O+TXPBEfjxciYhF
- 95DXlI2t1uyMExSBdqsLwaK+i764jEdAAjwOhRoLerpBIHSk9631+ev8JHPfglEnjWwbL1zI
- RmssQndqMYajZZjJ6otzhbEpmZDdvhLy29vOV+ckBHw69uq8pV+6SpQofUh98BBUaX+Yas1S
- KFTASolPW4o+sDlrAHPQwSX6HQTS2kbjBVGDRXd4B71Qpn+vC36tvFg2CaBJs35Uao0WTW54
- Kh1ThLjlToKOCQ48GHTjcxwkb5brRe8rBFx34LYfIeYP+dlc6jDYd0VW3ZOXsdJVyxAHIy8a
- ZcPD/EcNupctoXxukcCoQe7CQSqGejhyCJHhmXu0KM6zeosDxzI0gIjEdwJv3vbsNr7ObwOU
- e221qTE0S/OY+9U1Dr79YPGcgohofaJXb9ob8TRzkwvGBnejl6Nt4LlODWV1uQXvGiG9OpvS
- /ivgHMgpgFtuDSv2sAsio/Jho0P11DE7jt2wJwuKN2gT050etmkEZRKuyGBNIt7W8UvSHxnt
- ygm0LMJo4K7fDQUx5Q9wR7Sc/+KfpSI7B7+WuicLyp1iXJ4dL+imxq+7FWtxvD/W8So0ltHo
- S5InsTQu34N1xHe5ceKR/lj80qh1juC1Q7e5+5CLEspm6TbLJshzaQxlpoVqUnDHTH5mF/wj
- KCIckUo4O+o6/7oYrjgu5SSNJd0hxnxP6kvgMCzH+Q1PwgUU2SF5+ix1qfv8E/5TblSk/E7k
- arUvIrHKckapKO1GRJZ34gh5hqlEjur0NAVkH8aJ1xfYh2HlZLmO1TWLfD9CvewnkqjnS9wx
- /DDIr3hGpLNLmXfkLv5fbZy9UpcyA0rwNBQ4pJYE6oBIPfvWk/pqdDUEgU1PBCqzObhFNV9z
- J4eWWeVDqCFMaLeqV6I5uQxLOmQfIIYtzfwJ+I76/PujXI1g0ERcber0JcNan21HuxqI0CDb
- nrthtcBH30Kvg07TOHylF2OSyJTZ3G0X6I8/D47FZmmApnZRo22mLyB2zy0HppZZ2xcEVCME
- m/kd5+YVPcUdCKSPshhnyQCVbe6VoAszheuuxTnxLZ9KOrb4CgYuoz72Nhv++LTjQ0y9SBzD
- 8mFz2GBVX10nmQORz82xq9/vFd9xUmZ0aVjm/xYEsdc5/RGUwsgLp7czPR2C8ruVQLZYteJV
- FGmT826ATE2TdI+3cQDY1p6G9WhkB/PxTelA7wNm7yRGJM06r7c32T2J8tlz3bG1a8hj0QpQ
- 8dWNm2pmLR/9w7NCI7NiEiZiamqeroG3CLX92eM03COvEdGXw50S6nFWmofZkTOodTj+kzCV
- 6OuCaggMgZZzc6CK61KasDmjFlfSvbjOc7ebHy1m2iuHhaI3aiBbJTle2oDxiXREksEnB4J/
- XaAKwc+Aj2to2XEDDxhDV7vZVjj/vFkqHynVk800x2Kb0p52re14hIamP+cS/IW3r8coCkvp
- Dt7Ekih0d/KDdSMvxdufKBGbtMn/FhKzXrXuRVlMJKvfOhegQsidAd692NFBxRzA4NM1OqBf
- GklwQxpJKTQhE9GdD6wwZfzN/vbKT+h0gqobvvq3VTXy56q/aEP4ekjpk+r6B3vCk0k83x6y
- NRP+2Ob7JLaShERB8GiGn0r/gR38umJKhI24JnZgDg1afHcjw==
-IronPort-Data: A9a23:/o3o3aiqmzogJ/Iqm26wDbGZX161fREKZh0ujC45NGQN5FlHY01je
- htvWWCHO/eLM2f3eYpyOozlo04A6pbQyNMxGws9qHxnH3tjpJueD7x1DKtR0wB+jCHnZBg6h
- ynLQoCYdKjYdleF+FH1dOSn9SAivU2xbuKUIPbePSxsThNTRi4kiBZy88Y0mYcAbeKRWmthg
- vus5ZeAULOZ82QsaDxNs/jT8E8HUMna4Vv0gHRvOJing3eBzxH5PLpHTYmtIn3xRJVjH+LSb
- 47r0LGj82rFyAwmA9Wjn6yTWhVirmn6YGBiIlIPM0STqkAqSh4ai87XB9JAAatjsAhlqvgqo
- Dl7ncfpFVp2ZP2kdNM1CHG0GwkmVUFPFSSuzXKX6aR/xGWeG5fgLmkH4Ojb8uT0984uaVyi+
- 8D0JxgLchWpi+no+4jiFMJUtus6LNjKH6Em7yQIITHxVZ7KQLjMRuDR4MNAhW92jc1IAezDY
- owSe1KDbjycPVsVZwpRUshh2rj17pX8W2QwRFa9uewr5G7TxRFq3aLFKN3ffczMXsY9ckOw/
- z+WojWpXk5GXDCZ4T+68VPr1r7ioT2hSKBOEeWa19pwmlLGkwT/DzVTDzNXu8KRjESyc9RVJ
- woS8y8jxYAuslCsSNn0Qga1ulacuRQbS5xLEIUS9AaOx4LI5AWUQGQHJhZFado7pIo1SCYs2
- 1uhgdzkH3psvaeTRHbb8a2bxRu2OC4IPSodZDUJSQYe+PH9r4wpyBHCVNBuFOiylNKdJN3r6
- 2zU6nJj2vNJ15FNiPjTEU37vg9Ab6PhFmYdjjg7lEr8hu+lTOZJv7CV1GU=
-IronPort-HdrOrdr: A9a23:fkrBOKFdRXvO04jOpLqE+ceALOsnbusQ8zAXPo5KJSC9Ffbo8v
- xG/c5rtyMc5wx+ZJhNo7q90cq7MBDhHPxOgLX5VI3KNGLbUQCTQ72Kg7GO/9SZIU3DytI=
-X-Talos-CUID: 9a23:4rWZlWxxupMxZjqfHo5zBgUSBsUPfnaD902JfWSAOUlwSKy0an2prfY=
-X-Talos-MUID: 9a23:P540/AoMBgAi0JIevYIezzRdN+Yvs/WDNF5XgbdavpGmFAhqITjI2Q==
+X-IPAS-Result: =?us-ascii?q?A2GtAADsMeJq/0vj/y5aHAEBAQEBAQcBARIBAQQEAQFJg?=
+ =?us-ascii?q?TUFAQELAQGDSoFslk9VhSWMcWGEAoZOgX4PAQEBAQEBAQEBCUQNBAEBAwQ4D?=
+ =?us-ascii?q?4Q3Ao4dJzYHDgECBAMCAwEBAQEBAQEBAQEBCwEBBgEBAQEBAQYGAQKBHYYJR?=
+ =?us-ascii?q?g1JAQEBiTsHBIIIAYEkgSYBAQEBAQEBAQEBAQEdAg1+AQUyAUYQCw0LLhBGB?=
+ =?us-ascii?q?hODA4I5AToUtiKBNBoCZdx/FoE0gW4GFYE4AYheAYUDdoR9ggtEhEA+iwgEg?=
+ =?us-ascii?q?iKBDJZGUngcA1ksAUsKNQwzckMDgSlLBTdlEj8hHSgeOQI4BgUSIBEZQUNbR?=
+ =?us-ascii?q?FWBB11wOylgAQIfJx8tFYF2AoJRgSMHVgIBSUEOB0VTCSVDEkckIggSCQETG?=
+ =?us-ascii?q?i4LgRo1RSZBFRhYCxoFGkgIAgsCDHYoERATHiAmMgQDdz03FRkEkwCEOBDJM?=
+ =?us-ascii?q?QeEIYRzhy+WGoE3gicBlAwDkm6ZCIwQgXqbOYFuAYIPTYMmATQSQBmXRskoe?=
+ =?us-ascii?q?gEBOwcCBw8ChyqIcoILgUwBAQ?=
+IronPort-PHdr: A9a23:6BAuhhbo1XpHbbUnyWmFs9n/LTG714qcDmcuAnoPtbtCf+yZ8oj4O
+ wSHvLMx1wGPBd+Qsqwd07GempujcFJDyK7JiGoFfp1IWk1NouQttCtkLei7TGbWF7rUVRE8B
+ 9lIT1R//nu2YgB/Ecf6YEDO8DXptWZBUhrwOhBoKevrB4Xck9q41/yo+53Ufg5EmCexbal9I
+ Ri4rAjdrNUajZVtJqosyxbFv2dEdupLzm50OFyfmArx6ci38JN/6Spbpugv99RHUaX0fqQ4S
+ aJXATE7OG0r58PlqAfOQxKX6nUTSmsZnQNEDhbK4h/nRpv+vTf0ueR72CmBIM35Vqs0Vii47
+ 6dqUxDnliEKPCMk/W7Ni8xwiKVboA+9pxF63oXZbp2ZOOZ4c6jAZt4RW3ZPUdhNWCxAGoO8b
+ pUAD+wdPeZDsoLxo0ICoQaiCQWwAe/izCJDiH3r0q0gy+kvHwHI0hI+EtwTs3rUotr6O7sPX
+ u66zqbF1inDYvBQ3DTj9ITEbgwtreyKULltccTR004vFwbdg1uOrozlOima1v8QuGaF6OpgU
+ +KvhHQ6qwFqvDev3Nonh47Vho4P1lDE8iN5wIYvKt2lU050f8SkHYBItyGdLIR2RcwjT3tzu
+ CY507ALv4OwcycWxpo93RHfd+CHfJaS4hLlTOucITh2iXJndb+/gxu//0euxvDyW8e701tHq
+ jRIn8XQu30R1RHd5MmKR+V580mh2TiC0x3f5+5YLE40laTWN5wsz7gtnZQdtkTDGzX5mETwj
+ KKOdUUr5PKo6+L5bbXivJOcMJV0ig74P68zmcK/Gfw1PwcPUmSB5+ix1L3u8VfnTLlUjPA6i
+ KvUvZDCKcgGpaO0ABVZ3psi5hu9FTuqzdoVkHsdIF5YeB+Ki47kMEzULv/iF/ewmVGsnS9ux
+ /DBI7LuHI3ALmPGkLf9ZbZ97FNcyBYrwdBf+Z1UDrYBLer8Wk/0rdDYFRo5MxCsw+r6FNlxz
+ J8RVnyJAq+FKqPSrFqI6vgzLOiNfIMVuTD9JOY55/P2gnI0mEURcbep0JYXcny0AOpqLkeDb
+ XfugtoNCWIKsRA/TOzuhl2CSzlTZ3OqUqIg/D07FIWmDYHDRo+3nbyBxzm0HodNa2BeDVCDC
+ nDodoqeV/cXayKeOtVhnSAcVbi9V48h0gmjtAnhxLV6NefU/DYXuo/52Nhz/eLTkA89+SRuD
+ 8uBy2GNU310nmQQSj8q26B/olJyx0yf0ah/gPxXC8Zf6O5KUgsiL57T0/R6C8zuWgLGZtqJT
+ FemQtO7ATA+V94xwMEBY1x7G9q8ihDOxDSqA7ALmLyRHpA08bzT32L3J8ljz3bKzq4hj0MpQ
+ sdXL22pmrZ/9xTPB47Oi0iZk6eqdaIB3C/C7WuCw2uOvFtGXw50T6rFRmsfa1DIrdT2+EzCV
+ aWiCbc5PQtbz86NNK9KZsfujVVcS/fvINLebHmplGeqGRmI3q+MbJbte2gF0yjREFULkwMS/
+ XaDLQUwHiivrGzAAjJyCV/hZVvg/vR7qHyhVE870xmHYVV42bSt9RAZneecS+sd3r8coCkvs
+ i16Elnul+7RXuaHpAcpXA6MYNc05lsC98kJrQNwOIetKeg2mlkdfixruEDjkRl0XNZui88v+
+ U8tyQNpYZ6f1lNIaiiVx9ikJvvLLW/y9Q20ZrT+wlbU18bQ4aRZu6dwkEnqoAz8ThlqyH5gy
+ dQAliLEvv33
+IronPort-Data: A9a23:T/1O9q/qhuqfU6JW4iEtDrUDh3+TJUtcMsCJ2f8bNWPcYEJGY0x3y
+ 2FMC2HQb6rbZGf2c9Bwa9i18UNSupeHx9AwS1A6riBEQiMRo6IpJzg4wmQcnc+2BpeeJK6yx
+ 5xGMrEsFOhtEDmE4EvrauG/xZVF/fngbqLmD+LZMTxGSwZhSSMw4TpugOdRbrRA2LBVOCvT/
+ 4mtyyHjEAX9gWAtajhEs/7rRC5H5ZwehhtJ4zTSWtgU5Dcyp1FNZLoDKKe4KWfPQ4U8NoaSW
+ +bZwbilyXjS9hErB8nNuu6TnpoiH9Y+lSDX4pZnc/DKbipq/0Te4Y5nXBYoUnq7vh3S9zxH4
+ I4U6cHvE1dB0prkw4zxWzEAe8130DYvFLXveRBTuuTLp6HKnueFL1yDwyjaMKVBktubD12i+
+ tQecXMISk/YuN6f/+6hY85mj8Uzfef0adZ3VnFIlVk1DN4pRNXYRrnSvIce1zo2mtpTGLDVd
+ aL1axIzMlKaPkAJYA1ITs1j9AurriCXnzlwtBSJoqw36nXIwRZZyL/nN8qTYd/iqcB9xxfA/
+ TqaoDqoav0cHMORzznZyy+Vve/ouh7CaZoXDJeK/Nc/1TV/wURWUnX6T2CTp/O1oki0V5RZI
+ kkZkgIyqqs/3FCsTdS7Ux7QiHqFuAMMHtldCes37CmTxafOpQWUHG4JSnhGctNOnMs3QyE6k
+ 0CIhd7tCCd0mKOaRGjb9bqOqz62fy8PIgc/iTQsEVVDuYS+5ttp0VSQE76PDZKIszE8Ihmoq
+ xjikcT0r+x7YRIjv0ljwW36vg==
+IronPort-HdrOrdr: A9a23:+28iKKH4AHumQkxNpLqE5ceALOsnbusQ8zAXPo5KJiC9Vvbo8v
+ xG+85rsSMc6QxhOk3I9urrBEDtex7hHNtOkO4s1NSZLWrbUQmTTb2KhLGKq1bd8m/FltK1vp
+ 0PT0ERMrHNMWQ=
+X-Talos-CUID: 9a23:P8OIeG18Ufh80rlcj1sKCLxfHJlmd1mCl0jsCnDkE09OQrSUWQ6+5/Yx
+X-Talos-MUID: =?us-ascii?q?9a23=3AcBOOYQ06ax5BqArLUXiVqjdx8jUj/KqoCxw0zKw?=
+ =?us-ascii?q?9u+6jCBVBIzKFpga9a9py?=
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.27,183,1787004000"; 
-   d="scan'208";a="158598474"
+   d="scan'208";a="190304769"
 Received: from unknown (HELO gm-smtp10.centrum.cz) ([46.255.227.75])
-  by antispam66.centrum.cz with ESMTP; 28 Oct 2026 18:17:32 +0100
-Received: from blackbox.p10 (188-167-137-159.dynamic.chello.sk [188.167.137.159])
+  by antispam96.centrum.cz with ESMTP; 28 Oct 2026 18:35:21 +0100
+Received: from blackbox (188-167-137-159.dynamic.chello.sk [188.167.137.159])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by gm-smtp10.centrum.cz (Postfix) with ESMTPSA id 7795A1011FBFB;
-	Wed, 28 Oct 2026 18:17:32 +0100 (CET)
+	by gm-smtp10.centrum.cz (Postfix) with ESMTPSA id 6E45B101612D5;
+	Wed, 28 Oct 2026 18:35:21 +0100 (CET)
+Date: Wed, 28 Oct 2026 18:35:12 +0100
 From: Tomas Tonhauser <t.tonhauser@pobox.sk>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@nbd.name>,
-	linux-kernel@vger.kernel.org,
-	Tomas Tonhauser <t.tonhauser@pobox.sk>
-Subject: [PATCH v2 0/2] wifi: ath9k: fix loss of non-aggregate frames
-Date: Wed, 28 Oct 2026 18:16:50 +0100
-Message-ID: <20261028171652.1125692-1-t.tonhauser@pobox.sk>
-X-Mailer: git-send-email 2.43.0
+To: Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] wifi: ath9k: clear destination mask for
+ non-aggregate frames
+Message-ID: <auIyUEqdQIOJqEWp@blackbox>
+References: <20261003192957.761090-1-t.tonhauser@pobox.sk>
+ <87mrs9v3aa.fsf@toke.dk>
+ <atufwCYLtoF3UaMk@blackbox>
+ <87jyn7pk5v.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -132,76 +136,18 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <87jyn7pk5v.fsf@toke.dk>
 
-Non-aggregate frames (stations without an A-MPDU session, e.g.
-non-WMM ESP8266 clients) are lost on ath9k in two ways:
+On Sat, Oct 24, 2026 at 10:39:08AM +0200, Toke Høiland-Jørgensen wrote:
+> Alright, sounds good!
 
- 1. The hardware filters them (ATH9K_TXERR_FILT) while the station
-    is awake, and mac80211 retries a filtered frame only once.
-    Patch 1 sets CLRDMASK on every non-aggregate frame.
+v2 is out, as a two-patch series:
+https://lore.kernel.org/linux-wireless/20261028171652.1125692-1-t.tonhauser@pobox.sk/T/
 
- 2. Frames that exhaust the hardware retry chain are dropped, as
-    there is no software retry for non-aggregate frames. Patch 2
-    re-queues failed and filtered frames on tid->retry_q, as the
-    aggregate path does.
+Tomas
 
-Toke, I know you were not keen on clearing the filter
-unconditionally, so I first tested your suggestion (patch 2) alone.
-On a weak link it did much worse than patch 1 alone, and the two
-together did best. If you would prefer patch 1 limited, e.g. to
-stations that are not sleeping, I can rework it.
-
-Setup: TP-Link EAP225 v3 (QCA9563, 2.4 GHz), OpenWrt 25.12.5,
-backports 6.18.26. ESP8266 clients running Tasmota, non-WMM, legacy
-rates, modem sleep on (PS_STA toggling constantly).
-
-Weak client (-75 dBm), ping -s 1000 -i 0.05, 500 pings per run:
-
-                     loss         TXERR Filtered   avg RTT
-  patch 2 only       52-80%       +544 per run     0.6-1.4 s
-  patch 1 only       0-1 pings    0                13 ms
-
-Same client, patches 1+2 plus a test-only module parameter to switch
-the software retry at runtime, 12 alternating runs in 11 minutes:
-
-                     lost         tx failed
-  retry off (1)      127/3000     130
-  retry on (1+2)     1/3000       1
-
-At 1 ping/s, 3 x 25 pings each: 5/75 lost with retry off, 0/75 on.
-
-Other tests with patches 1+2:
- - 500 pings to each of five ESP8266 clients: 0 lost
- - client restarts during ping floods, OTA updates: no issues
- - WMM/HT clients (ESP32, IP camera, tablet): no change
- - 67 h soak: no warnings or resets, MemAvailable flat, ath9k
-   queues drain to 0, 3 TXERR Filtered in total
-
-Felix, on the open question from the RFC: on the weak link, filtered
-frames appeared together with XRETRY failures, but on the original
-good-signal setup they appeared without any. Do you know what sets
-the destination mask for an awake station?
-
-Changes since RFC:
- - Patch 1: code unchanged, commit message updated
- - Patch 2: new, alternative 2 from the RFC (Toke)
-
-RFC: https://lore.kernel.org/linux-wireless/20261003192957.761090-1-t.tonhauser@pobox.sk/
-
-The driver analysis and write-up were done with help from an LLM.
-Tests and measurements were done by me.
-
-Tomas Tonhauser (2):
-  wifi: ath9k: clear destination mask for non-aggregate frames
-  wifi: ath9k: retry failed non-aggregate frames in software
-
- drivers/net/wireless/ath/ath9k/xmit.c | 58 +++++++++++++++++++++++++--
- 1 file changed, 54 insertions(+), 4 deletions(-)
-
-
-base-commit: 734bef548a96e8774d6eef5dfa2026c6edc4e80b
--- 
-2.34.1
-
+> 
+> -Toke
