@@ -1,55 +1,130 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.243.164.118
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.255.227.203
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793206155;
-	b=Wdmgvgxxq4M70PX3IqGDuYDktaVp53DovSsfE6ZI7pQ4smS8VaszMeAw3ua2jDvY6Jbd
-	 k/WRyfWPFPrHW+HzzOm9awrgJzr/Ax7hHsI2AQrAzPrsOwghf99rfFo7m/s2n9VWcFsAE
-	 lZWeuYHZ/fTlpH3+3q1TuFsJ8395eMZpfj1j8gKQVUjiS5o9bM1fKUzeuej2SbdIIjUm0
-	 4Avt32PimCB2oMPh5srHnoKppie8RYGVAV4k0mZCkzRn0OmHwtXTLYfqTtnx4hajcEKSx
-	 xXa1HTaBm6JWIJTD4nojSQIh1Ag/4aH35IJu3L6dKRJ7FyF/Et4gf2jaTviRr7EnpYg==
+	t=1793207865;
+	b=K0+97qyotfn25D4TBQd6R+UV0Al7uKFe6WO9yBdTyow2MNU0QpnNgTjDsIAUQ9/1B9nZ
+	 XLK737XDeQcowiYvjiItYU2Nan/bdVHk3bUTjVM2+Lyf++D+0vlv0xTUHdL8V9YVkK4kr
+	 5ha8QTJ+HS8m72Cpdqa7cFVcurdPdjI6dYxjLu/ROpuAYdi1Ao87qMZ7buIQSU40wc8qF
+	 UeScucUTqtaqBV45WQ4R7QOlR/e1dk0Ydr/WedhO7Cit7Ixy9aYwf2xG1WBqCfrv+2quJ
+	 aTo6DPxCBip/oFFze4nCTgfJDfvBeU9ZyPZvAwjVhofLP/QX3jt3k+PUlek5oC8JkZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793206155;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=nSZsANMCsxetn0hkNJF20DbdMUkrz7cvjEhPpMT6+4k=;
-	b=BbGRjaErTgTmQG1TOAMHtvL/LRyKLAR+y6WzGrk9Z1pxjEvUU3NOpwW/jApZITpX8Q0e
-	 cxn3UeOFB5vknUkILNCFnHXLsxPaTirKuCc0nep3UE9PSdoUYWI1qD5QS2+fnHTYVMFUk
-	 Bsb0GC1+4j3vXMSSXcFv3Qu/4qri42HRY434EU2w8+otAWGXq7Qd6zTiAc+Q/J7zPhiol
-	 dCJS9MrHWNXMKjOqep/P+g6Fj2HrVwLCqv1cgRNGVUp2ASzlHNCqCTOFI7p2dhhxHIE99
-	 wwpVZifPkDHPz9ifmTJxgCI5AAh3CHxOWXaflpDQpk0/PdjSVsJgNO+5UInnGo5B1Qw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793207865;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ThreatScanner-Verdict:X-IPAS-Result:IronPort-PHdr:
+	 IronPort-Data:IronPort-HdrOrdr:X-Talos-CUID:X-Talos-MUID:
+	 X-IronPort-Anti-Spam-Filtered:X-IronPort-AV:Received:Received:From:To:
+	 Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=hzV/ZJGd94HL5X5mqltv4CJEN+vCU91tSnLK6kAjKrE=;
+	b=0JHd2TTJV/+C1gbdSwEzH0zylf1sbvJCoUkKnVZw61yBYQik8HTI0TxvjGgxnkzGWl0J
+	 nwI5dKxpDoULJ0sZfthNOGmMTg7m5V7iZekEpXaFpvJbJwxAQUphJHJBNOdjnU8ILPcdD
+	 i9vtcqS/gMeVGL1p6zN+LthQV4ygU4856fO7deS7lsXamZN6PAyTy5qwXbPLxYK4/j9tx
+	 nN3ZijiUR6n+XzG2NC3tpyQy+mce2OvjGPsRhNWcnsH9oRb96UCTXMdo31edvG4tO6Qfm
+	 tCT1uGqOq9195tfULeYRt2PmmGGiOXJCCMoj8CB/OgEcu4KgiTRKs7GYbfdeIlLdChA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=stu.xidian.edu.cn;
-	spf=pass smtp.mailfrom=stu.xidian.edu.cn;
-	arc=none smtp.remote-ip=162.243.164.118
-Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 58BD0606A31D;
-	Wed, 28 Oct 2026 16:49:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 58BD0606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=stu.xidian.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.xidian.edu.cn
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=stu.xidian.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-Id:MIME-Version:Content-Transfer-Encoding; bh=nSZsANMCsx
-	etn0hkNJF20DbdMUkrz7cvjEhPpMT6+4k=; b=eLxIWl1LQZMs//g1qpklQxIaDk
-	imf4T/KjStRHVboe9eTMhAP9OqNkw+b5bzzAFpod27vSSGPqo537deAw/87A1tLN
-	+tBnwJcawZjon2spPObYls6X+BajzbhsV0F2Ft7EMDntcxJlDeyzEnqZy+y9iSqg
-	2dj6LQgbWk7TIvZbk=
-Received: from user-virtual-machine.localdomain (unknown [113.200.174.26])
-	by hzbj-edu-front-4.icoremail.net (Coremail) with UTF8SMTPA id BrQMCkCmzQN_J+Jqguf1AA--.57595S2;
-	Thu, 29 Oct 2026 00:49:04 +0800 (CST)
-From: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
-To: linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Cc: Johan Hovold <johan@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Bin Yu <byu@xidian.edu.cn>,
-	Cheng Wen <wencheng@xidian.edu.cn>,
+	dmarc=none header.from=pobox.sk;
+	spf=pass smtp.mailfrom=pobox.sk;
+	dkim=pass header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b="AIHZ/u6G";
+	arc=none smtp.remote-ip=46.255.227.203
+Received: from gmmr-2.centrum.cz (gmmr-2.centrum.cz [46.255.227.203])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7955B606A333;
+	Wed, 28 Oct 2026 17:17:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7955B606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pobox.sk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pobox.sk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=AIHZ/u6G
+Received: from gmmr-2.centrum.cz (localhost [127.0.0.1])
+	by gmmr-2.centrum.cz (Postfix) with ESMTP id 39B0A2015CCC;
+	Wed, 28 Oct 2026 18:17:37 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pobox.sk; s=mail;
+	t=1793207857; bh=hzV/ZJGd94HL5X5mqltv4CJEN+vCU91tSnLK6kAjKrE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=AIHZ/u6GvG82RgUIX7ap5qJxUHr3sjKq2fa1QkkiwrZ2LQZG3XoGYrM4dxqJyQelR
+	 FSTV+c8iojppIbkUKrx2ra7p+gpJJdQleZKiOyhONpDuiS6LMTOUnHPoPStgV623nv
+	 Q8RW0KrE4zBFvwe6Nx/UsnhgMmjF0OpeE4GQ0iPE=
+Received: from antispam96.centrum.cz (antispam96.cent [10.30.208.96])
+	by gmmr-2.centrum.cz (Postfix) with ESMTP id 37756200B34A;
+	Wed, 28 Oct 2026 18:17:37 +0100 (CET)
+X-CSE-ConnectionGUID: 9PGTwW1HRPqDFqy7uWKuBg==
+X-CSE-MsgGUID: qvYBplllSWCrqR8jRApZTg==
+X-ThreatScanner-Verdict: Negative
+X-IPAS-Result: =?us-ascii?q?A2FOAgBBLeJq/0vj/y5agRKBR4JXgmGWTIEWimWSJIF+D?=
+ =?us-ascii?q?wEBAQEBAQEBAQlRBAEBPw+ENwKOHSc2Bw4BAgQDAgMBAQEBAQEBAQEBAQsBA?=
+ =?us-ascii?q?QYBAQEBAQEGBgECgR2GCVOMGgGEAAYnCwFGEBg5VgYTgwKCOgEDN7dGMxoCZ?=
+ =?us-ascii?q?dx/FjUZZoFoAQsUAYE4jWN2hH2CC0SBFYJzdoQKhn4Egy6WREiBHgNZLAFVE?=
+ =?us-ascii?q?w0KCwcFgWgDNRIqFW4yHYEjPheBBxsGBYEdgR6BGYEHXYErKWABISdhgXYCg?=
+ =?us-ascii?q?lGCAAIBSUEOB0VTCSVDEkckIggSCQETGi4LgRo1PAkmQRUMZAsaBWIIAg0Md?=
+ =?us-ascii?q?jkQMSAmMgQDCRgNSBEsNxUZBD5uB5FMgw4WeIEDgWPGdweEIYRznGkaM4FKl?=
+ =?us-ascii?q?jQDkm6ZCKRahGmBbwmCBk2DWlMZjj0W0ht4PwcCBw8CkXM0gUwBAQ?=
+IronPort-PHdr: A9a23:NrLxABNpurLx8Sf4Wlsl6naVChdPi9zP1u491JMrhvp0f7i5+Ny6Z
+ QqDvqsr1AWCBNuDuqMMotGVmp6jcFRI2YyGvnEGfc4EfD4+ouJSsioeReWoMgnFFsPsdDEwB
+ 89YVVVorDmROElRH9viNRWJ+iXhpTEdFQ/iOgVrO+/7BpDdj9it1+C15pbffxhEiCCybL58L
+ Ri6txndutcZjYd/K6s91h/Er39VcOlK2G1kIk6ekBn76sqs5pBo7j5eu+gm985OUKX6e7o3Q
+ LlFBzk4MG47+dPmuwDbQQWA/nUTXXwanwRHDQbY9B31UYv/vSX8tupmxSmVJtb2QqwuWTSj9
+ KhkVhnlgzoaOjEj8WHXjstwjL9HoB+kuhdyzZLYbJ2TOfFjZa7WY88USnRdUcZQTyxBA52zb
+ 40TD+oaIO1Uq5Dxq0YSoReiAAWhAv7kxD1ViX/sxaA00/ovHB/b0gIuHNwAt3bbrNv6O6kdS
+ u250KrFwC/fY/5MxTvx9I7FeQ0hr/GWWrJwdNLcx1coFwPAlFqQspHuMS2S1uQLs2iU9fdgV
+ fmxhG49tgp8pSSvyt0wionOgIIVykrL9ThiwIkrP921U1Z7Ydm/H5tXuCCWLZB2QsA7Tmxup
+ S01xaEIt4ShcygW1JQo2QTfa/qffoaG/x7uW/qcLSl8iX94ZL+zmha8/Eehx+D9SMW50FJHo
+ ylEn9fCqHwByh/e59SbRvZg4kqs1jaC2x3d5+xZL045k7fQJZ05wrMomZcesF7PEjH2lUj2l
+ qOaaFso9+qy5+nlYrjqvoKQOox3hw3kL6gjm86yDf4lPgUAXWWX4/mw2b3n8ED/Xb5ElOc5k
+ rPDv5DfPckbo6m5DBJL3Ys78Ba/Cium0MwfnXkaMFJJYBKHgJbtO1HJOP34AvK/j023kDdu2
+ /DGJqDtDonXInffjrjhe6p961RByAo219xQ+5NVBqkAIPL1REDxqMTVAxA4PgCu3erqCNVw2
+ pkAVW6RAKKVKqHfvF+Q6uIqOeaMZYsVuDjnK/gi4v7jlWM5lUUBfamu25sXaGq3Hul9I0qHe
+ 3rhmc8BEWARsQo5Q+3mkkaCUT1La3aoQ608/i07CJ6hDYrbQICim6GO0Ty9HpJNe29KEFaMH
+ m3td4qaQ/sMcj6dItd9kjwYUrisU5Mh2QuytA/9zbpnLvDb+jADtZ39zth4/PXTlRYp+jxzA
+ MWRyXqNT2JskmMSWzA2xLx/oVB6ylqbzah4hP9YGsJI6vNVVQc6NoDTw/ZnBNDxQg7BZMuGS
+ E66QtW6BjE8VtYxw94IY0ZgFNSulxPD0DSwA78TibOLAIc58rzT33fvPcZx0XXG27c7j1kgX
+ MRPMXeqhqll9wjcH4LJiVmWl762daQA2y7A7GODzWuIvEFFXw98SKvEXXEFZkTIqdT2+FjCT
+ 6S1BLQ5PQtO19SCJrFJatL3l1VGQunsONDEb2K2gWewCg6ExrWXY4XyYWUSwD3dCFQYkwAU5
+ XuLNRAyCTqio2LfCTxjDUrhbUzi/udgtH22Ukk6wxmXYE1kzbW14AIaiOSERf0KxrwKt3Rpl
+ zIhIFG+0pr2oAqBowNncOB+ygMn71pBzm/f/1hhOZ+tB7xlhVNYfwch7G300BAiNoJFmNNik
+ HQszANvMq+CmAddMS+f25D5J6baMEHq+xqoe+jN2QeNg56t5q4T5aFg+B3YtwazGx9nqi0/u
+ +Q=
+IronPort-Data: A9a23:s7EdUKPb0BdeJtXvrR24lsFynXyQoLVcMsEvi/4bfWQNrUp31jMBz
+ GVLXGjTP6rYNmr2Kd0lOdji80sP6MCHzNVkSnM5pCpnJ55oRWspJjg7wmPYZX76whjrFRo/h
+ ykmQoCeaphyEjmE/0nF3oHJ9RFUzbuPSqf3FNnKMyVwQR4MYCo6gHqPocZg6mJTqYb/WVzlV
+ e/a+ZWFZgb9gW4sbgr41orawP9RlKWv0N8nlgNmDRx7lAe2v2UYCpsZOZawIxPQKqFIHvS3T
+ vr017qw+GXU5X8FUrtJRZ6mGqGiaue60Tmm0hK6aYD76vRxjnBaPpIACRYpQRw/ZwOhxIktl
+ YoX5fRcfi9yVkHEsLx1vxC1iEiSN4UekFPMCSDXXcB+UyQq2pYjqhljJBheAGEWxgp4KTB22
+ sAHF2ktVCiaq8yv0e2mdcpxrMt2eaEHPKtH0p1h5T7cSO0jXYiaG+PB6NlExio1wMtcdRrcT
+ 5ZHL2AyMVKaOUIJZQp/5JEWxY9EglHjNSFfrlKcuLE6+UDLywZ2wP72M7I5f/TTFJ0OxhzC+
+ DuuE2LRGw8rHsSbzT6+zVm2n9WfnxnSQLAuG+jtnhJtqBjJroAJMzUQX1eTp/O1zEi3Xt83A
+ 1BS5i0oraEv70GxZsH6VRqo5mWH1jYAXNldO/E96wzLxqm8ywKYAHUUCz1MctorsOcoSjEwk
+ FyEhdXkAXpoqrL9YXac8KqE6CyzIyURIHQZTTELQBFD4NT5pow3yBXVQb5e/LWd0oOzQ2yth
+ WrQ825h2t3/kPI26klyxnif6xrEm3QDZlRdCtn/No590j5EWQ==
+IronPort-HdrOrdr: A9a23:gVLbQa8p9g+DBP9ywwxuk+DPI+orL9Y04lQ7vn2ZhyY4TiX+rb
+ HLoB1173HJYVoqMk3I3OrwW5VoIkmskKKdg7NxAV7KZmCP01dAbrsSj7cKqAeOJ8SRzINgPN
+ 9bE5RDNA==
+X-Talos-CUID: 9a23:RcTN6W4iha9o8cvYctsspXY7Jt8aK13n9G78DVapVntWa6C/RgrF
+X-Talos-MUID: =?us-ascii?q?9a23=3A7SwDFQ+jrKiHZz4pEhEbGwqQf9520o62DEQJqqo?=
+ =?us-ascii?q?todC+ZS5KEi+vsDviFw=3D=3D?=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-AV: E=Sophos;i="6.27,183,1787004000"; 
+   d="scan'208";a="190302261"
+Received: from unknown (HELO gm-smtp10.centrum.cz) ([46.255.227.75])
+  by antispam96.centrum.cz with ESMTP; 28 Oct 2026 18:17:36 +0100
+Received: from blackbox.p10 (188-167-137-159.dynamic.chello.sk [188.167.137.159])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by gm-smtp10.centrum.cz (Postfix) with ESMTPSA id A47671011FBFB;
+	Wed, 28 Oct 2026 18:17:36 +0100 (CET)
+From: Tomas Tonhauser <t.tonhauser@pobox.sk>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@nbd.name>,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: libertas_tf: fix NULL pointer dereference in if_usb_receive()
-Date: Thu, 29 Oct 2026 00:49:02 +0800
-Message-Id: <20261028164902.8136-1-25031212351@stu.xidian.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	Tomas Tonhauser <t.tonhauser@pobox.sk>
+Subject: [PATCH v2 1/2] wifi: ath9k: clear destination mask for non-aggregate frames
+Date: Wed, 28 Oct 2026 18:16:51 +0100
+Message-ID: <20261028171652.1125692-2-t.tonhauser@pobox.sk>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261028171652.1125692-1-t.tonhauser@pobox.sk>
+References: <20261028171652.1125692-1-t.tonhauser@pobox.sk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -60,102 +135,52 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:BrQMCkCmzQN_J+Jqguf1AA--.57595S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxWryDCF18JF43AFyrZF17GFg_yoW5AFyDpF
-	W7Ar17CrZ5Jr4jyanrArs7Zr1rXa10yayfGF1jkw4fZrs8Ww1ruryrWw4agFs8ZrWrAa4x
-	tFWqqrW2gFWDCw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Ib7Iv0xC_KF4lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
-	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xII
-	jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4
-	A2jsIEc7CjxVAFwI0_Gr0_Gr1UM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x2
-	0xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18Mc
-	Ij6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41l
-	c7CjxVAaw2AFwI0_JF0_Jw1lc2xSY4AK67AK6r1l42xK82IYc2Ij64vIr41l4I8I3I0E4I
-	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
-	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
-	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
-	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
-	IYCTnIWIevJa73UjIFyTuYvjxUsCzuDUUUU
-X-CM-SenderInfo: ysvqjiysrsjkur6v33wo0lvxldqovvfxof0/1tbiAQUAD2riD9MOGgAAsL
 
-if_usb_receive() takes the receive skb from cardp->rx_skb and
-immediately dereferences skb->data to get at the packet header:
+Frames to stations without an A-MPDU session (e.g. non-WMM/non-HT
+clients) use the non-aggregate path. The hardware may complete such
+frames with ATH9K_TXERR_FILT while the station is awake. They are
+then reported to mac80211 as IEEE80211_TX_STAT_TX_FILTERED, and
+ieee80211_handle_filtered_frame() retries them only once for a
+station that is not in powersave.
 
-	__le32 *pkt = (__le32 *) skb->data;
+The aggregate path re-queues filtered subframes on tid->retry_q and
+sets tid->clear_ps_filter, so they are retransmitted until they get
+through.
 
-That happens before the URB status or the skb itself is validated.
-cardp->rx_skb can already be NULL when the callback runs, because
-__if_usb_submit_rx_urb() frees the freshly allocated skb and clears
-cardp->rx_skb when usb_submit_urb() fails:
+The result is downlink loss to awake non-WMM stations, while WMM/HT
+stations on the same radio are unaffected. On a QCA9563 AP with
+ESP8266 clients this caused 20-40% ping loss.
 
-	kfree_skb(skb);
-	cardp->rx_skb = NULL;
+Set CLRDMASK on every non-aggregate frame. This restores the
+behaviour from before commit 5519541d5a5f ("ath9k: fix powersave
+frame filtering/buffering in AP mode") for the non-aggregate path
+only. The trade-off is that non-aggregate frames already queued in
+hardware when a station enters powersave may be sent to the sleeping
+station instead of being filtered.
 
-The submission fails with -EBUSY while the previous rx_urb is still
-queued on the endpoint, or with -ENODEV once the device is no longer
-configured.  usb_fill_bulk_urb() has already installed if_usb_receive()
-as the completion handler of that still queued URB, so when
-usb_kill_urb() from if_usb_free() later hands the URB back with
--ENOENT and a zero actual_length, the callback runs with skb == NULL
-and faults on skb->data:
-
-	general protection fault, probably for non-canonical address
-	0xdffffc0000000019: 0000 [#1] SMP KASAN
-	KASAN: null-ptr-deref in range [0x00000000000000c8-0x00000000000000cf]
-	RIP: 0010:if_usb_receive+0xd6/0x3a0
-	...
-	Call Trace:
-	 __usb_hcd_giveback_urb
-	 usb_giveback_urb_bh
-	 ...
-	 usb_kill_urb
-	 if_usb_free
-	 if_usb_probe
-
-Compute pkt only in the branch that actually consumes the payload,
-after the URB status and the skb have been validated, so a callback
-without a valid skb leaves through the existing retry path.  The
-handling of a non-zero status with a non-empty payload is untouched,
-which keeps the current recovery after transient errors.
-
-Fixes: c305a19a0d0a47ac59a58865a4a63be65b1bf7c8 ("libertas_tf: usb specific functions")
-Cc: stable@vger.kernel.org
-Co-developed-by: Bin Yu <byu@xidian.edu.cn>
-Signed-off-by: Bin Yu <byu@xidian.edu.cn>
-Co-developed-by: Cheng Wen <wencheng@xidian.edu.cn>
-Signed-off-by: Cheng Wen <wencheng@xidian.edu.cn>
-Signed-off-by: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
+Assisted-by: LLM
+Signed-off-by: Tomas Tonhauser <t.tonhauser@pobox.sk>
 ---
- drivers/net/wireless/marvell/libertas_tf/if_usb.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-index b85c6d783bf7..bca2912a1909 100644
---- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-@@ -625,7 +625,7 @@ static void if_usb_receive(struct urb *urb)
- 	int recvlength = urb->actual_length;
- 	uint8_t *recvbuff = NULL;
- 	uint32_t recvtype = 0;
--	__le32 *pkt = (__le32 *) skb->data;
-+	__le32 *pkt = NULL;
+Notes:
+    v2: code unchanged, commit message updated
+
+ drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3413bb4906d4..913aa280ae2a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1432,7 +1432,7 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
+ 			if (!sc->tx99_state)
+ 				info.flags = ATH9K_TXDESC_INTREQ;
+ 			if ((tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) ||
+-			    txq == sc->tx.uapsdq)
++			    txq == sc->tx.uapsdq || !aggr)
+ 				info.flags |= ATH9K_TXDESC_CLRDMASK;
  
- 	lbtf_deb_enter(LBTF_DEB_USB);
- 
-@@ -637,6 +637,12 @@ static void if_usb_receive(struct urb *urb)
- 			goto setup_for_next;
- 		}
- 
-+		if (!skb) {
-+			lbtf_deb_usbd(&cardp->udev->dev, "RX URB without skb\n");
-+			goto setup_for_next;
-+		}
-+
-+		pkt = (__le32 *)skb->data;
- 		recvbuff = skb->data;
- 		recvtype = le32_to_cpu(pkt[0]);
- 		lbtf_deb_usbd(&cardp->udev->dev,
+ 			if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
 -- 
 2.34.1
 
