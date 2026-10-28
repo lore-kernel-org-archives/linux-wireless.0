@@ -1,92 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793162495;
-	b=r+tZC9tbnzZT1SE8gTLNr6SXhLQQtnGC9F2THDL6AbiSolPf5WZpR6qj9toQ4rVqyrwA
-	 wZbQEYjSkJezRyBz49TsDeJMCjJjLn+fHtJKAPs0HV/UIHBLq/vlUn7OwbfACZ+V46/R7
-	 JCWqt3M3zfCwxZIHBIHF+VhkCrMrOnWVcyjGsFbPNWt2+nktl0KmOot63yAKv1i9wMhEd
-	 8VS4g4qdufevVxlFWqusMYyLfi94hiMl6a5JhVFKiuPLId7x0E9eogrIO4lOAKOfyH2Zl
-	 bnc0qnGQ9F6YC+czKY80lLOyUD6V1tBc4caXnlmYYnVJjVsh5nDC+P7w/WACS+07/iA==
+	t=1793162497;
+	b=3qvD0biQrFJlhk1Ax7cz9/4KM8n/aAv8TT8aomUQgx3Wq7sdyjgnou7QnrF/exusmGcL
+	 PLn0hVKsJEpTj2FYr+ZB7PDwN3IDV9mGvY2MPerNnxMJreoFMirBkbfQcs0ttDYgMx8RT
+	 Q5ZFgBLEd/X6wxQajF++uJhLnmBC9wrFnH1GI6PI8BvfFodTPvMop61FDzs0IL2nOunoJ
+	 ZjODNmbHMjYlDLCKYTPtRfQq8k4fHgh3jAx169fCo3VVhnlQ7jJBMJcW+qKzar8Dz5bjT
+	 XHrNatObpMQZRIbpMFPDJSSW4FymjWmZJFw9598zRBqargTwoapbeqHEwqFzft9Nn4A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793162495;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793162497;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=2oz5sHulKG/cmbjPoxzVB6iSV/i/NLI+1E7kfTmkYng=;
-	b=385yko9Uo+eUEfiSo8gWRaV62su7ifRipL2ebSsi8wGPC/0ya2jTbYUPLaAIUwEhyWFo
-	 HBWoCK35/XnD6PQ10GOCoo1ZL/9q48lMiF+zyxA4t66jpwyZYkFqiBgP8dGQ3kvTZ6z6/
-	 CdravLGosz82SFLgVtmGGVAssoLJcHh9t+T+iLNUCw4A8IV4wZ68HfZHrgtJa7aE4/Mu3
-	 rb/CktD5mvuTA9CBkcRXavR+n8ZZ2vKjT/Rwciy73XYXmysZOnbnMSHQ6m9+8fltuTB6E
-	 NTXwx5Csq5Jz85CwFMJovC5WmsQrNv4OTZEZzHoYIvSBcR0c7+ovQDMb/i/XVg0roEQ==
+	bh=RgnLwm7jME7dLSPWA5NR9OIlJ+/VcsQqGQdujMYqqLk=;
+	b=gGv9Bh1gXIdpAuxUpyPPRqEMt7h3mkF1ipBMdzlCIv4rcwL7QvF3JNg54ezI9co68Taz
+	 qJGZxCe75YGjaN6oK+KsVWkNRa0+qH5DKK+pf7zPXZQFUwZlDCR7FB9D9o2QaDDQCEeDX
+	 rYM0oJkU5yXFMBwYldQ95DlazGHaLJSJV/WMqw+u8Iw/OW45N2TbwM0Jtjo755nJuotI4
+	 fn0buuZUpoNmfq+p4aMGLRjMAahiC2Qg3/wh7ja688/FfNb2I9Vi0NnhxKxmmWsd5L5ij
+	 YKDfNpJa2uUa9etWoEjgZH0XRjww/6LZ5Ua2PG16mtQZ1aEJwjGJ/H5AddP55AzeKpQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=morsemicro.com;
 	spf=pass smtp.mailfrom=morsemicro.com;
-	dkim=pass header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=H+skV5Vx;
-	arc=none smtp.remote-ip=209.85.215.178
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+	dkim=pass header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b="skgf6e/R";
+	arc=none smtp.remote-ip=209.85.210.171
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADB6606A31A
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 04:41:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1ADB6606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BE81606A31A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 04:41:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8BE81606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=H+skV5Vx
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-cc4c02ddd62so405011a12.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 21:41:34 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=skgf6e/R
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-89f28c3ac7bso234301b3a.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 21:41:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20260707.gappssmtp.com; s=20260707; t=1793162494; x=1793767294; darn=vger.kernel.org;
+        d=morsemicro-com.20260707.gappssmtp.com; s=20260707; t=1793162497; x=1793767297; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=2oz5sHulKG/cmbjPoxzVB6iSV/i/NLI+1E7kfTmkYng=;
-        b=H+skV5VxMTgy8wQZPdkYB5QkzsaCtsEZUDU84zYyCDoy7EptknMKQkbktHkKSDpOzq
-         Gh/d0NOdW4cgHPZs0QQBoCpqi1mw5UnJKKiUXS260Y+USgcgE9xasaizcK6nvhjng8EA
-         JzBT2Czi0WIHMzoR+ITx1xvkDy+HH/ovv9xIUHIVMTO1/pcqW6ZgSD9PG1tEfoC1+fgw
-         +H8O0U/5MC6BYD/BOyktQbVGRL3ExOcI3AHapb0DLiqKT3Mg9pf2ONNVpMOh5Gcjgk+T
-         m+W9Qy5r5jkGQ9wBxTYVif/a82TozZR/OQdYC5d5+uWRQ22NTIYOWcc2SF0SM3lC+3oi
-         Qf5g==
+        bh=RgnLwm7jME7dLSPWA5NR9OIlJ+/VcsQqGQdujMYqqLk=;
+        b=skgf6e/RARXyhPhtwp3PrkEDpmWwy4NJqEloTLTDXdBfQzhN6iNe5IEkdMPTkx1M5J
+         tQSHatGR0KjIDZ6SzoNeyJG8/Ew1TPGy2k084i3Wrxfk3WMKJ9OG/JpE4Xuh+ooZpJ0O
+         KQgnnnfpEM8BWA0g9WLL6rKRRLGW02fdAXVe5nWKGDsx1Qo+c/TPU94GzSrUrA3MrHdo
+         MQm/SpLLxdkTN/Y3JGXXAFuh/eDVki1nd3DTXXDZmY1dYRpq++I1J7GzVAYraw88Lvse
+         Q+JMYR00YOC4unlSGUp/z58EUvoy2uVXosfFceDLKJKjDkEKsuZlfRHNmqiNTwPhWz8d
+         eI6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793162494; x=1793767294;
+        d=1e100.net; s=20260707; t=1793162497; x=1793767297;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2oz5sHulKG/cmbjPoxzVB6iSV/i/NLI+1E7kfTmkYng=;
-        b=w2I1n5+h4zKSl9rSPbwtbq8Nzklh8zqLyqgmjsXgecw+ZR8A7Esp2FH1G2OwbxbupE
-         3wkp4Cn3LRY9ItD0kaO8OIJ036rL1HET1LxGFKMqQL4KuaF0nZp/oh+cEskOHcW+9k3z
-         28XobmJfvEeQf/IUXBz83beL3MomJFaMRsJ45xb+K76QMi4vT59LvwcmELZ1ab99VqtV
-         /zMMBIJVVse9MmDPD+OCtJfPBJBrgGRa6kua0zGaa9sobCjCPpokWD2umh5LT1k8o5pG
-         oG8PLTzUxlsk4pm3Lzy1iRmBSp5YtPoa6tZkpY7jG+MRQITuywmbI1087eswUV5U5oVX
-         2PXA==
-X-Gm-Message-State: AFq9FYK/i+OeBu53tAwAzF5ilJAwuXsVB3oZz6jxo/Hb+KR0YdDKd34V
-	KPEL3L4FlsdV2Z3UvWZaUG86eaxEVnQXS78LaOrmEgy3RSpoMLqPTjhXRma7+YhLDCie+RektN0
-	UjVUp9RU=
-X-Gm-Gg: AYBFou0FOWjZvAv5B+QQSq+KuO7JOLOManMFklbDy0LoRHNUVX/t58gooJdR/Fa0xW+
-	HYfqicWEgYIO7c3Axnxd3uMuBhpAOKiK3YFuh44cs2/Gn5jQ2uVHddwVVi5tNo/8AXfmSvpprFt
-	KyM6ZDSQzesn4WU+GA5CYW7A2nxgFxF1H3QoERT0RLYHkviASnze/ON/wqTEkFkHSnUARDQtC9L
-	C2ldsDx9tL6LrM7l8/d9Oi7HxjqPEWRDkw6YkqIXFJdOn9kB/G0Dq6gQFrKqDvbjUyczzHwxLeE
-	w6Fciyj1ZOpVXXJBDD2VqhpeVSLb4RWsWVfWCkEykyyIzsgL3CJ9f5Ghi3+7PGcx7oi30jFA5UX
-	tYzJTRVybkXuEHMypw1AjQqBMp0XTykJ4jJePlgJzlt/x+Iz/0AjE7UXXSANFeQc48hbJg/6CA4
-	x5SS3/NFUnWuVTbuhmjlwZrIZ3gxGu1KaDXV+2foxPpnIhbhApiQtx9SwxPY47ZuYA8pQ0CCh2s
-	CFH9Ednr9jX8Xa3STMvaS/p5QVqMxcIsFtY1olLtjhot63modZ6VFfmPRSjMkoe9pjkUFyTExLZ
-	B6/L1TRsOTSjmbXrCl6QT5n2QewQJ5X22u5E24rPioV18ZNDFOrryt78iBXRtN+WGb49gBi5HQP
-	GH+NDGC2xc8mVnppomyu0lt5UYn1qLe8Jew==
-X-Received: by 2002:a05:6a21:3cc2:b0:3de:b120:bb88 with SMTP id adf61e73a8af0-3e902079ed5mr1002996637.2.1793162494287;
-        Tue, 27 Oct 2026 21:41:34 -0700 (PDT)
+        bh=RgnLwm7jME7dLSPWA5NR9OIlJ+/VcsQqGQdujMYqqLk=;
+        b=um0AxgJhVZKnFYGfIe0cM/349UigHbjeOF4U/E95qkyWmjeUFNU9u/Yz0v9/FYif+I
+         s15zjYgD7gezRLau3IdKKTIpPsyqiV/UZ6IJNzzpxmThZqY7IJB/mUlDcAtnKXe5e36e
+         FEKOlbi56X46/Cz5YQSdHT8eKYSjJUpX/BoC6qeDiGn+CPpJd3ngdyF/fU/d2usglIvT
+         JhyGs2VphSWyB76idEFjvYuiib7M8amgxdnpmfHVC6kUG/COkWiBfgkU1gxGUeqeXdnV
+         h2NYJWHx7X35PxqcICTRnLyg55XHV76KorQCVmVOwEqbwDfDDX43+2Y42O8a0A8TKJOx
+         tJtA==
+X-Gm-Message-State: AFq9FYIu5ElWAIPb1QUkrrocP2ejB4bgtX742AJJC09U7XmWAcYdfxwZ
+	0wtBSk3rfkPXBymJqZ/J0TJJqXAAj91AIsuE2bF5CPKz3LVtVak3+7vewzilBMn2aCU=
+X-Gm-Gg: AYBFou0rWSb9VeIpGxjuz/EDbhu6SM+3XNplKGdAOFnSFX+YT2RyAldRqPygyoDk/s+
+	b97yfmwF1qR6AW2VpTRlNlCKScweQvZzeJqMqEZxSG9XwemV1KJRXProv7KtxluMK0HAbcL4y5f
+	r3a2eKEEoaF9ADBY0R8VX8pWXeQUOITrphMq14zNsev43HEcwk6MAZzriedW4tuxeJJ5Hx3VcgO
+	JjKBZso6dU+nDn8HQDj3UwwyRUpEn7y2kFKTsduvyhJE0E1ml/EAX0Vta6fZXjCdc1qH1vvyP1m
+	TDBF8xDpkh97K9qyz6TZhYooMAkSf2Ba3/eIVEyt84Mt7DnWZ5gcM9J/mHxOLWONnofVVqmgUmL
+	s8mlIUJcWkGCX1/kyjv1WlmGpt+8uVxgIhRpJh157UGzK1ccLoNUDVnksPwzBJLWVI6X5HIRARs
+	M4A1Dbihsz+WQkodZ3y78h0A2/W5xcFxpx6IIH7gT8Y+B8BbqBNNjIaW6U3h6bZmjYILwzlLVxO
+	tWX7usQUmMHM0iaBEfWsfO8g5tlApuZOW8iiV1T+G9VvrWeUlc1ccdLeXskGYT63FT4YDV8RKwR
+	3u2piBid4vNUDPpqm6rFAsLY9L8pHbRhsopG5+jNDy0iwH5TWM3G2nRcIE1bNeaVYspgkus9rQ3
+	hxE+romj+1RCeeszWtv588hE0JvKFap2aykqkQo/Lsp/k0iey+KigQj0=
+X-Received: by 2002:a05:6300:6698:b0:3e8:b7fd:626c with SMTP id adf61e73a8af0-3e902291d87mr1088898637.20.1793162497022;
+        Tue, 27 Oct 2026 21:41:37 -0700 (PDT)
 Received: from mma-H9MHD44.lan (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a6cfc5ccsm630826b3a.40.2026.10.27.21.41.32
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a6cfc5ccsm630826b3a.40.2026.10.27.21.41.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 21:41:33 -0700 (PDT)
+        Tue, 27 Oct 2026 21:41:36 -0700 (PDT)
 From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	arien.judge@morsemicro.com,
 	Lachlan Hodges <lachlan.hodges@morsemicro.com>
-Subject: [PATCH wireless-next 1/2] wifi: mac80211: include freq offset when comparing frequencies
-Date: Wed, 28 Oct 2026 15:41:17 +1100
-Message-ID: <20261028044118.1422069-2-lachlan.hodges@morsemicro.com>
+Subject: [PATCH wireless-next 2/2] wifi: mac80211: remove ieee80211_rx_beacon_freq_valid
+Date: Wed, 28 Oct 2026 15:41:18 +1100
+Message-ID: <20261028044118.1422069-3-lachlan.hodges@morsemicro.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261028044118.1422069-1-lachlan.hodges@morsemicro.com>
 References: <20261028044118.1422069-1-lachlan.hodges@morsemicro.com>
@@ -101,82 +100,69 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The freq offset is not taken into account when comparing the rx status
-freq vs the control channel. Use the existing helpers to make sure we
-account for the freq offset.
+Remove ieee80211_rx_beacon_freq_valid() and replace it with the same
+freq offset aware comparison used elsewhere, since we now expect the
+1MHz primary to be reported at all times.
 
-Fixes: 6d531b9af16e ("wifi: mac80211: rework RX packet handling")
 Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- net/mac80211/rx.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ net/mac80211/mlme.c | 36 ++----------------------------------
+ 1 file changed, 2 insertions(+), 34 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ecee9348c70d..8843405c9a0d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -909,7 +909,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 
- 		chandef = &sdata->vif.bss_conf.chanreq.oper;
- 		if (chandef->chan &&
--		    chandef->chan->center_freq != status->freq)
-+		    ieee80211_channel_to_khz(chandef->chan) !=
-+		    ieee80211_rx_status_to_khz(status))
- 			continue;
- 
- 		if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
-@@ -5333,11 +5334,12 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
- 	dev_kfree_skb(skb);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6ec45a9f7221..f9ede2d80523 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -8095,38 +8095,6 @@ static bool ieee80211_mgd_ssid_mismatch(struct ieee80211_sub_if_data *sdata,
+ 	return memcmp(elems->ssid, cfg->ssid, cfg->ssid_len);
  }
  
--static bool ieee80211_rx_valid_freq(int freq, struct ieee80211_link_data *link)
-+static bool ieee80211_rx_valid_freq(struct ieee80211_rx_status *status,
-+				    struct ieee80211_link_data *link)
- {
- 	struct ieee80211_chanctx_conf *conf;
+-static bool
+-ieee80211_rx_beacon_freq_valid(struct ieee80211_local *local,
+-			       struct ieee80211_mgmt *mgmt,
+-			       struct ieee80211_rx_status *rx_status,
+-			       struct ieee80211_chanctx_conf *chanctx)
+-{
+-	u32 pri_2mhz_khz;
+-	struct ieee80211_channel *s1g_sibling_1mhz;
+-	u32 pri_khz = ieee80211_channel_to_khz(chanctx->def.chan);
+-	u32 rx_khz = ieee80211_rx_status_to_khz(rx_status);
+-
+-	if (rx_khz == pri_khz)
+-		return true;
+-
+-	if (!chanctx->def.s1g_primary_2mhz)
+-		return false;
+-
+-	/*
+-	 * If we have an S1G interface with a 2MHz primary, beacons are
+-	 * sent on the center frequency of the 2MHz primary. Find the sibling
+-	 * 1MHz channel and calculate the 2MHz primary center frequency.
+-	 */
+-	s1g_sibling_1mhz = cfg80211_s1g_get_primary_sibling(local->hw.wiphy,
+-							    &chanctx->def);
+-	if (!s1g_sibling_1mhz)
+-		return false;
+-
+-	pri_2mhz_khz =
+-		(pri_khz + ieee80211_channel_to_khz(s1g_sibling_1mhz)) / 2;
+-	return rx_khz == pri_2mhz_khz;
+-}
+-
+ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 				     struct ieee80211_hdr *hdr, size_t len,
+ 				     struct ieee80211_rx_status *rx_status)
+@@ -8180,8 +8148,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 		return;
+ 	}
  
--	if (!freq || link->sdata->vif.type == NL80211_IFTYPE_NAN ||
-+	if (!status->freq || link->sdata->vif.type == NL80211_IFTYPE_NAN ||
- 	    link->sdata->vif.type == NL80211_IFTYPE_NAN_DATA)
- 		return true;
- 
-@@ -5345,7 +5347,8 @@ static bool ieee80211_rx_valid_freq(int freq, struct ieee80211_link_data *link)
- 	if (!conf || !conf->def.chan)
- 		return false;
- 
--	return freq == conf->def.chan->center_freq;
-+	return ieee80211_rx_status_to_khz(status) ==
-+	       ieee80211_channel_to_khz(conf->def.chan);
- }
- 
- /*
-@@ -5445,7 +5448,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 				continue;
- 
- 			link = &sta->sdata->deflink;
--			if (!ieee80211_rx_valid_freq(status->freq, link))
-+			if (!ieee80211_rx_valid_freq(status, link))
- 				continue;
- 
- 			if (rx_data_pending) {
-@@ -5469,7 +5472,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 			sdata =	sta->sdata;
- 			link = rcu_dereference(sdata->link[link_sta->link_id]);
- 
--			if (!ieee80211_rx_valid_freq(status->freq, link))
-+			if (!ieee80211_rx_valid_freq(status, link))
- 				continue;
- 
- 			if (rx_data_pending) {
-@@ -5539,7 +5542,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		 * RX using the station.
- 		 */
- 		if (link_sta && link &&
--		    ieee80211_rx_valid_freq(status->freq, link)) {
-+		    ieee80211_rx_valid_freq(status, link)) {
- 			if (rx_data_pending) {
- 				ieee80211_prepare_and_rx_handle(&rx, skb, false);
- 				rx_data_pending = false;
+-	if (!ieee80211_rx_beacon_freq_valid(local, mgmt, rx_status,
+-					    chanctx_conf)) {
++	if (ieee80211_rx_status_to_khz(rx_status) !=
++	    ieee80211_channel_to_khz(chanctx_conf->def.chan)) {
+ 		rcu_read_unlock();
+ 		return;
+ 	}
 -- 
 2.43.0
 
