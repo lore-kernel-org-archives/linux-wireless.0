@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793190256;
-	b=4kpzpw22f4HJ/etWPgaZEdb6ebt/eDJVr1937n5ou86EH5jwu/ujniE3mIgt/zMWIHex
-	 15RR4/MzuoLKz+QJDEOKWSPFQWOgqzD4qmMVRZ+KgR5h4HcTRYZb6TdnEfszjyRGTu8lT
-	 7ahLrdpF9lhSUWh0EF/c3NbZscrPfJDcm7r3Qxfvd+Gj+Iojita2AU3tGk2BmFN47KV4P
-	 gMk7aYsKN4CHdpLtw9uV8Xh2jG+jJIlhMzkVoqN9/u+PLOOqfpbD4rEXR/qIpZTLZX03e
-	 ocjqOn/uFxMkueqm7Vxi5fwu7PjWnoUPYnwfOeciG9ShZ1oFq0zfn1qlIJfiN7ZIz/w==
+	b=zWkkmFVTzXv+r+Pcd8lTBXpuanVJv3NiAtYRMQ2oASKjzl61vRkrSak422dxxMLp/+1a
+	 kCj1QZeJf22AeLcxrrrLab3uCbR5XViHS0AdgvMbabeNAxfl0HkUz86e5xaNhi4S73xE1
+	 xhUyi0XaplLPYHq45yTUqEYURTrBbDwh3oH2sx7nMxMy/uDFWfk5BxvIScYPCHlGBgYdd
+	 kI41tgsMEhW5P+5CzZndXSm411okeTYlEjtyZA0MOcAIUrLEB09VvCYkzogiGpGMHJeZn
+	 2AfJ6gcxICXyD3tzySJhf0Xi18jZNHtRG9/TaNIn7j/V1NRqNnECa3eJ+loMEtw1p8A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793190256;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=TZBq6hk0z7IkHzKTHkkOyL8kK6QF0TUDAUmiq/HggO8=;
-	b=IoBPId35ebeOuEXjOs/rAPa340GpFT/3UfrC6O7xSgW7UhMK+en7P4z9Akd/fZbblmTv
-	 fHo4pCsC2c7zO29kN+sb64EtgzwRPzrkNS0yv1Pr5BXs67BnFvnwnOO5M177ynrGeStO2
-	 +FWyHDhDQ3j2RDrWY+rl0najb/+pTy0rG4XfwFUYXHcvMACncqCtmTzk2r0yYiETcJOUq
-	 bNQq9I2a4PmVEAYs6IBlDj9Cr1cZTpzPE6R4f42qFQLmJozyUfwi/oguugfcEdUk1bO9H
-	 fBbWI9842A9VKtj4ZR1HepRuywaecYRU4E/nC2hgOGhgUDtY+YdXjqY9CDsEcYutdeQ==
+	bh=LjDQyPvCOjYMB6yYJdmmd9DAcaJZRK3km26mngX/vkU=;
+	b=4QbxnTinYdErRvVcfEP3XJqS1s7457d4krMJfBwKXD32PouyTsCLl69swLkxJ+ro3OC1
+	 1x0HZbjz4K7mh471Lk6r23mTp6ly2hdCd5U5dAZPQP8Aakde/aN0zssEMs/ZbV+/+PtRQ
+	 gh3/nnp+BGmwBe4tnM4zeTdm1NYtHBaUcfrJegr5eFSXlQIIMhttH4R68c6s7bWfqwMl8
+	 VAuXWcngFVqNBhVeaH6KjsKp2dJZhMrU6ZWxPEhXqVbu7FgsJYqDJtYtgtZCsN9zShk8V
+	 QzwPh1MF1Iqeex3fqW6+onEIC/C9tXohiJO2jDuT+UJsNvTns53s7JXS3iyGbb5Flsw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nbd.name;
 	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=FBfdnit5;
+	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=UIH23xcI;
 	arc=none smtp.remote-ip=46.4.11.11
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C1D760A2611
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2439B60A260B
 	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:24:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3C1D760A2611
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2439B60A260B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=FBfdnit5
+	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=UIH23xcI
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=TZBq6hk0z7IkHzKTHkkOyL8kK6QF0TUDAUmiq/HggO8=; b=FBfdnit5Pxsdy+qx3omG7x4kCM
-	oZ/jj1x7u66vk10I/GHrN6+ZJBq9SRxwp7SMD2iPvMuorQ56zj7bUDODcXq2EMDnVcC3JXEN4JJmK
-	CVHU7ydePdBTbNxfZ9Bbbdy5v0jFZG6cM/3l9Ufqk2Bzb9yP/9P9w0Jg2CyG4+5Uc1Eg=;
+	bh=LjDQyPvCOjYMB6yYJdmmd9DAcaJZRK3km26mngX/vkU=; b=UIH23xcIN1gPKgPe45juEiMAfh
+	wtnZgh7shT2ROjhCQYZmHY7QrQBwQm8ICJcZowNhwNtKAkZbBIG9wbA7CTYlBSfEDflEnFJgenrew
+	m5MZrvoD6lG4vRWvCSDzw5sPhXNhUlBfrracJJ+aGql5YuvnQVk4JXKbxnz1OycDzRRw=;
 Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xM2hM-00C8Bw-3D
+	id 1xM2hM-00C8Bw-28
 	for linux-wireless@vger.kernel.org;
-	Wed, 28 Oct 2026 13:24:09 +0100
+	Wed, 28 Oct 2026 13:24:08 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 17/25] wifi: mt76: mt7915: upload the CSA beacon only once
-Date: Wed, 28 Oct 2026 13:23:55 +0100
-Message-ID: <20261028122403.796394-17-nbd@nbd.name>
+Subject: [PATCH mt76-next 15/25] wifi: mt76: mt7996: skip MLD address translation for encap offload frames
+Date: Wed, 28 Oct 2026 13:23:53 +0100
+Message-ID: <20261028122403.796394-15-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261028122403.796394-1-nbd@nbd.name>
 References: <20261028122403.796394-1-nbd@nbd.name>
@@ -68,54 +68,37 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-At the start of a CSA, __ieee80211_channel_switch() reports
-BSS_CHANGED_BEACON with csa_active set and then calls
-.channel_switch_beacon. mt7915_bss_info_changed() and
-mt7915_channel_switch_beacon() thus both upload the same CSA beacon,
-and each upload passes the initial count of the template to the
-firmware.
+mt7996_tx() translates the MLD addresses of a frame into link addresses
+for an MLD interface. It casts skb->data to struct ieee80211_hdr, but a
+frame with IEEE80211_TX_CTL_HW_80211_ENCAP set carries an Ethernet
+header, so the writes to addr1 and addr2 corrupt the Ethernet header
+and the start of the payload.
 
-Drop mt7915_channel_switch_beacon(). mac80211 calls it only after a
-BSS_CHANGED_BEACON report, so mt7915_bss_info_changed() already uploads
-the CSA beacon, like mt7996 does.
+Skip the translation for such a frame.
 
-Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
+This is currently not reachable, because mac80211 queues encap offload
+frames to a TXQ and mt7996_tx() receives them only when they bypass the
+TXQ. Found by inspection.
+
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 13 -------------
- 1 file changed, 13 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 556f8948abac..8cf7fde1a197 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -737,18 +737,6 @@ mt7915_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	mutex_unlock(&dev->mt76.mutex);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index e97af1828444..f715817243a6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -2089,7 +2089,8 @@ static void mt7996_tx(struct ieee80211_hw *hw,
+ 	if (link_id == IEEE80211_LINK_UNSPECIFIED)
+ 		link_id = deflink_id;
  
--static void
--mt7915_channel_switch_beacon(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     struct cfg80211_chan_def *chandef)
--{
--	struct mt7915_dev *dev = mt7915_hw_dev(hw);
--
--	mutex_lock(&dev->mt76.mutex);
--	mt7915_mcu_add_beacon(hw, vif, true, BSS_CHANGED_BEACON);
--	mutex_unlock(&dev->mt76.mutex);
--}
--
- int mt7915_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta)
- {
-@@ -1803,7 +1791,6 @@ const struct ieee80211_ops mt7915_ops = {
- 	.release_buffered_frames = mt76_release_buffered_frames,
- 	.get_txpower = mt76_get_txpower,
- 	.set_sar_specs = mt7915_set_sar_specs,
--	.channel_switch_beacon = mt7915_channel_switch_beacon,
- 	.get_stats = mt7915_get_stats,
- 	.get_et_sset_count = mt7915_get_et_sset_count,
- 	.get_et_stats = mt7915_get_et_stats,
+-	if (vif && ieee80211_vif_is_mld(vif)) {
++	if (vif && ieee80211_vif_is_mld(vif) &&
++	    !(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)) {
+ 		struct ieee80211_bss_conf *link_conf;
+ 
+ 		if (msta) {
 -- 
 2.47.3
 
