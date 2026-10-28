@@ -1,79 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793216260;
-	b=q51xHZXgWYKua/eGlXutLbdRU1zbFQR+63eF51I4DbWUqLafuyy7eAXqa79KGUXBss2/
-	 gzi5319qs6SVvFdTl8a2C+fyaxaQFAuRfme6oB8ctnj7wsw5MxY5g58sxo6k6xBlKgaKd
-	 BEgdp+ueZqyRl7y++vkM9EOhhIYPeSmskzO6NIra0alM2+peUrGBBdzhxA5IuHE9MB9KD
-	 bcXIAzKv7ND4V+vuvJXeeB9AaFH6XVYKiQotqLTG/a/EwKNiqdN+13cTY0LJx9T19vasf
-	 CE3eXSaMNc8dGuMNmAlNI/fScC5wkUw0X9bcuty42vhnaXrNL+vxCfdizKDu2E/znLQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793216260;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=eLlDCLSsDUwwUAgVwUhz6k7lTVTDa3zrZ/c4TXej6+A=;
-	b=zor2YsI3LBw68NjTMtvm2JVF3qVSb+YF4KIvlmH8UyYx/C4rckaxtZdOwvIs5jn/AbSL
-	 b+GgBn9uCaxtgXAHr7tn20GHn4O4/VYs2PICorUpjR+U9RMFmd2wDPyRMlpzcN9cPCUux
-	 SIO5gAhS/v0qitmMFXk9Oi7zIXGEfx/aJJnKMz2/Yeri2IcJNeyUoTHm0zZQh1UZorx65
-	 OBtqFlJXaOGBtpbPhrmQrnZQSNmqzTGBRhiRgxufP6a6+3udrfZ+3ygrtOA/65PH0e+m0
-	 5rdpIZ0uhjHeY/M/ylp5siFWFCYLQ4rSA60K9kdwamNrwhtSg28CmOClrfSMvokv2Aw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ls8yLWrm;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F12606A323;
-	Wed, 28 Oct 2026 19:37:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ls8yLWrm
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793216260;
-	b=A8weRGLzwnBTKdzCfOEykTLqmSRiC/fZBd/j1fpVn/Lt1L4lGton0rVHnngPR8PIXH+d
-	 7Wq8pcZkvFXrubia6JsHX+py4+/yfau+OacXpU0cnoaFRyiAmaCbcWv30ldTgkOIyICKC
-	 kpZIDR8kEVzarTk1gOILmk/PF0u3lBhH2x6OBdgv0lQlqYueeIxwm/lODABWXY8qr672x
-	 KefenecEoOe3gu/67uCxRiChB1joHBBns4IuDc3yB1wFpSqA3heLgKefTQySZINRiP+el
-	 1JI/l1Ddw8HB8mbCICJInYMtXB6+QG3z1HUqi3dZX73hotXWiVCiXsceSKmfxnCAsFg==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793216260;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=eLlDCLSsDUwwUAgVwUhz6k7lTVTDa3zrZ/c4TXej6+A=;
-	b=1ioApWTHYsTH/m4eEtCCZLYBpYjzkG/rAbOaOGrpdFClV2O4MRowlMXqloDtiArTURpp
-	 u5COOd4d3B50I+1guX7piBskwJCItgIIYe68aW2BQuznqc3QX6isotvBtRo8Ew8Qdu88j
-	 Qbwe9pko7F3FnNiPhkIeKVGN587FYOL1ZekuzBJlp6bT96AilnGX0WWS98Tx7eTypsNCN
-	 l9XuIrlUDLbPA4BB0A2+jWXc0EglmJwdRXE0s/2LpVjwbdT1sFF62aYDS0Qsc80E4lsCV
-	 nDbrf2YeVoj7x3J4ZsVWNGATDSTa40McOnwTB/qY3cdygaWby0d9k5VtB1ZENGr8hNQ==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.169
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793220910;
+	b=F54cRQ/D75aOKnhMuhqMANh+7kVum4KDvnUNRWxlays4TeNcXCjtn6m0+uisZOx+XYtu
+	 b5kiK1+N+G5VtP0NAPyZF57Ht0sY0fOVXLd7fDJq+zCIZJsRezyibhbVH0Gzw4rTSzDaH
+	 xcM7fNpbIC0tNZhzejxheF1fg18HgR3Zo1AmN/MDwjgaAQIIq0vOEvvZqdbf65Pp3tRxn
+	 SH9FFEYSnOEorGRqtHfbWqhfoqyI2zN4mwpjtzLjFVBo1/0552/cVnLwbdDTgEQUSXSzH
+	 ENxSoY3sw7ciO2qNw00fzFLLZQ1shRCD6GAB9Pod9hf4OPtxoXDSqdmBMhq/QzOeNWg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793220910;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
+	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
+	bh=YJGCZGrXuYKSbtbthGQ4UJ9HIhPS+IvzoBo7ywSwUhA=;
+	b=1dbOPUfq0QBW6wviCN5PHlBLoh7GBY37WyBIx2g+Sm9xh2esKUjr733lIPFHF2EHrncX
+	 XtYetnhWOQ33JmjSFitoH+ScLK2Cd4+A5u3U+sIcc3WOGKUwzL4tQKnXulYgkkSXrVxTE
+	 8LsEB5IjwDHmz3KiwvrcfXCK06nV4tGhM9NaEZSAK1/ozvFmA5GjZVHlWKnlkO1q9Da11
+	 DLwGAXFX2k7WeXTED+VwDz77c3ZXV8+Qj1/9+QTw6QR5/iYfh6WGdFPKgbptL6pzVOekT
+	 svp5pQOHHzLJaq1A/kUKkNKTRFwkQqLpd+ts94M36HuxLdV5v7yPMl5MenOh4pnQyLg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Dt4JdHdW;
+	arc=none smtp.remote-ip=74.125.82.169
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 67F0C1F01828;
-	Wed, 28 Oct 2026 19:37:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793216260;
-	bh=eLlDCLSsDUwwUAgVwUhz6k7lTVTDa3zrZ/c4TXej6+A=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=Ls8yLWrm/d3LkJL41zaATBG6u5sMTgkL1IA5S1wQWJ+3qysum7WQ3jIlwgBYoxOpQ
-	 h0t9Y7LAcYgoQ7KMYuV5JTd1tSTzrMLCIV44Pxpt3Wc6SfVT2crKgXhu566Ii8U1My
-	 2x6ERUCZOFmt42U1iMp1RUJURZUcAdt+cYtNOiiyKpkIzwVEDi+Zah4Rnc51TBCl8N
-	 2n+COppWWQRKGCUzQp52D2hHbyobPqVrrs3j4oc9RQwZg708bkUzSt04vpsgI9TAVE
-	 5HnCnk35kq5PbT5/agQUfkWeBAC7AqQxAfmPWS00T45HdG5T+XZjdV9+nD7nfo9wcj
-	 ngPIakN8W8PEw==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id CC1714554D;
-	Wed, 28 Oct 2026 19:37:38 +0000 (UTC)
-From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Wed, 28 Oct 2026 14:37:38 -0500
-Subject: [PATCH ath-next 1/2] wifi: ath11k: give a 6 GHz capable radio's 5
- GHz band HT and VHT
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A61F9606A31A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 20:55:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A61F9606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Dt4JdHdW
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-35829219da8so123010eec.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 13:55:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793220909; x=1793825709; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=YJGCZGrXuYKSbtbthGQ4UJ9HIhPS+IvzoBo7ywSwUhA=;
+        b=Dt4JdHdWU6gJbTpnpO/z6abmOYp4Bg5hSvmUPGjVCAbj+rCI1NQKHvl6RMNd4Guey9
+         xX1Cl64RgX1fMYxYmVTOAYX6rhE5bKk+EJsIRDXNPA9UILM5YFLdfeM8sIowiBEXc6iX
+         n6vBhYfApF3Mt6YgYlTacEV8q6m2/tJHUazKq+lDFPnC+B4UY+mvI9hgMWdTKiKWRdeC
+         nad0HbumcRdveM3AuI3eqA+XzxqS6kyMDX35pe7rxzN25pLSS2FJjlfBovFuumV6EzUh
+         piB9Yi0hxgX8rz24OQp326Jn0hsv9FASyFY7o0ulaIQsjvQPAdOtwrm06JEe/N8Q1x/F
+         KmBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793220909; x=1793825709;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YJGCZGrXuYKSbtbthGQ4UJ9HIhPS+IvzoBo7ywSwUhA=;
+        b=UrPDXqNuDp9sdc91hhJ57dG09hCHh+WteIgsmurO9zlp3q8kFsrZ4vSx7j1z6ggAVZ
+         uVUx9/E5Qp8U0d6xEVPCq03eUyI2NFI5nBwCbWq38xDxlTPzReHTO3LDbc0jQU6xQ1AY
+         1qA45GfLCoRuG3bQiKY5kGy6nJQPAA64qPLekTPKNeiCyn6RITDC1ma6iyn1ENXyY6Xv
+         6M2mJFmF1RsQ1d2ak1nyxaV8WDp+KGfUiNAMssZLLhVNhjgYe9D7CSWIOgrPov19xIyF
+         qA3QPz7/e+2LV0lPqFj0jNivjOT56IfcEdqjtpD9UrAd38lm7crkkXJTUeN8DLlknYh0
+         gy5Q==
+X-Forwarded-Encrypted: i=1; AKwUvBwU5va/oPnxd6vV3R1I3owipCPnF8d3UflH37FTi0lr6dNIGBzLx/CMEoUBHn08VngzO8oM9K2AvQWcSIal5A==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIVuMAd73f7SlkDX6L1LTlSGMRa7Q+0QqbpfYroKZD/YAcLmCed
+	nZv7bcvrBKnWpoOTQofaFK7LzNWG4GkFIAkLyNEcj84By4r4v45A6lsc5Htev0ZvRwQ=
+X-Gm-Gg: AYBFou26VHSKwCE80MJT5wye5pk9rWvzLRWxnv9XnlKihRYk8Rr8nzyB5keOXDbnMql
+	l1aSdvzild2Pc9L4s2P2Etmk1eJlvm3mlUTyHT67S6lrX9UwtsXIAAhbbtNWkNbFkUxUUjG7iNy
+	Svm2QAnPtX+SgAV5OSaLwnzjb68CAcnVEmEzHjusjsMfJAdrodSm93Cf67mG2w1PGgcjnxkVohZ
+	JpZh7WCCM9QqxC0DVBUtMVrUyDX2q2BmXclzvccjCAbKfl575GCNaBz4Uwo5wvyST8N98J7ZYON
+	W4/sP6CyutPB02f6oY/TiMiu3+vlKRzD1Cm6GwFHxTFrPhXsTDO/QHVeV39Ms4vJSLjYzaiNnyg
+	ACRKL93bhB+VFLD8z6/17bZL9nHr7ty0oDQHaE/zRuD2/q1uxLxxv/VBoDhMohFNuKRvnioDNqx
+	yN5BcsSvowoBXLstne3qZHy6zB/sxvxPYH9R9VpsHYmTCczrl4gZUeh7jaT7nAZUkGmNrlakIbj
+	WXX5O/0FJ5QeABU45mUPBJ1mph7eX6SObPOkvE4Rc4qebHuELF8xUGZbPL84mT7rsC8cFWaVNV5
+	pGoBzNR6PUOIgpWVI9+j+sjklQZBsyGS/ng=
+X-Received: by 2002:a05:693c:820a:b0:361:8d0:6c7a with SMTP id 5a478bee46e88-36a300a4eabmr779804eec.26.1793220908456;
+        Wed, 28 Oct 2026 13:55:08 -0700 (PDT)
+Received: from localhost ([103.89.26.203])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a237be80csm20679864eec.2.2026.10.28.13.55.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Oct 2026 13:55:07 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -82,78 +87,46 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261028-b4-ath11k-qcn907x-caps-v1-1-c7daa6f1c02c@gmail.com>
-References: <20261028-b4-ath11k-qcn907x-caps-v1-0-c7daa6f1c02c@gmail.com>
-In-Reply-To: <20261028-b4-ath11k-qcn907x-caps-v1-0-c7daa6f1c02c@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
- linux-kernel@vger.kernel.org, 
- Christopher Griffin <christophergriffin05@gmail.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793216257; l=2244;
- i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=LoAHMWFP0FpoZiJJt9l8o390qNJjKYVd9pyVzPAa5+I=;
- b=LaMXa7wTct2ML3K347ffAKeqcWaIx8xIkvSSAAFcymjA4tghkB2xpTuw0BXQTYP4mnlg4dP5s
- cVJmPgCg+uuCOnny7j6z8FNw70jcdC/4ULuECpWYhb/nXflKovoOn27
-X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
- pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
-X-Endpoint-Received: by B4 Relay for
- christophergriffin05@gmail.com/20261024 with auth_id=1309
-X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
-Reply-To: christophergriffin05@gmail.com
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 29 Oct 2026 02:55:03 +0600
+Message-Id: <DMGRRA9L08L3.1IM2GZHXGLZQ1@gmail.com>
+Cc: "Ping-Ke Shih" <pkshih@realtek.com>, "Luka Gejak"
+ <luka.gejak@linux.dev>, <linux-wireless@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wifi: rtw88: allow key removal when the CAM table is
+ full
+From: "Imtiyaz Parvez" <reza1234khan1234@gmail.com>
+To: "Hungyu Lin" <dennylin0707@gmail.com>, "Shagor Khan"
+ <reza1234khan1234@gmail.com>
+X-Mailer: aerc 0.22.0-0-gc2f86b7abde3
+References: <20261019165103.5990-1-dennylin0707@gmail.com>
+ <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
+ <334c6e785a5d242c6f168d57d042d63b777a242a@linux.dev>
+ <4f48c50cab1145fd9dbd6df6d424c877@realtek.com>
+ <CAGEkeHevidTtTNj-qfy6kE_O0wRvqT=F=sG+Hy83BOkRjCUqeA@mail.gmail.com>
+ <CANQ=N_C3+gpQ3O=SXYpRCGTh_MC1y4TEfnxF90SWgUVF_wYPUA@mail.gmail.com>
+ <CAGEkeHdT1-WwJnF1wTkrrRQRzrEYESOoDeAYE+fiV0gROG+6sw@mail.gmail.com>
+ <CAGEkeHf0CLjxhGySt2axf8gXMrCcn=cEHbe1aXRW4FgcbxjyZQ@mail.gmail.com>
+In-Reply-To: <CAGEkeHf0CLjxhGySt2axf8gXMrCcn=cEHbe1aXRW4FgcbxjyZQ@mail.gmail.com>
 
-From: Christopher Griffin <christophergriffin05@gmail.com>
+Hi Hungyu,
 
-ath11k_mac_setup_ht_vht_cap() sets the 5 GHz band's HT and VHT
-capabilities only for a single_pdev_only device or a radio that does
-not support 6 GHz, on the understanding that a QCN9074 covers 6 GHz
-only. A QCN9074 can cover 5 GHz as well: ath11k_mac_setup_channels_rates()
-then registers its 5 GHz band too, with HE capabilities
-(ath11k_mac_setup_he_cap() sets HE for any 5 GHz capable radio), but
-without HT and VHT. mac80211 can't use HE on 5 GHz without them, so on
-that band the radio uses legacy rates only. On an Arista C-360, its
-QCN9072 (which takes the QCN9074's hw_params) associated to an 802.11ax
-AP on 5 GHz at 24-54 Mbit/s with no MCS, and `iw phy` showed its 5 GHz
-band with HE capabilities and no HT or VHT ones.
+> Have you had a chance to test this patch?
 
-Give the 5 GHz band HT and VHT whenever it was registered with channels,
-which ath11k_mac_setup_channels_rates() does before this runs. With
-this, the QCN9072's 5 GHz band shows HT (HT20/HT40) and VHT in `iw phy`.
+Yes, sorry for the delay. I tested it on my laptop.
 
-Tested-on: QCN9074 hw1.0 PCI fw_version 0x250affff (vendor build)
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+Hardware: RTL8822CE 802.11ac | kernel version: 7.2.11-arch1-1
 
-Fixes: 22eeadcdeab6 ("ath11k: add support for 6GHz radio in driver")
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
----
- drivers/net/wireless/ath/ath11k/mac.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+I built only the rtw88 modules from the v7.2.11 source
+tree with this patch applied, and loaded them.
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 1a237adaa37d..af01ef1cf4c9 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5783,9 +5783,12 @@ static void ath11k_mac_setup_ht_vht_cap(struct ath11k *ar,
- 						    rate_cap_rx_chainmask);
- 	}
- 
-+	/* A 6 GHz capable radio may cover 5 GHz as well, as a QCN9074 does:
-+	 * its 5 GHz band, where one was registered, needs HT and VHT as much
-+	 * as any other radio's.
-+	 */
- 	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP &&
--	    (ar->ab->hw_params.single_pdev_only ||
--	     !ar->supports_6ghz)) {
-+	    ar->mac.sbands[NL80211_BAND_5GHZ].n_channels) {
- 		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
- 		ht_cap = cap->band[NL80211_BAND_5GHZ].ht_cap_info;
- 		if (ht_cap_info)
+I used it for around 2 hours with normal browsing, suspend/resume and
+reconnecting. No new warnings or errors in dmesg.
 
--- 
-2.43.0
+Tested-by: Imtiyaz Parvez <reza1234khan1234@gmail.com>
 
+Thanks,
+Imtiyaz
 
