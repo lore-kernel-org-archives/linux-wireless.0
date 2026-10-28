@@ -1,79 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793199474;
-	b=RhxwZfKqM3MWPSglZ7UZWHxXvS2I9bAbcNbgJ/ANNRHKKWBvYVeIRvUt2kwiLZ/WDegV
-	 IF0dCD/0cJFqsPfffSRlGpBIW+EsGORE/Rr7PmCFPU25nchQDVjdMP3nA1tpyotcLn9Ow
-	 fUlKAA6i5H5U764v2rjfPYsU7MfOjtQtVfLRI0IFwPKcRc3SEezcOjD64oBlX2Cd2PwzE
-	 QQHWt2GNJt/kOLEupe+m3nJnKsh8s287uFtielVo7hqFvyzrUTjlTgHRVvNsS+3/irywS
-	 HNhuCXJX4VVZQfeqH8VAqiZgIJs1e1Xi5UBpwM5TXsvRdHIeNdi4f4ApeAierrPju7A==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793199474;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=1aJCqrlea8ZrY27B4TMFDN2LGhln7d1dehrunf+FMQs=;
-	b=Y+ayh7CpIbxx+OIZbiRayztQNKiHQotUKNLy0eEaBGCyd2jji0ymeBPlC3VSixz37dJD
-	 raZyOzy+sFzInN5BGneM7zL3cdNHg8NaeF7t5xm8x99u6tG+ynwS35K0HJkTAoZv0dWVU
-	 fSSgRiQqAGWJgu2azbHWNS7cmqLJSm2KnCxm8COK/8mO/qZLshs72Heejz9X6hms5g0jz
-	 w4AH1gPPGLy4/5hguClxuPZYIChLiXlc3GQYx8lrgscfH8ZFcK7RaRzyPucaUsRDFVtyC
-	 epG/2givWUrVa643SKxeZR2CrFpUCSdJk8bpZVlf4goM/Wl9lNN0XwY0MHwjB7fbkLA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mhG3muBV;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F141606A31C;
-	Wed, 28 Oct 2026 14:57:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mhG3muBV
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793199473;
-	b=RqsfGwmyi4RxwJ4VTKg+Sc3xxHOpUiPa40oLUQRIXIhDoVtTlhp2OO10RoKE3rG59OYQ
-	 QOZblKjKrNIT2Pom8I1W4Tg8iAYy1Y0N3zQgZPneabU3/Puvm4zGVHRv+i/zUlyDT6n51
-	 2Bg6nhEotkzQGsd9GMdqS+79Eva+9Lgi0IRagBgx+cwX7522JCB7ycOsLIL2KGmCWUtMV
-	 MFuexBfm45YQnpqRUPQOPP4J6oAHijusWDpw+JVeaU7l4EHO+8O0sWxlqMueX5UTE0Gmr
-	 zeVuOzs1c1rIh361oVb1R7OfAb4okVV6b4tOm9r1Lzw4wfQf+pq1eWaFngIyxYPEc+w==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793199473;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=1aJCqrlea8ZrY27B4TMFDN2LGhln7d1dehrunf+FMQs=;
-	b=ogmEYXFOS6PF0HSCrKFDIWwsmT4eAs0jWHSK2C7EIxmpxH3YIRBEDb7Gc1t0m4+eaebc
-	 Hg5Rwpcc9FbP14C7IDc707EIwPWeR+IHrnKoc7nEObv7t0p0kcLD+ocIgr7hSC6ms9bf0
-	 Z8ockSs4YBnXSg6T1O6/zfj+7AHhZPl4N3FPoo03JoITIn9hlKFnu+9obkHo1B3EPocsr
-	 kH/JLRNYc1HI6e6R8BL41DexPHgygW2V4R+cO0YZqH24YhbeldD1YfVUhauKDN/StjvhJ
-	 +qUPyt3Q+Pjd9s8xquOVM/s7UUIPkbpqweEeKP5gk2i0f8xdwVxhK+mPKlNrZjrw5pg==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793199712;
+	b=hKQMkb5dpEkR7+O35YbaVi09vNNKDf54GxHmjSoP3FF2vCaoW7/5+/vEqaEw4PTWRd8e
+	 O/ic8uK9SDl+SoVo/a8+zilebBxvxIk3NZZmW+nqPKXH8ZPGdrkUQ2KYnu6Zor6tbAHtA
+	 UUWTbbPsoXfDZZpBErUf7ZmKRe+q1O64ZyFCwyM+GRY86FKRh2M9wprqdcFIMBAvTAxun
+	 0jaQYOHZbFrYptoSpKhlY4XY8Q2ze/WX3JrwhG1bM9YmmyeODV19rGAcKcqKHH3jENfix
+	 sgubAGkPp4akqDlX9Hu5i2dVTYe7rhyrTEAjZNv2POxZZglwwH9iiWaKxZYSccsUKwA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793199712;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=mVhCdDkhAXJ5S102mixnITdimIHOTHoGKH57O2P0pYk=;
+	b=w3mkipVP2rnV0gOiikzmo4x+iwyYOK3nZwq0hIyq2VV3hsozxSoMBWjPMsPV6dLWUODe
+	 2LT2MNaQl/XrYqGM3RgEJNFq4IEmHFoePMxXVMQL5/cURCR8HFb39UTIxc5tOSSxel6v+
+	 +1+2KyA40y8PG5gh3aE2a1U2yySOHm9PGa34jUL4rNj6J+oWx6c7GZ8KoLWaTBI7kVwun
+	 iX+RboJtAlylsvb3PMzk1K5q799Yp5DIZ5I5bNPo7SJZ9aZ/hPfn4+rWl1syOwPYmcnG2
+	 spFqI727HyO2GGuTKkLerSZ1eSrgEZf7TiAnrjiOP+RCU/P6EO03OeAmDqro+uCwM+A==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=QzAcC31k;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cFYVlePU;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id A15B61F01825;
-	Wed, 28 Oct 2026 14:57:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793199473;
-	bh=1aJCqrlea8ZrY27B4TMFDN2LGhln7d1dehrunf+FMQs=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=mhG3muBV6fAsnLvKukIU3KfcSdtSGNZtKzTAo4ozXycf6NzOZW+ScRVhFpHx8euRB
-	 hDdbyzUb8bqEil5jD6xyJlN/2yriELwQOc2oSu0L2li/UbU10KXJTXDG6TDrmq18Wg
-	 OFdDc+VS05FerD3lzADrdz7xIcTdc6vn0IkqKk1TIWFkvgcwJBybSLGDtxDumOWCxs
-	 gokLACg0yYIhNeDiHorFdKx9EyIYIgEfrA5c/xh+w8jrpI2V17k/Fz+cMl9WHZ1it5
-	 I6m2awnSLiTvLGsDmPLxIM4GOtyH676nQWysACP2TJKQI6XY+c+MTZF/dxVUlFEvyC
-	 DOdzCNCWLDu1A==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 0604B454C1;
-	Wed, 28 Oct 2026 14:57:51 +0000 (UTC)
-From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Wed, 28 Oct 2026 09:57:51 -0500
-Subject: [PATCH wireless-next] wifi: mac80211: flush TX for a new key only
- if it needs tailroom
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30C1460A2600
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 15:01:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30C1460A2600
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=QzAcC31k;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cFYVlePU
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69SBeVba2083948
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 15:01:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	mVhCdDkhAXJ5S102mixnITdimIHOTHoGKH57O2P0pYk=; b=QzAcC31ktlmC2cCS
+	LDO9UhLMk1H9E+JsuvEJv90SGUuvR0kWdzBFd1N55Vb24qADIf7fO2YSfkhikI/n
+	nxYoIzBAJ8kk/mBrOS7zHyz3FZQdaReG04rLsVn1rjqhuZtgP+5gnOgEmD+yqkHg
+	oxq/5E6o7WSEf2GgW/vqS/Aiw2Hl6I9UKBOEgS7BawkO+4qzhtuu6ZauV8oXHuQJ
+	2ImL7ZP/cVrLBQwYGAwanwzJOnRbK8qOFEFKpsABU5J+EbsrkUf27tNh+uY2XNPt
+	h/seLmU0kxBFcJ/VbJmDkJVJkTsnDPrCW5Fynxag64BjuXE12UaCuQ97zXxXfJyj
+	qbvvAA==
+Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com [209.85.161.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hjyjpvks2-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 15:01:46 +0000 (GMT)
+Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-70eadc5b37fso1543865eaf.3
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 08:01:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793199705; x=1793804505; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=mVhCdDkhAXJ5S102mixnITdimIHOTHoGKH57O2P0pYk=;
+        b=cFYVlePUUG0vlSUH/eTDP8he+7x9TTxigLm1sVnTWlvKR2ScQE15TWonXtJF1o8Dmb
+         Zu8OiFlytJKoArjQEeu3zrToRMcqQ88I/loLP/vmayhEGCN4siQtWk3MVJVcWSGo0KRB
+         KrNnjAAjanETkEuSiuaJKQjlV96sm1dbFMiJ4GM+40MTMBW4pvmNZWNKkjEItoj8tK2B
+         R5raFQ8AlsBraTRRSg01O3dVMycyQS5kAabUO7U6+2E0Ej/0zAdD6n5K0McEh0AUXwWJ
+         Tl7AUEX/e6uoLw2XggpohAabb1GqTvMZKpU3PMdRgULMlCxfEIUNi7QVPZLLM1NYFpSt
+         qrQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793199705; x=1793804505;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=mVhCdDkhAXJ5S102mixnITdimIHOTHoGKH57O2P0pYk=;
+        b=iPAh6pKE4u0LKjPM2tSioS/c8A9+il3alo7WnO3mMsdayrCL5WqYegv9gOpybKVwZV
+         Q8tONdILcZ3tL373xiF76JYUXQrIBiv91JRbLhTbMvGQkcSQfPp/RNIAMKby260YuOhb
+         JrU1sFZJdmDUxlNCFGV+UgifRbe+zxaNJq6QRl9LJ0RK3oF6oj79mkN2spFGVl5dBy8v
+         8kNbDk94UUeXUTwiWoNuhL91ogbSXRoxP1VirDMTAO20ugr7yrRhYSnXZaXgMaiXlDmC
+         fvZWVBJmZf9nBu3l0IjJ21Zdz/Qup1b0MNAKZUZh4cjKdbeYp8VyDpAVaMtwV9E0cUkH
+         aadQ==
+X-Forwarded-Encrypted: i=1; AKwUvBx2SWYM05QzoJVni8oGc9D1CXvlrIex+Rcic09m94HpyUm07OzAW09TFWlUvy6mT9Uw9h8MtwSPlg08MNET2A==@vger.kernel.org
+X-Gm-Message-State: AFq9FYK8mTUNEBKQ9WXEcaI6SrfoMtn+WDPCd5b6G8kPxo47TovFgPaG
+	rlhgIMTaXfSG3WEhzdByjh37THjjxQJc30xjpDzNYnSy/2D1JfMUOFRWonzLgk9EBGRQJIcMeh2
+	yzTwXWSfBGBYLlLPvJ34vkTBI8v+w/XCjM5Ry3wkGSkX9qwowpOm8OoPk+vBT8Kfb7lyn7Q==
+X-Gm-Gg: AYBFou3u+NGKODZkl4MYGdOAsx2PqiNXwd2Sah09h0Q96C8QLCMnF7SgGyNu6BOz+mW
+	MtfQ6tj4mLyL5bT54HokpYF3slWzCu6Bbs2Tc1NWgZktwf6n6cBNQJm45A/6uk2lM+ef3sDAcLR
+	/L/GSFjS+t+9pQErFcpuerdPvWfqswI9gFnBTo30/luwiWDkgKfO8ga2OQs3NXsv18X2rtoygFf
+	zOgiiJ9UYZ3W0vTKTH+AQq2mAto1lzqMPXXJTWgyoUaglt5Ogo23WaXbAxbK8P4+JuYcanNzzME
+	QQmHKjD+oc+PhYpto5nFGTDA1k9/c4N9qIod77XG19gLGjkUxWHK5WzHT7iFcc6v8wfES8LnBWJ
+	EBAt8Izg/qzoHCgrtXTVbHImDsZVJ82SN3QIzRZnfmfecL1ITc+F5YscVFBPuwCBIlwr6lIZUMr
+	3k1+tSmwrpayzOC1sMZPV/c7xA0bwx/D8JrQ==
+X-Received: by 2002:a05:6820:a65e:20b0:6fd:4277:16e8 with SMTP id 006d021491bc7-713f01edbd4mr1002290eaf.80.1793199705259;
+        Wed, 28 Oct 2026 08:01:45 -0700 (PDT)
+X-Received: by 2002:a05:6820:a65e:20b0:6fd:4277:16e8 with SMTP id 006d021491bc7-713f01edbd4mr1002259eaf.80.1793199704670;
+        Wed, 28 Oct 2026 08:01:44 -0700 (PDT)
+Received: from [10.227.105.111] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-7142d317adasm1606578eaf.14.2026.10.28.08.01.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Oct 2026 08:01:44 -0700 (PDT)
+Message-ID: <d094dc46-760d-4ee5-9404-9fa73a16a6bf@oss.qualcomm.com>
+Date: Wed, 28 Oct 2026 08:01:40 -0700
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,187 +114,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261028-b4-mac80211-tailroom-v1-1-f3cfbab9ef5f@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAG4N4moC/yWMQQrCMBAAv1L27EIS2hL8inhI0o2utIlkoxZK/
- 26qx2GY2UCoMAmcuw0KvVk4pwb61EG4u3Qj5KkxGGVGrYxF3+PiglVGa6yO55Lzgr0dVPR2Iho
- jtPRZKPL6217gw4VmEsFEa4XrX8vLPyjUYw37/gVFEo1OhwAAAA==
-X-Change-ID: 20261028-b4-mac80211-tailroom-4850fb8dee6f
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Christopher Griffin <christophergriffin05@gmail.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793199470; l=6194;
- i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=VVRIR+z05sVgNPbb1Hz7v+/VmM8Tn2LY06AEVY6Gvuo=;
- b=riVuGQy3wUiwpyg36tH+bNlgkKY6M1SeroWWKn6mwxv9nf1y7Wx1dMHzWRLWeXRgc4dTLYe8o
- 4RKBBP/wyA4AwZASA8w2AbLqbBlEyUcY5j4CCW/9vKJ5ozKwKwda7ww
-X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
- pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
-X-Endpoint-Received: by B4 Relay for
- christophergriffin05@gmail.com/20261024 with auth_id=1309
-X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
-Reply-To: christophergriffin05@gmail.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/4] wifi: unwind failed interface setup and recovery
+To: Jiale Yao <yaojiale02@163.com>, Jeff Johnson <jjohnson@kernel.org>,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Matthias Brugger
+ <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Deren Wu <deren.wu@mediatek.com>,
+        Ming Yen Hsieh
+ <mingyen.hsieh@mediatek.com>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+References: <20261028050337.127464-1-yaojiale02@163.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261028050337.127464-1-yaojiale02@163.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI4MDA1OSBTYWx0ZWRfX7vseKqvY4aJL
+ Qv4YoaaePi1wUz+dOUTXuFWbDw60kqV68aUjBhK/Lq9QAnBn4L7bm1RkpVkpvytMjsvJlSapBHq
+ 8kjiBAO1FynfiMVKIZQoEXXNxjhkRduVoM7ymmIoXx7F9Qx1Q094Rp3hgz4QPKwa9HqpABn7pwJ
+ O8Nsc37b5vBrhDlmKHhiGOEy7AoQ1mg2gWgiOkZ8mqQs5ZZQWoBJmeMt7imqpdJuvdgVProuxOM
+ i3LqAQSURXpR8wf4sxOqfsqycmk2o9sKBpcQdgxUjL9pSvxwAxfcU8PNE/yK7UmmpNGehnh6q7e
+ SxOJhLMKI1h30gnBXZwAb2Go0Ae45PE+BhYQH2ATHNEXBQPi1x9K9aOHeTtSzs/Fmc9sGqoCBY4
+ x1ITkXyQksAFEEzLxstWB/WX7AcSM1LOy8D4JFl8XnRWTZH2Q5kiG0J+yNKTlao6pcrDBkwPMp1
+ we6phOLmK5VMtnevOHA==
+X-Proofpoint-ORIG-GUID: -BVErMAin3TC5PJS-ncy_JOPz7HBa_Ag
+X-Proofpoint-GUID: -BVErMAin3TC5PJS-ncy_JOPz7HBa_Ag
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI4MDA1OSBTYWx0ZWRfX7CDHZP1UFwKm
+ 6W9NpOHsHK7hZKwrk+DcacAC44GbPJ1n73I/8MsexHpoFlcwy2zF7bm/kZKinJ1lTRN/luGW41m
+ po+5LAJfQpzeWsCgmpR447gwWecQ8f8=
+X-Authority-Analysis: v=2.4 cv=JodkP84C c=1 sm=1 tr=0 ts=6ae20e5a cx=c_pps
+ a=wURt19dY5n+H4uQbQt9s7g==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=JmONO2TMLgSK87zk2EoA:9 a=QEXdDO2ut3YA:10 a=-UhsvdU3ccFDOXFxFb4l:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-28_04,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 malwarescore=0 bulkscore=0 suspectscore=0
+ priorityscore=1501 spamscore=0 adultscore=0 lowpriorityscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610280059
 
-From: Christopher Griffin <christophergriffin05@gmail.com>
+On 10/27/2026 10:03 PM, Jiale Yao wrote:
+> Several wireless interface setup and reset recovery paths publish host
+> pointers or create firmware state before later operations which can fail.
+> Their error paths either retain pointers to vifs that mac80211 will free
+> or continue after firmware interface restoration has failed.
+> 
+> Clear the published ath10k and iwlwifi pointers on add failure. Check the
+> mt7921 and mt7925 firmware restore results, remove partial state and stop
+> configuring the affected interface. Each patch fixes an independent
+> driver path and can be applied separately.
+> 
+> Jiale Yao (4):
+>   wifi: ath10k: clear monitor interface after add failure
+>   wifi: iwlwifi: mvm: clear P2P device pointer on add failure
+>   wifi: mt76: mt7921: unwind interface restore failures
+>   wifi: mt76: mt7925: unwind link restore failures
+> 
+>  drivers/net/wireless/ath/ath10k/mac.c         |  1 +
+>  .../wireless/intel/iwlwifi/mvm/mld-mac80211.c |  5 +++-
+>  .../net/wireless/mediatek/mt76/mt7921/mac.c   | 16 +++++++++---
+>  .../net/wireless/mediatek/mt76/mt7925/mac.c   | 26 ++++++++++++++++---
+>  4 files changed, 41 insertions(+), 7 deletions(-)
+> 
 
-ieee80211_key_link() counts every key it installs as needing tailroom
-before ieee80211_key_replace() uploads it to the driver, and
-increment_tailroom_need_count() runs synchronize_net() when that count
-goes from zero to one. On an AP whose keys are all in hardware the count
-is zero between stations, so each station's pairwise key waits for an
-RCU grace period, and hostapd waits on its NL80211_CMD_NEW_KEY before
-it authorizes the station and serves anyone else. Commit 133bf90dbb8b
-("mac80211: restrict delayed tailroom needed decrement") keeps the
-delayed decrement, which avoids this on a roam, to station interfaces.
+You are sending patches that fall into 3 different maintainer trees in one series.
 
-Measured on an IPQ8074 AP (ath11k, HZ=100), WPA2-PSK, the same non-MFP
-station roaming in, hostapd's NEW_KEY for the pairwise key to its next
-step: 31-65 ms (median ~42, 10 joins) on a BSS without PMF; 0-2 ms on
-the same BSS with ieee80211w=1, whose software BIP keys (ath11k leaves
-BIP to mac80211) keep the count above zero. A driver that does BIP in
-hardware pays it with PMF on too.
+It is much easier for us maintainers if you split your patches by maintainer.
 
-The flush keeps frames sized without tailroom from meeting a key that
-needs it in software. A key that replaces none can't be met before
-ieee80211_key_replace() publishes it, by which time it is known whether
-it went to the hardware without needing tailroom, giving the count
-back. So keep counting it beforehand, but flush on the count's
-transition from zero to one only if the key still needs tailroom when
-it is about to be published. A key replacing another is handled as
-before, since the old key may drop to software while still in use.
-
-With this, the same joins took 0-2 ms without PMF (13 handshakes).
-
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
----
- net/mac80211/key.c | 61 ++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 50 insertions(+), 11 deletions(-)
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index d32c61a90..ee646f5d5 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -73,6 +73,20 @@ update_vlan_tailroom_need_count(struct ieee80211_sub_if_data *sdata, int delta)
- 	rcu_read_unlock();
- }
- 
-+/*
-+ * Count a key as needing tailroom, and return whether the count went from
-+ * zero to one, so that TX must be flushed before a key needing tailroom is
-+ * used (see increment_tailroom_need_count()).
-+ */
-+static bool __increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
-+{
-+	lockdep_assert_wiphy(sdata->local->hw.wiphy);
-+
-+	update_vlan_tailroom_need_count(sdata, 1);
-+
-+	return !sdata->crypto_tx_tailroom_needed_cnt++;
-+}
-+
- static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- {
- 	/*
-@@ -94,11 +108,7 @@ static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- 	 * http://mid.gmane.org/1308590980.4322.19.camel@jlt3.sipsolutions.net
- 	 */
- 
--	lockdep_assert_wiphy(sdata->local->hw.wiphy);
--
--	update_vlan_tailroom_need_count(sdata, 1);
--
--	if (!sdata->crypto_tx_tailroom_needed_cnt++) {
-+	if (__increment_tailroom_need_count(sdata)) {
- 		/*
- 		 * Flush all XMIT packets currently using HW encryption or no
- 		 * encryption at all if the count transition is from 0 -> 1.
-@@ -569,10 +579,11 @@ int ieee80211_key_slot_lookup(struct ieee80211_sub_if_data *sdata,
- 	return err;
- }
- 
--static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
--				 struct ieee80211_key_slot *slot,
--				 struct ieee80211_key *old,
--				 struct ieee80211_key *new)
-+static int __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
-+				   struct ieee80211_key_slot *slot,
-+				   struct ieee80211_key *old,
-+				   struct ieee80211_key *new,
-+				   bool flush)
- {
- 	bool defunikey, defmultikey, defmgmtkey, defbeaconkey;
- 	struct ieee80211_local *local = sdata->local;
-@@ -618,6 +629,15 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 			if (!ieee80211_key_needs_tailroom(new))
- 				decrease_tailroom_need_count(sdata, 1);
- 		}
-+
-+		/*
-+		 * The new key isn't visible to TX yet. If counting it took the
-+		 * tailroom count from zero to one, flush TX before it is,
-+		 * unless it went to the hardware needing no tailroom and so
-+		 * gave the count back.
-+		 */
-+		if (!ret && flush && ieee80211_key_needs_tailroom(new))
-+			synchronize_net();
- 	}
- 
- 	if (ret)
-@@ -693,6 +713,14 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
-+				 struct ieee80211_key_slot *slot,
-+				 struct ieee80211_key *old,
-+				 struct ieee80211_key *new)
-+{
-+	return __ieee80211_key_replace(sdata, slot, old, new, false);
-+}
-+
- struct ieee80211_key *
- ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 		    const u8 *key_data,
-@@ -964,6 +992,7 @@ int ieee80211_key_link(struct ieee80211_sub_if_data *sdata,
- 	static atomic_t key_color = ATOMIC_INIT(0);
- 	struct ieee80211_key *old_key = NULL;
- 	int idx = key->conf.keyidx;
-+	bool flush = false;
- 	int ret;
- 
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
-@@ -1031,9 +1060,19 @@ int ieee80211_key_link(struct ieee80211_sub_if_data *sdata,
- 		goto out;
- 	}
- 
--	increment_tailroom_need_count(sdata);
-+	/*
-+	 * A key replacing another is counted, and TX flushed if that takes
-+	 * the count from zero to one, here: the old key may drop to software
-+	 * while still in use. A new key isn't used before it is published,
-+	 * once it is known whether it went to the hardware without needing
-+	 * tailroom, so __ieee80211_key_replace() flushes TX only if not.
-+	 */
-+	if (old_key)
-+		increment_tailroom_need_count(sdata);
-+	else
-+		flush = __increment_tailroom_need_count(sdata);
- 
--	ret = ieee80211_key_replace(sdata, slot, old_key, key);
-+	ret = __ieee80211_key_replace(sdata, slot, old_key, key, flush);
- 	if (ret) {
- 		decrease_tailroom_need_count(sdata, 1);
- 		key->local = NULL;
-
----
-base-commit: 2c50cd5d10e8723797f28c7978f1f61688e0c0d2
-change-id: 20261028-b4-mac80211-tailroom-4850fb8dee6f
-
-Best regards,
---  
-Christopher Griffin <christophergriffin05@gmail.com>
-
-
+/jeff
