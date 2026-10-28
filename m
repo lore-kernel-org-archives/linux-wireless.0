@@ -1,132 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.255.225.202
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793208929;
-	b=hYOe6XiuNCE6NYYDport6+Vsi2dKnSmuLrzgEqJOpUMNzslQHB6sMuo/Py4Ai/Aiv8/1
-	 Nxricc+K8O0knjQdvSAR1Xy7m2/sORmN6E+DbbMrhP9NK/MZg0l05SNodxUbvL+npg1GP
-	 1RF1GKhpdZqVfcWY5RjLfMkM4yyVbasMV/8QSHRhq5Iyilb4CA0QlxziObc2FrRGGM5MN
-	 JYzu9ZSo5zp2XfFaZTQd+PvTUGI+3dEeD+Bepuf0QRWqVQVf4iQIX8/PKCZ25xfA68zjH
-	 Zuw3a106XSNX1viyKHIpP3Zj1WK0+lJzdFcmhkpdQqaQLye6Z2wpcX8kDcBkre6PgCA==
+	t=1793209263;
+	b=mBobUP3jIjwmYLeAhkR1oqCMnHFWqF9K/DgOl8o0UXrtbf+sKX5NdiLdS3yAQv9MX1j6
+	 ltt89h+S0Ss1LxbAh0dZlpiWkFS+4qByKScsp6x4xz9kk7yN4Y0snFA//1ss89yatDhyE
+	 URFAwPcrkntvXlm5+pcahFoF0YseO3Vlt0XBVwJqp7pYNPrjGD8vrcfdDYFG+nfAZTJgb
+	 OCw2QoRX+ZVxr93LKpKhnyDEPZpEUW3RpTTY/qnySqtO6SwTRRt9UPrzCvdXfHeazKspr
+	 3IDP3S5A9m1ivTyrGkexfySA1BrnxTRWSTMc8rndKS1qanzGj1BhSL6IHPvBr+8E2ww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793208929;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ThreatScanner-Verdict:X-IPAS-Result:IronPort-PHdr:
-	 IronPort-Data:IronPort-HdrOrdr:X-Talos-CUID:X-Talos-MUID:
-	 X-IronPort-Anti-Spam-Filtered:X-IronPort-AV:Received:Received:Date:
-	 From:To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
-	bh=trN9sfkyUF5lmYW35ov02jIT/bOiVDmYEcGexehOUmk=;
-	b=S7lKRkTfvD2uHxRbUE9u0yAwiinBZiiX2R0Jh8W583IXVs3eBqwzh3+/+NsOG7noSVKM
-	 3iUBcRAkmL45eKvnyrKe0krwvKemSPj7phF5aolJGUsDnV8vXF361j2GC36QutuYZ/Z75
-	 1DVvm+2VeOvkStxtfUv5iQlnHCPnbGcoAa6msrT/lV2hLATO7r178FV+vgLtndkxt332N
-	 6G9wAQzz4vcXDo4zMBQ7LoM1V8fYJkwWGXzzH1uH0/CTYB5+hFsWdUIqu1Bf0QeN9hIkH
-	 U0S3yxsfi0ByGCYUHqRp7EAQa0B+8AwE/bGhpgUlEHyznygq59P7q4ELrUfXWX6VexA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793209263;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:From:Subject:To:Cc:References:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=bKEddF200A5Fji/8mKWoxDNoJ3pSAPZUATgBbE0Ij0M=;
+	b=df40FsClh0br1i+hOqhy/APkDUOzHwdSdZFFVwpBwld/y9SDDOjUa1bsqDby7vZ5Nkyy
+	 I9KmuV+KJgZ88HproxReAjRsGdU4+/ew7QfBgXqEdwUj6VMqoPm2jDHd71NpBsTh+3O/K
+	 vp7G+rKhjTl4j5caEe8UWZWHzeDJOXa+8ylYKx4+q4cTGZN1R44bwSpyPe5QhDsTL0BRd
+	 nwmDtXszaghAd3zJPXVZUvJcaOyvngflj31f+V1mxtRiBQhuPWGv7lWbhRdrEZgUg1ylq
+	 29W41T9mraN8UKovdpcU8ne3xXr77S3zh/J6LzdDKIeenCslIlAnNzVw6EcGF9rzT8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=pobox.sk;
-	spf=pass smtp.mailfrom=pobox.sk;
-	dkim=pass header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=GbOyvRmX;
-	arc=none smtp.remote-ip=46.255.225.202
-Received: from gmmr-1.centrum.cz (gmmr-1.centrum.cz [46.255.225.202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lYTaYCcN;
+	arc=none smtp.remote-ip=209.85.128.43
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61573606A31D;
-	Wed, 28 Oct 2026 17:35:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61573606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pobox.sk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pobox.sk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF034606A31A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 17:41:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BF034606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=GbOyvRmX
-Received: from gmmr-1.centrum.cz (localhost [127.0.0.1])
-	by gmmr-1.centrum.cz (Postfix) with ESMTP id D902B2BCA9;
-	Wed, 28 Oct 2026 18:35:21 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pobox.sk; s=mail;
-	t=1793208921; bh=trN9sfkyUF5lmYW35ov02jIT/bOiVDmYEcGexehOUmk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GbOyvRmXT7iGVTGGmsXavM/uamnqXgLIEZUA7lQP8KpeUE+YusCBAy1arlS313Age
-	 TfbjDkNSWmmSAG30+dz8vQVdtm8znObYN000HLpWcyCY3buKTGrF8dB/rXQjmbl5mV
-	 g7P2RL7uxGzui3UkXeE572CAD9zOtLiOjUfptBms=
-Received: from antispam96.centrum.cz (antispam96.cent [10.30.208.96])
-	by gmmr-1.centrum.cz (Postfix) with ESMTP id D74D72326A;
-	Wed, 28 Oct 2026 18:35:21 +0100 (CET)
-X-CSE-ConnectionGUID: n1+mL73WTAW4rAObaix9Fw==
-X-CSE-MsgGUID: wfnk4Q5QShOOUQYpmpBZbA==
-X-ThreatScanner-Verdict: Negative
-X-IPAS-Result: =?us-ascii?q?A2GtAADsMeJq/0vj/y5aHAEBAQEBAQcBARIBAQQEAQFJg?=
- =?us-ascii?q?TUFAQELAQGDSoFslk9VhSWMcWGEAoZOgX4PAQEBAQEBAQEBCUQNBAEBAwQ4D?=
- =?us-ascii?q?4Q3Ao4dJzYHDgECBAMCAwEBAQEBAQEBAQEBCwEBBgEBAQEBAQYGAQKBHYYJR?=
- =?us-ascii?q?g1JAQEBiTsHBIIIAYEkgSYBAQEBAQEBAQEBAQEdAg1+AQUyAUYQCw0LLhBGB?=
- =?us-ascii?q?hODA4I5AToUtiKBNBoCZdx/FoE0gW4GFYE4AYheAYUDdoR9ggtEhEA+iwgEg?=
- =?us-ascii?q?iKBDJZGUngcA1ksAUsKNQwzckMDgSlLBTdlEj8hHSgeOQI4BgUSIBEZQUNbR?=
- =?us-ascii?q?FWBB11wOylgAQIfJx8tFYF2AoJRgSMHVgIBSUEOB0VTCSVDEkckIggSCQETG?=
- =?us-ascii?q?i4LgRo1RSZBFRhYCxoFGkgIAgsCDHYoERATHiAmMgQDdz03FRkEkwCEOBDJM?=
- =?us-ascii?q?QeEIYRzhy+WGoE3gicBlAwDkm6ZCIwQgXqbOYFuAYIPTYMmATQSQBmXRskoe?=
- =?us-ascii?q?gEBOwcCBw8ChyqIcoILgUwBAQ?=
-IronPort-PHdr: A9a23:6BAuhhbo1XpHbbUnyWmFs9n/LTG714qcDmcuAnoPtbtCf+yZ8oj4O
- wSHvLMx1wGPBd+Qsqwd07GempujcFJDyK7JiGoFfp1IWk1NouQttCtkLei7TGbWF7rUVRE8B
- 9lIT1R//nu2YgB/Ecf6YEDO8DXptWZBUhrwOhBoKevrB4Xck9q41/yo+53Ufg5EmCexbal9I
- Ri4rAjdrNUajZVtJqosyxbFv2dEdupLzm50OFyfmArx6ci38JN/6Spbpugv99RHUaX0fqQ4S
- aJXATE7OG0r58PlqAfOQxKX6nUTSmsZnQNEDhbK4h/nRpv+vTf0ueR72CmBIM35Vqs0Vii47
- 6dqUxDnliEKPCMk/W7Ni8xwiKVboA+9pxF63oXZbp2ZOOZ4c6jAZt4RW3ZPUdhNWCxAGoO8b
- pUAD+wdPeZDsoLxo0ICoQaiCQWwAe/izCJDiH3r0q0gy+kvHwHI0hI+EtwTs3rUotr6O7sPX
- u66zqbF1inDYvBQ3DTj9ITEbgwtreyKULltccTR004vFwbdg1uOrozlOima1v8QuGaF6OpgU
- +KvhHQ6qwFqvDev3Nonh47Vho4P1lDE8iN5wIYvKt2lU050f8SkHYBItyGdLIR2RcwjT3tzu
- CY507ALv4OwcycWxpo93RHfd+CHfJaS4hLlTOucITh2iXJndb+/gxu//0euxvDyW8e701tHq
- jRIn8XQu30R1RHd5MmKR+V580mh2TiC0x3f5+5YLE40laTWN5wsz7gtnZQdtkTDGzX5mETwj
- KKOdUUr5PKo6+L5bbXivJOcMJV0ig74P68zmcK/Gfw1PwcPUmSB5+ix1L3u8VfnTLlUjPA6i
- KvUvZDCKcgGpaO0ABVZ3psi5hu9FTuqzdoVkHsdIF5YeB+Ki47kMEzULv/iF/ewmVGsnS9ux
- /DBI7LuHI3ALmPGkLf9ZbZ97FNcyBYrwdBf+Z1UDrYBLer8Wk/0rdDYFRo5MxCsw+r6FNlxz
- J8RVnyJAq+FKqPSrFqI6vgzLOiNfIMVuTD9JOY55/P2gnI0mEURcbep0JYXcny0AOpqLkeDb
- XfugtoNCWIKsRA/TOzuhl2CSzlTZ3OqUqIg/D07FIWmDYHDRo+3nbyBxzm0HodNa2BeDVCDC
- nDodoqeV/cXayKeOtVhnSAcVbi9V48h0gmjtAnhxLV6NefU/DYXuo/52Nhz/eLTkA89+SRuD
- 8uBy2GNU310nmQQSj8q26B/olJyx0yf0ah/gPxXC8Zf6O5KUgsiL57T0/R6C8zuWgLGZtqJT
- FemQtO7ATA+V94xwMEBY1x7G9q8ihDOxDSqA7ALmLyRHpA08bzT32L3J8ljz3bKzq4hj0MpQ
- sdXL22pmrZ/9xTPB47Oi0iZk6eqdaIB3C/C7WuCw2uOvFtGXw50T6rFRmsfa1DIrdT2+EzCV
- aWiCbc5PQtbz86NNK9KZsfujVVcS/fvINLebHmplGeqGRmI3q+MbJbte2gF0yjREFULkwMS/
- XaDLQUwHiivrGzAAjJyCV/hZVvg/vR7qHyhVE870xmHYVV42bSt9RAZneecS+sd3r8coCkvs
- i16Elnul+7RXuaHpAcpXA6MYNc05lsC98kJrQNwOIetKeg2mlkdfixruEDjkRl0XNZui88v+
- U8tyQNpYZ6f1lNIaiiVx9ikJvvLLW/y9Q20ZrT+wlbU18bQ4aRZu6dwkEnqoAz8ThlqyH5gy
- dQAliLEvv33
-IronPort-Data: A9a23:T/1O9q/qhuqfU6JW4iEtDrUDh3+TJUtcMsCJ2f8bNWPcYEJGY0x3y
- 2FMC2HQb6rbZGf2c9Bwa9i18UNSupeHx9AwS1A6riBEQiMRo6IpJzg4wmQcnc+2BpeeJK6yx
- 5xGMrEsFOhtEDmE4EvrauG/xZVF/fngbqLmD+LZMTxGSwZhSSMw4TpugOdRbrRA2LBVOCvT/
- 4mtyyHjEAX9gWAtajhEs/7rRC5H5ZwehhtJ4zTSWtgU5Dcyp1FNZLoDKKe4KWfPQ4U8NoaSW
- +bZwbilyXjS9hErB8nNuu6TnpoiH9Y+lSDX4pZnc/DKbipq/0Te4Y5nXBYoUnq7vh3S9zxH4
- I4U6cHvE1dB0prkw4zxWzEAe8130DYvFLXveRBTuuTLp6HKnueFL1yDwyjaMKVBktubD12i+
- tQecXMISk/YuN6f/+6hY85mj8Uzfef0adZ3VnFIlVk1DN4pRNXYRrnSvIce1zo2mtpTGLDVd
- aL1axIzMlKaPkAJYA1ITs1j9AurriCXnzlwtBSJoqw36nXIwRZZyL/nN8qTYd/iqcB9xxfA/
- TqaoDqoav0cHMORzznZyy+Vve/ouh7CaZoXDJeK/Nc/1TV/wURWUnX6T2CTp/O1oki0V5RZI
- kkZkgIyqqs/3FCsTdS7Ux7QiHqFuAMMHtldCes37CmTxafOpQWUHG4JSnhGctNOnMs3QyE6k
- 0CIhd7tCCd0mKOaRGjb9bqOqz62fy8PIgc/iTQsEVVDuYS+5ttp0VSQE76PDZKIszE8Ihmoq
- xjikcT0r+x7YRIjv0ljwW36vg==
-IronPort-HdrOrdr: A9a23:+28iKKH4AHumQkxNpLqE5ceALOsnbusQ8zAXPo5KJiC9Vvbo8v
- xG+85rsSMc6QxhOk3I9urrBEDtex7hHNtOkO4s1NSZLWrbUQmTTb2KhLGKq1bd8m/FltK1vp
- 0PT0ERMrHNMWQ=
-X-Talos-CUID: 9a23:P8OIeG18Ufh80rlcj1sKCLxfHJlmd1mCl0jsCnDkE09OQrSUWQ6+5/Yx
-X-Talos-MUID: =?us-ascii?q?9a23=3AcBOOYQ06ax5BqArLUXiVqjdx8jUj/KqoCxw0zKw?=
- =?us-ascii?q?9u+6jCBVBIzKFpga9a9py?=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-AV: E=Sophos;i="6.27,183,1787004000"; 
-   d="scan'208";a="190304769"
-Received: from unknown (HELO gm-smtp10.centrum.cz) ([46.255.227.75])
-  by antispam96.centrum.cz with ESMTP; 28 Oct 2026 18:35:21 +0100
-Received: from blackbox (188-167-137-159.dynamic.chello.sk [188.167.137.159])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by gm-smtp10.centrum.cz (Postfix) with ESMTPSA id 6E45B101612D5;
-	Wed, 28 Oct 2026 18:35:21 +0100 (CET)
-Date: Wed, 28 Oct 2026 18:35:12 +0100
-From: Tomas Tonhauser <t.tonhauser@pobox.sk>
-To: Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH] wifi: ath9k: clear destination mask for
- non-aggregate frames
-Message-ID: <auIyUEqdQIOJqEWp@blackbox>
-References: <20261003192957.761090-1-t.tonhauser@pobox.sk>
- <87mrs9v3aa.fsf@toke.dk>
- <atufwCYLtoF3UaMk@blackbox>
- <87jyn7pk5v.fsf@toke.dk>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lYTaYCcN
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a60f9474c4so15771005e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 10:41:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793209261; x=1793814061; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:cc:to:subject:from:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=bKEddF200A5Fji/8mKWoxDNoJ3pSAPZUATgBbE0Ij0M=;
+        b=lYTaYCcNMkAKIRU3LZsCTt/AnaIzS9iBgUSVhIy0XMbUHFv7bOCQoDijnhQpipPCKw
+         fxVQDn8hV72p1BcbENkXLRv/Yw9THR0uFdfKDTWwFTcfB+X0KslyKh918Tc8Yv9d374M
+         DeB4kzdsnLFFT6NTDPh8QfDGgh7NWBcbJh+V0yTkPQYemyfAqf+NHtfCUJF0l78/aUzp
+         cJpaPW2SCbNcQOiDPKhSItrdwXg+UD7OXD1Vifl5jIdW3FPQqEXqi/rJo1RqwEEmGav+
+         z5iI/UkfUgGhWOMOYmnI/CnbGLJ1f4i4okrcJwsRnYeOSf93QK3vEWBA5S6RUu+jqjFT
+         DPeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793209261; x=1793814061;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:cc:to:subject:from:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=bKEddF200A5Fji/8mKWoxDNoJ3pSAPZUATgBbE0Ij0M=;
+        b=FiNx1vl9Ys0mg0yj+MSy6mCchXX+S/PSNpdKdkJcCNVfoAIDewzPqmsmr5MYxinrW1
+         ymZDc81pH+GKCILkd9j1bTB9EDHKa0CdPles9Oel/T07ChgvtldUFnaDQpYcY36fvwSo
+         h/oVdMVfvIcc5PkecxGAgy63MDUG6xyL+Fz7CQdHwc2EQk2/ahlC9NGz/bHA34QKkXPO
+         n8dwATlSCjG+CxV462l3bEpmfV7Upyh80reRudRUffdhU5Di7Xn179lWDFsB5TSEBBn2
+         MCvO4GdZ1gnYq6V1MUFQNhnj5Re4LfeBeLYmYXKq9qbeqlKnMlHxQKfsVf9JlnQebv46
+         6qPw==
+X-Forwarded-Encrypted: i=1; AKwUvBw6im34mbb8Cj2dUQGbeAfgDYsY2Y4xGa8fb/04nviPGESc4IIczTOybCXyb2SBGqW5J19Rfc1pw2kYVMjFlw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJMhKX2Zyp9XSvyCaHUxdYxXeW3YqtLTbUwOrLeTcwgRApNImyU
+	+6Hp1Tf0u+IdjHZsx7dlxTsaZ4vYC1zg4aDAOqvm827rvEyWG4nyaxVo
+X-Gm-Gg: AYBFou0g6DBokIVkN9Clb8MsiFITL/m8xfYtWw3xAU28cnlbwPOBTVeIh1qA4qEncjI
+	qXpQrsbZNxSnrUBxOJqJroAidyrSL8N82A9baf8D7edgbaAW53ElExOE5k0vLuLmoTgSXwucu2y
+	iO4XGAGtNn85La05Bj6BvBf5eN06HESojVkp+D+O0P6aADXJl9Ot6xr6B9j637fyox/i1et0VIc
+	MTri/ffYUppDYeNoFRQY4JupEwBWUbrtKlhYUsMgE8VAsob5YSCpdM4I2lK2yAOEo9t7pEHgtfZ
+	osbZSVn9gPZHQcbDpVLK05L8EVstV0lNqncuql2XB9FPbgCqyBIG15kvJxmHT2Q5r9RcCtNVf2J
+	4iKaW+cZzWD+7F/ZgDnGmkzq8nO07HKGeA8Cyw/izeMckJEDtzZrKRsTDQtq958CruLgn0seghq
+	RJO2ro8Mi8xB+on3vFvhRWdANoEsk9X08QZftbyVKAd/TUkSgv/YADPQhzhgxFdKMpGPhOksNZt
+	5kJdVklBTnfZfn7bmb1tn7OjzvXHUexaoaYBCr2qx3echHCMCmWj6dBp27S0tWwaGR2q2ZK68wy
+	jfgfpTNO/ixdMcAA8Sj7KkfP7KLp9uLQLkhC1++iNAexaOH6QJppIH66Rw==
+X-Received: by 2002:a05:600c:3b07:b0:4a3:5aee:2c25 with SMTP id 5b1f17b1804b1-4a967203057mr68045325e9.31.1793209260904;
+        Wed, 28 Oct 2026 10:41:00 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa8213ead6sm6817045e9.14.2026.10.28.10.40.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Oct 2026 10:40:58 -0700 (PDT)
+Message-ID: <c035c434-ac56-49b0-bc28-730caae58670@gmail.com>
+Date: Wed, 28 Oct 2026 19:40:56 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -136,18 +90,250 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH rtw-next 4/5] wifi: rtw88: pci: Add functions to support
+ older chips
+To: Luka Gejak <luka.gejak@linux.dev>, linux-wireless@vger.kernel.org
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+References: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
+ <35e9d20a-4f0c-42c3-9d06-358a5620251c@gmail.com>
+ <152a5489440fbddb039d515af46fa46b30bfb109@linux.dev>
+Content-Language: en-US
+In-Reply-To: <152a5489440fbddb039d515af46fa46b30bfb109@linux.dev>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <87jyn7pk5v.fsf@toke.dk>
 
-On Sat, Oct 24, 2026 at 10:39:08AM +0200, Toke Høiland-Jørgensen wrote:
-> Alright, sounds good!
+On 24/10/2026 11:36, Luka Gejak wrote:
+> Hi Bitterblue,
+> 
+> Thanks for working on this. I went through pci_old.c and have a few
+> questions.
+> 
+> 
+> October 24, 2026 at 1:02 AM, "Bitterblue Smith" <rtl8821cerfe2@gmail.com> wrote:
+> 
+>> +++ b/drivers/net/wireless/realtek/rtw88/pci_old.c
+> 
+> [...]
+> 
+>> +static void rtw_pci_old_reset_buf_desc(struct rtw_dev *rtwdev)
+>> +{
+> 
+> [...]
+> 
+>> +     rtw_write32(rtwdev, REG_RX_DESA,
+>> +                 rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma);
+>> +
+>> +     rtw_write8(rtwdev, RTK_PCI_CTRL + 3, 0x77);
+>> +}
+> 
+> If I read this right, this only runs on setup, and rtw_pci_stop() still
+> goes to the new rtw_pci_reset_buf_desc() when the device stops:
+> 
+> rtw_pci_stop()
+>   rtw_pci_dma_release()
+>     rtw_pci_reset_trx_ring()
+>       rtw_pci_reset_buf_desc()
+> 
+> Some of those offsets seem to be different registers on these chips,
+> for example 0x340 is REG_RX_DESA and 0x338 is REG_BKQ_DESA in
+> pci_old.h. Since rtw88xxa_power_off() calls rtw_hci_stop() before it
+> clears REG_CR, I think RX would still be running when they get written.
 
-v2 is out, as a two-patch series:
-https://lore.kernel.org/linux-wireless/20261028171652.1125692-1-t.tonhauser@pobox.sk/T/
+Oh, I missed that. I'll fix it.
 
-Tomas
+> Would it make sense to send rtw_pci_dma_release() through pci_gen too?
+
+I think just rtw_pci_reset_trx_ring().
 
 > 
-> -Toke
+> Also, after stop the descriptors keep their OWN bit and buffer address,
+> and only rp and wp are reset. If a frame was still queued at that point,
+> could the hardware pick it up again after the next start? Would clearing
+> them here help?
+> 
+
+Any frames still in the TX queues are unmapped on stop. I think we would
+get an error if the hardware tried to pick them up. That has not happened
+so far.
+
+> [...]
+> 
+>> +     /*
+>> +      * Because the time taked by the I/O in __pci_get_hw_tx_ring_rp is a
+>> +      * bit dynamic, it's hard to define a reasonable fixed total timeout to
+>> +      * use read_poll_timeout* helper. Instead, we can ensure a reasonable
+>> +      * polling times, so we just use for loop with udelay here.
+>> +      */
+> 
+> This comment looks copied, I don't see any I/O in this loop.
+
+Indeed.
+
+> 
+> [...]
+> 
+>> +     if (queue == RTW_TX_QUEUE_BCN)
+>> +             rtw_pci_release_rsvd_page(rtwpci, ring);
+>> +     else if (le32_get_bits(tx_desc[wp].w0_9.w0, RTW_TX_DESC_W0_OWN))
+>> +             return -ENOSPC;
+> 
+> I'm wondering if checking only OWN is enough here. OWN is cleared when
+> the hardware is done, but the skb stays in ring->queue until
+> rtw_pci_old_tx_isr() runs. rtw_pci_tx_write() only stops the mac80211
+> queue of the current skb, and the MGMT ring can get frames from more
+> than one queue (BARs use the AC of their TID), so I think the ring could
+> fill up completely. Then wp == rp, and the next frame would overwrite a
+> descriptor whose skb isn't freed yet. Would the avail_desc() check from
+> rtw_pci_tx_write_data() make sense here too?
+> 
+
+Is it a problem if it overwrites a descriptor whose skb isn't freed yet?
+
+> [...]
+> 
+>> +             if (dma != tx_data->dma)
+>> +                     rtw_err(rtwdev,
+>> +                             "tx_data dma %pad != tx_desc dma %pad\n",
+>> +                             &tx_data->dma, &dma);
+>> +
+>> +             dma_unmap_single(&rtwpci->pdev->dev, dma, skb->len,
+>> +                              DMA_TO_DEVICE);
+> 
+> If that can happen, dma here would belong to the next skb, so it would
+> be unmapped too early and this skb's mapping would leak. Maybe use
+> tx_data->dma like rtw_pci_tx_isr() does?
+> 
+
+I added that check just to see if it ever happens, but it never did so far.
+
+> [...]
+> 
+>> +             if (ring->queue_stopped &&
+>> +                 avail_desc(ring->r.wp, ring->r.rp, ring->r.len) <= 4) {
+> 
+> rtw_pci_tx_isr() uses > 4 here, so this seems to be the other way
+> around. Is that on purpose? I guess it came from rtlwifi.
+> 
+
+Yes, that is what rtlwifi does. It was done for unknown reasons in
+d0311314d002 ("rtlwifi: rtl8192ee: Fix handling of new style descriptors").
+Before that, it was "== 2".
+
+The vendor driver v5.3.7_27548.20180724_COEX20170206-6761 uses ">= 2"
+in check_tx_desc_resource():
+
+https://github.com/rapyuta-robotics/rtl8821ae-dkms/blob/master/hal/rtl8812a/pci/pci_ops_linux.c#L340
+
+> [...]
+> 
+>> +     /*
+>> +      * TODO: is it correct? it seems to work, but should we count
+>> +      * the number of occupied buffers for rtw_pci_napi_poll?
+>> +      */
+>> +     return 0;
+> 
+> About the TODO, I'm not sure returning 0 is enough. rtw_pci_napi_poll()
+> uses this to pick up frames that are already in the ring when interrupts
+> are enabled again. rtw_pci_old_rx_napi() doesn't count C2H or bad
+> frames, so it could return 0 while there's still data in the ring, which
+> would then wait for the next interrupt. Would checking OWN on the
+> descriptor at ring->r.rp be enough?
+> 
+
+RX didn't get any faster, so I'm not sure there is a point.
+
+> [...]
+> 
+>> +             if (le32_get_bits(rx_desc[cur_rp].w0_5.w0, RTW_RX_DESC_W0_OWN))
+>> +                     break;
+> 
+> Does this need a dma_rmb() after the OWN check? As far as I understand,
+> a weakly ordered CPU like arm64 could read the rest of the descriptor
+> and the buffer before it sees OWN cleared, and dma_sync_single_for_cpu()
+> doesn't add a barrier when the device is DMA coherent. It looks like the
+> example in Documentation/memory-barriers.txt. The new design gets this
+> from the readl() in rtw_pci_get_hw_rx_ring_nr().
+> 
+
+I guess it can't hurt.
+
+> Also, I think the wmb() calls could be dma_wmb().
+> 
+
+It looks that way. I didn't know about it.
+
+> [...]
+> 
+>> +             new_len = pkt_stat.pkt_len + pkt_offset;
+>> +             new = dev_alloc_skb(new_len);
+>> +             if (WARN_ONCE(!new, "rx routine starvation\n"))
+>> +                     goto next_rp;
+>> +
+>> +             skb_put_data(new, skb->data, new_len);
+> 
+> rtw_pci_rx_napi() got a length check in 6e76e9ed273d ("wifi: rtw88: fix
+> OOB read from firmware RX descriptor exceeding DMA buffer"), should it
+> be added here too? rtw_rx_query_rx_desc() allows pkt_len up to 11454, so
+> with 32 bytes of drv_info and a shift of 3 new_len could reach 11489,
+> while the buffer is 11478 bytes.
+> 
+
+Sure, I will add that.
+
+> [...]
+> 
+>> +             wmb();
+>> +             le32p_replace_bits(&rx_desc[cur_rp].w0_5.w0, 1,
+>> +                                RTW_RX_DESC_W0_OWN);
+>> +
+>> +             if (cur_rp == ring->r.len - 1)
+>> +                     le32p_replace_bits(&rx_desc[cur_rp].w0_5.w0, 1,
+>> +                                        RTW_RX_DESC_W0_EOR);
+> 
+> Is it safe to set EOR after OWN? le32p_replace_bits() reads and writes
+> back the whole w0, so if the hardware fills this descriptor in between,
+> I think the old value with OWN set could end up on top of its status,
+> and RX would wait there until the hardware wraps around. Setting EOR
+> before the wmb(), together with PKT_LEN, might avoid that.
+> 
+
+The original authors must have thought it was safe.
+
+> [...]
+> 
+>> +             pcie_capability_set_word(pdev, PCI_EXP_LNKCTL,
+>> +                     PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKCTL_ASPMC);
+> 
+> checkpatch --strict complains about the alignment here.
+> 
+
+Â¯\_(ãƒ„)_/Â¯
+
+> [...]
+> 
+>> +++ b/drivers/net/wireless/realtek/rtw88/pci_old.h
+>> @@ -0,0 +1,39 @@
+>> +/* SPDX-License-Identifier: GPL-2.0 */
+> 
+> Is GPL-2.0 only intended for this header? The rest of rtw88, pci_old.c
+> included, is GPL-2.0 OR BSD-3-Clause.
+> 
+
+I'm not sure where that came from. It should be like the others.
+
+> [...]
+> 
+>> +++ b/drivers/net/wireless/realtek/rtw88/reg.h
+>> @@ -11,6 +11,7 @@
+>>  #define BIT_FEN_PPLL         BIT(7)
+>>  #define BIT_FEN_PCIEA                BIT(6)
+>>  #define BIT_FEN_DIO_PCIE     BIT(5)
+>> +#define BIT_FEN_PCIED                BIT(8)
+> 
+> Maybe put BIT(8) above BIT_FEN_PPLL, these seem to be sorted high to low.
+> 
+> Best regards,
+> Luka Gejak
+
