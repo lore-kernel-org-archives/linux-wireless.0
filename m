@@ -1,59 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793190255;
-	b=kqCDgXPv9RDgTKprf6htrGeWXEFjIH+a7KUcj1st3FPIvTdBUelAIvgaCR0cYwA/m54d
-	 V45Ql4BOvivLOc8zT460w9Hv8II3jY9knKcAvmJsCuaInDcnkiMowp7oAYXcM+a61foQ0
-	 zjx/NSH9K/Oj7GTlNkKRvsmaBxn+gbH1WJ71Hs/UTeF0CUNvPOiNoP9oDVYZoJ8cq42/Q
-	 0ai/2CX7iaPrDCS1l4zaE9dUo5i2knqbBRxX6J5qBuFmv6+4p8ZlDGxGpCVDM7fWAqGIY
-	 Cr/ChKYEmM+wGJ/f4m/zVCX1xUh/N8TA2c5SFBQGxrK/PJ/OS6rEw/Kmj2Nmx7qISQQ==
+	b=5UJUU812RooCWrhKC2OyylV2+Ejc4RYdzsMRg45jO+dfYIVUNkr3t2CQO2PqoxqK4KMg
+	 +mma3G0PfGBFsQFxf70Cx7anfy0w5Ci1XbuQu/HgrkOXqQxe66f9wzPLJXbpuRvoneEjC
+	 3dk6Sa90d5O2P7275pRItJErITX9FklS36NzwcPQzuXRsLVoZklIbRCXe7/dRDSmftkth
+	 Hk8MIATMMs2L6rnIjedcbFBBpBUHbylyDXIqJbjD5Ao78RP9GVQqP2AAmjJ3gOcwJIg8q
+	 C4LwRUAtWuucxaAiGi6BkqfZzpDemHapGLlFOkB7vD1VgGQr69czELqNk3vMJkWwebw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793190255;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=cabI/jOYX9SIfyBZt1Mb8swGfrKf65ifww50x5IFeIU=;
-	b=RP4JmauxMMuq6VPD2rMCekxwKEZu1lpncklSzAJ2WpuUItS5QKskxHRey6agT94cyOxK
-	 yOi1I8dhF1990SGBFGv++Tx9MkTtmc8MzZJlqt0FDFV5APc5d9+vrwQ02AFrto518z5/h
-	 hCbIgFsEOp05mM8cmNL48YD9pTxZXJZSdOFa3sLTMgz0XD2/gm10+lvNleNd59SI43zi0
-	 jfB4q8VhvRHh9+h6nGPf4G/5Uer53XNoCr4l0ZLoaEtuN0xWl0mdjD5Lhx/uPxkrXES1U
-	 8ZlZFbLbkKNytQq6G0AmCuSc9XfP3747etJGsmYqdWAB++o3zLjeAxaaw0kkSd4JW1Q==
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=rBeWeZEWXRDiiv329SYfiB2vbFAefZl4V3oW/CYMvBY=;
+	b=Es8GdvpVsJv7YcVxKqPt+kbs6zi3lHTgPXruDfhHIAS+QidkfqsFxS/ElDyktPsqcU1U
+	 pamE67IoG3T2K/HNg2XSc3CbDd0ju54Ka9XuJKmF7XdTvFDSY5z4KV6omA8dqJc9GOOqk
+	 i0ptnK3wXBjF6jYtqg42WvjctkbZREV/EBgapUC3iR8UOREgES4P0aSCwLTOUacbzWTRi
+	 YekrdUir9fLjcbH+DSPLaNJlZqH3ZfS/6tdOBw6f+hbExx6n65gZn8MNP6eTPCAkgJGFJ
+	 06F1FGND9ENe9j/BRjWovlJF9G5XGbrZGRiVExSQHtXf0MKdO8MlM2vC9o2Mk7Pef6Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nbd.name;
 	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=U3sBKTpm;
+	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=TGALUoD0;
 	arc=none smtp.remote-ip=46.4.11.11
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF82E606A31A
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:24:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF82E606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B963606A330
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:24:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B963606A330
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=U3sBKTpm
+	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=TGALUoD0
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=cabI/jOYX9SIfyBZt1Mb8swGfrKf65ifww50x5IFeIU=; b=U3sBKTpmc86gSsu/Lshwf+zK9V
-	SdlqHn3G6nR3/UPKtO4m+bgzUzbZLfVfNgfhTx5nP5sBdmOxMiMnGo1hErug8OW7cnwK7qgTdel4+
-	+wJhtB/zKlWv5rs6aa8E7msl8U4irKBSwfjeC7gyJBS2Kx7uaCat9c1iURyy6h9Uh0PM=;
+	bh=rBeWeZEWXRDiiv329SYfiB2vbFAefZl4V3oW/CYMvBY=; b=TGALUoD09jGN2ScqNjKGMnsn5o
+	xtihy7MGW2u55u4Ap6wedQ4HUJUHJoJItWKZOsDw5lZalh3SlxvAIl1Id8+uhDolQI9KnyDmnxhNa
+	9ZDmIIWb0aJIYkO8PerkpwESblro+6O3DlVpK6VdFg4QWAxaki0ePjvBDWTu0quMNzWU=;
 Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xM2hK-00C8Bw-0i
+	id 1xM2hM-00C8Bw-1b
 	for linux-wireless@vger.kernel.org;
-	Wed, 28 Oct 2026 13:24:06 +0100
+	Wed, 28 Oct 2026 13:24:08 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 01/25] wifi: mt76: mt7996: take the link of an 802.3 frame from its station
-Date: Wed, 28 Oct 2026 13:23:39 +0100
-Message-ID: <20261028122403.796394-1-nbd@nbd.name>
+Subject: [PATCH mt76-next 14/25] wifi: mt76: mt7915: honour the valid flag in efuse block reads
+Date: Wed, 28 Oct 2026 13:23:52 +0100
+Message-ID: <20261028122403.796394-14-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261028122403.796394-1-nbd@nbd.name>
+References: <20261028122403.796394-1-nbd@nbd.name>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -65,41 +68,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mt7996_tx_prepare_skb() takes the link of every frame other than the
-QoS data of an MLO station from IEEE80211_TX_CTRL_MLO_LINK. mac80211
-does not set that field for 802.3 frames, as include/net/mac80211.h
-documents, so it reads 0.
+mt7915_mcu_get_eeprom() ignores the valid flag of the EFUSE_ACCESS
+response, and copies undefined data for an unwritten efuse block.
 
-Since commit 729c83a3330c ("wifi: mt76: mt7996: fix reading zeroed
-info->control.flags after mt76_tx_status_skb_add()"),
-mt7996_mac_write_txwi() uses that link instead of the link of the wcid.
-When the host writes the TXD of an 802.3 frame to a non-MLO station on
-a link other than 0, the TXD thus names the BSS and band of link 0, and
-the frame is lost.
+Return -ENODATA for an invalid block. mt7915_eeprom_load() skips the
+block and leaves its eeprom range untouched.
+mt7915_eeprom_has_background_radar() then reports no background radar
+on MT7906.
 
-Treat an 802.3 frame like one with IEEE80211_LINK_UNSPECIFIED, so that
-it takes the link of its wcid, as before that commit.
-
-Fixes: 729c83a3330c ("wifi: mt76: mt7996: fix reading zeroed info->control.flags after mt76_tx_status_skb_add()")
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c    | 5 +++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index f36da545045b..edff4e5a5dff 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -1062,6 +1062,9 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 		u8 tid = tx_info->skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+index 145d14a1012d..0ab02580423f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+@@ -154,7 +154,7 @@ static int mt7915_eeprom_load(struct mt7915_dev *dev)
+ 		block_num = DIV_ROUND_UP(eeprom_size, eeprom_blk_size);
+ 		for (i = 0; i < block_num; i++) {
+ 			ret = mt7915_mcu_get_eeprom(dev, i * eeprom_blk_size, NULL);
+-			if (ret < 0)
++			if (ret < 0 && ret != -ENODATA)
+ 				return ret;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 67b470f4bd9b..e66968b819da 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2952,6 +2952,11 @@ int mt7915_mcu_get_eeprom(struct mt7915_dev *dev, u32 offset, u8 *read_buf)
+ 	}
  
- 		link_id = (tid % 2) ? msta->seclink_id : msta->deflink_id;
-+	} else if (is_8023) {
-+		/* mac80211 does not set the MLO link of an 802.3 frame */
-+		link_id = IEEE80211_LINK_UNSPECIFIED;
- 	} else {
- 		link_id = u32_get_bits(info->control.flags,
- 				       IEEE80211_TX_CTRL_MLO_LINK);
+ 	res = (struct mt7915_mcu_eeprom_info *)skb->data;
++	if (!le32_to_cpu(res->valid)) {
++		dev_kfree_skb(skb);
++		return -ENODATA;
++	}
++
+ 	if (!buf) {
+ 		u32 addr = le32_to_cpu(res->addr);
+ 
 -- 
 2.47.3
 
