@@ -1,95 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197168;
-	b=smh3geIyWIf4IpR8VcdjJ66TvE4DzUc0NwDDF4l/rjK/df5V1+dUUTyNGeaQIQkZ7aHg
-	 PUSzkIqajSC8FFLrRN60uOoxVdJ/V/tXJgp6gHJJj9KJJcgJuRYedMJMlvbdd5w9mbX4X
-	 S6JVeJoVDY0v7V8p7QBtSUaAqm+2xsN7RNk8Y6qazjEQpf5w3zWSTwOMiqaqbO+YZlku8
-	 5dY97Mo6QnbEC6EKCvd6475eKAbWIXZ3BAQNpiw7ROGP3Ohy+7+l6MpU6x5oxl0k/P4+N
-	 253B+SRzEF4gGO/s5EjR0s0jBPKt1U54IvmCEOhgS3S1iwhZlC5+SOfy/eAsKgJ5LWg==
+	t=1793197191;
+	b=TNWArl/0/ehdQuJ7rZOwOXqJLmLEU9KasC3pKz34fYNOX1EeCBdS9JRQUctL+e9WE+dz
+	 X8bpYD7z8azbDiVqQE+qIlSEv7Ko7XMYl2C4s8Lu9LzYlzlSEeyiWGjIw2Ha/0n96mLp0
+	 BZbj7QINhwYLF3e+K5x/nIa3oQr/Xey6HGhT2pRiQDpTDAnu9eFcdCtA561wQUq5K4h7c
+	 /lF8BsLQ/KOJYOgYOkbe+kPZ5Ua9L7jHABGPJaqbmQG2Xu/qevuQdh/mIQ+x0Pnlpw0K8
+	 l1JvrpyNIbvAPhAys9EpAtHv99ONJ5t4Z4yjAW9Vy2C1ycxQI8dwfWs1XBuSdT+5Xhw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197168;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197191;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=wfVFawx1WEgioRP93JnhxZQvMdlK3X24yVnDut49gjc=;
-	b=wav9TUtDraud0s6hkSXdvzL3vY1kQq8DNJDmuC1pKwfdBy/O0wfxLH0ir1P1wg6v9AXJ
-	 HQAzXuogT8t9JiiEWYoYXSZEU+jMImSgM2JYOicaIVtJlJIe1EkhR5GZWVoKoUq7Fm/d3
-	 INBRpBXcAkaCHrRBRCcq9EznZzAUts4MlHO4/EKXU53HIuGrYDEDULU9KmR66+B3snOT2
-	 be83h7TMnwBYAXgH4DSVfYrVTFUQwGNMxi/l082cISNhUWpbPrMmxh6niBblKfW17ek8o
-	 nYDM0rmz4jpoIrUhe5M8DfUi9sxCbWXTWFQJKSjoN2K79FEuG3MMYbBy8lM8O2KBgpQ==
+	bh=kMi186sipMCPPAOY1m8cGHv9pOpCV2aOI05mfiXBJnE=;
+	b=Be+R+gJR28VaagryeY81HjZk24DucMrq9aZaXDRb8QnSmMt1xyfCLmECRH/5lYh4IwIY
+	 Ru2QxfMZTfFZR1+Ix+rxapPtk/Y8/QuNEo2JKpTYpfqh750PW09ygNA6NRkXS2Jdw08fu
+	 dbBHQ/bxT6+lcndvKHJC7NxhyI0btF0kOV1YlIMjGiFHUJlHRsyELfuZGEyXk7zanAPAs
+	 mtu5kfcDny14IF8jYqgZNT6WTGEbleII1WDqny47y/Cwpu4SbBxlLx8Mg7ICKzANU68TU
+	 RznfzrtBOkdEFR9GOC74xSaGihs8WG6QwFiMgBtlvUsLZbH3WeSg/OQJsQumo74Q9PQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=P1XA+VnQ;
-	arc=none smtp.remote-ip=209.85.210.178
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wRjSWJOZ;
+	arc=none smtp.remote-ip=209.85.216.41
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DFA6606A33E
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:19:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5DFA6606A33E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF7C60A260A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:19:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5CF7C60A260A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=P1XA+VnQ
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-886e61fa30fso510653b3a.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:19:27 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wRjSWJOZ
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ab752f6244so1147912a91.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:19:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793197167; x=1793801967; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793197191; x=1793801991; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=wfVFawx1WEgioRP93JnhxZQvMdlK3X24yVnDut49gjc=;
-        b=P1XA+VnQPQCdb8cQtqtSQOiFR33H3BylLmzvaDP5xvfAoAO+KLEchzy0HUroGMJ9Yf
-         pLiTWLeBzGjv60XR0m8sHhiyZhBhnKcQFAwRP+a/UoOGkFHAzOvzxjmV8ZmVxrqb9BFe
-         UomSN2nAOriW2X8FvIegSKAg4hCpzjSG0l4pfmHg2R3tdvA8k8FrSlegrlsGYDI9pISc
-         RQiJq9VJ4S3ZH3JDGBI7i1S4x/1BXncfu0OaBN7EykMMbBBB6sbtzUSy+GFPNO0ZcFcj
-         O4iK9rkiCOpaj3zAQ87CPSqrVOoHRY2+REuScBVAWsgzbiNKjFw5zUQLw9YM/epf+8WD
-         y1xQ==
+        bh=kMi186sipMCPPAOY1m8cGHv9pOpCV2aOI05mfiXBJnE=;
+        b=wRjSWJOZYZPdAY+OE4XZV6r4KDrZeBQGkQPzFoJKC6gyoSpl4N13146XbZQieY+k/R
+         rMLaJVOE0sNqZvjZm3LFL7LK3LyjWYNLJaLsgnUNSBy6N9oZXzKSPQCaUatNy66mHwP5
+         eU6sctMtl8WYVOiM4R81RiQSdr0nYddco0kRuwRExbcR3oqJ06t4tKqoDf6Oyja3DxB6
+         8yx7khBA5WHLVJ97nkIU9oUx/L4BLX5swZJfK8GPIpZ8lLsV0/haKR8SKwAO2pbaQdHK
+         jYHOzz7UWZJE6IMQ3SIQ/bVUgU0UOqYuRdHMrhyFyIQ9huonKkcbZaE22jN5qilj7st4
+         ee4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197167; x=1793801967;
+        d=1e100.net; s=20260707; t=1793197191; x=1793801991;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=wfVFawx1WEgioRP93JnhxZQvMdlK3X24yVnDut49gjc=;
-        b=MEUzmKdlI0iqJYbhgNJu9NZOFZWR60uXuLbKQMLXToXJYUmcFrugThzcmtTAd0yIFC
-         U+1EG61qgZTx4OQ+cX3FmlTLmZpc5pb1VHeYpBE1iDZk3Lc49UVcTEEGZKB/pNBonrEL
-         w0Hc3TGnKgfp4mnnv1cEMMw/YL3hwjr1HOID425pP90jfwdA82YCLUC9BVZ7RB0wtYXB
-         lTjpRFJmqs0YexPkTBOBs020kBoK2c9+El1kkR8x1XhdXL7Mdxc/iPAkZO+QB87vtbqM
-         Xe6YXj6S6FDvAGhqvewoZhOVB95bOZFs8bIGVLl5svQevV13EvFEdfvbBlqqbQSSCebb
-         D0aw==
-X-Forwarded-Encrypted: i=1; AKwUvBxJWlA0AanNDlMhtIzulEx70I6rnw6mHUu9CrhXUWNjr8SHjjULeQ5//VPHBRevo5TUkxOq1QtkJPW8/9Vsjw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKlkm21vh6GYP2rgMqK9ajECb8hfST4mrKPn3ksHG3nQznf9Hlu
-	Z1teUI38Vc9b45BUiW2AFD03ZRXGsqwbLLVdPEp0m1jJgePvpxuQkLo/
-X-Gm-Gg: AYBFou0CU3yMdMeXno5zZJgfrLCdb4nqZSzqUCXO23SsrgcTkGU4opgkXvIpjoueFx5
-	RbSya+ATx4LchlqKBfZKHtp7GWTn+ZNDcKRyZYKQQbmupgZTL54LVakZGOT7st8hbDqtGq0VsN5
-	UuXKzBu967HrNDf36Q/d9p88DTJ+kXpm32deH1IM+uaBJWe1WaqkoQmQEV5d36TX6/k++wMIRcN
-	flyJeeO5s0ykLxwOdd7Tvt22+2mCj1djhoOo8SZk2qOWl630ydTC43xvJBf1XtioCMkX2Op3Rur
-	5bxpLDvXtzIIzGjfdvdzgSskXjctKi1Hhf75uLS5pdO6vz5zm8XIuSy5ELCaMIuGeD0Y2eUOBgI
-	ke2s7zCOpahW9NqRTCELb9SoQRc5S64rAfX63HBCBbtL4Gs0dqKvjFZGtjHZri/tTK+fUmhOijm
-	REsLKFI/y6EzbXjchWIcA1r2SL6bnqj3VdOus11FpVkKcaqJ42yGlvOxHdQQEleHMbKOmxXGkM7
-	K1+kPxhME6rcAJJYy9ZfGgz/kPWZPcVHl2pzJkdYJMEUUGSaifEsdwWTzrkgSfsmsiGLg3m28/s
-	ESn+vKTH6NvmVJ1O8WCss82YvJNGLLYNapyfOQxRACe748yYT1xNQX3gmjYhrY6tKqpB
-X-Received: by 2002:a05:6a21:8217:b0:3e2:7030:9080 with SMTP id adf61e73a8af0-3e9023aaec6mr2697680637.47.1793197166415;
-        Wed, 28 Oct 2026 07:19:26 -0700 (PDT)
+        bh=kMi186sipMCPPAOY1m8cGHv9pOpCV2aOI05mfiXBJnE=;
+        b=TSG0YzW+7/lQkuwjSh0iTsVXJriW5iW1YxtTGrL3j6qXh+8ZsUA4z7vv5BYStmUIuU
+         vBMXe31CTQjWnWVUjqOaXfOwJ0Nju9iLpphLm6iBTwjG8OiV5HR0Tiv17drbmoOEWTqQ
+         5uD8EXG8K9EcmDINOisxgkyJu2IMrqm4fC5Es7byFvSMiH83iOQ7FFfcGW1bCMEizE2b
+         DfTNnrWlqYMZ8SthY5lmNGpFx7LtEoXZkyVo83MMjC5v8ddrmCiOy/Q7ix3yOCOwWUAp
+         rPMV25if9kPGKg0tMCi1BfU5F9Z6dbg87qMCdJuOGKHCfcTIiOk3nLzXmnAaUt9iIXdv
+         3Tcg==
+X-Forwarded-Encrypted: i=1; AKwUvBwrUXjT4fAqP3aZ+6pyoEGZRc/F/cTRZM1MiXXEikG8kvoypTilvs0/6OB4m/kEx7TZQYw4kIHEZdkh80cAdw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYL2xK+NL65dHeqTJGBVQjAAA5L7m3cJhpKc7TMOuoHsYo9CshYT
+	wUrgLh3vHCeGG/JBD0X+IKgV2G93Xlb3KBNeREM6NfIKwx8hWAOYzfUG
+X-Gm-Gg: AYBFou3d/GYigzmvLzz+JINadX46KHAbbk77+A3kOBnmo5OG54iBJ28+l0Z1I0DyUrY
+	wZkzR8J8P2mAlREIhXx8VcUj8F3TNwbPyucnnLMhVHXNHyu60BFZh+dDzL///TY+suqYSdifuAc
+	qWlJrJL+YuS4bL8Nd6b2RkN/iFMSrQ55WyoADPFQLQ/9thwvUMceuj7RGD0o35TKPduSKkUzul+
+	2BxSe8uqOn5vjOViPGLGyh/tM1pn0NiZ2a5Xi1EHm8uI1vNZciQM14+ZNEBv5Vl5ZuhVludUju0
+	XE0AzVURjI9Us7NckSmAQqIT8MA5suZ2t7AKr0GdtbccO2Y8spqtOs1ZO/WilkJjcYMcQSqJoYz
+	s6b1K69Fje2qzUBwgvH00d7Pa97WOOixmsuihLFhISTbw5PUju3M2Kvd1OS1mFQOWwjaFylfvws
+	/aaeULtER+0MuyTBKZsYPSG07GsBW4aCOM1ht/zXZ8KICFoG0EbtF6BYqE+ZXZoEb7SrRuuR3rT
+	k2I/bT/Re14eDaU365AH2vHsq58XL+XgFqcWyKRTyye6roAofCjDZ+OYdhycAdFyjJ1pc+u4M6r
+	PolSVq6LJfdUJ/pnN3hQsJPu/7SICyQNyv0E4QYd3ZFAmEhrYzKYCjVmmvrOqFP0/GfK1R8BFiE
+	C20qZ57iDKjOSWg==
+X-Received: by 2002:a17:90b:3944:b0:3a8:bd51:205b with SMTP id 98e67ed59e1d1-3ae580d0513mr1943943a91.37.1793197190592;
+        Wed, 28 Oct 2026 07:19:50 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a6cf9489sm1300647b3a.39.2026.10.28.07.19.21
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a9f286fsm3290141a91.15.2026.10.28.07.19.43
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 07:19:26 -0700 (PDT)
+        Wed, 28 Oct 2026 07:19:50 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: neo_jou <neo_jou@realtek.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Ville Nummela <ville.nummela@kempower.com>,
+	Jiangshan Yi <yijiangshan@kylinos.cn>,
+	Marek Vasut <marex@nabladev.com>,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	Stefan Hansson <newbyte@postmarketos.org>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+	Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
 	Kalle Valo <kvalo@kernel.org>,
-	Hans Ulli Kroll <linux@ulli-kroll.de>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: rtw88: usb: stop RX work before unregistering hardware
-Date: Wed, 28 Oct 2026 22:19:04 +0800
-Message-ID: <20261028141904.8707-1-enderaoelyther@gmail.com>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/3] wifi: rsi: fix background scan result and state lifetime
+Date: Wed, 28 Oct 2026 22:19:24 +0800
+Message-ID: <20261028141927.9306-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -102,53 +111,38 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Disconnecting an rtw88 USB device while RX traffic is active can leave
-the RX worker running after mac80211 hardware is unregistered. A firmware
-event can then queue C2H work onto a destroyed workqueue.
+Initialize background-scan results and report cancellation as aborted.
+Report command-preparation failures instead of leaving mac80211 waiting
+for a completion, then serialize the saved request with cancellation and
+firmware completion.
 
-rtw_usb_disconnect() kills active RX URBs and unregisters the hardware
-without disabling rx_urb_work or canceling rx_work. The resubmission work
-can restart a killed URB, while an in-flight RX worker can keep processing
-packets during teardown.
+The patches are ordered. Patch 2 clears the saved request on every failed
+start; patch 3 relies on that invariant when it treats bgscan_en and
+hwscan as one state protected by scan_mutex.
 
-Disable rx_urb_work before killing the active RX URBs, then cancel
-rx_work synchronously before unregistering the hardware.
+The driver is orphaned and this series was not run on RS9113 or RS9116
+hardware. Testing from device users would be helpful.
+LLM assistance was used to review this series.
 
-LLM assistance was used to find the bug and review.
-
-Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-Fixes: 3e3aa566dd18 ("wifi: rtw88: usb: Preallocate and reuse the RX skbs")
-Cc: stable@vger.kernel.org # needs adjustments for <= 6.13
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
-Validation: A W=1 module build with MODPOST passed on the rtw
-tree. Not reproduced; rtw88 USB hardware was unavailable.
-Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
-Kernels before 6.14 have no rx_urb_work, and 6.6 also lacks
-disable_work_sync(). There, killing the URBs already stops resubmission,
-so the backport only needs cancel_work_sync(&rtwusb->rx_work) after
-rtw_usb_cancel_rx_bufs().
+The series applies without source changes to the retained 6.1.y, 6.6.y,
+6.12.y, 6.18.y, 7.2.10, and v7.3 trees. The retained 5.10.y and 5.15.y
+trees need a context adaptation in patch 2.
 
- drivers/net/wireless/realtek/rtw88/usb.c | 3 +++
- 1 file changed, 3 insertions(+)
+Zhao Li (3):
+  wifi: rsi: initialize background scan completion data
+  wifi: rsi: report background scan start failures
+  wifi: rsi: serialize background scan state
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 64e1c3420e0a..1d2759eb96bf 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -1370,7 +1370,10 @@ void rtw_usb_disconnect(struct usb_interface *intf)
- 	rtwdev = hw->priv;
- 	rtwusb = rtw_get_usb_priv(rtwdev);
- 
-+	/* Stop deferred resubmission before killing the active RX URBs. */
-+	disable_work_sync(&rtwusb->rx_urb_work);
- 	rtw_usb_cancel_rx_bufs(rtwusb);
-+	cancel_work_sync(&rtwusb->rx_work);
- 
- 	rtw_unregister_hw(rtwdev, hw);
- 	rtw_usb_deinit_tx(rtwdev);
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 50 ++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_91x_main.c     |  1 +
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 30 ++++++++-----
+ drivers/net/wireless/rsi/rsi_main.h         |  2 +
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  3 +-
+ 5 files changed, 56 insertions(+), 30 deletions(-)
 
-base-commit: af32da41b0327b9c6a37856ba82b6760d6c8d10e
+
+base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
 -- 
 2.56.0
 
