@@ -1,60 +1,116 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.31
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793194499;
-	b=vaxsS0LA1UebuSt6WLevYtgGios8g7rg/L5WY4yNYmgP1EEeMdVx5IGR8/s5nwGf6UYH
-	 xJCq67d255RpG4Pyq0kZg0OvWoN8ZJdhjwPu/B80kixqM8sE5LEFqgUMMUIbu1Fq5+qZh
-	 esgmyZUctbCj+h3QXk+jS9aJuig3YbiX7fPQw/5EilyTlBGwEldbh6pC+6kU0o1HiC4fC
-	 OJYu1Ym/9dyEJm0hJ33ic6opK6DdEDy6jxM/J7z6lY2QINUSJzEZV8Qropc8j/KG9mMES
-	 b3+QsrbwOCRnVdzx+rVDVUQ/FkfHghrys5lMZTaZcl87F+8OH9xtqT6sHluCFvejZ7Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793194499;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
-	 Content-Type;
-	bh=maFM6J3tuW6aGxj4suln/5TGodXdNpTT72L7DWb+75E=;
-	b=sVYrG8/gxjo0r2JTzIp0Rp6RnhOUuCQsnGni5AzhKP2nNvXbodRBLczjIm6QL4400/nr
-	 AIxWYulELFYBm8js4BbcVJMIyRWPPPggInomxQg+3RtpUg5W1CD87aJu0A7hrpEBgfhe1
-	 BCQjxgtPz8a+UOiSk/FA00EnbDKIqEtEjEzKwzCH56aOz/IcWe3AfrvLy0Y919JdkTO3X
-	 RDkwsfMtdt84Sv+u5ntwkgsZUUamYFpdmshiNvbPQRFWnSuv48JCy22pJFoZ0zOcIuHlB
-	 FwmByrY1YMPQognJvYaNhkXgLnIflJj8VizPLXvs5FaUApJVHnhWFomATrnjU23PUPQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=protonmail.com;
-	spf=pass smtp.mailfrom=protonmail.com;
-	dkim=pass header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=lnBL5+QF;
-	arc=none smtp.remote-ip=79.135.106.31
-Received: from mail-10631.protonmail.ch (mail-10631.protonmail.ch [79.135.106.31])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.70.23
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793195908;
+	b=ZMGs9YhR3PlucmCP30kfvWjCChhfqfywWwxqBRKNLpio4Z+/B5J/TgNGK4AAcEo9xll4
+	 zEqaEfyzNO3lD9rgJA2CGWShswU5uv4tpXHRAhSqAn4FOTb0NLb1jISD0GLgzd6zzwyBS
+	 GBAFTKQNfRKU5hy8/KMu7WMwQJ88fVDuP4PnW1Yxoucc4li80zeskFMJkLzI3gyr+ucMF
+	 l2JkSMXeDt1NUO9uRzbj1CjR1uXvQC0UWVzpaZUW6qxfSRIldvtjE8wz3nIHniFz7RcbM
+	 uynnVyNThQXLG9T2nI7E4qR5ac4od1kwEGO0c5mMVORh1YLeRhyCy11nSgnzi/nW5PA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793195908;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:X-CLAM-Verdict:X-CLAM-Score:X-CLAM-Description:Received:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:X-EOPAttributedMessage:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:Content-Type:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=b1ZsR0wZ6c1yl47fPPokbR/eZIGWlB+iwI67J2vdw0k=;
+	b=J9hTcH35HftdDgowwHh9wMz19E5uomYWd5qn0JKEuE0aunr2imzgCG15LSRH1jb355y5
+	 b1GXhD1ol5u4KP+SFc5UW2pYwZPnYltHmx07BaUbv1Eo3A+C1g2mERWRJbScJwOe0ty/f
+	 qIXb9iif4MBqD/jdybVVChyz2zJHfgiRyrYciCbFqLAB9NKCcH2G7JIEFhPhZxibv8kTk
+	 Z6nri7RcwE3pkH2i7RPYa2UV0LWYpItNBVQLEv2/EqY25iuwWvvwBf3EOBsLgjAfNcHv1
+	 pWkLDFh92tRYv9nujW/3gpqXUzMzEZodyK5P3P+0AKJisFIHBgwHlJ5NHt/BZOG//Rg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=philips.com;
+	spf=pass smtp.mailfrom=bbl.ms.philips.com;
+	dkim=pass header.d=philips.com header.i=@philips.com header.a=rsa-sha256 header.s=selector1 header.b=za9ly2F6;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.70.23
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011023.outbound.protection.outlook.com [52.101.70.23])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38A05606A324;
-	Wed, 28 Oct 2026 13:34:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 38A05606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56F0606A31C
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 13:58:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D56F0606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bbl.ms.philips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=lnBL5+QF
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1793194496; x=1793453696;
-	bh=maFM6J3tuW6aGxj4suln/5TGodXdNpTT72L7DWb+75E=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=lnBL5+QFQhFFZbR2BE/I5znV5WXdjgw52krlOgqBACIdB7x9Y9gF4CX8fF5LXXh4b
-	 yTAxXLDS2d3WGgZgXwtKu3CFAk3bWWPDrZBGuRV9oS9rq6P2BIxCoGsBkdBD55vBOJ
-	 NJPdMbaQRo1e4ZvPB8XQY3UcDG+h+WFwYp48cZVm4k9WVHGven7f1g3jdgTCyVZni8
-	 BZlfk7xJIEJctAkuZ9n2DxOJCj+wpvYT9P1LQeFcfrro1YW3oob+xuHZHNrGBGbo6o
-	 1yZIhTUevJq5uWSEkNDExO404vcTvSbFJOgf9AUaRd3WX8GGQekizF8s181TSDsbPQ
-	 4HwOe9El0bxcQ==
-Date: Wed, 28 Oct 2026 13:34:50 +0000
-To: Alessio Ferri <alessio.ferri@mythread.it>
-From: vit9696 <vit9696@protonmail.com>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org
-Subject: Re: [PATCH wireless-next v2 2/8] bcma: pmu: init PLL and resources on BCM4352/BCM4360
-Message-ID: <87C23173-4498-4D56-A143-03CA0358C4FF@protonmail.com>
-In-Reply-To: <20261028101448.7f26dd0b@fedora>
-References: <20261027-bcma-ac-rev1-v2-0-b69b61c31920@mythread.it> <20261027-bcma-ac-rev1-v2-2-b69b61c31920@mythread.it> <B511987C-C9E8-442B-89EB-6AF6E8398F38@protonmail.com> <20261028101448.7f26dd0b@fedora>
-Feedback-ID: 739018:user:proton
-X-Pm-Message-ID: 029e3bdb5cd63c89a9cf081f415d2e8d8d5d4f6c
+	dkim=pass (1024-bit key, unprotected) header.d=philips.com header.i=@philips.com header.a=rsa-sha256 header.s=selector1 header.b=za9ly2F6
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=do6WkCVGP+r5sZC0D8pFgTww7svjmIxuyeVPB+JBZp8MK8n3fcXv5NhPJ8pKO0U4+ri/NdM1rgoOuYk8/Tu1SJNcpWhTKdjRKDXeMQLmMkGblYRUkRfOBl2/tdMSJGW7MDVri3XkQro9bSpuiYpywOENPDGPF8SPQWDuFaJLX2oOVMdET1OqXxyRfEszDQc65ONwXg0ussB8kgkUJioeL/X90qXg6X0W6kWAL/EVBhI0cJCWnJbaEmdLZtJQIBmFsK2N4lDsz4ksbQp5EOlxIXy64LRin/gYQH5jc1suil4gGt1KY2rmi8gKWxUJW2gF4sAZgCKV7+uvgbl3i5/KqA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=b1ZsR0wZ6c1yl47fPPokbR/eZIGWlB+iwI67J2vdw0k=;
+ b=XzPyD+VFjWZ1ON21PB6IkylJdHQKpRJvBGcdlDGAL0on+eaCb9sLfzV6ZprcD5qkQPrIq4c7PG+BqjQt06tRmFyiEW4VUk4nxQ0xYC2bIM+HwrRzyRUfHaJFhQMyNisc4M/XjimICIqYe9haUiWJ13zY4iEljWpmVXSNSCVbQdPOJHcDz1Uob3rh99mQLPB7woRZBLo6JlA5tJdejfw2bB7q53kd8AnKgH3x23NGOpqvC57yih/Te82eGr0K/60KDefFkNL1yNUA9VusTndHf0YUbS4BMRIzOkHJLEwVZvpds51aC2sTj77ZvngFbSM6060SZlVwdovv7slIpcvXPQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 3.248.88.141) smtp.rcpttodomain=vger.kernel.org
+ smtp.mailfrom=bbl.ms.philips.com; dmarc=pass (p=reject sp=reject pct=100)
+ action=none header.from=philips.com; dkim=none (message not signed); arc=none
+ (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=philips.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=b1ZsR0wZ6c1yl47fPPokbR/eZIGWlB+iwI67J2vdw0k=;
+ b=za9ly2F6Fj9s3KQn2AxgNyFITXqQvUPWTZvhN/5sW1KrQoksdlZeI9kHvP2N4asyEFxM/0U/NLrj/7A4XYiHDUOZ/SfASIRmFUfAabfsrCGVUUgTBv1yf+VwTpy3HSBQytXrPasLcaxMhe5PifwXBMqVwWAhTqsL/0W8WNSDCQM=
+Received: from DU6P191CA0019.EURP191.PROD.OUTLOOK.COM (2603:10a6:10:540::23)
+ by GVXPR10MB9162.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:150:1de::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.8; Wed, 28 Oct
+ 2026 13:58:22 +0000
+Received: from DB1PEPF000509E8.eurprd03.prod.outlook.com
+ (2603:10a6:10:540:cafe::3c) by DU6P191CA0019.outlook.office365.com
+ (2603:10a6:10:540::23) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.22 via Frontend Transport; Wed,
+ 28 Oct 2026 13:58:22 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 3.248.88.141) smtp.mailfrom=bbl.ms.philips.com; dkim=none (message not
+ signed) header.d=none;dmarc=pass action=none header.from=philips.com;
+Received-SPF: Pass (protection.outlook.com: domain of bbl.ms.philips.com
+ designates 3.248.88.141 as permitted sender) receiver=protection.outlook.com;
+ client-ip=3.248.88.141; helo=ext-eur1.smtp.philips.com; pr=C
+Received: from ext-eur1.smtp.philips.com (3.248.88.141) by
+ DB1PEPF000509E8.mail.protection.outlook.com (10.167.242.58) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.546.15 via Frontend Transport; Wed, 28 Oct 2026 13:58:22 +0000
+Received: from smtprelay-eur1.philips.com ([130.138.84.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 256/256 bits)
+	(Client did not present a certificate)
+	by ext-eur1.smtp.philips.com with ESMTPS
+	id LuqjxngoztKtZM4AYxIh0F; Wed, 28 Oct 2026 14:58:22 +0100
+Received: from mail.bbl.ms.philips.com ([130.143.87.230])
+	by smtprelay-eur1.philips.com with ESMTP
+	id M4AXxaQijL551M4AXxy56J; Wed, 28 Oct 2026 14:58:22 +0100
+X-CLAM-Verdict: legit
+X-CLAM-Score: ??
+X-CLAM-Description: ??
+Received: from bbl2xvg1.bbl.ms.philips.com (bbl2xvg1.bbl.ms.philips.com [130.143.220.100])
+	by mail.bbl.ms.philips.com (Postfix) with ESMTP id C050F180394;
+	Wed, 28 Oct 2026 14:58:21 +0100 (CET)
+Received: by bbl2xvg1.bbl.ms.philips.com (Postfix, from userid 2884)
+	id BA35CFE0237; Wed, 28 Oct 2026 14:58:21 +0100 (CET)
+From: Vishal Gupta <vishal.gupta_1@philips.com>
+To: briannorris@chromium.org
+Cc: francesco@dolcini.it,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Vishal Gupta <vishal.gupta_1@philips.com>
+Subject: [PATCH 1/1] wifi: mwifiex: synchronize scan cancellation state
+Date: Wed, 28 Oct 2026 14:58:18 +0100
+Message-ID: <20261028135818.4166538-1-vishal.gupta_1@philips.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,239 +120,95 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha256; boundary="------d27c6f642e9989b1867bbe9df4b0f546c8df97de4e21426f979626ae4acf2340"; charset=utf-8
+Content-Transfer-Encoding: 8bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DB1PEPF000509E8:EE_|GVXPR10MB9162:EE_
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: 8c355e47-160d-4618-b062-08df34fb874c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|23010399003|376014|82310400026|36860700016|11063799006|56012099006|261009223027099003|261026121527099003|261021121427099003|261021123027099003|10067099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	QEaQFrutpSZ11d7IdHZ6L48qkTWXE2ftOuSECG9fruij3JAdeMD6Jqq0SDB5ffKDRrnbxPVsKKa8qnIfmXkoJR/D3UIxvTY/TiW3Hen+MVk7yvkUfSNiZbjTDiYxgFUlqFd77Lf8yYeskMucCOCmjU6gB9GqgPt5Hnxc2USx9eq4sZl/X2bZVH7pTrHAOICRXDFJlcWugC/GpLdTrhQwn/7F40h40uQ8cxmE0dDxa//tJ1N6xtrspIrTtSM1HPgs+2An6QiEjVNHZmbznQ3RAmYolaZ6gPq0agtqyWuu/OxiE8XEw97C2x15/gWuaCq+Zu7BO9T6jjb7xTAyvdpVDJI5ibEd/VC1lBgZZkvIgypAWQqxtzAm1v6fReFNplocTojWutFYlSddN/4QyqkSLCJB1PUOyQ9PIwCYg0USG04Tk0kglxSxeWsk40zLyipHDCR+TvOmA4ix4eh9VMjoHWDGYkIeD4xkJjlprHWAA9NdYDSdDaZTKauuUWnetSkZ9hETU3umojJGTkZgtbF1Q6cyqwwYGZAlyYPma7eWqx66yYU0wwgULZj76//S69tWunvMiPFQenZ41yG6FcxVQQVINo6bWCg+fYKT2ACdX8tRhB2eqYqsE2wKDVjCnTG7tfbTQIKzi6ujroo6Gms/um4nOAsDVy8HQ6j14pB1vt4jXd2A9naO9p+2rjoiQJqKyaVl+/FgqS2skfpThSWzXg==
+X-Forefront-Antispam-Report:
+	CIP:3.248.88.141;CTRY:IE;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ext-eur1.smtp.philips.com;PTR:ext-eur1.smtp.philips.com;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(376014)(82310400026)(36860700016)(11063799006)(56012099006)(261009223027099003)(261026121527099003)(261021121427099003)(261021123027099003)(10067099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	nhSFF70oRwhvqXAgXilBN8JUEg0BNsDPftXuGOcbCorEzUzK1E4VKF6RkmWIz1/Wn4ANZ/lpUReQRRrNgZ5aiteFihXhroDX8TAJZ/cQUjopKodjdKC6jGRI/tWB+2wmIECnhfhOoofNjWOIVm6pW/I1qUgDJ+wofnyQbj5YmvCbv3o50wxLqoqcY/LZG+co74juJWkG2eH1OdY6W5WhJPYX0uuTxobxoECEZ4UQAPHuoMDmtklCjtyceaVzWmOKUCEqqX2Bs94jlzmOQyb59N+qXO0lrHvctzD6gp4H0s1hKdwz5nj2OO63BYa/+nhMYl+DL71tiLVMJWqEJ7eHwNFRW3C1uxIYxIomYt2oWFf7k6TclQP1ojJZJUSN2wEEiOCoS828g3feenppufoSMssKBrCzABtHi9VGgSUHrUf0nBhHo/CHiHJJvjSYWzTf
+X-OriginatorOrg: philips.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 13:58:22.1231
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8c355e47-160d-4618-b062-08df34fb874c
+X-MS-Exchange-CrossTenant-Id: 1a407a2d-7675-4d17-8692-b3ac285306e4
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=1a407a2d-7675-4d17-8692-b3ac285306e4;Ip=[3.248.88.141];Helo=[ext-eur1.smtp.philips.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DB1PEPF000509E8.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR10MB9162
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------d27c6f642e9989b1867bbe9df4b0f546c8df97de4e21426f979626ae4acf2340
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.4\))
-Subject: Re: [PATCH wireless-next v2 2/8] bcma: pmu: init PLL and resources on
- BCM4352/BCM4360
-From: vit9696 <vit9696@protonmail.com>
-In-Reply-To: <20261028101448.7f26dd0b@fedora>
-Date: Wed, 28 Oct 2026 16:34:32 +0300
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
- Michael Buesch <m@bues.ch>,
- linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-mips@vger.kernel.org
-Message-Id: <87C23173-4498-4D56-A143-03CA0358C4FF@protonmail.com>
-References: <20261027-bcma-ac-rev1-v2-0-b69b61c31920@mythread.it>
- <20261027-bcma-ac-rev1-v2-2-b69b61c31920@mythread.it>
- <B511987C-C9E8-442B-89EB-6AF6E8398F38@protonmail.com>
- <PI9Cjv-14HEqAnf26GqGftOIUBT5oOa_o0utCXnHdtqKa24Jazoe-KvlG3LsxR1IOqUb22h9EpaxF0OYYrnNgg==@protonmail.internalid>
- <20261028101448.7f26dd0b@fedora>
-To: Alessio Ferri <alessio.ferri@mythread.it>
-X-Mailer: Apple Mail (2.3864.700.51.1.4)
+Read and update scan_processing under mwifiex_cmd_lock so cancellation
+cannot race with scan state changes. Skip scan completion when no scan
+was active.
 
-Hi Alessio,
+Signed-off-by: Vishal Gupta <vishal.gupta_1@philips.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 34 ++++++++++++---------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
 
-I checked the other patches and e-mailed my thoughts where I saw I could pr=
-ovide some help.
-Although I do not have expertise in Broadcom hardware design, I co-maintain=
- complementary set of extensions for macOS Broadcom drivers for the purpose=
- of broader hardware compatibility and happen to have some sparse informati=
-on here and there.
-
-In general I would recommend to rely more on the open-source part of the Br=
-oadcom drivers, especially for Northstar boards, because it often contains =
-useful information.
-
-Best,
-Vitaly
-
-> On 28 Oct 2026, at 12:14, Alessio Ferri <alessio.ferri@mythread.it> wrote=
-:
->=20
-> Il giorno Wed, 28 Oct 2026 00:44:31 +0000
-> vit9696 <vit9696@protonmail.com> ha scritto:
->=20
->> Hello,
->>=20
->> XTAL frequency on BCM4360 and BCM4352 apparently does not only depend
->> on the revision number. It is determined by bit #0 presence in
->> chipstatus. If bit #0 is set, then it is 40 MHz, otherwise it is 20
->> MHz. This logic is actually already present in the bcma driver[1],
->> and looks correct to me. FVCO frequency being 960 MHz for all BCM4360
->> and BCM4352 chips is also more or less known from the public
->> open-source part of the Broadcom driver[2].
->>=20
->> The nitpick here is that whereas PLL seems indeed to be only
->> programmed on revision 3 and newer[3] (with the code there assuming
->> 40 MHz XTAL frequency, probably because Broadcom migrated to 40 MHz
->> at a certain point for all newer chips), but there is a special case
->> for HT clk_ctl_st bit[4], i.e. backplane is running on HT clock.
->>=20
->> With this in mind I believe the patch:
->> - could handle revision 3 or newer, not just 3 in CTL2/3 logic;
->> - could bug on BCMA_CC_CHIPST_4360_XTAL_40MZ not being set in CTL2/3
->> logic;
->> - could check for CCS_HTAVAIL bit not being set in CTL2/3 logic;
->> - perhaps could calculate resulting CTL2/3 logic values in a slightly
->> cleaner way, after all si_set_bb_vcofreq_frac is open-source;
->> - perhaps could handle CTL6/14 for other revisions, si_pmu_res_init
->> is also open-source, and to me it makes little sense to ignore it.
->>=20
->> Best,
->> Vitaly
->>=20
->=20
-> Hi Vitaly
-> Ok, it seems i missed it, i'll fix. In the meantime would you mind
-> looking in depth at rest of the series before i resend with this change?
->=20
-> Best,
-> Alessio
->=20
->> [1]
->> https://github.com/torvalds/linux/blob/8a36f53fd5ec3eff01f1b637d42cbdc38=
-21d0493/drivers/bcma/driver_chipcommon_pmu.c#L336-L342
->> [2]
->> https://github.com/RMerl/asuswrt-merlin.ng/blob/386_x/release/src-rt-6.x=
-.4708/shared/hndpmu.c#L3450-L3460
->> [3]
->> https://github.com/RMerl/asuswrt-merlin.ng/blob/386_x/release/src-rt-6.x=
-.4708/shared/hndpmu.c#L5142-L5143
->> [4]
->> https://github.com/RMerl/asuswrt-merlin.ng/blob/386_x/release/src-rt-6.x=
-.4708/shared/hndpmu.c#L4961C37-L4964
->>=20
->>> On 27 Oct 2026, at 02:53, Alessio Ferri <alessio.ferri@mythread.it>
->>> wrote:
->>>=20
->>> On chip rev 3:
->>>=20
->>> - program PLLCTL2/3 for a 960.0098 MHz fractional VCO from the 40
->>> MHz crystal, except on a BCM4360 strapped for USB;
->>> - set the up/down time of resource 6;
->>> - with chipstatus RSRC_INIT_MODE0 clear, program PLLCTL6/14 and set
->>> max_res_mask to 0x1ff.
->>>=20
->>> The values are those of Broadcom's driver on rev 3; other revisions
->>> are left as they are.
->>>=20
->>> Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
->>> ---
->>> drivers/bcma/driver_chipcommon_pmu.c        | 41
->>> +++++++++++++++++++++++++++++
->>> include/linux/bcma/bcma_driver_chipcommon.h |  4 +++ 2 files
->>> changed, 45 insertions(+)
->>>=20
->>> diff --git a/drivers/bcma/driver_chipcommon_pmu.c
->>> b/drivers/bcma/driver_chipcommon_pmu.c index 263ef6fa1..ab2b2701d
->>> 100644 --- a/drivers/bcma/driver_chipcommon_pmu.c
->>> +++ b/drivers/bcma/driver_chipcommon_pmu.c
->>> @@ -145,6 +145,39 @@ static void bcma_pmu2_pll_init0(struct
->>> bcma_drv_cc *cc, u32 xtalfreq) /* TODO: Do we need to update OTP? */
->>> }
->>>=20
->>> +static void bcma_pmu_4360_pll_init(struct bcma_drv_cc *cc)
->>> +{
->>> + struct bcma_bus *bus =3D cc->core->bus;
->>> +
->>> + if (bus->chipinfo.rev !=3D 3)
->>> + return;
->>> + if (bus->chipinfo.id =3D=3D BCMA_CHIP_ID_BCM4360 &&
->>> +    cc->status & BCMA_CC_CHIPST_4360_MODE_USB)
->>> + return;
->>> +
->>> + /* Fractional VCO, 960.0098 MHz from a 40 MHz crystal. */
->>> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL2, 0x0c31);
->>> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL3, 0x100e);
->>> + bcma_pmu_set32(cc, BCMA_CC_PMU_CTL, BCMA_CC_PMU_CTL_PLL_UPD);
->>> +}
->>> +
->>> +/* Returns the max resource mask to program, 0 to leave it alone.
->>> */ +static u32 bcma_pmu_4360_resources_init(struct bcma_drv_cc *cc)
->>> +{
->>> + if (cc->core->bus->chipinfo.rev !=3D 3)
->>> + return 0;
->>> +
->>> + bcma_pmu_write32(cc, BCMA_CC_PMU_RES_TABSEL, 6);
->>> + bcma_pmu_write32(cc, BCMA_CC_PMU_RES_UPDNTM, 0x00200001);
->>> +
->>> + if (cc->status & BCMA_CC_CHIPST_4360_RSRC_INIT_MODE0)
->>> + return 0;
->>> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL6, 0x09048562);
->>> + bcma_chipco_pll_write(cc, BCMA_CC_PMU_PLL_CTL14, 0x09048562);
->>> + bcma_pmu_set32(cc, BCMA_CC_PMU_CTL, BCMA_CC_PMU_CTL_PLL_UPD);
->>> + return 0x1ff;
->>> +}
->>> +
->>> static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
->>> {
->>> struct bcma_bus *bus =3D cc->core->bus;
->>> @@ -156,6 +189,10 @@ static void bcma_pmu_pll_init(struct
->>> bcma_drv_cc *cc) xtalfreq =3D 20000;
->>> bcma_pmu2_pll_init0(cc, xtalfreq);
->>> break;
->>> + case BCMA_CHIP_ID_BCM4352:
->>> + case BCMA_CHIP_ID_BCM4360:
->>> + bcma_pmu_4360_pll_init(cc);
->>> + break;
->>> }
->>> }
->>>=20
->>> @@ -188,6 +225,10 @@ static void bcma_pmu_resources_init(struct
->>> bcma_drv_cc *cc) BCMA_RES_4314_WL_CORE_READY;
->>> max_msk =3D 0x3FFFFFFF;
->>> break;
->>> + case BCMA_CHIP_ID_BCM4352:
->>> + case BCMA_CHIP_ID_BCM4360:
->>> + max_msk =3D bcma_pmu_4360_resources_init(cc);
->>> + break;
->>> default:
->>> bcma_debug(bus, "PMU resource config unknown or not needed for
->>> device 0x%04X\n", bus->chipinfo.id);
->>> diff --git a/include/linux/bcma/bcma_driver_chipcommon.h
->>> b/include/linux/bcma/bcma_driver_chipcommon.h index
->>> 0cb6638b5..45c37b6bd 100644 ---
->>> a/include/linux/bcma/bcma_driver_chipcommon.h +++
->>> b/include/linux/bcma/bcma_driver_chipcommon.h @@ -107,6 +107,8 @@
->>> #define  BCMA_CC_CHIPST_4706_PCIE1_DISABLE BIT(5) /* PCIE1 enable
->>> strap pin */ #define  BCMA_CC_CHIPST_5357_NAND_BOOT BIT(4) /* NAND
->>> boot, valid for CC rev 38 and/or BCM5357 */ #define
->>> BCMA_CC_CHIPST_4360_XTAL_40MZ 0x00000001 +#define
->>> BCMA_CC_CHIPST_4360_RSRC_INIT_MODE0 0x00000020 +#define
->>> BCMA_CC_CHIPST_4360_MODE_USB 0x00000100 #define BCMA_CC_JCMD 0x0030
->>> /* Rev >=3D 10 only */ #define  BCMA_CC_JCMD_START 0x80000000
->>> #define  BCMA_CC_JCMD_BUSY 0x80000000
->>> @@ -500,6 +502,8 @@
->>> #define BCMA_CC_PMU_PLL_CTL3 3
->>> #define BCMA_CC_PMU_PLL_CTL4 4
->>> #define BCMA_CC_PMU_PLL_CTL5 5
->>> +#define BCMA_CC_PMU_PLL_CTL6 6
->>> +#define BCMA_CC_PMU_PLL_CTL14 14
->>>=20
->>> #define BCMA_CC_PMU1_PLL0_PC0_P1DIV_MASK 0x00f00000
->>> #define BCMA_CC_PMU1_PLL0_PC0_P1DIV_SHIFT 20
->>>=20
->>> --
->>> 2.34.1
-
-
-
---------d27c6f642e9989b1867bbe9df4b0f546c8df97de4e21426f979626ae4acf2340
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: ProtonMail
-
-wsCpBAEBCABdBYJq4fn5CRBPsoxt7Hy0xTUUAAAAAAAcABBzYWx0QG5vdGF0
-aW9ucy5vcGVucGdwanMub3JnovhRn/wmbxLfqc36oddm5hYhBERSlkTqW1Te
-3v1Bj0+yjG3sfLTFAABgsggAhyERKvEfFf7PNdZqgt/P5OZLnhUSn441S6XN
-Rf1TMsUiAL8QQ4bWxD3G2orGt8d8//mZeHES0TMPlwFtkvjEeOVdLcybhuWP
-qYNJFOpGcPJCUP++PNbxXnlk5tVYwUJRbm4rWDkw83rNgzqZNB+znFvy8S6n
-UnvDVOIQO7gOjKuyhMBz8KSRzemFihyQ2nqImWyb/0NOh2LBQhQnrOP0jfRU
-0PvVXI2hIIxY9JOG31AwZU36vQTV28HKxh1qAympi5UkBDbJQSurqPwkh3hf
-roXUX8+knmCy4YlGKQXd8gg9dGEoFMwo+GPO14/jXcPuSM9oWzSb8LRWYEWK
-PRZooA==
-=vQFV
------END PGP SIGNATURE-----
-
-
---------d27c6f642e9989b1867bbe9df4b0f546c8df97de4e21426f979626ae4acf2340--
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index bdd4b8465863b..c2c5738d8a3fa 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2059,26 +2059,32 @@ void mwifiex_cancel_scan(struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv;
+ 	int i;
++	bool cancel = false;
+ 
+ 	mwifiex_cancel_pending_scan_cmd(adapter);
+ 
++	spin_lock_bh(&adapter->mwifiex_cmd_lock);
+ 	if (adapter->scan_processing) {
+-		spin_lock_bh(&adapter->mwifiex_cmd_lock);
+ 		adapter->scan_processing = false;
+-		spin_unlock_bh(&adapter->mwifiex_cmd_lock);
+-		for (i = 0; i < adapter->priv_num; i++) {
+-			priv = adapter->priv[i];
+-			if (priv->scan_request) {
+-				struct cfg80211_scan_info info = {
+-					.aborted = true,
+-				};
++		cancel = true;
++	}
++	spin_unlock_bh(&adapter->mwifiex_cmd_lock);
+ 
+-				mwifiex_dbg(adapter, INFO,
+-					    "info: aborting scan\n");
+-				cfg80211_scan_done(priv->scan_request, &info);
+-				priv->scan_request = NULL;
+-				priv->scan_aborting = false;
+-			}
++	if (!cancel)
++		return;
++
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		if (priv->scan_request) {
++			struct cfg80211_scan_info info = {
++				.aborted = true,
++			};
++
++			mwifiex_dbg(adapter, INFO,
++				    "info: aborting scan\n");
++			cfg80211_scan_done(priv->scan_request, &info);
++			priv->scan_request = NULL;
++			priv->scan_aborting = false;
+ 		}
+ 	}
+ }
+-- 
+2.43.0
 
