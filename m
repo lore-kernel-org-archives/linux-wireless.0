@@ -1,82 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197122;
-	b=wWzhg1Dt0Ihxr/g214tNK2qIFrFOZf3ghPDG998zNiY+6wUqOqtZ82KfFILgQK/lr3HS
-	 nhIIuAMMWA8qo5cbreRtng1XjVA51tLXIAdpEzwIvbMJC+l7VkXLo6gBddxfoccEt+w+I
-	 wjlp3bX06pPqbZq8th21QEY5uKNmBnoPD1jWiS19e4/lpF8fAPGg5oyxzXrt2m5EQ+0xb
-	 9rEg9OgYxWomYAevz0EJKJ9RwxqXvqchaJmGdrgA6ulm/+UDEsxA2/QWvDw4jlHFdN/8v
-	 fNnacIUXnytcU6y6baoFTQ9apqU3jqYTO3L+rFq8GPiEHiLHJHMWRzUONo9KOB+77NA==
+	t=1793197127;
+	b=salyYQu3MgA+3zGZJkGtPaZar3KEuBbERJ4cLcWpI0zn+GYxhXzDbMyKVnX+jTnJZHi4
+	 TJJAQKTwyr0OYYrsiBakWThTHBpbMjawYxI3EHW81wxRXBStGYLIilYvTD8htZQSXorix
+	 L7c0ERSYJiAKV4viASq+YVXKbnouG4fslG3QKx0m753bwaS2Xy28i1N+tPOv0tkoOhqhA
+	 O44yuGv1XgqNo0k8fBBKmDZ8+tOhK6Bfum1K8t0CzmPJZkJZmIPikwGEVW2xbfiN87Ut1
+	 VEgvS0oYkNIyBYAxn2TUJYK5UrhLdRXc2mi/JkHD6JzTJcLUVu+IDYLZ3ej0BUqWilg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197122;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197127;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=uhged07YjYHVSfrcQ8AV5LddG8+yWyQJ6mwgUwS9Twg=;
-	b=dMysqc3+4OugvJd0Rw+femT2rwJ9y56rHkhGJsfeGerxbjcSLPFzGtr0TyQVJLqa556v
-	 EnKIM0PEmRdkuFGaGLUUMYJkIEJ/L2/7Yx3EytdsxZrjafeXQ9RcdINIefd/j3AEBYlAv
-	 xPKbqq05aiOq3zwoz9MioPLrNn4ejMn8R+7v2/uQwVZd0jsLU8skNs7SZalJiR0yvKu6B
-	 5NaoR1Uk+PTxOwxUjXw8yEhu3DTdtCiu73qNC631Zj2TCALXHW3+XyPFAZEsVV6nRMhJX
-	 SqF1grKuJrKxXGHqDc9MZxm/tMsf9qwf2k9q9HUkwXAxQwKkLg9EDo3r9ZXIIjFwnTA==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=x5pMrzNqhnU/C2P6XLQ8m6/Y72S3deTQkrwYq1kdoTA=;
+	b=RRJ8M3fIp7teWEWSk+GX/kNdimaZucxPKKhYwi/tc1MJlMps0ff4MJ2p+Kwvs2c3Bbcb
+	 603XI6BEyZixXeYTHxfbbL5GC+4l/49+u09rPAdi8jGgGsV1igwwRPh9S4h3BGPnWLfuJ
+	 QbYKoJTxwVHdJ8UbsnFdlaU6knUI4goSya/7A79DzGp4LZ+qIdDoZgCNz+tgjSxuopEWY
+	 ynj6Zsu/iX3k0/HWG4R62Jvbf4vIWI0knz9r8Vw13MzMQdEDvOaeIO2dVVIe7rQsfNiwF
+	 0pIQUiLAhZ4bBW3zsOGAFLq8UgleHbc1yEkDTinMx//pNFlECR6zemTOqaf/xfZMY/g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LyQTjCIB;
-	arc=none smtp.remote-ip=209.85.216.50
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=D7TLlDew;
+	arc=none smtp.remote-ip=209.85.216.54
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A7D6606A31C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:18:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A7D6606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363A7606A323
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:18:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 363A7606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LyQTjCIB
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3ad41b47541so873396a91.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:18:41 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=D7TLlDew
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3ae57dc1ea9so435458a91.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:18:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793197121; x=1793801921; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uhged07YjYHVSfrcQ8AV5LddG8+yWyQJ6mwgUwS9Twg=;
-        b=LyQTjCIB6nzqoYRvuAJddT3ibncTV4Gsil83rGFuES/5IOQrtYtaqkBJ020mNZTPY0
-         lrR7WliJAxZB0IwXX6lUGzgvq9LG8qKYJ4/bU2aAB7dinRvp8EDnk3f9/IbyLneqENKo
-         Rz+c88Vju+YomHtLDeJRs5ah93AVAuP8f2XdJFYoc27LqQIrKG7fW6ClUO/KIiC8X8Aa
-         cYzu3MGAmZcfv9gv86WkwOJqLwCIqCFBbq4x23QA+rCbZUrmRMINE0qVwssRII5FqEyf
-         fnB0hoTlcNrNbLCuIY9j1LAINM2pJvH3wp6xtmjHjSGlRUIcI14c29hPx+75IXd2ouwH
-         6eMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197121; x=1793801921;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793197126; x=1793801926; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=uhged07YjYHVSfrcQ8AV5LddG8+yWyQJ6mwgUwS9Twg=;
-        b=Uh+Ix+PvzSDJNh4etJExv3VNy5/7POML+yeK4OO+c2fbesyXST2nQEaT2iw17Nqu06
-         mjvVgd/sXbZKTOKOo5wF6iqOxSq1kW5NdggmF1k91qXCgH9V3Z869WqCSIa1aLJbj1Ey
-         epfM4LtF0tAO2sXC0T5eY+3R3JGAHBNWCKx9zKT0GVf5br9/8r7JGBugKN8HIg0NzkiS
-         EGwHoNX/2KILcATW3TbSpHxwcQRcbbtOgvwqtePsbBUwaNA8LDOIbtsnCooXT5P1FchC
-         ESKobjLXyGKtygjGC1JIk8jLuzX74eFsCnndsLuyrRf9nj50TkE4gwsI23I+K5uW8boa
-         kNnw==
-X-Forwarded-Encrypted: i=1; AKwUvBzPaMv2bJStQXDwMZZ92W1Vkvfd/7itx0TaGMOXE7nsVW9RD2ft2SBs7uphAR9lM22UpDrdiKWBNXoi8KuB/g==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ6iPJv3JwCpw+XsJsKIXCYo8fB2qzvc5VnJmOqCb03zVgrh/02
-	kPdHhqBjQYMud85s82eK1KTuwbTk1G3kgsILlWmaKz5OaTckrOha4g3B
-X-Gm-Gg: AYBFou3KCjqKxwcF+n0tKqjcvOPcpQi74r8vdam98+PbhD6WRIjf/hp1ZKMpahph5qT
-	ja0CCvz1wsJ165j5ltiNH9yFl7uxupSXPJLI5m0H60egd2krntLvl5gJUc1MD5gPNw83zMEMxA7
-	D4bZjeAG5BNJ98hqU+ijgAbY1OUacE/XUry6WgwzeTKORkscb6VmyqC44XaI+flId9tvCBjV7mM
-	KFbgyid+c0JbPe12nYXTU+FF754gLJqY0PyCaskg6lD/ZwM9sax/u5USHBrZDMBmBus4cdLmJQE
-	NMCBHuUZpsb9Ob61VpAWiJCo+bsWD5uxuI3Xq+533LrF8CAFHbMqP7u7Z4rXoMe+usqJrArntyN
-	+cWKBITochBsEiqs942YwHe9+RAJUFs4TbYVhlGEDE1DyjSK92EFfQ/aHHoexGLyoHZPDbL8W+m
-	taToCwalpX/sw9DM2YJ7uyV8lBTlTYP2uhmtb6vcvoIN+zN1w06LwuIQwv7PUxn6P5BKoQTfyQL
-	XlFaq2jK2bKrAG6r+yt2sjbhjcr226aU3fm/e48/rNIHLK/BN1Ifh8fUg7eP5yfAVaphrvKdEl9
-	68R3UPsOghEJBGYF0m/HOd77OJ8JLc+hJx+JCBa+9ML/3kx49Weso56DnwLB7iArpiKB
-X-Received: by 2002:a17:90b:2c85:b0:3ad:8769:8741 with SMTP id 98e67ed59e1d1-3ae57e4207emr2104742a91.4.1793197120513;
-        Wed, 28 Oct 2026 07:18:40 -0700 (PDT)
+        bh=x5pMrzNqhnU/C2P6XLQ8m6/Y72S3deTQkrwYq1kdoTA=;
+        b=D7TLlDewfvGsFRADJTjmPF8rrR4n6LzIhjICYp/le+3pDRjbxkiD4agzf5lGE7L7ND
+         YR0c6Y1GYict88qgmGuJFRmPWpJ12Z5k90qpP0gvG9o5eXazBhdgN9mGxuEh0bAJuu7c
+         FdK3z4RCRPFa6tTjPWCYRIBB9qhxHMaqiYS2BQLZ+YSJfQDtW9VZIDblnPsOFRInnDbq
+         mpth9IY/s1EJ3Q5oKkSz5RLa1wlru717pLCc0xzU5BE8nHJR0faQRHSl3Q0d4U5tmJzi
+         3OndwlReYc5K2q2wXK1BkqnvkmjjeGTyspnt9Kn1T37Cxy7XuABQhZwNDcwwGFd5q7ZD
+         zG+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793197126; x=1793801926;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=x5pMrzNqhnU/C2P6XLQ8m6/Y72S3deTQkrwYq1kdoTA=;
+        b=Ig1jk7r+vzVsgLkRiQyU7ILUVDTDbYpUyY8bVhpFHDq+WqU2MIGUgR1ARrN/4dDgY2
+         C2yD+QVjnyae49IYlh3x9dD11jFN7HGm+XdiHxuM0UH4+95sR8JN5s5YIlxXXzSi4nb8
+         +Paf72tL8wlF5o4N75PPQFHTErx8Cnu30HuJMBwb/c5GcT2h2nC0F/PA5LJPvQZJwC4E
+         eg9gwMtUYIAfwu/t4X4JPZ/Zrj6HiPyblkATL18Z+tn4lZ83tiPzRbw9PphM6IrJ6+6Y
+         Et28kZ9H8+cL60qzNBuBnauKlSQTB+fsbzxGzvMnnyBJ9fVfx8t9xW803HjD7beau4rY
+         isWA==
+X-Forwarded-Encrypted: i=1; AKwUvBzXYScejyIHW2LLLlPOya3APGwTRPK5SG9C4qvNQuVBnnEQz6FV9HBYz/1SXizoPiFP9hj3FAMFU3StKDckyg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYL+6lprcndr234BwWuP4J1u9Hf38ODCIcort5WKM2nQeUsc4oon
+	HB2EgNdVRJUSxS06WhHB3irBkg7CGvcghVS0dwdFPDauPiBkE0CrSK0v
+X-Gm-Gg: AYBFou1cEFxiAVZqHvoT4ftxYfXiujfpMrhzq89t8SVV38wkC2h7jsgUFTC9bvhYlLd
+	GC7//cfp1KUHK4WkjWZh1bVsSRRUjACdM36f42EDxOAhTDF1hGryDHGE/4QSFwSReU/mua4p7Lc
+	eKHCdTfDtjiWir8j86VqFHWvaJ5jd/Bmy7bIFWjIoFE2VaW+3clpXLpOfLQJgz4fuyX6aI75LMB
+	f4wEceDVfGNxIb+dEDcSH/jkkz10V5CVJcWaYO/oD/mBtHKZmbljXV8Q9Pz7p3fIEpZjoKu0H29
+	3rtE8OwIgzMW7ROgPMIaPCDwnM2I4EzUhkNAi6diaB6jg9uQotxdRMdwA91ktRuYSB1MIjp3UTT
+	6wWi11pfEjC/ZN7euH3vxzF5JqwPfiTWPsqQGjt4R8bIZ6Hu0/iMzxvTVqorq6zgfDQqTeS6LXm
+	ampA4HdPKQUIMmx9HFwIcpegcL173b9DvEGld5QbHTxeDRmWOOtJYPsUaX9A+BoAPpfLZFiSUaT
+	4LjFNYP6OqHUH0GvrXskqg0anIiL9TPfeGwC0nBp6G3MtM256F/X04+Tg2HKq0Kn3m8ILYIadC+
+	1E6PD03f39aSbHU5TiIho6Fr3bge8aZibGuYat7YuvIcchjaenMnCXkF46xY87HPjLiVlA==
+X-Received: by 2002:a17:90b:2886:b0:3ac:9d14:feb2 with SMTP id 98e67ed59e1d1-3ae581d5d09mr1702502a91.35.1793197126435;
+        Wed, 28 Oct 2026 07:18:46 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a0482e9sm3437223a91.0.2026.10.28.07.18.35
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a0482e9sm3437223a91.0.2026.10.28.07.18.40
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 07:18:40 -0700 (PDT)
+        Wed, 28 Oct 2026 07:18:46 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: Jeff Chen <jeff.chen_1@nxp.com>
 Cc: Francesco Dolcini <francesco@dolcini.it>,
@@ -87,11 +88,14 @@ Cc: Francesco Dolcini <francesco@dolcini.it>,
 	Kees Cook <kees+treewide@kernel.org>,
 	Rosen Penev <rosenp@gmail.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/4] wifi: nxpwifi: fix AP channel-switch lifetime and failures
-Date: Wed, 28 Oct 2026 22:18:15 +0800
-Message-ID: <20261028141819.7556-1-enderaoelyther@gmail.com>
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH 1/4] wifi: nxpwifi: cancel channel switch work on teardown
+Date: Wed, 28 Oct 2026 22:18:16 +0800
+Message-ID: <20261028141819.7556-2-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261028141819.7556-1-enderaoelyther@gmail.com>
+References: <20261028141819.7556-1-enderaoelyther@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -103,33 +107,40 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-NXPWIFI retains request-owned beacon buffers for delayed AP channel-switch
-work. Once the nl80211 request is released, the IE parser can read freed
-memory and copy stale bytes into management-IE commands sent to firmware.
+Stopping an AP while channel-switch work is pending leaves the delayed
+work armed. After driver removal, the callback runs on freed driver
+state. If the AP is restarted first, the callback switches it to the old
+target channel. Reusing the interface slot can also reinitialize the
+work while it is still pending.
 
-Deep-copy that beacon data, cancel pending work when the AP stops, defer
-blocking AP traffic until switch preparation succeeds, and stop the
-interface when delayed work cannot complete the switch.
+Cancel the work when the AP stops. Interface deletion, type changes and
+driver removal all stop a running AP first.
 
-The series was not run on IW61x hardware. Testing from IW61x users would
-be helpful. All four patches apply without changes to v7.3. Patch 3 has
-144 hunk-body lines with context, above the stable tree's 100-line limit,
-so patches 3 and 4 need a smaller reviewed backport.
-LLM assistance was used to review this series.
+LLM assistance was used to find the bug and review.
 
-Zhao Li (4):
-  wifi: nxpwifi: cancel channel switch work on teardown
-  wifi: nxpwifi: stop AP TX after preparing channel switch
-  wifi: nxpwifi: own beacon data used by channel switch work
-  wifi: nxpwifi: stop AP when delayed channel switch fails
+Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
+Cc: stable@vger.kernel.org
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+---
+Validation: A W=1 module build with MODPOST passed. Not
+reproduced; IW61x hardware was unavailable.
+Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
 
- drivers/net/wireless/nxp/nxpwifi/11h.c      | 22 ++++--
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 74 ++++++++++++++++++---
- drivers/net/wireless/nxp/nxpwifi/main.h     |  2 +-
- 3 files changed, 81 insertions(+), 17 deletions(-)
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-
-base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
+diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+index 473e81304ca8..384ba69dd058 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
++++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+@@ -1638,6 +1638,7 @@ static int nxpwifi_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	struct nxpwifi_private *priv = nxpwifi_netdev_get_priv(dev);
+ 	int ret;
+ 
++	wiphy_delayed_work_cancel(wiphy, &priv->dfs_chan_sw_work);
+ 	nxpwifi_abort_cac(priv);
+ 
+ 	if (nxpwifi_del_mgmt_ies(priv))
 -- 
 2.56.0
 
