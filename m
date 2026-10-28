@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793190256;
-	b=oMtekHsHCscE7nmH5YibSKzaihVf1lFGy6/XaRfWAdyHX/i+w5e25fyVF15h/EhNB1cq
-	 JulEGt9fPOaWBbHB8dLBI+FCY9JbOgFvZZEqKiLcy65I+lZ96GQavlE+2QKPdroVCG6vP
-	 TwpqtYguTrDZ2NMhp8seqSAa1HtdXVu8025GAee2M4UjCJVLSHNQiMg6nKNdUappLNHAb
-	 3hSr9rpck54vTe2uBVDnu33YzfWCxNoUCxaQcWQ8zWW85pCRH66wcmclpnz7riUWpd43o
-	 k9G8APk6gMmG3BJym07ugfgb3/FmqvAOEkHxQy1y7852dJAa2FuRb9CQWFM7U7vlqmQ==
+	t=1793190258;
+	b=YHYLvrjdsurCiCkfZ/WJoxKYA1hMaXA7F4AZFQ/QH8p/o/YGZHVG0LWkIDyGuK3/+qSr
+	 7N3/OOraQs0YHmXU7wOZnMR9//y8/0jg5CLQp8OxzmUk0eE942KdsUQBd33xuOLEH39yz
+	 QtELJc87BSivKvido59k5Uu9FsDUnruXaRJN1/rPb6Ps4ipJ5F33jMk0+0wsrsgi2fr0W
+	 mfOu0Kn3rtqLFApWJTcLdyi73Qp2LYrfbu3KlbbyToES7zhlYv85Yub08/Y82fdsveZTu
+	 eZN08XUnZ5jlNl3k9bPQVRjJy4fL9Ufbjs4ce0XTGB31UdcGTt/pjPUoFzaeDn5qf6A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793190256;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793190258;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Gd76QZPqRZfzgQp6/SAN6xoCix4siVmDpoOFPbUM+Os=;
-	b=3YXaaLiNYokKvzAOXSB8FP44p/K4HiPZFc/gONvZu97RtCMawS1Ubhij+v700iAUzxTb
-	 9VcnNaKmXUPQLoRwLvPI+d9vOywV/A3sWdp/5RFwGLKjK3oKFSkIXvT2j0IBf5x3wTfle
-	 Ak87BBiJzt8fIWT1tTZ3KWp/4YTL1rVQghAagyNXtrd/nnaZ3yNb4UOhnku3JUT2AhsLb
-	 GYHa0HyQzms2k30ctvpwMsnbl+9D5g4QVg8BOUCPfCp3BQAVFd2qrtJjaJzHGSFgt/Eb2
-	 2pX9OI3M/1BPJNh0b2SkndaMVC13QOz+sgk2E7XUv2t8YMcRqnvAYj8i4knaer/OyTQ==
+	bh=YDUAf4ivJekhuV8kDqVBq001+yqpK3G08cDwqgIWTdQ=;
+	b=xsGqKbsQwIEmuTR3cBIEpugdUSHSHXZntgzTAD7vz9mVtgx83Ix+mXUQOhGKjRS/65MJ
+	 gA9XKBX4v0KaZqtbxoOKc+13pgyFlAVAiI0i9nxqkTXLrsgUWbOdSpJWCkDg+MgUiq2ik
+	 SCVFcZCwMdc8WQ6ZgYAq3sNBqevreMixdT6p8VkL3bOtnb76gQ0HY9af29T+vovatPLN5
+	 ou78SXzQM3IB5s8YEbtScDf2EI+GaJBMromW5nWuUi7QV1IiHVkJGj1b4MzEfC5PRXXs3
+	 Al9at9q++CyihOafY1WmNaqN+/u4GivU+rjElfmmKPFvAXNS/nX5b6LeRrA36UMAvyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nbd.name;
 	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=JxHL1frV;
+	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=hRcYnix4;
 	arc=none smtp.remote-ip=46.4.11.11
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5E360A260F
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:24:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A5E360A260F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D69606A336
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 12:24:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 27D69606A336
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=JxHL1frV
+	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=hRcYnix4
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=Gd76QZPqRZfzgQp6/SAN6xoCix4siVmDpoOFPbUM+Os=; b=JxHL1frVXvcil9GyisALWe0dek
-	5iSGJ04NJ79NIQJ3w9ZQE8RzNBBZsTzbTNorhTa8qdpE9+borWrFqZn35nRtGNo+HpJhGI+FLVoVi
-	I9m78SzvLc8NMJpgbIThcMFisrBKUIT/IJvsU8a/PRZgFdHEsQzungqI8Mn0lPs3UJao=;
+	bh=YDUAf4ivJekhuV8kDqVBq001+yqpK3G08cDwqgIWTdQ=; b=hRcYnix4wh6zAlnq/K14jayOD2
+	FDT6VSRRxSAYGA2KioECV66Vp6Y5XtTLRn+L15WFo/5T63xu2VJbRCLwxJ8ZbU+klbCZ3I/lPINPH
+	o7dWvouss5VbtZmMwztkcOmMEAeeEeoVh1yV42xr0vgUQn4Br17kLIarOY5/1FUNC6cs=;
 Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xM2hN-00C8Bw-1c
+	id 1xM2hN-00C8Bw-3D
 	for linux-wireless@vger.kernel.org;
-	Wed, 28 Oct 2026 13:24:09 +0100
+	Wed, 28 Oct 2026 13:24:10 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 20/25] wifi: mt76: publish the beacon monitor interval after its timestamp
-Date: Wed, 28 Oct 2026 13:23:58 +0100
-Message-ID: <20261028122403.796394-20-nbd@nbd.name>
+Subject: [PATCH mt76-next 23/25] wifi: mt76: check the RX PN of an MLD peer once per peer
+Date: Wed, 28 Oct 2026 13:24:01 +0100
+Message-ID: <20261028122403.796394-23-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261028122403.796394-1-nbd@nbd.name>
 References: <20261028122403.796394-1-nbd@nbd.name>
@@ -68,161 +68,175 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mt7996_vif_link_add() and mt7996_vif_cfg_changed() start the beacon
-monitor of a station link with a plain store of beacon_mon_interval,
-followed by the store of beacon_mon_last. mt76_beacon_mon_iter() runs
-without dev->mutex and reads the interval first. It can thus see the
-new interval with the old timestamp, for example 0 for a new link, and
-report a beacon loss at once.
+For a frame that the hardware decrypted, mt76_check_ccmp_pn() compares
+the PN with the last PN of status->wcid. For an MLD peer, mt7996 reports
+each frame on the wcid of the link it arrived on, so every link keeps
+its own replay counter, although all links of the MLD share the PN space
+of the key. With the IV stripped, the function also sets
+RX_FLAG_PN_VALIDATED, so mac80211 skips its own check per key. A frame
+received on one link and replayed on another one thus passes the replay
+check whenever the second link has seen lower PNs.
 
-Add helpers that start and stop the monitor: the timestamp is written
-first, and the interval is published with release semantics, which
-mt76_beacon_mon_iter() pairs with an acquire load. Read the interval
-with READ_ONCE() in the other lockless users. This also removes the
-duplicated interval computation in mt7996.
+Keep the replay counters of a peer on its default wcid (def_wcid), like
+the reorder state in mt76_rx_aggr_reorder(). The key check still uses
+the wcid of the link. This also applies to mt7925, which sets def_wcid
+for the links of an MLD station.
 
-Fixes: 4df75606ece5 ("wifi: mt76: add per-link beacon monitoring for MLO")
+A key install resets these counters to the RX sequence of the key in
+mac80211, which frames marked RX_FLAG_PN_VALIDATED never advance. In
+mt7996 and mt7925, the key of a station is set up link by link, and in
+mt7996 a link that is added later gets the installed keys again. Each
+of these setups would reset the counters of the whole peer, so that a
+frame of the new key received on one link could be replayed after the
+setup of the next one. Seed the counters on the default wcid once per
+key install, before the key reaches any link of the station, and only
+enable the check on each link.
+
+Fixes: dd82a9e02c05 ("wifi: mt76: mt7996: Rely on mt7996_sta_link in sta_add/sta_remove callbacks")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 19 +++++++++++++-----
- drivers/net/wireless/mediatek/mt76/mt76.h     | 16 +++++++++++++++
- .../net/wireless/mediatek/mt76/mt7996/main.c  | 20 +++++++------------
- 3 files changed, 37 insertions(+), 18 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c  | 18 ++++++++----------
+ drivers/net/wireless/mediatek/mt76/mt76.h      |  7 +++++++
+ .../net/wireless/mediatek/mt76/mt7925/main.c   | 13 +++++++++++--
+ .../net/wireless/mediatek/mt76/mt7996/main.c   | 11 ++++++++++-
+ 4 files changed, 36 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index b2702c9079d9..76908bd835f2 100644
+index 76908bd835f2..08ed3fc6d386 100644
 --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
 +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -2243,7 +2243,7 @@ mt76_offchannel_notify_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
+@@ -1209,16 +1209,10 @@ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ 	struct ieee80211_key_seq seq;
+ 	int i;
  
- 	if (!ieee80211_vif_is_mld(vif)) {
- 		if (mt76_vif_link_phy(mlink) == data->phy) {
--			if (!data->offchannel && mlink->beacon_mon_interval)
-+			if (!data->offchannel && READ_ONCE(mlink->beacon_mon_interval))
- 				WRITE_ONCE(mlink->beacon_mon_last, jiffies);
- 			mt76_offchannel_send_nullfunc(data, vif, -1);
- 		}
-@@ -2260,7 +2260,7 @@ mt76_offchannel_notify_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
- 		if (mt76_vif_link_phy(mlink) != data->phy)
- 			continue;
- 
--		if (!data->offchannel && mlink->beacon_mon_interval)
-+		if (!data->offchannel && READ_ONCE(mlink->beacon_mon_interval))
- 			WRITE_ONCE(mlink->beacon_mon_last, jiffies);
- 
- 		mt76_offchannel_send_nullfunc(data, vif, link_id);
-@@ -2308,7 +2308,7 @@ static void mt76_rx_beacon_iter(void *_data, u8 *mac,
- 			mlink = (struct mt76_vif_link *)vif->drv_priv;
- 		else
- 			mlink = rcu_dereference(mvif->link[link_id]);
--		if (!mlink || !mlink->beacon_mon_interval)
-+		if (!mlink || !READ_ONCE(mlink->beacon_mon_interval))
- 			continue;
- 
- 		if (mt76_vif_link_phy(mlink) != data->phy)
-@@ -2363,11 +2363,20 @@ static void mt76_beacon_mon_iter(void *data, u8 *mac,
+-	wcid->rx_check_pn = false;
+-
+-	if (!key)
++	mt76_wcid_key_link_setup(wcid, key);
++	if (!wcid->rx_check_pn)
  		return;
  
- 	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
-+		u16 interval;
-+
- 		if (link_id == mvif->deflink_id)
- 			mlink = (struct mt76_vif_link *)vif->drv_priv;
- 		else
- 			mlink = rcu_dereference(mvif->link[link_id]);
--		if (!mlink || !mlink->beacon_mon_interval)
-+		if (!mlink)
-+			continue;
-+
-+		/* pairs with smp_store_release() in
-+		 * mt76_vif_link_beacon_mon_start()
-+		 */
-+		interval = smp_load_acquire(&mlink->beacon_mon_interval);
-+		if (!interval)
- 			continue;
+-	if (key->cipher != WLAN_CIPHER_SUITE_CCMP)
+-		return;
+-
+-	wcid->rx_check_pn = true;
+-
+ 	/* data frame */
+ 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
+ 		ieee80211_get_key_rx_seq(key, i, &seq);
+@@ -1327,6 +1321,7 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
+ 	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
+ 	struct mt76_wcid *wcid = status->wcid;
+ 	struct ieee80211_hdr *hdr;
++	struct mt76_wcid *pn_wcid;
+ 	int security_idx;
+ 	int ret;
  
- 		if (mt76_vif_link_phy(mlink) != phy)
-@@ -2375,7 +2384,7 @@ static void mt76_beacon_mon_iter(void *data, u8 *mac,
+@@ -1339,6 +1334,9 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
+ 	if (!wcid || !wcid->rx_check_pn)
+ 		return;
  
- 		if (time_after(jiffies,
- 			       READ_ONCE(mlink->beacon_mon_last) +
--			       MT76_BEACON_MON_MAX_MISS * mlink->beacon_mon_interval))
-+			       MT76_BEACON_MON_MAX_MISS * interval))
- 			ieee80211_beacon_loss(vif);
++	/* the links of an MLD peer share one PN space per key */
++	pn_wcid = mt76_wcid_primary(wcid);
++
+ 	security_idx = status->qos_ctl & IEEE80211_QOS_CTL_TID_MASK;
+ 	if (status->flag & RX_FLAG_8023)
+ 		goto skip_hdr_check;
+@@ -1366,14 +1364,14 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
+ 
+ skip_hdr_check:
+ 	BUILD_BUG_ON(sizeof(status->iv) != sizeof(wcid->rx_key_pn[0]));
+-	ret = memcmp(status->iv, wcid->rx_key_pn[security_idx],
++	ret = memcmp(status->iv, pn_wcid->rx_key_pn[security_idx],
+ 		     sizeof(status->iv));
+ 	if (ret <= 0) {
+ 		status->flag |= RX_FLAG_ONLY_MONITOR;
+ 		return;
  	}
- }
+ 
+-	memcpy(wcid->rx_key_pn[security_idx], status->iv, sizeof(status->iv));
++	memcpy(pn_wcid->rx_key_pn[security_idx], status->iv, sizeof(status->iv));
+ 
+ 	if (status->flag & RX_FLAG_IV_STRIPPED)
+ 		status->flag |= RX_FLAG_PN_VALIDATED;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index fb1b99f56e9c..fce7bf2f0333 100644
+index fce7bf2f0333..477d33a0022d 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -2178,6 +2178,22 @@ mt76_vif_link_ctx_set(struct mt76_vif_link *mlink,
- 	smp_store_release(&mlink->ctx, conf);
- }
+@@ -1574,6 +1574,13 @@ int mt76_rx_aggr_start(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid,
+ 		       u16 ssn, u16 size);
+ void mt76_rx_aggr_stop(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid);
  
 +static inline void
-+mt76_vif_link_beacon_mon_start(struct mt76_vif_link *mlink, u16 beacon_int)
++mt76_wcid_key_link_setup(struct mt76_wcid *wcid,
++			 struct ieee80211_key_conf *key)
 +{
-+	u16 interval = msecs_to_jiffies(ieee80211_tu_to_usec(beacon_int) / 1000);
-+
-+	WRITE_ONCE(mlink->beacon_mon_last, jiffies);
-+	/* pairs with smp_load_acquire() in mt76_beacon_mon_iter() */
-+	smp_store_release(&mlink->beacon_mon_interval, interval);
++	wcid->rx_check_pn = key && key->cipher == WLAN_CIPHER_SUITE_CCMP;
 +}
 +
-+static inline void
-+mt76_vif_link_beacon_mon_stop(struct mt76_vif_link *mlink)
-+{
-+	WRITE_ONCE(mlink->beacon_mon_interval, 0);
-+}
+ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ 			 struct ieee80211_key_conf *key);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 22cc5b49da0a..ffbc6b954632 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -707,8 +707,11 @@ static int mt7925_set_link_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	else
+ 		goto out;
+ 
+-	mt76_wcid_key_setup(&dev->mt76, wcid,
+-			    cmd == SET_KEY ? key : NULL);
++	if (sta)
++		mt76_wcid_key_link_setup(wcid, cmd == SET_KEY ? key : NULL);
++	else
++		mt76_wcid_key_setup(&dev->mt76, wcid,
++				    cmd == SET_KEY ? key : NULL);
+ 
+ 	err = mt7925_mcu_add_key(&dev->mt76, vif, &mlink->bip,
+ 				 key, MCU_UNI_CMD(STA_REC_UPDATE),
+@@ -749,6 +752,12 @@ static int mt7925_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	mt792x_mutex_acquire(dev);
+ 
++	/* the links of a station share one RX PN state, seeded before the
++	 * key reaches any of them
++	 */
++	if (sta && cmd == SET_KEY)
++		mt76_wcid_key_setup(&dev->mt76, &msta->deflink.wcid, key);
 +
- static inline struct mt76_phy *
- mt76_vif_link_phy(struct mt76_vif_link *mlink)
- {
+ 	if (ieee80211_vif_is_mld(vif)) {
+ 		unsigned int link_id;
+ 		unsigned long add;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index f715817243a6..6815f5192116 100644
+index ec7c5e8f3fda..82143ade1cc0 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -492,12 +492,9 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
- 	if (vif->type == NL80211_IFTYPE_STATION) {
- 		vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER;
+@@ -268,7 +268,7 @@ mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if (cmd != SET_KEY && !is_bigtk)
+ 		return 0;
  
--		if (vif->cfg.assoc && link_conf->beacon_int) {
--			mlink->beacon_mon_interval =
--				msecs_to_jiffies(ieee80211_tu_to_usec(
--					link_conf->beacon_int) / 1000);
--			WRITE_ONCE(mlink->beacon_mon_last, jiffies);
--		}
-+		if (vif->cfg.assoc && link_conf->beacon_int)
-+			mt76_vif_link_beacon_mon_start(mlink,
-+						       link_conf->beacon_int);
- 	}
+-	mt76_wcid_key_setup(&dev->mt76, &msta_link->wcid, key);
++	mt76_wcid_key_link_setup(&msta_link->wcid, key);
  
- 	return 0;
-@@ -1027,12 +1024,9 @@ mt7996_vif_cfg_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			if (!link)
- 				continue;
+ 	err = mt7996_mcu_add_key(&dev->mt76, link, key,
+ 				 MCU_WMWA_UNI_CMD(STA_REC_UPDATE),
+@@ -837,6 +837,15 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	else
+ 		links = BIT(0);
  
--			if (vif->type == NL80211_IFTYPE_STATION) {
--				link->mt76.beacon_mon_interval =
--					msecs_to_jiffies(ieee80211_tu_to_usec(
--						link_conf->beacon_int) / 1000);
--				WRITE_ONCE(link->mt76.beacon_mon_last, jiffies);
--			}
-+			if (vif->type == NL80211_IFTYPE_STATION)
-+				mt76_vif_link_beacon_mon_start(&link->mt76,
-+							       link_conf->beacon_int);
- 
- 			phy = mt7996_vif_link_phy(link);
- 			if (!phy)
-@@ -1053,7 +1047,7 @@ mt7996_vif_cfg_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 			link = mt7996_vif_link(dev, vif, link_id);
- 			if (link)
--				link->mt76.beacon_mon_interval = 0;
-+				mt76_vif_link_beacon_mon_stop(&link->mt76);
- 		}
- 	}
- 
++	/* the links of a station share one RX PN state, seeded before the
++	 * key reaches any of them
++	 */
++	if (sta && cmd == SET_KEY) {
++		struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
++
++		mt76_wcid_key_setup(&dev->mt76, &msta->deflink.wcid, key);
++	}
++
+ 	for_each_set_bit(link_id, &links, IEEE80211_MLD_MAX_NUM_LINKS) {
+ 		err = mt7996_set_hw_key(hw, cmd, vif, sta, link_id, key);
+ 		if (err)
 -- 
 2.47.3
 
