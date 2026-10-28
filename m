@@ -1,108 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.177
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197216;
-	b=wFzLLDVV9WYKDLH8wM9F+FkiQrm2wyiAlso/VHDpJQenJ2fs3GQdu53recYNMALTsaW7
-	 dmb6Y207f//iZ6gkxVWYo5BJEYxhg7By0Wv6bSSxdYZF3exPFXbzLJDb3fq0WO7ub/Ka5
-	 V92eXFF5lxjgKNacCbbOlRAZQQCX9Uik3PchQS4khXL3paS+7KWkUc4vi12N3EF0pPFvJ
-	 BIlPFsBx9B1ljQ2bscCi2UOSxRq0x0h26I4Leix8V8PaFnsuAYA9vhPMtsKGZyuVf49wx
-	 FYLcZ1S+8trUOwV2f2bp/kU0/MJhk77uW+GgvO72GsyGKh49g+pK7IiSTN82P5LlQug==
+	t=1793197244;
+	b=O5FOyniH0SNVUCgEHLP9xzYxGcRdpPiGtx39L9hKN1KE4cuKXVnEtvD3sCyaYAz7eMHx
+	 c9CVP+XOI6IYTUD+d7o4pi5SD3cR0kG7U/9Je0syGThbhsZcHu/nUi7EBULGBvCbPH941
+	 lkP0Y63x0dBIB1AuEMHJSrZKtBgcj8EXyPgG91QzNRJULWRT3sWdCc+w3JF7u5A2sRTf2
+	 cQdW8qapQSoScJMHYHfvLeVbFr9ekjGFHjXgck3kHK8SkmZRpnKcN2oNtyIaFIexyU0WU
+	 oKcjVN6aGDaRTEqO2ZCNu55pa0ef2m08AeVDDze69BmXfDNOWszHyaZpL7B33VXVg/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197216;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197244;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=SgNj/pzQLmQvOonHYZEQH+dwdrtpqg30CRf+0Qq4LmA=;
-	b=VJnN6ZaYje6s2OsSDT1deGRmyTgi8BlNKu9MlW8gikfKzrcMXziUFrDgmVIyVz8LGPAE
-	 KCwgXuN309JuZyRMBBFSnjQ4mqgIhuzLwFJwnpsovUeam7uDXwKmH4RobZhVWOQ3DsAEE
-	 JwNCJRMV3HEvW6100PJVWrgFvBkGVZFZMiD5/hd897URBw8XyRkfY15v6Vey/hUnfqx61
-	 mBm1CBSnA5XM3ORlOhVpoIrCKLDioPtFQ0spyHNNa9CodFfgqjlgfqlSDRT0QgNG+OIGW
-	 GQTHlyz7jL/rOYTTS78h1fvw7DbP77vgxs9OCTlJEQQ27IQ3fIbF59+Q/iLs+p/Y37w==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=6n8IW/uLeuiPSehxbUOrC5l5QcKl9RaPrUD5nySkR/A=;
+	b=ab6Xfysdm4kc5XKyjzpmD5GMqbLqSfOazjoLvwAXBpYZhL49rUuYesSViLrU1iPupm2l
+	 SDe66MKV1+4ZxkWzh9i1HJB3em4MGg/tW5AqViHZIx7VCyfBApVM2eH8z9GF8TCFt+kwI
+	 VhLQah0XVfLwtuoqba1KxVAsHooSDts3+GuRaSZmnGIkyMqvDHYV6UydsAZJtlS60WweY
+	 5FhizS+Wp2x9WDawLi0nGrexw3dA80Tx/dQjDyWmAXZDbAwQMAdefSVXu9Jk0a9qO1S3X
+	 TtfOGk3SIsyKnYDwxiaYKXIkJu3VJeoVf3I982/STGqTAWj3fKGwY0EqbD1vkQaSJFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Wf4mH2x+;
-	arc=none smtp.remote-ip=209.85.216.50
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="sjSmWs/L";
+	arc=none smtp.remote-ip=209.85.215.177
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479C3606A31C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:20:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 479C3606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E9B606A31D
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:20:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A5E9B606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Wf4mH2x+
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3ab41538192so779328a91.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:20:15 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=sjSmWs/L
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-cc4dbda1e5dso487384a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:20:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793197215; x=1793802015; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=SgNj/pzQLmQvOonHYZEQH+dwdrtpqg30CRf+0Qq4LmA=;
-        b=Wf4mH2x+hWQ9EKpKV2bo2gNtu59egwucXiOyAlIiJeteJF7EHrJwMd7VWcdrWJGXGP
-         Z8W5cWyA2BuZhr0l8QLwMmslYPP7M19Luc4tD+8Halz0M8LXyROprlbV8qyK+quTKmpm
-         bt7qEgkXbDTKe9ygo1FOdMzHnzdMl8q+HXAUHGID0bWEXNj9RJJ5RX8F79TFDaNc3cdw
-         S05cPsgUMVLT2Mw8nNKHXnzSZq3CZPcJ69ZWki20lEgfIpywMkZznYpEqexSeqrBOynH
-         yjmicmuPmIsDFGFN6K986rhcWb+FLVJzZ2oa8Q9DEDRHkECbNfZFTdP+ytcVl6uUKsoO
-         KsqA==
+        d=gmail.com; s=20260707; t=1793197243; x=1793802043; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6n8IW/uLeuiPSehxbUOrC5l5QcKl9RaPrUD5nySkR/A=;
+        b=sjSmWs/LBhPuYyzDNDvi8REjdT7mYhQCsdWh6VwjVLKtvFc3gQXVaXNXV/msBoUS2k
+         4OSrqCw/XHsCXZhVzfzBxrZnCv93DLDZ0pukBrTCBf6PC5TkrzMiWsWZGlU7rO4vGCga
+         OTNfZjdfUYbD0Vi47ykpTv2wHSrOyeEwlrMytfCTrM+r2evVAFnm3EWxvLfjdZR4RsmH
+         G0NlwvCqyEboxkYKLhlqbV4ZssD7/c8yBC3GsjZFu4hiO1bDUJAV6lN2XWMC6JIxMYfL
+         8QRxCoKbOnReHNWQ3eK1pDC6wQ23bhjMJBG9tzXr9f84TQOEPK3pXbTFngacazjs8Sgc
+         B6nQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197215; x=1793802015;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SgNj/pzQLmQvOonHYZEQH+dwdrtpqg30CRf+0Qq4LmA=;
-        b=TXWdc1phPmG57KbLOOagfLw/gs7JmS6dAzSoWgsMd2I7aOdWtNKkuTvPBuHDpDFpNl
-         bUNeVMNsqK8I65eYUTReVWJB6kxyXSfLFhCnVS2UAwFpa0GoKEZMzXPGjOaVtm3cVIOb
-         38GsmD6jo1OMt9YRr2wOenrj/RCDBy4yvFBVe536qmfkK0wYomMFxoxk8c0bKinKTK4Q
-         1r115hpTz67TYoUIfgWd+bzLfW35Ps1AsnWqIMq6aWoY2YIOns18qT6yDGnoXGfQvrbX
-         cIv9SS8STBlR7JvoURf9dUsN0DPHU4mBBmcOsqaMlxqR5unn9CVmuR6hyJicpAXhf243
-         JgOw==
-X-Forwarded-Encrypted: i=1; AKwUvBxMpXFGoxafwRb4Z6fzslUusxI7WuK45Jz55l44sQFtUQlbOe6zAufnxx2kfOQHUMrxDJw7cLJhD3Xb8m/80Q==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKuHzs8Ht+1i2wDay1QQKSZ9nG84Mq4LBIyeG088pxmrQ9X0y7v
-	ZRwBTqs9Ux1+vFTWvLYctxd8UB6N52fCAomhuSyeZ+qJrnEvWHhakmB4
-X-Gm-Gg: AYBFou3/P2Gi40GKQoFgP3UoK4WTLlbMWXKP+72mv8EXRMCsA4cg0i4gzXgUHECyLvi
-	R0BGxExt1Aq+rMrFDzzcIQB4w7+OU6bWO30GqWoHKGjKyuA5gupUo77g/O5zRMZmbCNKmw0Fi7s
-	AM0vQfHG1iz9GKSvpWrPTUiLLEqctrTmrYE0bA+AtHEdWZduT1coG4M1wpjmaT5lDH+mfI29JgU
-	fTNL7Zp0EjDTNqOACh/nHcOMZPG6OTOVKRWaL5Cc2r7t2JbUJO6kFBCVWSvCzF6gJ9bvBJAlKQt
-	m0xbyDOznz6sqtXIQfDxSblCTXa4h1+MsYlZ00rYPp498pLybbUaMQcVFsvTtYMw2l5PfxA/15T
-	QWfL2OVeRCUWiTii4VY3hEQQkxAYxnq7mRJAuveuxXQKbZ+roXPnkIAj78o0gu5GSbxzzrIBELu
-	UrG0PoJBwc7uVYSgOZx/31yf5smMaXgBH8F/5anIYtuY0WBhCWCTp9o9RacNnJDNauD86nU3bIa
-	N4JivUFwU5RzLmyopyK44bkmrKd33NcAw05jAXQHR1QiLVYBfmBHrkSFrDCJrJ4VQXQYLkoFlfO
-	Ya/lPV+6tLemVIjsUQuxw3Fs+mADByEwlG96/jqTLOaRhCyhRdh0s/Y1rSV+cAnCXblS
-X-Received: by 2002:a17:90b:54c5:b0:3ac:9c37:9430 with SMTP id 98e67ed59e1d1-3ae5819e5a4mr1948616a91.21.1793197214381;
-        Wed, 28 Oct 2026 07:20:14 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793197243; x=1793802043;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6n8IW/uLeuiPSehxbUOrC5l5QcKl9RaPrUD5nySkR/A=;
+        b=dOfodbAiA1gv3b6iqZxmIr6GsDqYLd9CGYmQLeI6RqddjGiUv6NsHB/UvUrgiYZH0z
+         OSIdNh3hoTRE+J6fUxwkyICa8IMTBCQqEsr8sJJ4URgdvjlw9BmIMTJvWgpr1nPxl1y7
+         /SzRNZfeCSYRkRZgGacTWn6hvFW9AtoEn+S7tK36gA4fr2+28EUd9wndwTHeaUiroQMk
+         6fA5Ic03wZ3nEed4t4SrADc6sTzUW0iylZVQccpUS4Oo5RF2Iac+Y+xLwGRI28A3PG3l
+         v3W+I+Vo6lfjkjYHld+zgzQfy+eqG2arZX3+XyURYLdDwkEjLV/Sl3FFvKuelhqPpT2w
+         Ddeg==
+X-Forwarded-Encrypted: i=1; AKwUvBzDfwN7TE6isil82+7MpcNjOhNuBJubAPHHzt3LAOKnwoPhJTK/24Emi1XDOrOsRQ5MfL1oC361vOLLMgLRcQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLJA56+ZyyQNyTb2CvZbSNSyfsiuFzQ9+YuE+xhslDue0wLULtr
+	bN26xmVE8cjt06rA7GtvMFWKcSM3N4vH2/BnDZSdYYYy/EiBDHwVW/Ch
+X-Gm-Gg: AYBFou0EeZwleT9rmzRjujBs1DAGzhGXCyYSicQh0R/+V3ztLgMR2qOlpWSaIw28ZV+
+	ZsNaUNq4hxA3VxUvgpxpg21qCcN/79jlHnLjLRUITwUIoOKzp4ZZaA3768IcaaWAYisUbyD0HE/
+	g2lTEX3B0Q09Uk3OSEFGMydSa9hFLYE0qQHbDBSZgS5uo7yJUVmVQfAH0zhMJ30eslsDnLOLrpm
+	x5CZIUgX8qvsbA6fd8iEEvQDQ1CfH9REl1DUpA0GTXnRhLErwNbG25p3Z3rU+tGrE3mOz2NEFBm
+	msbQk5iOmdzgI9/ZJS0ISrB9rG7p0puqRFWS3FtW8vF4kFk83sPN7xfSv0sDv1dQy8qKDf57/oc
+	eGa5G1Jl6V8eDw0mevYVLBum78SCOqwxHk4wpLR5dOfxUMIyVtazpsmtiH4sjZ77NyOyVR1LAra
+	UPWnG09MyKu2/kzG6w7DvefNBfBOmDNVSduRGadHSJSoZPdJRP4FvW1Jx23yRKElP4qUsPHvP5Q
+	I2os/gLo9QfHPy2hLen9z1jPUsQbP9Qeui1mir3hldcWkzvg4raROR04jX9NuX85H/L17YFknve
+	D11zDe8tjXENWdH7pyrohyIssCtI73lX/QEr7o5hZ596MKwZKauh4PyEKGu9gTTlj6oqhw==
+X-Received: by 2002:a17:90b:574b:b0:3a4:acde:1e3b with SMTP id 98e67ed59e1d1-3ae57f637b8mr1772644a91.13.1793197242672;
+        Wed, 28 Oct 2026 07:20:42 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a9f286fsm3290141a91.15.2026.10.28.07.20.06
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a501083sm3765987a91.8.2026.10.28.07.20.35
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 07:20:13 -0700 (PDT)
+        Wed, 28 Oct 2026 07:20:42 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
+Cc: Jiangshan Yi <yijiangshan@kylinos.cn>,
 	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Ville Nummela <ville.nummela@kempower.com>,
-	Jiangshan Yi <yijiangshan@kylinos.cn>,
-	Marek Vasut <marex@nabladev.com>,
-	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	Stefan Hansson <newbyte@postmarketos.org>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Ethan Nelson-Moore <enelsonmoore@gmail.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
+	Ville Nummela <ville.nummela@kempower.com>,
+	Jeongjun Park <aha310510@gmail.com>,
+	Fariya Fatima <fariyaf@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <amit.karwar@redpinesignals.com>,
 	Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
 	Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH 3/3] wifi: rsi: serialize background scan state
-Date: Wed, 28 Oct 2026 22:19:27 +0800
-Message-ID: <20261028141927.9306-4-enderaoelyther@gmail.com>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] wifi: rsi: stop packet threads before bus teardown
+Date: Wed, 28 Oct 2026 22:20:13 +0800
+Message-ID: <20261028142015.10717-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261028141927.9306-1-enderaoelyther@gmail.com>
-References: <20261028141927.9306-1-enderaoelyther@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -114,164 +108,33 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The firmware completion event runs in the RX thread without
-common->mutex, while scan cancellation can clear hwscan under that mutex.
-Both paths test bgscan_en before sending STOP and reporting completion.
-An interleaving can therefore dereference a NULL or freed request in
-rsi_send_bgscan_params(), or report the scan twice.
+Stop the WLAN RX and TX threads before mac80211 or bus teardown. Then
+stop coexistence TX after HCI unregister and before USB reset or SDIO
+chip reset and function disable. Probe failures are covered before
+buffer freeing or function disable.
 
-The RX path cannot take common->mutex: rsi_mac80211_start() holds it while
-waiting for that path to finish firmware initialization after
-hibernation.
+Patch 1 makes repeated thread stops safe and prevents the WLAN TX loop
+from draining queued packets after a stop request. Patch 2 does the same
+for coexistence TX without adding an exported core-to-bus wrapper.
 
-Add a scan-specific mutex and use it to serialize start, cancellation,
-and firmware completion. Clear bgscan_en and hwscan together even when
-STOP cannot be queued so a later event cannot report the same scan again.
+The driver is orphaned and the series was not run on RS9113 or RS9116
+hardware. Testing from device users would be helpful.
+LLM assistance was used to review this series.
 
-LLM assistance was used to find the bug and review.
+Zhao Li (2):
+  wifi: rsi: stop WLAN threads before teardown
+  wifi: rsi: stop coexistence TX before bus teardown
 
-Fixes: 7fdcb8e12660 ("rsi: add support for hardware scan offload")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
----
-Validation: W=1 module builds with MODPOST passed with CONFIG_RSI_COEX
-enabled and disabled. Not reproduced; RS9113/RS9116 hardware was
-unavailable.
-Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
-Host state is serialized, but no hardware or protocol evidence established
-how a late event from a scan whose STOP command was not queued is attributed
-after a later scan starts.
+ drivers/net/wireless/rsi/rsi_91x_coex.c |  3 +++
+ drivers/net/wireless/rsi/rsi_91x_core.c |  2 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c |  5 +++++
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 15 +++++++++++----
+ drivers/net/wireless/rsi/rsi_coex.h     | 12 ++++++++++++
+ drivers/net/wireless/rsi/rsi_common.h   |  4 ++++
+ 6 files changed, 36 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 31 +++++++++++++++------
- drivers/net/wireless/rsi/rsi_91x_main.c     |  1 +
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 16 +++++++----
- drivers/net/wireless/rsi/rsi_main.h         |  2 ++
- 4 files changed, 36 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index a2e981e261d6..5617c7ef6196 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -249,15 +249,21 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
- 	    scan_req->n_channels == 0)
- 		return -EINVAL;
- 
-+	mutex_lock(&common->scan_mutex);
-+
- 	/* Scan already in progress. So return */
--	if (common->bgscan_en)
--		return -EBUSY;
-+	if (common->bgscan_en) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
- 
- 	/* If STA is not connected, return with special value 1, in order
- 	 * to start sw_scan in mac80211
- 	 */
--	if (!vif->cfg.assoc)
--		return 1;
-+	if (!vif->cfg.assoc) {
-+		ret = 1;
-+		goto out;
-+	}
- 
- 	mutex_lock(&common->mutex);
- 	common->hwscan = scan_req;
-@@ -270,6 +276,9 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
- 	}
- 	mutex_unlock(&common->mutex);
- 
-+out:
-+	mutex_unlock(&common->scan_mutex);
-+
- 	return ret;
- }
- 
-@@ -283,16 +292,20 @@ static void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
- 	};
- 
- 	rsi_dbg(INFO_ZONE, "***** Hardware scan stop *****\n");
--	mutex_lock(&common->mutex);
-+	mutex_lock(&common->scan_mutex);
- 
- 	if (common->bgscan_en) {
--		if (!rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
--			common->bgscan_en = false;
-+		mutex_lock(&common->mutex);
-+		if (rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
-+			rsi_dbg(ERR_ZONE, "Failed to stop background scan\n");
-+		mutex_unlock(&common->mutex);
-+		common->bgscan_en = false;
-+		common->hwscan = NULL;
- 		ieee80211_scan_completed(adapter->hw, &info);
- 		rsi_dbg(INFO_ZONE, "Back ground scan cancelled\n");
- 	}
--	common->hwscan = NULL;
--	mutex_unlock(&common->mutex);
-+
-+	mutex_unlock(&common->scan_mutex);
- }
- 
- /**
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 2ce514766620..16f57c964ca3 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -325,6 +325,7 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
- 
- 	rsi_init_event(&common->tx_thread.event);
- 	mutex_init(&common->mutex);
-+	mutex_init(&common->scan_mutex);
- 	mutex_init(&common->tx_lock);
- 	mutex_init(&common->rx_lock);
- 	mutex_init(&common->tx_bus_mutex);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 165423313c5f..5f11de44f880 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -2107,17 +2107,23 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
- 		rsi_dbg(INFO_ZONE, "Wakeup/Sleep confirmation.\n");
- 		return rsi_handle_ps_confirm(adapter, msg);
- 
--	case BG_SCAN_PROBE_REQ:
-+	case BG_SCAN_PROBE_REQ: {
-+		struct cfg80211_scan_info info = {};
-+
- 		rsi_dbg(INFO_ZONE, "BG scan complete event\n");
-+		mutex_lock(&common->scan_mutex);
- 		if (common->bgscan_en) {
--			struct cfg80211_scan_info info = {};
--
--			if (!rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
--				common->bgscan_en = 0;
-+			if (rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
-+				rsi_dbg(ERR_ZONE,
-+					"Failed to stop background scan\n");
-+			common->bgscan_en = false;
-+			common->hwscan = NULL;
- 			ieee80211_scan_completed(adapter->hw, &info);
- 		}
-+		mutex_unlock(&common->scan_mutex);
- 		rsi_dbg(INFO_ZONE, "Background scan completed\n");
- 		break;
-+	}
- 
- 	default:
- 		rsi_dbg(INFO_ZONE, "%s: Invalid TA confirm pkt received\n",
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index dcf8fb40698b..5fa8fd93a17e 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -250,6 +250,8 @@ struct rsi_common {
- 	struct completion wlan_init_completion;
- 	/* Mutex declaration */
- 	struct mutex mutex;
-+	/* Protect background scan state. */
-+	struct mutex scan_mutex;
- 	/* Mutex used for tx thread */
- 	struct mutex tx_lock;
- 	/* Mutex used for rx thread */
+base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
 -- 
 2.56.0
 
