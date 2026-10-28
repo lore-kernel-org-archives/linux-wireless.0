@@ -1,116 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.70.23
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793195908;
-	b=ZMGs9YhR3PlucmCP30kfvWjCChhfqfywWwxqBRKNLpio4Z+/B5J/TgNGK4AAcEo9xll4
-	 zEqaEfyzNO3lD9rgJA2CGWShswU5uv4tpXHRAhSqAn4FOTb0NLb1jISD0GLgzd6zzwyBS
-	 GBAFTKQNfRKU5hy8/KMu7WMwQJ88fVDuP4PnW1Yxoucc4li80zeskFMJkLzI3gyr+ucMF
-	 l2JkSMXeDt1NUO9uRzbj1CjR1uXvQC0UWVzpaZUW6qxfSRIldvtjE8wz3nIHniFz7RcbM
-	 uynnVyNThQXLG9T2nI7E4qR5ac4od1kwEGO0c5mMVORh1YLeRhyCy11nSgnzi/nW5PA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793195908;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:X-CLAM-Verdict:X-CLAM-Score:X-CLAM-Description:Received:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:Content-Type:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=b1ZsR0wZ6c1yl47fPPokbR/eZIGWlB+iwI67J2vdw0k=;
-	b=J9hTcH35HftdDgowwHh9wMz19E5uomYWd5qn0JKEuE0aunr2imzgCG15LSRH1jb355y5
-	 b1GXhD1ol5u4KP+SFc5UW2pYwZPnYltHmx07BaUbv1Eo3A+C1g2mERWRJbScJwOe0ty/f
-	 qIXb9iif4MBqD/jdybVVChyz2zJHfgiRyrYciCbFqLAB9NKCcH2G7JIEFhPhZxibv8kTk
-	 Z6nri7RcwE3pkH2i7RPYa2UV0LWYpItNBVQLEv2/EqY25iuwWvvwBf3EOBsLgjAfNcHv1
-	 pWkLDFh92tRYv9nujW/3gpqXUzMzEZodyK5P3P+0AKJisFIHBgwHlJ5NHt/BZOG//Rg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=philips.com;
-	spf=pass smtp.mailfrom=bbl.ms.philips.com;
-	dkim=pass header.d=philips.com header.i=@philips.com header.a=rsa-sha256 header.s=selector1 header.b=za9ly2F6;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.70.23
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011023.outbound.protection.outlook.com [52.101.70.23])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.176
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793197051;
+	b=bJyubJAhEFfuVJnvCq8fCy0UXvnkcSef2J/Ht7WGz4guFz6GzgpfYgGVi97aItjswlJM
+	 ucIlmFvfEw0ZTz84hApjubVxa1fhf384xDV5tHbIy3sJekQmSM+F3zH7Iv9ebZT7oYhgW
+	 a91XbMYhIoPRd8qZcxKCozDlFoHb1er8e/XR6tGIgFMyS/SC08KfWt8qhOjg6rWJ5xYBD
+	 gqN3aeMt9Otb8x7On1DDNX8HNySSYZYPEBychZG/NISr2YGLSHjkv/HyRA8FwX8adJIeU
+	 oayNCHbQuN3UjMHpCxL6CpAfk6fYRs5xEdUoRHUEyEJzxIrryFfXtW1KpuxAv7ncNjQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197051;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=400J3GHcIQLYwc1sIdmefx5I/Bqi2GbTm1mkxszhp6A=;
+	b=RpiFUfrdarmdmdenHAUNmNVwbGaV40u4sZuc8P6tYID82Fiq1WlZaJHzunmeIII9LvYa
+	 +aaPkai1aEQ1nrfkZM3KwgDScYI4VLRjUuoiLH2RyF+ERC9laqcaIcmIChzcEQI8Ck4lL
+	 816xdvGs0yFT/NJdiBnHEf2px82ufVeyNKtFN1U6sBKeNXxNrvoZykIzC6odfkxrVyzDn
+	 Vh5nUSlJqAPV+9kkryaKu2dVDER6VpA0W4MYoZ8gO+KKyOGM4+hh4yEr7vsNe72OnytmO
+	 GcFK3lIQyO+4cqfXzpl3SDbntxidXxoatkVRGxfSQZsw8y+WZLLDJmqdQ5L3/UchDvA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=DXYDhQyP;
+	arc=none smtp.remote-ip=209.85.214.176
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56F0606A31C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 13:58:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D56F0606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bbl.ms.philips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E0A9606A320
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:17:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E0A9606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=philips.com header.i=@philips.com header.a=rsa-sha256 header.s=selector1 header.b=za9ly2F6
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=do6WkCVGP+r5sZC0D8pFgTww7svjmIxuyeVPB+JBZp8MK8n3fcXv5NhPJ8pKO0U4+ri/NdM1rgoOuYk8/Tu1SJNcpWhTKdjRKDXeMQLmMkGblYRUkRfOBl2/tdMSJGW7MDVri3XkQro9bSpuiYpywOENPDGPF8SPQWDuFaJLX2oOVMdET1OqXxyRfEszDQc65ONwXg0ussB8kgkUJioeL/X90qXg6X0W6kWAL/EVBhI0cJCWnJbaEmdLZtJQIBmFsK2N4lDsz4ksbQp5EOlxIXy64LRin/gYQH5jc1suil4gGt1KY2rmi8gKWxUJW2gF4sAZgCKV7+uvgbl3i5/KqA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=b1ZsR0wZ6c1yl47fPPokbR/eZIGWlB+iwI67J2vdw0k=;
- b=XzPyD+VFjWZ1ON21PB6IkylJdHQKpRJvBGcdlDGAL0on+eaCb9sLfzV6ZprcD5qkQPrIq4c7PG+BqjQt06tRmFyiEW4VUk4nxQ0xYC2bIM+HwrRzyRUfHaJFhQMyNisc4M/XjimICIqYe9haUiWJ13zY4iEljWpmVXSNSCVbQdPOJHcDz1Uob3rh99mQLPB7woRZBLo6JlA5tJdejfw2bB7q53kd8AnKgH3x23NGOpqvC57yih/Te82eGr0K/60KDefFkNL1yNUA9VusTndHf0YUbS4BMRIzOkHJLEwVZvpds51aC2sTj77ZvngFbSM6060SZlVwdovv7slIpcvXPQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 3.248.88.141) smtp.rcpttodomain=vger.kernel.org
- smtp.mailfrom=bbl.ms.philips.com; dmarc=pass (p=reject sp=reject pct=100)
- action=none header.from=philips.com; dkim=none (message not signed); arc=none
- (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=philips.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=b1ZsR0wZ6c1yl47fPPokbR/eZIGWlB+iwI67J2vdw0k=;
- b=za9ly2F6Fj9s3KQn2AxgNyFITXqQvUPWTZvhN/5sW1KrQoksdlZeI9kHvP2N4asyEFxM/0U/NLrj/7A4XYiHDUOZ/SfASIRmFUfAabfsrCGVUUgTBv1yf+VwTpy3HSBQytXrPasLcaxMhe5PifwXBMqVwWAhTqsL/0W8WNSDCQM=
-Received: from DU6P191CA0019.EURP191.PROD.OUTLOOK.COM (2603:10a6:10:540::23)
- by GVXPR10MB9162.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:150:1de::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.8; Wed, 28 Oct
- 2026 13:58:22 +0000
-Received: from DB1PEPF000509E8.eurprd03.prod.outlook.com
- (2603:10a6:10:540:cafe::3c) by DU6P191CA0019.outlook.office365.com
- (2603:10a6:10:540::23) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.22 via Frontend Transport; Wed,
- 28 Oct 2026 13:58:22 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 3.248.88.141) smtp.mailfrom=bbl.ms.philips.com; dkim=none (message not
- signed) header.d=none;dmarc=pass action=none header.from=philips.com;
-Received-SPF: Pass (protection.outlook.com: domain of bbl.ms.philips.com
- designates 3.248.88.141 as permitted sender) receiver=protection.outlook.com;
- client-ip=3.248.88.141; helo=ext-eur1.smtp.philips.com; pr=C
-Received: from ext-eur1.smtp.philips.com (3.248.88.141) by
- DB1PEPF000509E8.mail.protection.outlook.com (10.167.242.58) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.546.15 via Frontend Transport; Wed, 28 Oct 2026 13:58:22 +0000
-Received: from smtprelay-eur1.philips.com ([130.138.84.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 256/256 bits)
-	(Client did not present a certificate)
-	by ext-eur1.smtp.philips.com with ESMTPS
-	id LuqjxngoztKtZM4AYxIh0F; Wed, 28 Oct 2026 14:58:22 +0100
-Received: from mail.bbl.ms.philips.com ([130.143.87.230])
-	by smtprelay-eur1.philips.com with ESMTP
-	id M4AXxaQijL551M4AXxy56J; Wed, 28 Oct 2026 14:58:22 +0100
-X-CLAM-Verdict: legit
-X-CLAM-Score: ??
-X-CLAM-Description: ??
-Received: from bbl2xvg1.bbl.ms.philips.com (bbl2xvg1.bbl.ms.philips.com [130.143.220.100])
-	by mail.bbl.ms.philips.com (Postfix) with ESMTP id C050F180394;
-	Wed, 28 Oct 2026 14:58:21 +0100 (CET)
-Received: by bbl2xvg1.bbl.ms.philips.com (Postfix, from userid 2884)
-	id BA35CFE0237; Wed, 28 Oct 2026 14:58:21 +0100 (CET)
-From: Vishal Gupta <vishal.gupta_1@philips.com>
-To: briannorris@chromium.org
-Cc: francesco@dolcini.it,
-	linux-wireless@vger.kernel.org,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=DXYDhQyP
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2e5378b281aso5332955ad.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:17:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793197050; x=1793801850; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=400J3GHcIQLYwc1sIdmefx5I/Bqi2GbTm1mkxszhp6A=;
+        b=DXYDhQyPBdB+66SGq5pe4HNqA7llbQQiVEhcYQMMEPtK6oNXB6ldbDG10MbPNB7CNO
+         aVArXI/j0nIa9vUh9PwsdlfIrqAkdy/c6HfY0v7X5QrV+HLrjycExkRtiaEfxEGrVUKY
+         NtBkwW5x2i0mCLvIHwZWzqaRklYkVabxm4ix1PZ6eaY99yJVEOdFoyCFmVPqzumzSz7F
+         MvWLFuJ0Ndl+UfThsEwJLtrxMxRjMF6MPJ8WCdNVsA38Fu+0Yh1DxPfZNeYJMgMFpC+3
+         pybBmYTrNyTcAGj1zaZqUS/nmWKXmPKTG3tNAQecnDch2OdIxy63hjn3eHArAlqwTwAv
+         3bHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793197050; x=1793801850;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=400J3GHcIQLYwc1sIdmefx5I/Bqi2GbTm1mkxszhp6A=;
+        b=o4G/b668XgRKCsGprQY6AhjOOER1uwp80vp8vMv2XOpoe/Yt87QI8Rc4s3MA2X2WFt
+         UKwNrfNSUN9f0R0mFOp5tmJdEWsCk8FTF23Fat9+nnhqjObd9N0k9H1cLsohRVW9drtP
+         KAUsn4UikpwwIlm4VVCpRpy+X3UNEwXz6hIyYtmO5akPn9nbwP3wG5Rq215TabGPp2AB
+         hw8l+uJQnrNkw+lbQsr2S20L1enfcjHsTKyLBuRTGwM+CJPuCMfzLE0Q6Y0GviQCtAie
+         naiadcFSioFxuH2Qs/LCKMyOBgQHWtfDUFEALRELCn6/BQd/ZWk50ZOODXiDjTKSyvsH
+         8DiQ==
+X-Gm-Message-State: AFq9FYLPzpi6VVPZacRIF/M/rNdM7oNZO2lwBVyXpSZESlBaI594WCNR
+	ZFHof/i4lUZw3KMiN3BBK55cTRBcKiPb3HDFHG7mxE7hTkrIySfqe5mHPEPdTfvm
+X-Gm-Gg: AYBFou0g9I/QBYWu6les7CMnnRUihSV6KX1k8wFxsNL0JRvWnncIQgBpOFtiscHS2Uf
+	rxUqUlp++wiPOyIxCWzSqS2wLiNCimKTUgFnRfRR7zTmCTS3uBG/DHIXEZfrPKWySvWhJQRm8K8
+	rCX6+LVH1k6h3txGSQBeU5u5FqwhE8mGv3ctOufZOCqfb2aXFUzh7oYBiv2kx2DLckMV6lDzQRn
+	VOvqDB2ozclQSsTOi26XT5yMctEPHtRginnK3DN7eRtQ15Mh/fUCBeoQGBDoJg3mD22PVxNEuGK
+	hiSsPmtnFsG+ccl/RmG7er7jBTa3X25Mn8GUNE6CbECbylFPGIk/zpSL2NOGKu4ZUwXapl/kF+z
+	WsQT0hg42LSTR+YA+4ZDmPTb+sRVYnZiSGzKWUnT8dlH5HNqrYqLZcxhGt6AutVgeJU9AvViWlY
+	AYJ4yDDri93jcxKvNCqCuk8asKEDYolUYXEh/4dixntsG+G1KfJuI251yxIbq7ok1NMmohnutI3
+	nhQARHG9DTd/EtvmRkF5hErM+xNVR30lH+lxFyeo1nU9TIsEw9twEuFYZr9nSDnhnitC8xW9hHv
+	r7fVx+eAXImNfDZw+ZgZFiWpp134b9UrBsOBWPKqyRfXqFBLHw3KkA4WmS/mtmnVq3PV
+X-Received: by 2002:a17:903:2447:b0:2ea:71a7:7f21 with SMTP id d9443c01a7336-2eb002e2967mr23279075ad.13.1793197050082;
+        Wed, 28 Oct 2026 07:17:30 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6b76dafsm22396935ad.18.2026.10.28.07.17.27
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 28 Oct 2026 07:17:29 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Vishal Gupta <vishal.gupta_1@philips.com>
-Subject: [PATCH 1/1] wifi: mwifiex: synchronize scan cancellation state
-Date: Wed, 28 Oct 2026 14:58:18 +0100
-Message-ID: <20261028135818.4166538-1-vishal.gupta_1@philips.com>
-X-Mailer: git-send-email 2.43.0
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: drain link readers before stopping removed links
+Date: Wed, 28 Oct 2026 22:17:08 +0800
+Message-ID: <20261028141708.5532-1-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -121,94 +94,73 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DB1PEPF000509E8:EE_|GVXPR10MB9162:EE_
-Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 8c355e47-160d-4618-b062-08df34fb874c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|376014|82310400026|36860700016|11063799006|56012099006|261009223027099003|261026121527099003|261021121427099003|261021123027099003|10067099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	QEaQFrutpSZ11d7IdHZ6L48qkTWXE2ftOuSECG9fruij3JAdeMD6Jqq0SDB5ffKDRrnbxPVsKKa8qnIfmXkoJR/D3UIxvTY/TiW3Hen+MVk7yvkUfSNiZbjTDiYxgFUlqFd77Lf8yYeskMucCOCmjU6gB9GqgPt5Hnxc2USx9eq4sZl/X2bZVH7pTrHAOICRXDFJlcWugC/GpLdTrhQwn/7F40h40uQ8cxmE0dDxa//tJ1N6xtrspIrTtSM1HPgs+2An6QiEjVNHZmbznQ3RAmYolaZ6gPq0agtqyWuu/OxiE8XEw97C2x15/gWuaCq+Zu7BO9T6jjb7xTAyvdpVDJI5ibEd/VC1lBgZZkvIgypAWQqxtzAm1v6fReFNplocTojWutFYlSddN/4QyqkSLCJB1PUOyQ9PIwCYg0USG04Tk0kglxSxeWsk40zLyipHDCR+TvOmA4ix4eh9VMjoHWDGYkIeD4xkJjlprHWAA9NdYDSdDaZTKauuUWnetSkZ9hETU3umojJGTkZgtbF1Q6cyqwwYGZAlyYPma7eWqx66yYU0wwgULZj76//S69tWunvMiPFQenZ41yG6FcxVQQVINo6bWCg+fYKT2ACdX8tRhB2eqYqsE2wKDVjCnTG7tfbTQIKzi6ujroo6Gms/um4nOAsDVy8HQ6j14pB1vt4jXd2A9naO9p+2rjoiQJqKyaVl+/FgqS2skfpThSWzXg==
-X-Forefront-Antispam-Report:
-	CIP:3.248.88.141;CTRY:IE;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ext-eur1.smtp.philips.com;PTR:ext-eur1.smtp.philips.com;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(376014)(82310400026)(36860700016)(11063799006)(56012099006)(261009223027099003)(261026121527099003)(261021121427099003)(261021123027099003)(10067099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	nhSFF70oRwhvqXAgXilBN8JUEg0BNsDPftXuGOcbCorEzUzK1E4VKF6RkmWIz1/Wn4ANZ/lpUReQRRrNgZ5aiteFihXhroDX8TAJZ/cQUjopKodjdKC6jGRI/tWB+2wmIECnhfhOoofNjWOIVm6pW/I1qUgDJ+wofnyQbj5YmvCbv3o50wxLqoqcY/LZG+co74juJWkG2eH1OdY6W5WhJPYX0uuTxobxoECEZ4UQAPHuoMDmtklCjtyceaVzWmOKUCEqqX2Bs94jlzmOQyb59N+qXO0lrHvctzD6gp4H0s1hKdwz5nj2OO63BYa/+nhMYl+DL71tiLVMJWqEJ7eHwNFRW3C1uxIYxIomYt2oWFf7k6TclQP1ojJZJUSN2wEEiOCoS828g3feenppufoSMssKBrCzABtHi9VGgSUHrUf0nBhHo/CHiHJJvjSYWzTf
-X-OriginatorOrg: philips.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 13:58:22.1231
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8c355e47-160d-4618-b062-08df34fb874c
-X-MS-Exchange-CrossTenant-Id: 1a407a2d-7675-4d17-8692-b3ac285306e4
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=1a407a2d-7675-4d17-8692-b3ac285306e4;Ip=[3.248.88.141];Helo=[ext-eur1.smtp.philips.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DB1PEPF000509E8.eurprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR10MB9162
 
-Read and update scan_processing under mwifiex_cmd_lock so cancellation
-cannot race with scan state changes. Skip scan completion when no scan
-was active.
+Removing an MLO link can leave work queued on its link container after
+the container is freed.
 
-Signed-off-by: Vishal Gupta <vishal.gupta_1@philips.com>
+ieee80211_tear_down_links() stops each link before the RCU grace period.
+A reader that fetched the link earlier can therefore queue work after
+ieee80211_link_stop() has canceled it. ieee80211_request_smps() and
+ieee80211_csa_finish() can both reach this window.
+
+Record each removed link while removing its keys and debugfs state. Wait
+for RCU readers, then stop the recorded links so cancellation includes
+work queued by those readers. Free the detached keys after the grace
+period as before.
+
+LLM assistance was used to find the bug and review.
+
+Fixes: efe9c2bfd1a8 ("wifi: mac80211: isolate driver from inactive links")
+Cc: stable@vger.kernel.org
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/scan.c | 34 ++++++++++++---------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+Validation: A W=1 module build with MODPOST passed. In a QEMU KASAN
+guest on the declared base, a built-in test reader held link 1 under RCU
+while ieee80211_vif_set_links() removed it. Each of three boots reported
+22 unique use-after-free reports before the change and none after it,
+with no lockdep report. A reproducer is available on request.
+Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index bdd4b8465863b..c2c5738d8a3fa 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2059,26 +2059,32 @@ void mwifiex_cancel_scan(struct mwifiex_adapter *adapter)
+If "wifi: mac80211: free keys asynchronously" lands first, the key-list
+context will need refreshing; the RCU wait remains necessary for link
+readers:
+https://lore.kernel.org/r/20261026125145.68153c510dfe.Ieaf95b8e1336f07866f54d174f699c6aa079d9b8@changeid
+
+ net/mac80211/link.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index 931950a10508..41c7dfc49a24 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -191,6 +191,7 @@ struct link_container {
+ static void ieee80211_tear_down_links(struct ieee80211_sub_if_data *sdata,
+ 				      struct link_container **links, u16 mask)
  {
- 	struct mwifiex_private *priv;
- 	int i;
-+	bool cancel = false;
- 
- 	mwifiex_cancel_pending_scan_cmd(adapter);
- 
-+	spin_lock_bh(&adapter->mwifiex_cmd_lock);
- 	if (adapter->scan_processing) {
--		spin_lock_bh(&adapter->mwifiex_cmd_lock);
- 		adapter->scan_processing = false;
--		spin_unlock_bh(&adapter->mwifiex_cmd_lock);
--		for (i = 0; i < adapter->priv_num; i++) {
--			priv = adapter->priv[i];
--			if (priv->scan_request) {
--				struct cfg80211_scan_info info = {
--					.aborted = true,
--				};
-+		cancel = true;
-+	}
-+	spin_unlock_bh(&adapter->mwifiex_cmd_lock);
- 
--				mwifiex_dbg(adapter, INFO,
--					    "info: aborting scan\n");
--				cfg80211_scan_done(priv->scan_request, &info);
--				priv->scan_request = NULL;
--				priv->scan_aborting = false;
--			}
-+	if (!cancel)
-+		return;
-+
-+	for (i = 0; i < adapter->priv_num; i++) {
-+		priv = adapter->priv[i];
-+		if (priv->scan_request) {
-+			struct cfg80211_scan_info info = {
-+				.aborted = true,
-+			};
-+
-+			mwifiex_dbg(adapter, INFO,
-+				    "info: aborting scan\n");
-+			cfg80211_scan_done(priv->scan_request, &info);
-+			priv->scan_request = NULL;
-+			priv->scan_aborting = false;
- 		}
++	struct ieee80211_link_data *stop[IEEE80211_MLD_MAX_NUM_LINKS] = {};
+ 	struct ieee80211_link_data *link;
+ 	LIST_HEAD(keys);
+ 	unsigned int link_id;
+@@ -205,11 +206,16 @@ static void ieee80211_tear_down_links(struct ieee80211_sub_if_data *sdata,
+ 			continue;
+ 		ieee80211_remove_link_keys(link, &keys);
+ 		ieee80211_link_debugfs_remove(link);
+-		ieee80211_link_stop(link);
++		stop[link_id] = link;
  	}
+ 
++	/* drain RCU readers before cancelling work they may queue */
+ 	synchronize_rcu();
+ 
++	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++)
++		if (stop[link_id])
++			ieee80211_link_stop(stop[link_id]);
++
+ 	ieee80211_free_key_list(sdata->local, &keys);
  }
+ 
+
+base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
 -- 
-2.43.0
+2.56.0
 
