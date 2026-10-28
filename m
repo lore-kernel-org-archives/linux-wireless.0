@@ -1,83 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197133;
-	b=m8KLzvujJkRV0LYpyNZDqFvoDVQ8MFPhLGTQbFftB5fEddtfrpmNR2S7GRixuugkF/Tp
-	 8fSWF2p81vNoGLEZz9OL1YlRTwHwJj7wwIo0dkXu3BgF4SWB2gZRT1GxublYPWk+dgwwk
-	 euaiEgr5cBXPz3TuGiLjNlai/U1VFrm0P/bDie05hxmGb8s8WBYXnD7d05hvxYAVsdoZe
-	 tDJZEjuVh3eiDZE/+A3Fde3sOqjP2IWQv4CYXWXtf41TRc4/O70ZjBUgpCLX2WsvRow9i
-	 FwvNnFk47N2mBrjPCb6hWIIyUghxEqxZo41BjNt3HnCIMbeDyswcDHFevwp7QXvwk7A==
+	t=1793197145;
+	b=kYxI60HAKwOAci4BTgIIOBOyY4Z+gqVoffmUfPZISFoXQs2oBwsvl+xG5Cdjpa2QbaMV
+	 eNh7FaKKp8b5n38SmHVAk+f+khtAhzd8pRaWOL08tUHB/iE4GjlG3cIks0UB+eeqYqaTG
+	 gj84zwuVQXWcduupQgtzKQFmkUFhlw1VUTz/zKfLUTt/Yuvgi5mT8j9q4ZBCxBVXBtAnF
+	 8i19WyxMN2mEmF+XzSS+UIisE8sMyEAT5k7alM/d+aXWuSrkYieCF0SAWXnFisMCS1fUC
+	 C2uSDfr7WVyekDeUKEdob7356wVeQ6oPsBI8iITrAyMMaPT5Dk5LxJJSqxvA0XjC/BQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197133;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197145;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=nFEfZnQ59TpCZnJvhgBJzEp+yfYh6wGlCUPMkB3MYBc=;
-	b=SfTdrOKhIPe4BW4v5f2INLNN7g6JC55zLxXvJQ2UqwaMKgDA5Xsi3USgI1A6+yriEjqA
-	 ONCqGLhUgjsw7vFVCwFxOj0TplVD5zf7Qp2osSjkBkMJpJGl99KuuDKd3kxe09C8poT5s
-	 KNfycDKJwyYxMG+f925sXU/tedLBXX6kDtxdQH3C7qVefe0yE5rTdSOYYKRiL2P3XQvfe
-	 2qK510nylrMzNBRBFVOq+pmBG//7NqtzJGsXvIA0ENkTy49dkX2xXHzW/6EYGg534D0AD
-	 0A85iBc8WyOPJKVw8BU/9n0NrEf1yVYVtnEnWcVcjT8UNsfwKobTrn59+FbRk1j7WFA==
+	bh=JBg8MLPlrE0fjPrOyLI8JRzxatJ5zVcZoGDssyVp73c=;
+	b=aPMBeW5p9lC2z804nCfueJ0BRSFc5BuRGNC6uukcbvuPCTGYg5CnSa/qV6dz8X99/4FS
+	 uIrdWPTJozsVf0PuSVyIrpVm1BrTeFB5xWzfzB3aXSA6Yif2I9kt2xvapQkx9Oy4udIcL
+	 NN/JtzDv7xwMUY/7t8RKESdllc2z4pxA6lotPoWt3XSGjX7ns3MEXJaLTVAXsuDUvgLbU
+	 2G+PaW0ejy3EM9sEEZjnOg1bg9N3wqWRlFfLGtt/isHp+8EQkVINcQcOnugdU1dfKqZIK
+	 w/G0QhACpeZZZfA5JCmTymLIUHFdFvwd0EBiKzQcR798/SD6bWkN441oGxET8BDhTWw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RjLQz0ze;
-	arc=none smtp.remote-ip=209.85.215.170
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=nVvzS0cC;
+	arc=none smtp.remote-ip=209.85.216.44
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C49D606A330
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:18:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C49D606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDAEE60A2620
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:19:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BDAEE60A2620
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RjLQz0ze
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-cdab8873d9dso453998a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:18:52 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=nVvzS0cC
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3a4b3ac8fb7so639119a91.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:19:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793197132; x=1793801932; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793197144; x=1793801944; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=nFEfZnQ59TpCZnJvhgBJzEp+yfYh6wGlCUPMkB3MYBc=;
-        b=RjLQz0zek60zgNWMOUzt+E2a1xXdBEOiVCxWA/FFoRh3FoUS4+hOiT2HP3gcy8Kvux
-         PrLGVghaH9/X5IesZxXXelQwMBw23TpKdfAm5H5CNTED6rtMXS+MDaFBoWDcEriTyU3X
-         421a2sdHC6BR37TyAyTU1M26ctJlzFHYvxKFbVxnoaER08bJLunZh9kh3b/UY+IjdsFU
-         DmrPpA2BejTH1SQtFJYaUTx43Wre9yYyVqDjcLyp3PH58lMGu1ve46GKjhzXVXJg9pGj
-         PuhME+NL8nnXJW/SI/NbjncgvmKw4C3+eKf9NogEbuvwpeYA430D9zLKqfjca6lcV5AW
-         mAkw==
+        bh=JBg8MLPlrE0fjPrOyLI8JRzxatJ5zVcZoGDssyVp73c=;
+        b=nVvzS0cCAcsPi1aoEMGZ6fwt7Q1PvWG0cUwqP9ijYueVsaXUPH+RLO7Db3Qw7Paw3H
+         LgzMPIOgHpmTpJ/UlWh4O9S5pgNDWOKWXvY1OLQEitXmAT53YR2xirH3EV3OTeMuYz8+
+         AlE+eLRej3ixe/qmP1ooD5IrzTnll1fKVxklyAsqaY33eQYDwMygEKb33J79v2ydYkAH
+         cCvFSQt32Hh20D86ytYH24x/XcllCFd9YQEQhqUhehnnHjUG/NJFV/9ufSFTtnpWgi6c
+         HFZ3ElkDrfo2G9o53XQjrwZJtZ8MamNCO7OQMT9IaunybfF8PtF5B7wkiu00eguMeONP
+         V9mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197132; x=1793801932;
+        d=1e100.net; s=20260707; t=1793197144; x=1793801944;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nFEfZnQ59TpCZnJvhgBJzEp+yfYh6wGlCUPMkB3MYBc=;
-        b=0rABEVtkOmDqBP2kbfE8Tk8Jo6L+eoTkv0fh/L+obt8TWelfKHCXbq+7HIUGaBvuDi
-         udFDojtNg7zXsY/nCjI8CEFijk79EVImd59cUGsbk6sAX3GAX41pIYos8lqhoajvj31Z
-         Fx5hCfvaq/8OYKItoiD8GTv6BQdjpEfQgUUGXUeQgbVZ085+/JXnKb9cFUQjhdaPPRm2
-         fbWFCheN7No4ZehOiVbLxYfqHP0w5WB47xkmfvCAZS30NYMKzeCcu2If/5pp2gZYZOzr
-         FXYth5tJShc1+8nPHxkfNt8fir0UYrDigvC2g1JuzipTzXm+3z1ZNaoeTPN58nAS4tZn
-         Oo4Q==
-X-Forwarded-Encrypted: i=1; AKwUvByv26NnE10gWOXRMs/xlLfGFTQzibpTKFn8zWi6gLiCu4iVD13WezY+JV+0YkKo2d8Sj//VRNJyckJjePzDZQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLui3NdsyJ6T4lmsmR4Np7O2L4di6wq1WOBTQ8X9E7zN1eCGMV2
-	+nwUhSfOnJc7UT07vLNg3kXPshtHOdDduxFrg191TTapWidQiUBKfF9E
-X-Gm-Gg: AYBFou3NXMAs+PIRK7iEG1EGUiNWaqEJQPgxQvyaywY4RwcKiV9LapDbv0wuY7R6zjs
-	81rlMW+O4umEH1wM1Jy2TBv0HxqW907fsYExIF+znmqj6AvZQdBrYwo1fjflzM1wrdk//8YurCB
-	dUNXUid8hdcwT8hhVddJNGb9Ej7QsWaNFHGa9vBSE2CrDH50RILowz8aIyYXzAzj/Ia8+dCh1ZM
-	N+QL1xuO+TLbFf6IUKpFa1Y2QNKliGP2CY+B8VE72P+KRG74X5uNfxd5fQeCRVJW6vEcrf5uug6
-	ZU78K0IxEbyD9hu8pqXk0LWJE+NN6BHMvXo6JqqRlj2hxhnAS1h+XEUoZ9HtdPa8aiSbn+d0kLz
-	HYjYGAG5Kppew7O5Ena8+as/1hSWpqF4F0f9VrG5A/RPktmKQxb8s+MEYryvP6OqjERb4zL5m9v
-	Id2D6t5P3sVccPP4QUMzZrmXZQCwjpq9hv7bbeHG08z9iBuZuTTfw1VBr7JHWxCZigsOEdTzLX2
-	8FyOA1mJPlp9xr3E4vEnjT0EvZLRIdL72e/g/lEarj0GV/BwMK7sgXRAOsuRT7vOozl4thrKb8H
-	hEeQ7Nz3PMcnx7kUSkflcMiAjHazRh07MwM1VHbhYPE6i9IeIIt8K1u3G/Y53jX0qoX6
-X-Received: by 2002:a17:90b:2fcd:b0:39d:efa9:cd1a with SMTP id 98e67ed59e1d1-3ae57e07d0cmr1867914a91.4.1793197132116;
-        Wed, 28 Oct 2026 07:18:52 -0700 (PDT)
+        bh=JBg8MLPlrE0fjPrOyLI8JRzxatJ5zVcZoGDssyVp73c=;
+        b=biBMQo2j6iUI6Ju6NMlvqmbebGxl19rb+lnNI7FK6fm4ANaR1jb/zoAsZ9U0lwI9Jh
+         2DjhIV/5PaeONB7ZOIeaWzUBHHY3s7pVKCQHfXvCveONgQp+53rWez9sba+gte2WoXeP
+         BB+0OACpgHEkFYqGqmbq/2fr30T2eCFyki2FnKbP/rfyLVbuwgyt7obaETAmWqi7kb8a
+         hef1qi06acEHUlFOp33SGPBdkDkhPRIzyiVBg4/aTIbl+fzVeWW0EhnuWmHhssJ1R7/s
+         P97jBcZQ4k5xGrd6wIKlFDEYSitF8/5JapWhXcAH0cLhui6UPSs5VL/AeRd194xPnuCT
+         cSzw==
+X-Forwarded-Encrypted: i=1; AKwUvBzQHJCBB/vX3XoxUjqmVuG1C5j0lSxLnj7A7dDmTEwk6a7Y9/ze7F/T6IGJbA2O5qJAZoz2o0Ar6JnlzJibrw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLIKMdpnjDnoIJN7DzhU+lb68P0zJr75qB3E/ZdaIeNTfHXUwiz
+	Re4t4Vy+aHpL//cfcheY6+VDo49ervOVs06cdy/2HVkpvSI++M/F6+VY
+X-Gm-Gg: AYBFou2JBvPbryWpTeEkSc+yVOW+a0vukk6NFkxQfcC5uqhJP3NEzUNFy21nkOPANst
+	TNR1yAsQMF8bmAyo4PuJNWtcb7HvtgQJczbORVmCAjDUTOMnZf3lriwv3S2fbXkLfK8bScXpDwh
+	iXfCfYvvtIS98xwSICHDSyZ3ySom1SM3QEowml4/2TK0n2f+smGzQliNW1GEAUhyT5KI0b8c52o
+	XpcxkZQx2p7CrK4NlfvKiM/9qLTfII5rQd5Z29ctV1iuA/fPoH/VR8JvKZW7uYYOQZHS47GCCth
+	QR5yA1+blQiACcG2SVc0JAOVZwf6Qhzwzboaq/cGsSgWhEb3UZPryTunQ2FH8yoQEY+zgklxeZV
+	LjhB11TMDXFru2J8HoqW+fPAyMEMG5Vf1TiSqUx2VYd+fcX2UmQcKtIhLy0swJDV0k8hu4YZrCN
+	JFjvA5x66gsAUDfx0VcuOxYUVGwTE6c+dIMOtidTNkolwAtUdhaWMMmNTwMiVt5UHGjsU4twJh/
+	sQby6Jzj7APOVZt03IueeqqeBE2l/HsEsARIlvfFUui+QuTFygPbWgc5jZKWe38H6jjSUMV3m/M
+	rKJi0wMYvY+yojmCnwRUrZzLiRmB7bR2nrbBxaB/zO9Ui5T5SA/i6NDfZXCVdOWi6BBR
+X-Received: by 2002:a17:90b:5628:b0:3ad:6781:da66 with SMTP id 98e67ed59e1d1-3ae5816f4e2mr1764279a91.23.1793197143876;
+        Wed, 28 Oct 2026 07:19:03 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a0482e9sm3437223a91.0.2026.10.28.07.18.46
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae5a0482e9sm3437223a91.0.2026.10.28.07.18.58
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 07:18:51 -0700 (PDT)
+        Wed, 28 Oct 2026 07:19:03 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: Jeff Chen <jeff.chen_1@nxp.com>
 Cc: Francesco Dolcini <francesco@dolcini.it>,
@@ -89,10 +89,10 @@ Cc: Francesco Dolcini <francesco@dolcini.it>,
 	Rosen Penev <rosenp@gmail.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH 2/4] wifi: nxpwifi: stop AP TX after preparing channel switch
-Date: Wed, 28 Oct 2026 22:18:17 +0800
-Message-ID: <20261028141819.7556-3-enderaoelyther@gmail.com>
+	stable+noautosel@kernel.org
+Subject: [PATCH 4/4] wifi: nxpwifi: stop AP when delayed channel switch fails
+Date: Wed, 28 Oct 2026 22:18:19 +0800
+Message-ID: <20261028141819.7556-5-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261028141819.7556-1-enderaoelyther@gmail.com>
 References: <20261028141819.7556-1-enderaoelyther@gmail.com>
@@ -107,67 +107,93 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A channel-switch request can leave AP traffic stopped if installing the
-CSA management IEs fails or the driver's work wrapper refuses the request.
-The driver disables carrier and the TX queues before programming the IEs,
-and the wrapper silently drops work during removal, command timeout or
-suspend.
+A delayed AP channel switch can fail while stopping the BSS, programming
+the new beacon, or restarting the AP. The worker returns without notifying
+cfg80211, and traffic can remain enabled over a stopped BSS when the
+request did not set block_tx.
 
-Prepare the CSA IEs before stopping traffic. Queue the switch directly
-with wiphy_delayed_work_queue(), since the driver's wrapper can silently
-discard it after the IEs are installed and traffic is stopped. The wiphy
-mutex serializes the callback and worker with AP-stop cancellation.
+An earlier stop failure can also clear the driver's AP configuration while
+cfg80211 still considers the AP running. A following channel switch then
+reaches the worker without a beacon period and is discarded.
+
+Disable carrier and the TX queues, retain the channel-switch state, and
+request interface shutdown on all four failures. Keeping the state until
+the stop path cancels it prevents another switch from starting while
+shutdown is pending.
 
 LLM assistance was used to find the bug and review.
 
 Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
-Cc: stable@vger.kernel.org
+Cc: <stable+noautosel@kernel.org> # depends on the beacon ownership backport
 Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
 Validation: A W=1 module build with MODPOST passed. Not
 reproduced; IW61x hardware was unavailable.
 Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
+All four patches apply without changes to v7.3.
+Stable pickup is disabled because this patch depends on that backport.
+Persistent firmware-command failure recovery was not exercised. The patch
+disables TX and requests interface shutdown; it does not prove that cfg80211
+and firmware state converge if stop_ap() also fails.
 
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+ drivers/net/wireless/nxp/nxpwifi/11h.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-index 384ba69dd058..0f7720df0304 100644
---- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-@@ -3115,12 +3115,6 @@ nxpwifi_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 				       &priv->dfs_chandef))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/nxp/nxpwifi/11h.c b/drivers/net/wireless/nxp/nxpwifi/11h.c
+index a6c87dfad9ee..1341c9015ea4 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/11h.c
++++ b/drivers/net/wireless/nxp/nxpwifi/11h.c
+@@ -300,22 +300,22 @@ void nxpwifi_dfs_chan_sw_work(struct wiphy *wiphy, struct wiphy_work *work)
+ 	bss_cfg = &priv->bss_cfg;
+ 	if (!bss_cfg->beacon_period) {
+ 		nxpwifi_dbg(adapter, ERROR,
+-			    "channel switch: AP already stopped\n");
+-		goto out;
++			    "channel switch: AP configuration is missing\n");
++		goto stop_iface;
+ 	}
  
--	if (params->block_tx) {
--		netif_carrier_off(priv->netdev);
--		nxpwifi_stop_net_dev_queue(priv->netdev, priv->adapter);
--		priv->uap_stop_tx = true;
--	}
--
- 	ret = nxpwifi_del_mgmt_ies(priv);
- 	if (ret)
- 		nxpwifi_dbg(priv->adapter, ERROR,
-@@ -3137,11 +3131,16 @@ nxpwifi_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	memcpy(&priv->ap_update_info.beacon, &params->beacon_after,
- 	       sizeof(priv->ap_update_info.beacon));
+ 	if (nxpwifi_send_cmd(priv, HOST_CMD_UAP_BSS_STOP,
+ 			     HOST_ACT_GEN_SET, 0, NULL, true)) {
+ 		nxpwifi_dbg(adapter, ERROR,
+ 			    "channel switch: Failed to stop the BSS\n");
+-		goto out;
++		goto stop_iface;
+ 	}
  
-+	if (params->block_tx) {
-+		netif_carrier_off(priv->netdev);
-+		nxpwifi_stop_net_dev_queue(priv->netdev, priv->adapter);
-+		priv->uap_stop_tx = true;
-+	}
+ 	if (nxpwifi_cfg80211_change_beacon(adapter->wiphy, priv->netdev,
+ 					   priv->ap_update_info)) {
+ 		nxpwifi_dbg(adapter, ERROR,
+ 			    "channel switch: Failed to set beacon\n");
+-		goto out;
++		goto stop_iface;
+ 	}
+ 
+ 	nxpwifi_uap_set_channel(priv, bss_cfg, priv->dfs_chandef);
+@@ -323,7 +323,7 @@ void nxpwifi_dfs_chan_sw_work(struct wiphy *wiphy, struct wiphy_work *work)
+ 	if (nxpwifi_config_start_uap(priv, bss_cfg)) {
+ 		nxpwifi_dbg(adapter, ERROR,
+ 			    "Failed to start AP after channel switch\n");
+-		goto out;
++		goto stop_iface;
+ 	}
+ 
+ 	nxpwifi_dbg(adapter, MSG,
+@@ -337,7 +337,13 @@ void nxpwifi_dfs_chan_sw_work(struct wiphy *wiphy, struct wiphy_work *work)
+ 		priv->uap_stop_tx = false;
+ 	}
+ 
+-out:
+ 	kfree(priv->ap_update_info);
+ 	priv->ap_update_info = NULL;
++	return;
 +
- 	chsw_msec = max(params->count * priv->bss_cfg.beacon_period, 100);
- 
--	nxpwifi_queue_delayed_wiphy_work(priv->adapter,
--					 &priv->dfs_chan_sw_work,
--					 msecs_to_jiffies(chsw_msec));
-+	wiphy_delayed_work_queue(wiphy, &priv->dfs_chan_sw_work,
-+				 msecs_to_jiffies(chsw_msec));
- 
- done:
- 	return ret;
++stop_iface:
++	netif_carrier_off(priv->netdev);
++	nxpwifi_stop_net_dev_queue(priv->netdev, adapter);
++	priv->uap_stop_tx = true;
++	cfg80211_stop_iface(wiphy, &priv->wdev, GFP_KERNEL);
+ }
 -- 
 2.56.0
 
