@@ -1,65 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793164414;
-	b=GHibZzqYhFNZB83Ts/nCfoCWtM9Ij8C7YYbsykfT+e0bWi9OmyrOGjUlVYpKjEdXDVqv
-	 hMPwFclvJz+I2b3+2STRNrZyanmUnHfVd86Snf4D5fDUVxY3jPXpljslw5SE0g598kfYi
-	 YBWsHN4EGZ9mE0bn9VpEUd/pLqNRjTto5wVYsRGsq38UMcHk7TGsRwnK1ykMkj080rTDz
-	 zmrF8bJ2z9ARY43iDYDKnwcBe7IGgL0tRnVk86p3/AlRf88Y26CyZBvyGUdJRJzEUZvlx
-	 cT9cVLClGbrGll08vBoFiYpmLVa3mbO/OPwqhsvpr9T7PFF87ArkstlGGTgEWjucqgg==
+	t=1793166118;
+	b=g50PZ7YEFeJpGkE3hHTaKobPnz38PHR3WLSsRdxOXXBrfwhbBSsxpi++IcBjcsgUl7MM
+	 eOhzMLbD2FLTGql8sbW0mmjBi7P7x2QyaLpyEpfWcwA2AomqKE6LfDMKrnSB4aF0ottiH
+	 e1YvMIOqS/72+XKt25B60/8DozUrZz9X/3MspDx22kBiSXGd3m4ZtLeAETskV4NO+F49O
+	 76wkcvYmCANJtzoSDRsoUs0urpRauQTEMLZq5DH77ybL3MhTPSBsojYthlJ4LrAZpLYnY
+	 dfkepYcZahfCUoEi9deGfSdZGhC/FpZbp4wdea6uJwK3oCewoGzFFlJekx8aYDwk7eA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793164414;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=sh0jjqvJiEPcXO2T9p933jIcQss8YBNUV3WFM1iJF54=;
-	b=Ov9RtAHK1P6/GKsexXBaUAu5ruUw/mmTwVCsB8KdgEnxJ1ajy+DKqxeL6Ul3JnhNnNYp
-	 g6WuCwQXXI9nUEfWlVhUSzx4io2sTQ7MPIOl1eC1ukQd4ihORsNJRKXmpnyavGBrMkSxt
-	 M++JmKE4Ya7KynWXret8L/yYo/KknE1WmMM73qv18E9KrGwsraoBTcG77cIdNdpRPJaxQ
-	 +X9HCUzDCF/3MfxC82WiVLcS7vkHGMYnVyXU4oAirA98OEkm2VJlBHGl/15CYXJrBkncI
-	 P3MuTrxBepA2ZYXgf5pk0K866TbwLfZECah8wLIWm0x0tp5cDp0csv0CQV2942ADNcQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793166118;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 References:In-Reply-To:Accept-Language:Content-Language:
+	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=4Tt7DPMN2jjHR/Knkht0X77hzqG0cdAPxU/YpNye/GM=;
+	b=fyoBkbDj2vbBooN14Cog9k67nP7wen2vT5WZRT5nVCc/iKkj0WN7d83E1rCnJhFoXcqd
+	 9T5wBhb8Rzxe9EkBtz9rIGwZ+v2Bc1ahnKOjdiw7hX25+MJC3mZvAUXtSX/HDtxu3Sjlp
+	 EaMEN8mlTvBGSO/hsDtYw9bHggXL/BCRp5iZ9XTrvQDtPY3+MXqhHdBK/rqG4fgER+EOc
+	 RJMNjIw9CiyiTgCIaktEwLzpeX4cHWDpVGXzD3Mg4xthM/8Av50qT0h/g+dHRhLCkBjX1
+	 +6car0MStG1PHVtJmhVG3oUOFui8EbRDFlGJFD4l8vw4GDhab5a5FDJBHCOpKFh65vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="Ln/i3jtP";
-	arc=none smtp.remote-ip=117.135.210.5
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b="i/BA1tGv";
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C76F860A2616;
-	Wed, 28 Oct 2026 05:13:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C76F860A2616
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C60E2606A31F;
+	Wed, 28 Oct 2026 05:41:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C60E2606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Ln/i3jtP
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=sh
-	0jjqvJiEPcXO2T9p933jIcQss8YBNUV3WFM1iJF54=; b=Ln/i3jtPT9Marz4A63
-	bs8N4xcCltjaloN7wEutG0ekvQrEejmttz1gAEkPTdab4sQ+UwpQEs6S8dTJa8Mc
-	287g6jX1ypbA5FG5muRhWIqApwVX+PbZtxbtAI2zTtlaaJz/80wRNqG92fNMhXPy
-	NA11RVc9Q5X6LLmBCw9dRYzrQ=
-Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3_3lYhOFqTkVqDQ--.14113S4;
-	Wed, 28 Oct 2026 13:12:58 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-	Govindaraj Saminathan <quic_gsamin@quicinc.com>,
-	Maharaja Kennadyrajan <quic_mkenna@quicinc.com>,
-	Rajkumar Manoharan <rmanohar@codeaurora.org>,
-	Sven Eckelmann <sven@narfation.org>,
-	Sriram R <sriram.ramachandran@oss.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org
-Subject: [PATCH 2/5] wifi: ath11k: validate hardware mode capability TLVs
-Date: Wed, 28 Oct 2026 13:12:51 +0800
-Message-Id: <20261028051254.147628-3-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261028051254.147628-1-yaojiale02@163.com>
-References: <20261028051254.147628-1-yaojiale02@163.com>
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=i/BA1tGv
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69S5fqjJ71542548, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1793166112; bh=4Tt7DPMN2jjHR/Knkht0X77hzqG0cdAPxU/YpNye/GM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=i/BA1tGvaj33zRY+KQpppqpq2J2W6FS0MvMIjdw3UFxBmaL43ukHM9DhVkJBL7x32
+	 pBx2kIJlYBJ8TDsEqRsVWCSw14QKogyTV/ZkvdzmI29tyumhOnzC7pw2LzEqAGsX2r
+	 UxF6yMlgi20DVKms314fjIPdTybDHwUv2RklGjxlFWfe4/rKE63vKbjLlAgWta4Wfk
+	 QByWLo9U0mnCIgWABpQsCpMpuY7jSrpXs48B9U0NG8Xm8yZlCCaRONP7aOcZeTcxxY
+	 x7N47YBb83qDkCqrxfo09b3YfpEeGhlGXzpMk8uWdduv6enw6BcUFv5CbYQkLgeBzT
+	 s0uLTtFx5FCtg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69S5fqjJ71542548
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 28 Oct 2026 13:41:52 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Wed, 28 Oct 2026 13:41:52 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Wed, 28 Oct 2026 13:41:52 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH rtw-next v5] wifi: rtw88: pci: wake the TX queues after
+ restart_hw and interface up
+Thread-Topic: [PATCH rtw-next v5] wifi: rtw88: pci: wake the TX queues after
+ restart_hw and interface up
+Thread-Index: AQHdYtso8j1Y8YSlsUur541W2jCI1bcSeEEQ
+Date: Wed, 28 Oct 2026 05:41:52 +0000
+Message-ID: <daa596fc5d0e4ab59c15b085d12f050b@realtek.com>
+References: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
+In-Reply-To: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -69,41 +83,31 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3_3lYhOFqTkVqDQ--.14113S4
-X-Coremail-Antispam: 1Uf129KBjvJXoW7JF4xJFy3JF4xKrW7tFyDAwb_yoW8JrWDpF
-	4xG3WUA348Jr47Jw1fAa1xZa45Kan5K34agFW7t34fuF18CF1rZFyYqFWYqFyrtF4UGFya
-	qF4DtrW5GF98t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jcCzZUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzRpKhGrhhFretwAA3l
 
-The service-ready parser indexes hardware mode capability TLVs using the
-full structure stride and reads their PHY maps without validating the
-firmware-declared payload length.  A short TLV can therefore cause an
-out-of-bounds read.
+Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
+> When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
+> records it in ring->queue_stopped. The completion loop in
+> rtw_pci_tx_isr() is what clears them, and it needs a descriptor to
+> complete. If the device goes down first, rtw_pci_dma_release() rewinds
+> the indices and frees what was in flight, so nothing is left that
+> could. ieee80211_reconfig() does not help either: it wakes only
+> IEEE80211_QUEUE_STOP_REASON_SUSPEND, and an interface down/up does not
+> reach it at all. TX then stays dead although the device came back.
+>=20
+> Reset that state where the device starts, which both
+> ieee80211_restart_hw() and an interface down/up reach through
+> rtw_core_start(). Gate the wake on ring->queue_stopped so that a
+> start which stopped nothing leaves the queues alone. The wake cannot be
+> narrowed to the queue the ring-full path stopped: the flag sits on the
+> ring, and rtw_tx_queue_mapping() puts management frames and multicast on
+> rings of their own whatever queue they came from, so a flag there does
+> not name a queue. mac80211 also keeps a single non-refcounted DRIVER
+> stop per queue, shared with the scan paths in fw.c, so
+> ieee80211_wake_queues() releases whatever holds that slot.
+>=20
+> Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
 
-Add a minimum-length policy for hardware mode capability TLVs.
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Cc: stable@vger.kernel.org
-Signed-off-by: Jiale Yao <yaojiale02@163.com>
----
- drivers/net/wireless/ath/ath11k/wmi.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 0d4481a09501..8a73318704f3 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -165,6 +165,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
- 		.min_len = sizeof(struct wmi_dma_buf_release_entry) - TLV_HDR_SIZE },
- 	[WMI_TAG_DMA_BUF_RELEASE_SPECTRAL_META_DATA] = {
- 		.min_len = sizeof(struct wmi_dma_buf_release_meta_data) - TLV_HDR_SIZE },
-+	[WMI_TAG_HW_MODE_CAPABILITIES] = {
-+		.min_len = sizeof(struct wmi_hw_mode_capabilities) - TLV_HDR_SIZE },
- };
- 
- #define PRIMAP(_hw_mode_) \
--- 
-2.34.1
 
