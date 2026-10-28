@@ -1,86 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793209263;
-	b=mBobUP3jIjwmYLeAhkR1oqCMnHFWqF9K/DgOl8o0UXrtbf+sKX5NdiLdS3yAQv9MX1j6
-	 ltt89h+S0Ss1LxbAh0dZlpiWkFS+4qByKScsp6x4xz9kk7yN4Y0snFA//1ss89yatDhyE
-	 URFAwPcrkntvXlm5+pcahFoF0YseO3Vlt0XBVwJqp7pYNPrjGD8vrcfdDYFG+nfAZTJgb
-	 OCw2QoRX+ZVxr93LKpKhnyDEPZpEUW3RpTTY/qnySqtO6SwTRRt9UPrzCvdXfHeazKspr
-	 3IDP3S5A9m1ivTyrGkexfySA1BrnxTRWSTMc8rndKS1qanzGj1BhSL6IHPvBr+8E2ww==
+	t=1793209302;
+	b=g1MOOjQRCE98WUx7KbgYwmJhlAzx2pJfnfK0kOOw9I7wnbHOGp2J+eDtqwh5Yg0BvlLI
+	 MFah4TLFyKSgXA+tvjZmqdp5VYqhNwnI1dj4McMHJCSwZp8UtKO23h6wBrOMhNWlsCCf7
+	 0fNGzg9ZS79tjczMTkXgueI1lCa108SI4JBflFhfzQI8qgaORGuiyxIhxdmeU/GZryEyS
+	 LQ8wCaH+euYSv8+cH7DTShblUMhJbfq3Yhi5W1I1RZCGInsn6pCsmohB40fJ1JZJXr0+w
+	 jSeYLuSuJvAJ2Ew/0Fz76+L24F38R4l1hQGeapl9HcUfosbLyjVTYVXvOcmJtd2JXqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793209263;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793209302;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:From:Subject:To:Cc:References:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=bKEddF200A5Fji/8mKWoxDNoJ3pSAPZUATgBbE0Ij0M=;
-	b=df40FsClh0br1i+hOqhy/APkDUOzHwdSdZFFVwpBwld/y9SDDOjUa1bsqDby7vZ5Nkyy
-	 I9KmuV+KJgZ88HproxReAjRsGdU4+/ew7QfBgXqEdwUj6VMqoPm2jDHd71NpBsTh+3O/K
-	 vp7G+rKhjTl4j5caEe8UWZWHzeDJOXa+8ylYKx4+q4cTGZN1R44bwSpyPe5QhDsTL0BRd
-	 nwmDtXszaghAd3zJPXVZUvJcaOyvngflj31f+V1mxtRiBQhuPWGv7lWbhRdrEZgUg1ylq
-	 29W41T9mraN8UKovdpcU8ne3xXr77S3zh/J6LzdDKIeenCslIlAnNzVw6EcGF9rzT8Q==
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=x/l/zKeelwRJBhxZfMNH6sAqhzKzVG26GZyZjVVGRF0=;
+	b=43yjpoZQgvmok8q4MMBTos8nfLBmkfedw0zL5E0tMtTCqVaSYQF/E/hdnnZw6N6v+0yB
+	 M4VJ72H+eAcyynWBzwPAcJtKl67xmJgh0OZM8D98vEfGSVNPBM8xD//PbMvh8iHsiFBpM
+	 tKLZ5eX0l94iIlTqYahnpkWjeifFsbzsDH8ZXnpAvJ62xrVd9PfxuASIfdh0zNfx5NyPd
+	 SaLv+MYwxrLhysGolSCYJclSmXHFsNV+beVqonXCfGkTcXrK2VYDkMwhgsC0oFrCfv6W5
+	 FNToeDfng+YzPaHj+FT/0i8zMxIwA7wc7vWpUMpYtGfId3HoSdCGYBcpTabyAv8giGA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lYTaYCcN;
-	arc=none smtp.remote-ip=209.85.128.43
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CHId1680;
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF034606A31A
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 17:41:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BF034606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28DF7606A31F
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 17:41:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28DF7606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lYTaYCcN
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a60f9474c4so15771005e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 10:41:02 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CHId1680
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a5b2be99a8so11006415e9.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 10:41:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793209261; x=1793814061; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:subject:from:user-agent:mime-version:date
+        d=gmail.com; s=20260707; t=1793209300; x=1793814100; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
          :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=bKEddF200A5Fji/8mKWoxDNoJ3pSAPZUATgBbE0Ij0M=;
-        b=lYTaYCcNMkAKIRU3LZsCTt/AnaIzS9iBgUSVhIy0XMbUHFv7bOCQoDijnhQpipPCKw
-         fxVQDn8hV72p1BcbENkXLRv/Yw9THR0uFdfKDTWwFTcfB+X0KslyKh918Tc8Yv9d374M
-         DeB4kzdsnLFFT6NTDPh8QfDGgh7NWBcbJh+V0yTkPQYemyfAqf+NHtfCUJF0l78/aUzp
-         cJpaPW2SCbNcQOiDPKhSItrdwXg+UD7OXD1Vifl5jIdW3FPQqEXqi/rJo1RqwEEmGav+
-         z5iI/UkfUgGhWOMOYmnI/CnbGLJ1f4i4okrcJwsRnYeOSf93QK3vEWBA5S6RUu+jqjFT
-         DPeQ==
+        bh=x/l/zKeelwRJBhxZfMNH6sAqhzKzVG26GZyZjVVGRF0=;
+        b=CHId1680KI71HT4YHSV0SKQhY5xMgtWI8PMVmdM13OzjVP+F8Jbax0Z4x6vwGF9t7U
+         w7dpqQH89fr0g+/ig11wj1XA4EzxJNA23cMcZdlKqIeVfSdL9cm9W9B3YP+Jkp7136W4
+         dx3c4I+NAITe1XEmeDVTNesxCIfNfiVX/V9rETPJxJGWndspgI+nPK5vlr+WWVhW9Zyp
+         Gtwn/tXiwCVkb9GRlyiS0Q+7MT5xeYxdG4bXC+68TEb+XlqlBaRb80YJZK+ugo+5KQVs
+         291a/XDwZ2xTzsmtGrt9zmr223+xI42LdNfdY+/bA1a4AblSDfIGn1NxvC2wcBgWnPi/
+         O0Jg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793209261; x=1793814061;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:subject:from:user-agent:mime-version:date
+        d=1e100.net; s=20260707; t=1793209300; x=1793814100;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
          :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=bKEddF200A5Fji/8mKWoxDNoJ3pSAPZUATgBbE0Ij0M=;
-        b=FiNx1vl9Ys0mg0yj+MSy6mCchXX+S/PSNpdKdkJcCNVfoAIDewzPqmsmr5MYxinrW1
-         ymZDc81pH+GKCILkd9j1bTB9EDHKa0CdPles9Oel/T07ChgvtldUFnaDQpYcY36fvwSo
-         h/oVdMVfvIcc5PkecxGAgy63MDUG6xyL+Fz7CQdHwc2EQk2/ahlC9NGz/bHA34QKkXPO
-         n8dwATlSCjG+CxV462l3bEpmfV7Upyh80reRudRUffdhU5Di7Xn179lWDFsB5TSEBBn2
-         MCvO4GdZ1gnYq6V1MUFQNhnj5Re4LfeBeLYmYXKq9qbeqlKnMlHxQKfsVf9JlnQebv46
-         6qPw==
-X-Forwarded-Encrypted: i=1; AKwUvBw6im34mbb8Cj2dUQGbeAfgDYsY2Y4xGa8fb/04nviPGESc4IIczTOybCXyb2SBGqW5J19Rfc1pw2kYVMjFlw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJMhKX2Zyp9XSvyCaHUxdYxXeW3YqtLTbUwOrLeTcwgRApNImyU
-	+6Hp1Tf0u+IdjHZsx7dlxTsaZ4vYC1zg4aDAOqvm827rvEyWG4nyaxVo
-X-Gm-Gg: AYBFou0g6DBokIVkN9Clb8MsiFITL/m8xfYtWw3xAU28cnlbwPOBTVeIh1qA4qEncjI
-	qXpQrsbZNxSnrUBxOJqJroAidyrSL8N82A9baf8D7edgbaAW53ElExOE5k0vLuLmoTgSXwucu2y
-	iO4XGAGtNn85La05Bj6BvBf5eN06HESojVkp+D+O0P6aADXJl9Ot6xr6B9j637fyox/i1et0VIc
-	MTri/ffYUppDYeNoFRQY4JupEwBWUbrtKlhYUsMgE8VAsob5YSCpdM4I2lK2yAOEo9t7pEHgtfZ
-	osbZSVn9gPZHQcbDpVLK05L8EVstV0lNqncuql2XB9FPbgCqyBIG15kvJxmHT2Q5r9RcCtNVf2J
-	4iKaW+cZzWD+7F/ZgDnGmkzq8nO07HKGeA8Cyw/izeMckJEDtzZrKRsTDQtq958CruLgn0seghq
-	RJO2ro8Mi8xB+on3vFvhRWdANoEsk9X08QZftbyVKAd/TUkSgv/YADPQhzhgxFdKMpGPhOksNZt
-	5kJdVklBTnfZfn7bmb1tn7OjzvXHUexaoaYBCr2qx3echHCMCmWj6dBp27S0tWwaGR2q2ZK68wy
-	jfgfpTNO/ixdMcAA8Sj7KkfP7KLp9uLQLkhC1++iNAexaOH6QJppIH66Rw==
-X-Received: by 2002:a05:600c:3b07:b0:4a3:5aee:2c25 with SMTP id 5b1f17b1804b1-4a967203057mr68045325e9.31.1793209260904;
-        Wed, 28 Oct 2026 10:41:00 -0700 (PDT)
+        bh=x/l/zKeelwRJBhxZfMNH6sAqhzKzVG26GZyZjVVGRF0=;
+        b=Vx0J6p0tjq8ORNNgXFqh2yx/xkrXeWq4Fjv07OEaRlNgpFq/4wzX05U6wj63azBHcr
+         UBc0BEG9NS68S9vgBfB0J0kjOJWsjqsuKBoOtvrRw/RFk5sb0kncQHcPBLBEnguYCAJd
+         iLCu1un2rtTGmiW6EpYHGIvRrMiGGQFEZpR3VRTfqesb4ht1sJM3EMOp1hO/90L6tRry
+         2e8HdfzNedg5HhH0Zmh1T2SM9lbwy1e+oJILJ2KikPjv8hpP1NnvehmPEPQqp5ELXuiM
+         80KoxRGiEV4dOqau+u8O2vQ0iARf1XR+ICBfoJtdPgeDbL+x2byPlPH+CMUCA4tND7j8
+         kD+g==
+X-Forwarded-Encrypted: i=1; AKwUvByxZW+BypTbFWYOwxa99ZfZ4bbtryLYSOPCqZdWVVj4qtN7jzNYzu+GaPwVyP5bhTGYYG9kztPwekdNfcEEcQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJhWawLArlBphbriUNib6BRS4ZKL/+pyYAQo01c9sSb7+2ILzrM
+	OUo57OK513OdPBXbPNDgBwc/Md8kC6p5o5TWj49DEkfcPKnjLZ3AcWFB
+X-Gm-Gg: AYBFou3AM8H74aPoN6BCZZHX8SLmCkaAsoVih4w0slYpgkatjwd8efwc+FAjdVuZhFF
+	eCxbzVT5eFfhJUqn1kMuU4qLUGEMeEoHhZ84/1nvIvmFfIuQ9m022bNxPehFmV+WsB+VIuVHa/V
+	Ytu52aRTVxcoUI16bWjZjb0OuxeNVlZM90IVCMLTNqmeqH8F29f+Iq/2Mjn6vRBd3qN64ZW4iGX
+	P1BBkPkYCM/lBauvMD0ubb7H5Hmd/z788c5vQHK4KTtelL1wNZ2aD23KFeEZWVFqisS4FnctzSN
+	co2Xnon5N/G0NjNvPn4eKAd7cnHYNfwhteFYxtCfrhEL6CRduB43R0rUoASpJdhQiaih4BT6mFV
+	FHyaPLTNoOPpW0iQAiO74esXYl+arDN26I59OlplK+fEyFGbzq0Ye+S0F5Vq8rbcfpydHNV9Trb
+	5vo1AtdxcBa0z8CmBT8LBOW/3SKxcF5T/4bBr/Y7i1Tg2IN6bvhMg6H84p7SOW+j8aZoHIEjJN0
+	M+Ls3C8YBd6vnL3akU7sglag6VzmO5WxuZd+S+HANvZFiYvAtj40SrOy1/PxVpCbUup3bbAkqc6
+	qNfkYyNe4llkQH9LL/1YsgmCqI5f1/ID44QL
+X-Received: by 2002:a05:600c:37cc:b0:4a2:677:ad8e with SMTP id 5b1f17b1804b1-4a968552939mr68565885e9.34.1793209300362;
+        Wed, 28 Oct 2026 10:41:40 -0700 (PDT)
 Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa8213ead6sm6817045e9.14.2026.10.28.10.40.57
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa7c5063e3sm7909065e9.0.2026.10.28.10.41.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Oct 2026 10:40:58 -0700 (PDT)
-Message-ID: <c035c434-ac56-49b0-bc28-730caae58670@gmail.com>
-Date: Wed, 28 Oct 2026 19:40:56 +0200
+        Wed, 28 Oct 2026 10:41:39 -0700 (PDT)
+Message-ID: <152bc5bf-4e5e-443e-b191-198205ad81bc@gmail.com>
+Date: Wed, 28 Oct 2026 19:41:38 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -91,249 +92,123 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH rtw-next 4/5] wifi: rtw88: pci: Add functions to support
- older chips
-To: Luka Gejak <luka.gejak@linux.dev>, linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Subject: Re: [PATCH rtw-next 0/5] wifi: rtw88: pci: Support an older design,
+ like RTL8821AE/RTL8812AE
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 References: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
- <35e9d20a-4f0c-42c3-9d06-358a5620251c@gmail.com>
- <152a5489440fbddb039d515af46fa46b30bfb109@linux.dev>
+ <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
 Content-Language: en-US
-In-Reply-To: <152a5489440fbddb039d515af46fa46b30bfb109@linux.dev>
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 24/10/2026 11:36, Luka Gejak wrote:
-> Hi Bitterblue,
+On 27/10/2026 03:52, Ping-Ke Shih wrote:
+> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>> This series extends rtw88_pci to support an older design, like
+>> RTL8821AE, RTL8812AE, RTL8723BE, etc.
 > 
-> Thanks for working on this. I went through pci_old.c and have a few
-> questions.
-> 
-> 
-> October 24, 2026 at 1:02 AM, "Bitterblue Smith" <rtl8821cerfe2@gmail.com> wrote:
-> 
->> +++ b/drivers/net/wireless/realtek/rtw88/pci_old.c
-> 
-> [...]
-> 
->> +static void rtw_pci_old_reset_buf_desc(struct rtw_dev *rtwdev)
->> +{
-> 
-> [...]
-> 
->> +     rtw_write32(rtwdev, REG_RX_DESA,
->> +                 rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma);
->> +
->> +     rtw_write8(rtwdev, RTK_PCI_CTRL + 3, 0x77);
->> +}
-> 
-> If I read this right, this only runs on setup, and rtw_pci_stop() still
-> goes to the new rtw_pci_reset_buf_desc() when the device stops:
-> 
-> rtw_pci_stop()
->   rtw_pci_dma_release()
->     rtw_pci_reset_trx_ring()
->       rtw_pci_reset_buf_desc()
-> 
-> Some of those offsets seem to be different registers on these chips,
-> for example 0x340 is REG_RX_DESA and 0x338 is REG_BKQ_DESA in
-> pci_old.h. Since rtw88xxa_power_off() calls rtw_hci_stop() before it
-> clears REG_CR, I think RX would still be running when they get written.
-
-Oh, I missed that. I'll fix it.
-
-> Would it make sense to send rtw_pci_dma_release() through pci_gen too?
-
-I think just rtw_pci_reset_trx_ring().
-
-> 
-> Also, after stop the descriptors keep their OWN bit and buffer address,
-> and only rp and wp are reset. If a frame was still queued at that point,
-> could the hardware pick it up again after the next start? Would clearing
-> them here help?
+> The older design is own-bit ring, and the new is read/write index ring
+> with buffer descriptor. Can we use 'own-bit' instead of 'old' as the file
+> name ?
 > 
 
-Any frames still in the TX queues are unmapped on stop. I think we would
-get an error if the hardware tried to pick them up. That has not happened
-so far.
+Sure, the file name is not a problem. What about the code? All the functions
+in pci_old.c are prefixed with "rtw_pci_old", and there is rtw_pci_gen_old
+and rtw_pci_gen_new. Should I rename all of these?
 
-> [...]
+>>
+>> After this, another ~20 small patches can enable support for RTL8821AE
+>> and RTL8812AE.
 > 
->> +     /*
->> +      * Because the time taked by the I/O in __pci_get_hw_tx_ring_rp is a
->> +      * bit dynamic, it's hard to define a reasonable fixed total timeout to
->> +      * use read_poll_timeout* helper. Instead, we can ensure a reasonable
->> +      * polling times, so we just use for loop with udelay here.
->> +      */
-> 
-> This comment looks copied, I don't see any I/O in this loop.
-
-Indeed.
-
-> 
-> [...]
-> 
->> +     if (queue == RTW_TX_QUEUE_BCN)
->> +             rtw_pci_release_rsvd_page(rtwpci, ring);
->> +     else if (le32_get_bits(tx_desc[wp].w0_9.w0, RTW_TX_DESC_W0_OWN))
->> +             return -ENOSPC;
-> 
-> I'm wondering if checking only OWN is enough here. OWN is cleared when
-> the hardware is done, but the skb stays in ring->queue until
-> rtw_pci_old_tx_isr() runs. rtw_pci_tx_write() only stops the mac80211
-> queue of the current skb, and the MGMT ring can get frames from more
-> than one queue (BARs use the AC of their TID), so I think the ring could
-> fill up completely. Then wp == rp, and the next frame would overwrite a
-> descriptor whose skb isn't freed yet. Would the avail_desc() check from
-> rtw_pci_tx_write_data() make sense here too?
+> Will you plan to implement RTL8723BE (you listed it above) in rtw88?
 > 
 
-Is it a problem if it overwrites a descriptor whose skb isn't freed yet?
+I wouldn't mind, but I don't have that card.
 
-> [...]
+>> Then rtl8821ae can be deleted from rtlwifi.
 > 
->> +             if (dma != tx_data->dma)
->> +                     rtw_err(rtwdev,
->> +                             "tx_data dma %pad != tx_desc dma %pad\n",
->> +                             &tx_data->dma, &dma);
->> +
->> +             dma_unmap_single(&rtwpci->pdev->dev, dma, skb->len,
->> +                              DMA_TO_DEVICE);
+> Luka asked me to merge AP mode for RTL8723BS, because the AP mode of staging
+> rtl8723bs can work well. If you decide to delete it from rtlwifi, please
+> make sure all features are implemented before deleting. However, I can't
+> say what the exactly all features are. 
 > 
-> If that can happen, dma here would belong to the next skb, so it would
-> be unmapped too early and this skb's mapping would leak. Maybe use
-> tx_data->dma like rtw_pci_tx_isr() does?
+> [1] https://lore.kernel.org/linux-wireless/d6af5cebfa1a46e2bc2da662634766d7@realtek.com/T/#maa2a3e897d5d488d0219399f9555d88b9ef6504f
 > 
-
-I added that check just to see if it ever happens, but it never did so far.
-
-> [...]
+>> rtw88 is not without problems, but in my experience it's more reliable
+>> with these two chips. In the 6-8 months I used this code, I observed
+>> these problems with rtw88:
+>>
+>>  * The top speed is a bit lower: ~220 Mbps instead of ~300 Mbps. In the
+>>    case of TX, the difference is due to the EDCA parameters. rtw88 uses
+>>    the ones from mac80211 (rtw_conf_tx()), whereas rtlwifi uses its own
+>>    "turbo" values when there are not too many non-BE packets
+>>    (rtl8821ae_dm_check_edca_turbo()). Not sure why the RX speed is
+>>    lower.
 > 
->> +             if (ring->queue_stopped &&
->> +                 avail_desc(ring->r.wp, ring->r.rp, ring->r.len) <= 4) {
-> 
-> rtw_pci_tx_isr() uses > 4 here, so this seems to be the other way
-> around. Is that on purpose? I guess it came from rtlwifi.
+> Maybe you can try to compare them by VO or VI packets?
 > 
 
-Yes, that is what rtlwifi does. It was done for unknown reasons in
-d0311314d002 ("rtlwifi: rtl8192ee: Fix handling of new style descriptors").
-Before that, it was "== 2".
+Do you mean for the TX speed comparison?
 
-The vendor driver v5.3.7_27548.20180724_COEX20170206-6761 uses ">= 2"
-in check_tx_desc_resource():
-
-https://github.com/rapyuta-robotics/rtl8821ae-dkms/blob/master/hal/rtl8812a/pci/pci_ops_linux.c#L340
-
-> [...]
+>>
+>>  * RTL8821AE RX speed gets limited to 70-100 Mbps sometimes. If I watch
+>>    a Youtube video with Bluetooth headphones for 10 minutes and then
+>>    switch to another wifi adapter while the video is playing, leaving
+>>    the RTL8821AE's wifi side idle, usually within 20 minutes it will
+>>    start to raise IMR_RDU when it reaches the end of the RX ring and
+>>    goes back to the beginning.
 > 
->> +     /*
->> +      * TODO: is it correct? it seems to work, but should we count
->> +      * the number of occupied buffers for rtw_pci_napi_poll?
->> +      */
->> +     return 0;
-> 
-> About the TODO, I'm not sure returning 0 is enough. rtw_pci_napi_poll()
-> uses this to pick up frames that are already in the ring when interrupts
-> are enabled again. rtw_pci_old_rx_napi() doesn't count C2H or bad
-> frames, so it could return 0 while there's still data in the ring, which
-> would then wait for the next interrupt. Would checking OWN on the
-> descriptor at ring->r.rp be enough?
+> Does it still happen without Bluetooth? IIRC the rtw88 BT-coexistence 
+> mainly supports RTL8822BE and RTL8822CE. I believe the algorithm can
+> share with other chips, but control registers or additional settings might
+> be missing.
 > 
 
-RX didn't get any faster, so I'm not sure there is a point.
+I think it was not likely to happen without the Bluetooth headphones.
+The bug Luka pointed out may have something to do with this, so I will
+retest the RTL8821AE. Right now I have the RTL8812AE installed.
 
-> [...]
-> 
->> +             if (le32_get_bits(rx_desc[cur_rp].w0_5.w0, RTW_RX_DESC_W0_OWN))
->> +                     break;
-> 
-> Does this need a dma_rmb() after the OWN check? As far as I understand,
-> a weakly ordered CPU like arm64 could read the rest of the descriptor
-> and the buffer before it sees OWN cleared, and dma_sync_single_for_cpu()
-> doesn't add a barrier when the device is DMA coherent. It looks like the
-> example in Documentation/memory-barriers.txt. The new design gets this
-> from the readl() in rtw_pci_get_hw_rx_ring_nr().
-> 
+https://lore.kernel.org/linux-wireless/152a5489440fbddb039d515af46fa46b30bfb109@linux.dev/
 
-I guess it can't hurt.
-
-> Also, I think the wmb() calls could be dma_wmb().
+>>
+>>    It uses RX descriptor number 511, then number 0, then it doesn't
+>>    want to use number 1 for "a while". It raises IMR_RDU once or twice,
+>>    and only then it moves on to number 1, 2...
+>>
+>>    Usually when it raises IMR_RDU there are 510 or 511 RX descriptors
+>>    available (out of 512), so it has no excuse.
+>>
+>>    Once it has raised IMR_RDU the RX speed doesn't exceed 70-100 Mbps
+>>    anymore.
 > 
+> If driver can receive packets on time, how does it raise ISR_RDU? 
 
-It looks that way. I didn't know about it.
+It's a mystery for me.
 
-> [...]
-> 
->> +             new_len = pkt_stat.pkt_len + pkt_offset;
->> +             new = dev_alloc_skb(new_len);
->> +             if (WARN_ONCE(!new, "rx routine starvation\n"))
->> +                     goto next_rp;
->> +
->> +             skb_put_data(new, skb->data, new_len);
-> 
-> rtw_pci_rx_napi() got a length check in 6e76e9ed273d ("wifi: rtw88: fix
-> OOB read from firmware RX descriptor exceeding DMA buffer"), should it
-> be added here too? rtw_rx_query_rx_desc() allows pkt_len up to 11454, so
-> with 32 bytes of drv_info and a shift of 3 new_len could reach 11489,
-> while the buffer is 11478 bytes.
+> Is RX interrupt triggered on time?
 > 
 
-Sure, I will add that.
+I'm not sure how to check this. I assume it is triggered on time because
+the ring was always nearly empty when it raised IMR_RDU.
 
-> [...]
+>>
+>>    Powering off and on again, which happens a lot when the wifi
+>>    interface is idle, doesn't help.
+>>
+>>    The only thing that seems to help is reloading the driver, but even
+>>    that may not always work.
 > 
->> +             wmb();
->> +             le32p_replace_bits(&rx_desc[cur_rp].w0_5.w0, 1,
->> +                                RTW_RX_DESC_W0_OWN);
->> +
->> +             if (cur_rp == ring->r.len - 1)
->> +                     le32p_replace_bits(&rx_desc[cur_rp].w0_5.w0, 1,
->> +                                        RTW_RX_DESC_W0_EOR);
+> I think reloading the driver and interface idle are very similar (almost
+> the same). No idea why they have different results. 
 > 
-> Is it safe to set EOR after OWN? le32p_replace_bits() reads and writes
-> back the whole w0, so if the hardware fills this descriptor in between,
-> I think the old value with OWN set could end up on top of its status,
-> and RX would wait there until the hardware wraps around. Setting EOR
-> before the wmb(), together with PKT_LEN, might avoid that.
+>>
+>>    Switching to another wifi adapter while playing some video is the
+>>    most reliable way to trigger the problem, but it can also happen
+>>    randomly, it just takes many hours.
 > 
-
-The original authors must have thought it was safe.
-
-> [...]
+> Thanks for your effort. 
 > 
->> +             pcie_capability_set_word(pdev, PCI_EXP_LNKCTL,
->> +                     PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKCTL_ASPMC);
-> 
-> checkpatch --strict complains about the alignment here.
-> 
-
-¯\_(ツ)_/¯
-
-> [...]
-> 
->> +++ b/drivers/net/wireless/realtek/rtw88/pci_old.h
->> @@ -0,0 +1,39 @@
->> +/* SPDX-License-Identifier: GPL-2.0 */
-> 
-> Is GPL-2.0 only intended for this header? The rest of rtw88, pci_old.c
-> included, is GPL-2.0 OR BSD-3-Clause.
-> 
-
-I'm not sure where that came from. It should be like the others.
-
-> [...]
-> 
->> +++ b/drivers/net/wireless/realtek/rtw88/reg.h
->> @@ -11,6 +11,7 @@
->>  #define BIT_FEN_PPLL         BIT(7)
->>  #define BIT_FEN_PCIEA                BIT(6)
->>  #define BIT_FEN_DIO_PCIE     BIT(5)
->> +#define BIT_FEN_PCIED                BIT(8)
-> 
-> Maybe put BIT(8) above BIT_FEN_PPLL, these seem to be sorted high to low.
-> 
-> Best regards,
-> Luka Gejak
+> Ping-Ke
 
