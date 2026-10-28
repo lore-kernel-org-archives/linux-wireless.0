@@ -1,79 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793166118;
-	b=g50PZ7YEFeJpGkE3hHTaKobPnz38PHR3WLSsRdxOXXBrfwhbBSsxpi++IcBjcsgUl7MM
-	 eOhzMLbD2FLTGql8sbW0mmjBi7P7x2QyaLpyEpfWcwA2AomqKE6LfDMKrnSB4aF0ottiH
-	 e1YvMIOqS/72+XKt25B60/8DozUrZz9X/3MspDx22kBiSXGd3m4ZtLeAETskV4NO+F49O
-	 76wkcvYmCANJtzoSDRsoUs0urpRauQTEMLZq5DH77ybL3MhTPSBsojYthlJ4LrAZpLYnY
-	 dfkepYcZahfCUoEi9deGfSdZGhC/FpZbp4wdea6uJwK3oCewoGzFFlJekx8aYDwk7eA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793166118;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=4Tt7DPMN2jjHR/Knkht0X77hzqG0cdAPxU/YpNye/GM=;
-	b=fyoBkbDj2vbBooN14Cog9k67nP7wen2vT5WZRT5nVCc/iKkj0WN7d83E1rCnJhFoXcqd
-	 9T5wBhb8Rzxe9EkBtz9rIGwZ+v2Bc1ahnKOjdiw7hX25+MJC3mZvAUXtSX/HDtxu3Sjlp
-	 EaMEN8mlTvBGSO/hsDtYw9bHggXL/BCRp5iZ9XTrvQDtPY3+MXqhHdBK/rqG4fgER+EOc
-	 RJMNjIw9CiyiTgCIaktEwLzpeX4cHWDpVGXzD3Mg4xthM/8Av50qT0h/g+dHRhLCkBjX1
-	 +6car0MStG1PHVtJmhVG3oUOFui8EbRDFlGJFD4l8vw4GDhab5a5FDJBHCOpKFh65vg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b="i/BA1tGv";
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.231.128
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793166336;
+	b=mE7q2D4dNxJTUh+4vw1ij6TNI3qsMRJg8TNr6Gp58j6A2G/n59u8R4WLALbRCyNMnYoI
+	 +VjYCtC+/iQVIme6CV33UkuwG97Mub2uZz7RP1vTQMH5Fmo7WNjPiyIBdKIJWKJlYLhdG
+	 LRxkR6t9k4jGExlVmAidEvhU0t+DHNgqA4bRVRksvc+dpQU9+pRsA+ElbD1R4W6xVxhf3
+	 UW8dDXlQc17XvvE9mT5FVx2Ehu0kmbIJkRgLVF+Dq3OwdKC0X5OChRrnBsdstBocV6hM+
+	 uM/5t76T5f1yoRpOIRE4zHSlaD/yEC+6cI69vib8dcEOWju8VFucb4UI186h0NQaA/g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793166336;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=PFsS6+I6tSnMVxI7cw6XHZ1p9l0CCeVWrHrbBHijNRU=;
+	b=slY4oQh7nR4fjyx+t2y9Mzbla4EvNwPggTvt9yZ4qr7eEHU7BPxUmnM+WEBKuJzX2Bh0
+	 b4uTHnQd1ecOjXfHbspS128FpgxDo+Y7f/Vr75H/7Io8h/V6OyrZHzb3qzEFjI+YXm82N
+	 1w47BF8O7/wcqx/uKFtmXcnOoUn0e+0ivdHqpoSrPK7QkxW5uXl7yZoOPEPvEZdnQWXlo
+	 823/zm9YXPyZMluc6cx6PwyVxLPa3rggLdIn/jBd0y9Itn3fSqsgCwQHCaGm80PrXzFaU
+	 KeO+nbVnb6a2tI7i3jV87IEXirARAAMzV+VjV10nTrjgY01+sg9nYGe1Wm8/r/2rgNA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LRw0BAXQ;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.231.128
+Received: from mail-oo2-f0.google.com (mail-oo2-f0.google.com [74.125.231.128])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C60E2606A31F;
-	Wed, 28 Oct 2026 05:41:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C60E2606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89849606A31A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 05:45:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 89849606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=i/BA1tGv
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69S5fqjJ71542548, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793166112; bh=4Tt7DPMN2jjHR/Knkht0X77hzqG0cdAPxU/YpNye/GM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=i/BA1tGvaj33zRY+KQpppqpq2J2W6FS0MvMIjdw3UFxBmaL43ukHM9DhVkJBL7x32
-	 pBx2kIJlYBJ8TDsEqRsVWCSw14QKogyTV/ZkvdzmI29tyumhOnzC7pw2LzEqAGsX2r
-	 UxF6yMlgi20DVKms314fjIPdTybDHwUv2RklGjxlFWfe4/rKE63vKbjLlAgWta4Wfk
-	 QByWLo9U0mnCIgWABpQsCpMpuY7jSrpXs48B9U0NG8Xm8yZlCCaRONP7aOcZeTcxxY
-	 x7N47YBb83qDkCqrxfo09b3YfpEeGhlGXzpMk8uWdduv6enw6BcUFv5CbYQkLgeBzT
-	 s0uLTtFx5FCtg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69S5fqjJ71542548
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 28 Oct 2026 13:41:52 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Wed, 28 Oct 2026 13:41:52 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 28 Oct 2026 13:41:52 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH rtw-next v5] wifi: rtw88: pci: wake the TX queues after
- restart_hw and interface up
-Thread-Topic: [PATCH rtw-next v5] wifi: rtw88: pci: wake the TX queues after
- restart_hw and interface up
-Thread-Index: AQHdYtso8j1Y8YSlsUur541W2jCI1bcSeEEQ
-Date: Wed, 28 Oct 2026 05:41:52 +0000
-Message-ID: <daa596fc5d0e4ab59c15b085d12f050b@realtek.com>
-References: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
-In-Reply-To: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LRw0BAXQ
+Received: by mail-oo2-f0.google.com with SMTP id 46e09a7af769-84e8a9fae57so249673a34.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2026 22:45:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793166335; cv=none;
+        d=google.com; s=arc-20260327;
+        b=MEcHTdWysTxBGaEOKVEygeoUAX/i139IlJRqteK45vcHPHC0L3QInYnPlbSFF3E0lc
+         6RqqUdY3v5/I2wQ+DxeFB04VVB57C49vSq9pCD7uC1c6uIv3drQM0MAZR7D0JRr1l0lt
+         z504Y377JC8oX3OSTFBDJ59UUKH0ePWuJxrJQs2I82YsHdeF9lbA8VDsdOq3F23I6Ml5
+         9fAldnCi9Wn8GKox8RrWgDfc9ZIgVsXAU88gHANXETguFjCPmp6JeatGsioix3wjEa0b
+         NEZOB/LeWeWmjkilUnQtNoTfy18w987/+TXzRbk3DqZys6T5xhLOswaC64CDlJms+Yjx
+         7m4Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=PFsS6+I6tSnMVxI7cw6XHZ1p9l0CCeVWrHrbBHijNRU=;
+        fh=vJb8nDeUwEbTtD6uaaDU1BBsx80XXowI512MHIxZlDk=;
+        b=L08FsF5TNle70kaeR0qr+eps7JH3WBdwsZ78nMulg31Rzd/k9cBoF5l2xGdtV0NJ9i
+         /ZctxegqrgJyLP6VF+h/JWc0ZADPWbhX4ZvxDIz5II1K4764HzDgMbgDhxI0rU4C50Pi
+         To3m7e9DW+RrIaei5ZGshTAZyB4N1gd5R0LAbpRHEcFiZy2KRnA0C4Qwza82IFBLnnlR
+         /1COcvr5pBXU+BWgMjOh0pnA4kGOO8eNgbJC/F2z4US4bzl5pQF/1Ehynjq+mL/amLEb
+         Uvt1nF+lisTgdg0WFgD0rtwgBM9k6YMs/Te62ywg6W/C9zc8RmwLrmceCEvGQjBDAo+E
+         Yr5A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793166335; x=1793771135; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=PFsS6+I6tSnMVxI7cw6XHZ1p9l0CCeVWrHrbBHijNRU=;
+        b=LRw0BAXQl58a/IHHmGsMU3etxXpb/3ZUQJHH31Ssgt0OdIf1KhsaceSFALVL91PEZM
+         ltlrxsZZeMoT9MKENRwGP7iPVTEIHhfrjh4VSdvUxhvtsc/Dae9j7JuiXljdT/DYU0Jc
+         ebKSVs9VVBiDal89zqam54wlRVbIAvW1ugqo3WLxdhVqxoNKEGnPi/jWW33e5qeDHkaZ
+         Vwt/Z3Epjs29Gj5aOvjPp6KUDi807JyNTHzpJMDuL8G/rOkSc6JhR1IGaVmcs8EzOUua
+         un5Y6QNJDdA22GlQeJcXv4I1GnqS/rfKrfl1Sq9ngBtNXvOj9HXBXneFUM5W1XxIrfeL
+         eWMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793166335; x=1793771135;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=PFsS6+I6tSnMVxI7cw6XHZ1p9l0CCeVWrHrbBHijNRU=;
+        b=BlNgEwxjFQ17yAnhxpMuVtGOxYGhjqaeenpSiILYIEoOtEVGaPAneYgYO+JuYcFgbz
+         e2Yr4wK3rUeegVZzL+MQt1vrLdknkZKJzihVXZ7gCeoYoNQqxjfcp05TwqzO0lbA1d0i
+         A0mv/eCO8rX8HP0fZcIEas8A0d2JXcwn2z//YeC1xUcpLCdgN1U3R+f+1rmi+pqTSgy9
+         GeJX4j+ZbmwZ/D+rD9N7kDVz68DoM8I0r7Db8AEZmq0iuQd1ItHLyljsOClEP2M7tPk6
+         zTk7VQWZMd06kCxn/mhhhcsyJizbx1q0AfdTcDFDvk4f+j769/sENqYFG4BuboLkPm7k
+         C0xg==
+X-Forwarded-Encrypted: i=1; AKwUvBweE4r9uXDKzW4w8adxxQvEmechH5lAj7w3kDDkU7Lnl8r6Qmpsq8saG6FUUJ3vM2i5x2Qayd4diZSZcNpN4Q==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLMO8+xPIBAncepYl4sGrj+Zh6Equ7swFc3O4eB7RfsgMciudAh
+	Ss1Sjh9AdjxpYXCjfVXZNy7R8ybQX+mXzvVE62qE358gN03YWoELIzpLkLgyQNPywwUrv1ItN3x
+	AMwZcIb4vI5ZoBZctUX/ktpLDgL2gucA=
+X-Gm-Gg: AYBFou3IDNzFL6AGcxWOAGvOMClvH92AptOs6/D/BRObP/1MeoYKa6WhAIdwJpAEkvs
+	dp+nMI8l3Zt/dD8Ev7dnT8FY4c8Pda9Lvt2LPcbxbFouj9Z2vXEt1ZvGztP06L9gmvAXcCCASVX
+	cJ1/W9Dy0wKVDsv+Blw+m4XepJyw/JDOI2UfpuEttzWRRuglm+4IPB3Tmbs5JUuwgg0xYexq6CF
+	U43/84iZEXKzqLocHD8ifgqlcHjEPZ8HPzqJsGhsuG+QNomsWaRdZPPYo5yHhhO9w5pHfFAQqdB
+	0eLOTZpl6CwtaBTeAyX9t0929rNgP3LeTJZYq1pYVR0eGir+qr1DYB8nTTvFGpbSbFrPx6VqlvD
+	Ne3f88TVlxK5q4i9Jw2fLeOAokW32O4JwUq+ZTmdlVPa5n5nGsulrxfVcb4rsi2uIUiFP1OI=
+X-Received: by 2002:a05:6870:6784:b0:475:e2e9:4f54 with SMTP id
+ 586e51a60fabf-4a8bb623838mr1143705fac.34.1793166335471; Tue, 27 Oct 2026
+ 22:45:35 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,31 +103,27 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+References: <20261019165103.5990-1-dennylin0707@gmail.com> <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
+ <334c6e785a5d242c6f168d57d042d63b777a242a@linux.dev> <4f48c50cab1145fd9dbd6df6d424c877@realtek.com>
+ <CAGEkeHevidTtTNj-qfy6kE_O0wRvqT=F=sG+Hy83BOkRjCUqeA@mail.gmail.com>
+ <CANQ=N_C3+gpQ3O=SXYpRCGTh_MC1y4TEfnxF90SWgUVF_wYPUA@mail.gmail.com> <CAGEkeHdT1-WwJnF1wTkrrRQRzrEYESOoDeAYE+fiV0gROG+6sw@mail.gmail.com>
+In-Reply-To: <CAGEkeHdT1-WwJnF1wTkrrRQRzrEYESOoDeAYE+fiV0gROG+6sw@mail.gmail.com>
+From: Hungyu Lin <dennylin0707@gmail.com>
+Date: Tue, 27 Oct 2026 22:45:22 -0700
+X-Gm-Features: AclHuK_56Etvh4NDXHmZo6v_Uy5gCnaEAwyYEkyYaUlQKWDKsf27nBbYFYKNEFs
+Message-ID: <CAGEkeHf0CLjxhGySt2axf8gXMrCcn=cEHbe1aXRW4FgcbxjyZQ@mail.gmail.com>
+Subject: Re: [PATCH] wifi: rtw88: allow key removal when the CAM table is full
+To: Shagor Khan <reza1234khan1234@gmail.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, Luka Gejak <luka.gejak@linux.dev>, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
-> When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
-> records it in ring->queue_stopped. The completion loop in
-> rtw_pci_tx_isr() is what clears them, and it needs a descriptor to
-> complete. If the device goes down first, rtw_pci_dma_release() rewinds
-> the indices and frees what was in flight, so nothing is left that
-> could. ieee80211_reconfig() does not help either: it wakes only
-> IEEE80211_QUEUE_STOP_REASON_SUSPEND, and an interface down/up does not
-> reach it at all. TX then stays dead although the device came back.
->=20
-> Reset that state where the device starts, which both
-> ieee80211_restart_hw() and an interface down/up reach through
-> rtw_core_start(). Gate the wake on ring->queue_stopped so that a
-> start which stopped nothing leaves the queues alone. The wake cannot be
-> narrowed to the queue the ring-full path stopped: the flag sits on the
-> ring, and rtw_tx_queue_mapping() puts management frames and multicast on
-> rings of their own whatever queue they came from, so a flag there does
-> not name a queue. mac80211 also keeps a single non-refcounted DRIVER
-> stop per queue, shared with the scan paths in fw.c, so
-> ieee80211_wake_queues() releases whatever holds that slot.
->=20
-> Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+Hi Shagor,
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> I can help in testing if you want. Since i do have rtw88 hardware
+> available with me.
 
+Have you had a chance to test this patch?
 
-
+Thanks,
+Hungyu
