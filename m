@@ -1,94 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197356;
-	b=jr3bCWKQrRAqN6uVVFvf9IT8XkISg7dwgWD2fkKmgRyhxYvd7UCsj+GF4li6zHkRKN01
-	 BziyWc8d8Qc9vJC7lxslMoEn6bELqTvwdOhBdlqqnYzTdM0X2h/u16eiA8BCPtwiS3aPp
-	 WUVGlpQcCqutC01hjyYXdW1Zxca4PpJr/XY5tgP2Y0bSkvTONTvC4huMs/Cdo8Hnp2B6I
-	 ipORkZxg9PPiV1ly6cVnEpFdYCvO9eSnDy6B/gYkbXC3ai3YICqRdHx0JXSvBFC/kVU1O
-	 wlFG1wVgAh+2FT/q/jvCQ2ngmNaTuSNSIgYo7OCY81vMcT91qlTX1Ka0k1YiOV03qxA==
+	t=1793197376;
+	b=dRp8EyUnle4/sajC/yB2bQDG8xcYCyvYr5K59gQJGZ8jPCDXoOyPcg6ivHmfIB3fUIXl
+	 4dguGF1C26/NSYlKUoVLXAzGFcv0aPh1OseteLccIKcNOcipabJoAPl8b08XoxK8TPLNl
+	 cs80XlGRVFAtWHRvNCQO4/oCoI9xzqCLbD2I7WXARhg6vVR5ReP1+5c68n7xsYdCWKJbt
+	 W/1fXLpZdGT4ME0lUwdMadX2R3+EA58IYQsPrOjsW1ohof7KHn/LdqOqDs7/1Nv7RQOEv
+	 Cz9O0FFVkurVEwaQorqJGgzjeK6urhJcfDcRUZpDR4mGo5rjHwVevkTSi22nxhm0rZQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197356;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197376;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=R/mNeciGEDV4oliH8vu2vu4EuuS7Y9Kms2mXuzaoLDE=;
-	b=yyDWHqKKMGKXg9oSztfCjO8Yd1zHHpY+oYj2jy5l1iPanjCR18a+5+Cs6evAEnBcbgyN
-	 a51peVBeQSmiua4Gm12rXgZqnSyMFenNaBQ6hDzGz1SI/HAN5c8Ho4YRrX0UTsEi6dzr8
-	 vNgPQXrJAtQ8m/IQRDt/vUj6kNVzefRIsL7awrdVfh00dWoaxLsljrPKbBQAkmtzatou0
-	 FUQ/Qlr4OA+aX9Ph8KJDhmPmMe32b3ElQujJ0ewsD4okxXdvgNhL+pSKvWhZVSJIXRUDq
-	 xRrmLK25a08GtY8WT3uM09WFoY4RGh7vnGhYupQbAXfViryeb9mAps0Gow0MS79sgwA==
+	bh=R3r/3ZU1ASS4zexAo6qBQYoR9NBo3ie0E+cmGO2ebcE=;
+	b=wHy/NUgiShoAzBU0QOJlPoPkvGDoz7Mi1og5z0qrw888py1Tr/3xBRfXUCEjbdOu+kzO
+	 i1qynsw5WofCMWqn2Sdw6a/cMXs3rzP0LxrCU9+gvsSPlfy9325cC63m/0lfIsMQBEFP5
+	 yU0+6/0E5P3lqA8phsohGgt68P6fcdGSAf0Q4H4/wq2syps8oSsLeHpIBj9LqK87Icoux
+	 A0ZRIVRrh77c+4Ur/SQ5p8wIoRJTLZmxMeo/QnL3bB+N+aBq8ibWC+1F47Le9FXy5LQma
+	 yxnLSGAx/9bdUH3dXy/hh6i/o/WOD+tQlzWeauUdx3eelsxS0V6xWNmUfatE8kd22IA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=G+B9NVDk;
-	arc=none smtp.remote-ip=209.85.216.47
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gjcfw3PA;
+	arc=none smtp.remote-ip=209.85.210.173
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2477F606A321
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:22:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2477F606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CC25606A31F
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 14:22:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5CC25606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=G+B9NVDk
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3ac6794fe45so846873a91.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:22:35 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gjcfw3PA
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-8a089dfee18so1333827b3a.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 07:22:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793197355; x=1793802155; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793197376; x=1793802176; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=R/mNeciGEDV4oliH8vu2vu4EuuS7Y9Kms2mXuzaoLDE=;
-        b=G+B9NVDk35WhIetAeOybgWF5FUaVx4PLG54HD67lQ+AB9SFBfBsLJ5qsiuhIJCKZiu
-         E2zE29XFq3TMc4dc4HVw2SsISFGT30LsXCL9Hu+xtBhwOTXru0BJRqd26LmexPZQlRjo
-         uEFruBiTze1LG7QV3EkRWIU24AwrEroLcjLJryAPk7GC2viNF2+DuyKqvV8N4xEiGId0
-         f1tr0Vcfs5Se9zzStoE14FYUd78LkBnu+GfrnxqtGB1k0SjLtbWi6UCi54+cAJwFRsVz
-         /HagYHytdWo2ObgfDZ0nsdduG0hRcGCk4ixMuATQrzPp76vab96/Et9Ishw25yN/L41F
-         dDJA==
+        bh=R3r/3ZU1ASS4zexAo6qBQYoR9NBo3ie0E+cmGO2ebcE=;
+        b=gjcfw3PA9hInUgM1/7h/j9oC2YHnkcn9OVoO3vBpXmAhWqvMOplncuF0jZhVSA64lq
+         muwaNSN3eWHCy32PpAxV3l2LD2znF8xz+HN/+FtZ5bKJ7oPTnyG3ferbD2yWEjpbHGJT
+         fOrz592h6KkbIurx7vayadNEk7tXXcpkJRvKyQdp2UlDP4pFA1F9YeBewcquw1QQfrVu
+         rwfPTPXl6eU2/IlRBzqWIzNdiq7zWfFcf2ivaMpGCz/sAD/Ph15Le9V9y+dkbeZDtYOO
+         9C+Q8v/HReRAVMIXPQ3PGfDakfNqRAISnC9nLoe1FkjFg0BaIc5QgtBw/z6d0HjYfwns
+         m3MQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197355; x=1793802155;
+        d=1e100.net; s=20260707; t=1793197376; x=1793802176;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=R/mNeciGEDV4oliH8vu2vu4EuuS7Y9Kms2mXuzaoLDE=;
-        b=MNxbXRmS1xJmRX67A8KPDUqw+PWfy9tlznRboKbSf0YwcITmZvLTs65h9tVDs3su/w
-         8A2Y1yqNR5xHU2uK7fMUyPOJPwVYlbLoUTyBz4/nhKiRVa8IWuJ7FX8hn/8m5p3w51+c
-         IH0C42Ei5RIYCyvSl7mwMJTs8qZa59JAL8B09Dooo1dIFt6rBN1npFhg1PYUvXE8ZjVQ
-         QHM4+g9ukI36b1xRuW5R5ArhUEgUcY45nC444if0898E0JVZpop6Ysmt9RdAPoHZgVOb
-         OO6Mh45LslQf0fDV17RoyzohAdGNMV1lnNVuxkYBVQtpU1tZdYFyArNs7G+4Fqwj3ptB
-         lnBQ==
-X-Forwarded-Encrypted: i=1; AKwUvBz1s/465PpjO/wiDy30PNZ3+b/lVe+0KY0cABi698/OzunjOnZ1ap975ri09Ll/ZE3YDV/v50fMy2YTKcErjQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLVY749yfp+aJuwghWamm92UoMogcpA5FCeBF/k8zOEs+OsY1Yt
-	gNXYphL/nw9rx7qOIM/tVYDEuOBtHx9+snUx1ZlGX1O7YmYHLbn7+ZsQ7NER+YeuDUw=
-X-Gm-Gg: AYBFou1cY/Qslbi6hso2sKDPXDt0rE/lbAnmVK4JTP1tCHEJa40F78oRNY389Gvzi2O
-	x21axXuj+tNSZd4409IZjVRBz5WAQFsK/W/t4mVtkQFNtG6cccnTxl2v0G/PBzLWKsto/riC8cV
-	lm+WhWGYLW6xCzpAd9SDh7eaUva3qwIXeH6W18MrUJI5G/3mDoke8CPBNYqjnSTUUfV2z6ZmpdR
-	ccytY2FLnOfSuq/j5qasOqRZdOPhRLb7Imc3OTUCEcvIaSmdGidqFY6pHXqPdIyWDtxsJBSgQV4
-	50mFlL9Hp7foHSHXSTf/StK/fM7LVP7SfDiVyX0d5ZyDxUEPdKicOXghcaqf3/hkHFGT489xJbN
-	W3UrRjNQ73PTfvuj4lNFOZYbVimcxbGNaPHzoRMkouYK/uPy5O/ZPDCGaHaeVdLaimG5Dvw8F0z
-	TBJSVRqzF9tx2UekA/QhMVklced/0mUoOdS0OYLKiuqvfXS97cAK03RdpHeKrx/PK8yGZQ7wSWx
-	u+K4S1vwjZELJ0p/BqiA8P8r7zIrCl5xKSHRkLRH6dL/pE6t8vFfBGAJcT5wZaYkkLjihLv2fOV
-	qspOuZc46U5RGhCSblT0GOP1IhQ5jx0IME8zs/XNMpzsRCqS0gE+BsABfYSPhX/ayk99
-X-Received: by 2002:a17:90b:264c:b0:3a8:10e2:ad08 with SMTP id 98e67ed59e1d1-3ae580dd95fmr2042875a91.48.1793197355157;
-        Wed, 28 Oct 2026 07:22:35 -0700 (PDT)
+        bh=R3r/3ZU1ASS4zexAo6qBQYoR9NBo3ie0E+cmGO2ebcE=;
+        b=0M3JdbVuVamavYy59NNFRAnKTlzv3xIoKmit07wO0dn0CGxq+5vpGQP0zRYthelsQY
+         HXD62h49+obaUlR6PuLMlePqjYk4lZmw3flL8yn2v1myrpNNofIp/XV2NQWS7Uci86VG
+         nxTaU2RNhBhj0AOot78hmLs1GgYO3bDRZxWIydxpjUXgqBi59J63tqz6n9IrqEBesazJ
+         tUAk60cxKw4vKNYFo8rcZm2yCbPTyvDjEFRD/VjeHWGdBV206liPKRESmVO4ikTFOAtV
+         VvBSg0Oycn/zuVcZn3Kn5Xw4A2zcjcH0wtPYLZD/2f877qcZkRA5bORirNBIuc8aL3xE
+         j56g==
+X-Forwarded-Encrypted: i=1; AKwUvByNun5VWXDWrNNCeHJuEBIAODzLkxUvEK+cfVm+frXx2YuMhfXNBknvP8+RSe6KQhPWWVukNwuUEkcjhckSmw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYL9c+8bMTjq77eNhX7HL8/leUnTwFQ29BDDpkjzSIMj4fuRkM9g
+	msfwYgI72ncfgas3lx2xvZmsPXAefI3qiXdEhFiVqUfG4jaVkV2l4IzJ
+X-Gm-Gg: AYBFou2ucsxfhkZSeStyFZkYgmCQ/dI67pKZw5rRZRYiuM83j++yfcJ5hF4qxLFhBco
+	q+1BT/+MzY412PdYK8EIRYgqU1BnFPnBJ2qnJCwHASma9ulKBiUbl3z4FAVpwNjNj3WxHm8G2GY
+	kB+caeGM/GWS71EOhmdydOFN6LD4hYgVYjxunZXDInHLP/ZNHw0KlA1DuYbUXPFTVhfJG8DCukz
+	jB9wQb5jOEj8ena6KwgOUjKX/X4RdaHYj/GhREWHJAcY9DyrozoEr1CJmBM7PrN3m/2p2Y1YY2t
+	1SeHg4CDcL+sStRmZSrzf7RugyjcBCORnE66Byku1v+/aQYBfyitD5BA5vnF1A0XztN4prHwQZ1
+	PIryXmx2GPzfXct9CR6CCYAAmaRLNM4ckFZGKiZXnwGeILPVB5eZf1YeGKt713iIkAepplZKW/i
+	pKZnImRuR+90GUhmwZe1QdrQo6rem8K7UGwNxT/tdIupJCU0ZTm/BL0odQneHuHI5176TiWcCOZ
+	jfPvvSepWpeNPuUdagBYXjaQB8TqcNQNjdOtI6RwCqwusqyIqQS6UVmtcfhJ5ECjqW0WiXo+mPr
+	JacbEOZGE+nJbY/3WpYn3ufLE6L8PzSDJ/vwTEPbpn+O61I9jJLloj0Az0LgasTUR8yg
+X-Received: by 2002:a05:6a21:b8c:b0:3e1:2c06:3a51 with SMTP id adf61e73a8af0-3e908011755mr790326637.2.1793197375307;
+        Wed, 28 Oct 2026 07:22:55 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6453ea6sm23723645ad.10.2026.10.28.07.22.30
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a662ba00sm1245181b3a.23.2026.10.28.07.22.52
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 07:22:34 -0700 (PDT)
+        Wed, 28 Oct 2026 07:22:54 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Deren Wu <deren.wu@mediatek.com>,
-	Quan Zhou <quan.zhou@mediatek.com>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	Bo Jiao <Bo.Jiao@mediatek.com>,
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: mac80211: reject invalid EHT guard intervals in airtime estimates
-Date: Wed, 28 Oct 2026 22:22:12 +0800
-Message-ID: <20261028142212.14523-1-enderaoelyther@gmail.com>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] wifi: mac80211: enforce IBSS station allocation limits
+Date: Wed, 28 Oct 2026 22:22:33 +0800
+Message-ID: <20261028142235.15428-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -101,48 +97,20 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-An invalid EHT guard interval can select the wrong airtime group and, at
-320 MHz, read beyond airtime_mcs_groups.
+Patch 1 prevents the worker from installing more than 128 stations.
+Patch 2 bounds pending station allocations to 128 per interface. The
+patches are ordered: the insertion recheck must precede the
+pending-allocation bound.
+LLM assistance was used to review this series.
 
-Guard interval 3 advances EHT_GROUP_IDX() into the next bandwidth group
-at narrower widths. With one spatial stream and 320 MHz, it evaluates to
-264, one past the 264-entry table. RX rate parsing rejects the value, but
-the common TX-status validator has no EHT check and last_rate_info can
-carry it to the airtime helper.
+Zhao Li (2):
+  wifi: mac80211: recheck the IBSS station limit before insertion
+  wifi: mac80211: bound pending IBSS station allocations
 
-Reject values above NL80211_RATE_INFO_EHT_GI_3_2 in the helper. This also
-protects exported ieee80211_calc_rx_airtime() callers that do not pass
-through the TX-status validator.
+ net/mac80211/ibss.c        | 21 ++++++++++++++++++---
+ net/mac80211/ieee80211_i.h |  1 +
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
-LLM assistance was used to find the bug and review.
-
-Fixes: 3702a33216e6 ("wifi: mac80211: introduce EHT rate support in AQL airtime")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
----
-Validation: A W=1 module build with MODPOST passed. A QEMU
-KASAN guest calling ieee80211_calc_rx_airtime() with a synthetic EHT status
-changed 8 global-out-of-bounds reports to 0; guard interval 3 returned zero
-instead of a wrong neighbouring-bandwidth estimate. A real device TX-status
-path was not run. A reproducer is available on request.
-Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
-
- net/mac80211/airtime.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
-index a4e1f33c0377..c31540ff42e0 100644
---- a/net/mac80211/airtime.c
-+++ b/net/mac80211/airtime.c
-@@ -550,6 +550,8 @@ static u32 ieee80211_get_rate_duration(struct ieee80211_hw *hw,
- 		group = HE_GROUP_IDX(streams, status->he_gi, bw);
- 		break;
- 	case RX_ENC_EHT:
-+		if (status->eht.gi > NL80211_RATE_INFO_EHT_GI_3_2)
-+			return 0;
- 		streams = status->nss;
- 		idx = status->rate_idx;
- 		group = EHT_GROUP_IDX(streams, status->eht.gi, bw);
 
 base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
 -- 
