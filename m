@@ -1,65 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793291902;
-	b=hHefiuWvENtqZohWqsxVO9OCJKb5Y2p+i4/vULLhrt/kJ59oymrOB5E6ZgvZ5HrVB+qW
-	 qWxQNGqGiqmoEzT7C1/aclIPSIJnrOa7l5Yz7toBC3Rtw4kCC0uNop95OOzyvT370dfaa
-	 NJFIsaTYnD4jENYIn1BksjwNC4e9aFuWW5vkfrYUU51Q9uPcrIbVk7jB6biJNZtsLS3Ev
-	 pGxOMbIaUC7HNLt2tmmEbaUgjD7NQwjuyyemnNDI03ss+1uyvYh8WdA6TSuxIhCqDXurv
-	 ya+DOwIOgnQoL6kljN4DkrwlmkAGbNIyVhaY1a+prkeVYWVoQYVS5nn0yZWmKufpr9w==
+	t=1793291909;
+	b=oejXoyq1pNP0bIhjfe1gjV3tKQMbRek83OwoG1rPuuPaNYJZQdCDxAJkLOcwKQSMZACC
+	 YFhhXIAucH+97W/SENT+I9+7/Z5PVht55IxwKOL9dLP8tzVrli+Uk372PTOzZGzV1uooo
+	 r3Numi2UrH2snIo/ghoGUXbiE7uKRjiGY1DJuZySOODPdkUGXL28+MTl4XFTUizgUD2pd
+	 TpkImWpxyl1vi3j3O88veTgaB8VWD7BYbdK9rIiPwqm/CSnHWJO8hBspD1V+Peua3iKQ4
+	 0i5q+W+i79LuUOR+vNZU84J7G8QoBfASl1VbMNXfXIBFMyUa2fMI+otOZMjMMenZBrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793291902;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793291909;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=Rk+pfvv1vb7NTTtSUJmQv83uHi7ByrRhQkXx66jSAVY=;
-	b=C4upovLyARA2+7L7rUpEO/nBBD7kpCZhEpMFi+FWHISiMNQ4d04KHsw7/6JhHBZYvLMV
-	 2VQ61C8SfY/4dsweoOoM734DHJsAzcb+sQGLsEtVjDpUPi/MXOtEXJW0BsrgsRVkAgmKa
-	 v2BcBWN1gs7YXZtlqTvgtfFUXgG9MBvGjbGhNsEIMeCIFd/3Wbf0/1Wq3jXEQCRnjFBLm
-	 LyAohRT+Tx4imw+C8fx7WilXArDs6tt3IgTqdaWKyt/UK6KlrPI0oqoWD2yhiinM5gMNv
-	 l/GiQm+WMO52Jxqgx8w+dTKu7Lu34j5K5LUXK69zHS8sPqcbkyV6KWa/tnyChWVaABg==
+	bh=+Hcw6ChGcYDsBOLvV15AWtaOoAcXtAbBHg8paBG5N7A=;
+	b=VU1Tki8LRF7P49QhAvTa+nBEIpAtPPMeUmWuZJf2W/s+YMI/wqjRJ5dgoxq4/TN/6C8b
+	 uODosj96fFAI0/AEMkaWvIUkwmXowu7w7oDDJuqyMM8o+uAPYHeyRXxicsWHUEHleYf29
+	 Q0NqK4rOcBmXJDX20KWIOchy3HGVcLzRqa074Ylx07Et6zecHUIMiZ/vGVpFGd7Ryf1mZ
+	 XB1nXgQAtQydOIGoXDln57zvLUER7GfZsl569eoGt+sqjZmgLzWpF/9YSO0e9G7g7efij
+	 f7MeBHULw1lV/MoYJ4V5IoQ3dsgF0Ut1o0dNuOktnIQRsfFWCAVzlhNm4RK0GgFA1Xg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=fNUzvZdA;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Qey1lgpy;
 	arc=none smtp.remote-ip=170.10.133.124
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECFDD606A31C
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 16:38:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ECFDD606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81631606A326
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 16:38:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 81631606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=fNUzvZdA
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Qey1lgpy
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793291899;
+	s=mimecast20190719; t=1793291907;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Rk+pfvv1vb7NTTtSUJmQv83uHi7ByrRhQkXx66jSAVY=;
-	b=fNUzvZdAeH61BunZr5X5AHdcFZb4wxNr3DqYi5GHeoVGkJKeGFdGafPa/otgzDRmqqoDre
-	A63Zd55FuByEQZ/cotwCJJ/Bpxk7eTpN08lATmS1Y5WUwOJt7eYwc6n1Y7BopHRW/SaoUi
-	ELzRjUsNXBzjB2LvGpKVhernYbCQWTw=
+	bh=+Hcw6ChGcYDsBOLvV15AWtaOoAcXtAbBHg8paBG5N7A=;
+	b=Qey1lgpycsUR4+80HHfjFaNieIQaZBbDmuYVxCS+Ek18cciOjDRGUZOkVc0cQzcY+vvaqq
+	EQgGT6hOZnk/cIihzAjKdx6FZAT1thvIciljlLWfAUk1fWWHHXMRf7BuO1FNCP1Th6WUwa
+	klnaBtxvYMlMa5lX360BuYSshx/NUHg=
 Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-684-9LRORvpiNdStrDF32nnCug-1; Thu,
- 29 Oct 2026 12:38:16 -0400
-X-MC-Unique: 9LRORvpiNdStrDF32nnCug-1
-X-Mimecast-MFC-AGG-ID: 9LRORvpiNdStrDF32nnCug_1793291894
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-54-IZUHoYpdON-BLUmfP8xBgg-1; Thu,
+ 29 Oct 2026 12:38:24 -0400
+X-MC-Unique: IZUHoYpdON-BLUmfP8xBgg-1
+X-Mimecast-MFC-AGG-ID: IZUHoYpdON-BLUmfP8xBgg_1793291901
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0B18E1935311;
-	Thu, 29 Oct 2026 16:38:14 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6867A1935311;
+	Thu, 29 Oct 2026 16:38:21 +0000 (UTC)
 Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 794E61956088;
-	Thu, 29 Oct 2026 16:38:09 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5426E1956088;
+	Thu, 29 Oct 2026 16:38:16 +0000 (UTC)
 From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 To: jgg@ziepe.ca,
 	alex@shazbot.org,
@@ -81,9 +81,9 @@ Cc: johannes@sipsolutions.net,
 	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v3 4/8] ath11k: add PCIe link recovery retry
-Date: Thu, 29 Oct 2026 17:37:09 +0100
-Message-ID: <20261029163713.1366077-5-jtornosm@redhat.com>
+Subject: [PATCH v3 5/8] ath11k: use KVM MSI domain for VM passthrough
+Date: Thu, 29 Oct 2026 17:37:10 +0100
+Message-ID: <20261029163713.1366077-6-jtornosm@redhat.com>
 In-Reply-To: <20261029163713.1366077-1-jtornosm@redhat.com>
 References: <20261029163713.1366077-1-jtornosm@redhat.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -98,116 +98,77 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-When ath11k devices are passed through to VMs via PCIe passthrough,
-the PCIe link may not stabilize immediately after global reset due to
-virtualization layer timing variations. This causes MHI initialization
-to fail with "BHI offset: 0xffffffff is out of range" errors because
-the device is read before it's ready.
+The Qualcomm ath11k firmware programs MSI addresses directly into
+device BAR registers for CE/SRNG ring interrupt delivery, bypassing
+the standard PCI config MSI path managed by QEMU/VFIO. In a VM, the
+firmware receives the guest virtual APIC address instead of the host
+IRTE address, causing DMAR faults and non-functional interrupts.
 
-Currently, ath11k_pci_soc_global_reset() just warns if the link is
-down but continues anyway, leading to inevitable MHI failures.
+When CONFIG_PCI_KVM_MSI_DOMAIN is enabled, use the KVM PCI MSI domain
+synchronization functions to obtain the correct host physical MSI
+address after MSI is enabled in power_up. The kvm_pci_msi_wait_ready()
+function performs a KVM hypercall to retrieve the host MSI address,
+and kvm_pci_msi_get_address() reads the cached values to update the
+driver's internal MSI address/data used for ring configuration.
 
-This patch adds:
-1. A retry loop (up to 5000ms) to wait for the PCIe link to recover
-   after global reset (similar to the existing ath12k LTSSM retry logic)
-2. Proper error propagation to prevent continuing with a dead link
+This placement (after msi_enable in power_up) ensures:
+- Host MSI is enabled and stable (QEMU has completed setup)
+- No MSI state transitions are in progress
+- CE/SRNG rings have not been programmed yet
+- The function runs on every power_up, including recovery
 
-This is especially important for VM environments where timing can vary
-significantly from bare metal.
+On baremetal, if CONFIG_PCI_KVM_MSI_DOMAIN is not enabled the code is
+compiled out and the behavior is identical to the original. If
+CONFIG_PCI_KVM_MSI_DOMAIN is enabled (e.g. distribution kernels), the
+KVM MSI functions detect baremetal at runtime and return immediately,
+preserving the original behavior with no side effects.
 
 Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 ---
-v3: no modification
-v2: https://lore.kernel.org/all/20261011074514.515894-5-jtornosm@redhat.com/
+v3: new
+v2: https://lore.kernel.org/all/20261011074514.515894-1-jtornosm@redhat.com/
 
- drivers/net/wireless/ath/ath11k/pci.c | 38 ++++++++++++++++++++++-----
- 1 file changed, 31 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath11k/pci.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index a163168f3617..7e29ebaf9773 100644
+index 7e29ebaf9773..31889e5caa8d 100644
 --- a/drivers/net/wireless/ath/ath11k/pci.c
 +++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -190,8 +190,10 @@ static void ath11k_pci_restore_window(struct ath11k_base *ab)
- 	spin_unlock_bh(&ab_pci->window_lock);
- }
+@@ -7,6 +7,9 @@
+ #include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/pci.h>
++#if IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN)
++#include <linux/pci-kvm-msi.h>
++#endif
+ #include <linux/of.h>
+ #include <linux/time.h>
+ #include <linux/vmalloc.h>
+@@ -855,6 +858,13 @@ static int ath11k_pci_power_up(struct ath11k_base *ab)
  
--static void ath11k_pci_soc_global_reset(struct ath11k_base *ab)
-+static int ath11k_pci_soc_global_reset(struct ath11k_base *ab)
- {
-+	bool link_recovered = false;
-+	int retries = 250;
- 	u32 val, delay;
+ 	ath11k_pci_msi_enable(ab_pci);
  
- 	val = ath11k_pcic_read32(ab, PCIE_SOC_GLOBAL_RESET);
-@@ -215,14 +217,28 @@ static void ath11k_pci_soc_global_reset(struct ath11k_base *ab)
- 
- 	mdelay(delay);
- 
--	val = ath11k_pcic_read32(ab, PCIE_SOC_GLOBAL_RESET);
--	if (val == 0xffffffff)
--		ath11k_warn(ab, "link down error during global reset\n");
-+	/* Wait for PCIe link to recover, especially important in VM environments
-+	 * where timing can vary significantly from bare metal.
-+	 */
-+	while (retries-- > 0) {
-+		val = ath11k_pcic_read32(ab, PCIE_SOC_GLOBAL_RESET);
-+		if (val != 0xffffffff) {
-+			link_recovered = true;
-+			break;
-+		}
-+		mdelay(20);
-+	}
-+	if (!link_recovered) {
-+		ath11k_err(ab, "PCIe link failed to recover - device may need power cycle\n");
-+		return -ETIMEDOUT;
-+	}
- 
- 	/* Restore window register as its content is cleared during
- 	 * hardware global reset, such that it aligns with host cache.
- 	 */
- 	ath11k_pci_restore_window(ab);
++#if IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN)
++	if (kvm_pci_msi_wait_ready(ab_pci->pdev, 500) > 0)
++		kvm_pci_msi_get_address(ab_pci->pdev, &ab->pci.msi.addr_lo,
++					&ab->pci.msi.addr_hi,
++					&ab->pci.msi.ep_base_data);
++#endif
 +
-+	return 0;
- }
+ 	ret = ath11k_mhi_start(ab_pci);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to start mhi: %d\n", ret);
+@@ -1350,6 +1360,9 @@ module_exit(ath11k_pci_exit);
  
- static void ath11k_pci_clear_dbg_registers(struct ath11k_base *ab)
-@@ -377,8 +393,10 @@ static void ath11k_pci_force_wake(struct ath11k_base *ab)
- 	mdelay(5);
- }
+ MODULE_DESCRIPTION("Driver support for Qualcomm Technologies PCIe 802.11ax WLAN devices");
+ MODULE_LICENSE("Dual BSD/GPL");
++#if IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN)
++MODULE_SOFTDEP("pre: pci-kvm-msi");
++#endif
  
--static void ath11k_pci_sw_reset(struct ath11k_base *ab, bool power_on)
-+static int ath11k_pci_sw_reset(struct ath11k_base *ab, bool power_on)
- {
-+	int ret;
-+
- 	mdelay(100);
- 
- 	if (power_on) {
-@@ -391,8 +409,12 @@ static void ath11k_pci_sw_reset(struct ath11k_base *ab, bool power_on)
- 
- 	ath11k_mhi_clear_vector(ab);
- 	ath11k_pci_clear_dbg_registers(ab);
--	ath11k_pci_soc_global_reset(ab);
-+	ret = ath11k_pci_soc_global_reset(ab);
-+	if (ret)
-+		return ret;
- 	ath11k_mhi_set_mhictrl_reset(ab);
-+
-+	return 0;
- }
- 
- static void ath11k_pci_init_qmi_ce_config(struct ath11k_base *ab)
-@@ -822,7 +844,9 @@ static int ath11k_pci_power_up(struct ath11k_base *ab)
- 
- 	ab_pci->register_window = 0;
- 	clear_bit(ATH11K_FLAG_DEVICE_INIT_DONE, &ab->dev_flags);
--	ath11k_pci_sw_reset(ab_pci->ab, true);
-+	ret = ath11k_pci_sw_reset(ab_pci->ab, true);
-+	if (ret)
-+		return ret;
- 
- 	/* Disable ASPM during firmware download due to problems switching
- 	 * to AMSS state.
+ /* firmware files */
+ MODULE_FIRMWARE(ATH11K_FW_DIR "/QCA6390/hw2.0/*");
 -- 
 2.56.0
 
