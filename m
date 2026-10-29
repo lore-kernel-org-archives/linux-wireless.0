@@ -1,79 +1,117 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793312151;
-	b=PJTGpeWugBjMpVzVeQfufPLgK35QZX4zWRRQDbaHWQ4HoVeujbdzOziGZfeGrnQrHabt
-	 gNPGcRyx5FtVwqDqbnWjy9G1Z3Bc0Hs9jUpt3cLXt8eL24irVvHB4HyfCl+EbjRgIOvf5
-	 3Ay2FkY9GNBdFdw/3QYkXXOzSKgvmK/JjksZZz79VYUp+WBMdIFw3rOJS+Ps5BL3kKH+e
-	 1ltvs8VbmbQe0LJABDVhn92UN1K0VYEJaVXP6IHwZcC2KuBAt4TVlGVNS/lXvwYaxOpxt
-	 NM0Nn/mMdx5vBvaY9XfuqJ8Oq0xBVhBserT3soYAYZIPkNfMJblo/8fJii8ONv1ej1g==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793312151;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=MWYlf8XcgjyLVzWD26ZQSwWE8DILydKaeCY9WPoYanE=;
-	b=mt9ImPc9BAngzphvDYVV1dW4+ES6A6ZcZ0H569IOQUegnQH25YYVJmsMRfdFGzz1iD4N
-	 0bh+UsUA79etA5ofHlZBqZDv1KhipdhIEa+DUbsBm3D+OkpglYeFPpWVus7Prfehtu+X9
-	 pGLLQZBAxkNT9NHJaQiMAP88HpOyufFY7gpLTOMxOgW+l7Xp/0GbqN6ofp3chg54N1+1l
-	 WwYdMK9tXdO02kH07+r4hICumttQ+qpLzuaLRKZDBH/osAeYMENFPCw8GA3z+aSbDnPcP
-	 Vj3AnWtewhorm66X283vdTR4+b9LwGlFgJamjyUPr7qIud2fnVjqcFOXHTWjnQwSi8A==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GPelaCvM;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92A4F606A31A;
-	Thu, 29 Oct 2026 22:15:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GPelaCvM
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793312150;
-	b=pdi4+5bimXtHC+FSXhR7g0mq8XrP4NMq7bospIKxyAc707nrtOsuHXYjVPp6h/DLyD3E
-	 6U0LZ75OC9kXlUcHk6eK+MDT8dzkRPNn6iRt24LfXvqgBm34Sl7/NQ/joYrXb5jCant0l
-	 ys1O2/eJaZTaUTRlYGLbsw3tMxND8NJZUHmeJj4DrSRV8xLRCXWL5R5OAaZvf7hiTfgc2
-	 4iobCSmTWQRNbyVUT1iBMosWgqrCnYvllaPYRz7gqIVBE/KMbp2bVVBWt6h83hwsWvvJa
-	 M3/92Y3s+1Emj96geJ+KeEviudYHHPKDSNWEeK9iKEbt0xv6JkGQ4OQt73YzKLfC+lQ==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793312150;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=MWYlf8XcgjyLVzWD26ZQSwWE8DILydKaeCY9WPoYanE=;
-	b=gw9095RFhKep6oLJDnVjyT8Eh7zVMve51whLEPmRx5gspelj6dwB91JBuqMg0wlqYZ7z
-	 tcNnukVttwKVP8u6gBXW98Vt+1KkhLXhNj1gWX6fYPiwTgxsKZKrfBL3z7K1yc0KWScSY
-	 yTZNrPmoDfQ/6fGHWN9XhtQ1vGwhJpE11mHOTx/gXouHMuXgVXJFhJz5MaI3/ja2bAggd
-	 70I55oDZU1RUFM9d8LeEgFcnkdeLLpXEPQUjof8V89Dffgn8ScWwn4Yn0CJybXCX36qCb
-	 WLN6ZXYj5fFbZiQQOxyiWSa2Nokm1R6aGtjiHuqt5iTp2fxFhrCm8yj0JChs4sV3+oQ==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793314570;
+	b=E/Ub4xZPfqNdibLe07Vo28Gfz5tGwNKSz3CEAV/3LRIQs2Xw8xfAXen7qdGvgzCLy1Oz
+	 BD0k3OC2foxhz3a2Ks1u/4oFtRXnZe1nph7QtXosL1ytm9aqqgQDWKVtn4NrSjERnGr3j
+	 OrzMDH3zooxpqV/P9RzlsO4Y1TrAi81k8Y/MbpG0Xgdpbuimfhcl8Wkb1VU79knCM+zmA
+	 L4Lcj5qxA8EOX28bhNfJK39mSgg5C1oQ6vKb5LD86L6/EgFYBelQYblFADKwvj2i9HZhv
+	 T5Xp4d7RFi771e3v9QV0qzwG++NLk8X0AKvYtvcOaSIlRZ5hggyQVjh/uzyplErwJCg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793314570;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:From:To:Cc:In-Reply-To:References:
+	 Subject:Message-Id:Date:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-Mailer:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=Kovbbk6loTr0hn1v5TMoxCLs3KlWkkhMntV1tVmNBmo=;
+	b=32V4m+v/X5Br7oedGO3q8pm4nM3PTqNOD8iA+98V2TFKGY6VYOOZ60kc8TWXfy1TCuQ1
+	 LZgj2rNJhVjo6CKHv1PVAuhq4FAlQIPQEszSn3m2Ohj6WmFrcpxp3kq41E1FBP0Vx8yEz
+	 9uCe5ms5WiwWpMsZkqxsGOqZzm+kj+pthpPwq3yQB2tTcul/XNdVcbPuEWr92V+de8Q1i
+	 bDaKco96ZR9l4rlK9l8Of3HiNJfovftsqEvFTso8Am1G8fpeP0tiu3Acf5l3riEj/Tap1
+	 1Bg9sxbSBhUrCDhfVNP56OaK9iIMo64tVD8N1PepRJ4YUFlDv0kdwaUdvMWrt93F2qw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=HnpWCIY1;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=bgd84zGn;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 3C9391F01816;
-	Thu, 29 Oct 2026 22:15:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793312150;
-	bh=MWYlf8XcgjyLVzWD26ZQSwWE8DILydKaeCY9WPoYanE=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=GPelaCvM/fntZhAplPpPWOS7IcJ47jr+ioaWzqHzHzpU+3AiwVD3JzT/FQ3gCrLxa
-	 CN9c2yX7jAWk0pC8/nSzqzPQohcBT11Dn86F8+fRmBBNeBQv7C/AyBsV4dCNdo39WT
-	 0Z1SlRyZSkSdHE1JZJDqTc+83B2FrsqCL+OT0JSFZzhCHqt9OdH5z/uPTFyFK2/Var
-	 Sddf5uvdHuyYh9fEf7pE38Xxk2rrklQIy1o4ZND+a8u8WQzxNDWlw0acIAaM1y8NU2
-	 06YAb6OPu4cyGUJnKAVCdnZ9mh+uF8AN3hYGE2noERItqQikU6AwX39An7eECY1tOd
-	 QxTpjZQptz6ag==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 9004C459FA;
-	Thu, 29 Oct 2026 22:15:48 +0000 (UTC)
-From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Thu, 29 Oct 2026 17:15:48 -0500
-Subject: [PATCH ath-next] wifi: ath11k: add the measured noise floor, not
- -95, to a received signal
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A182606A321
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 22:56:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A182606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=HnpWCIY1;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=bgd84zGn
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69TLaUBa291290
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 22:56:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Kovbbk6loTr0hn1v5TMoxCLs3KlWkkhMntV1tVmNBmo=; b=HnpWCIY1ECpy+4bI
+	+DWyNZONjtaCnPuLuU0IKZG4Jb/OAyW65O53Dqbt5DVqiojEi6K+uzsvW+h3no2M
+	4mmyAvnn4HrGam9QF6M9vYmP9mTJFNCDe3pNZ36bLVPj9NjTGg6kGhmAj6r7PkxD
+	f6VSlMJuPjlmb3ncsmMsfJ51jh5177l4pzY3EuPweSv0CYMWMF0Tj7/1gCPnB07f
+	k4EM9wSBclJKkCieARFNnDFqGyhJRkF4Pdp4XtO78VnbdQdztEY3XFx3D21Q6Gsc
+	U3MoagN7z3PEUQm9V92nWnVRm8EYT/KAjPMz8aV2kraLl5YVpXVnvyLmnB81NrXb
+	HUtdlg==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hme6p08nm-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 22:56:09 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-33c35f5ca6cso382988eec.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 15:56:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793314568; x=1793919368; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Kovbbk6loTr0hn1v5TMoxCLs3KlWkkhMntV1tVmNBmo=;
+        b=bgd84zGn+zIL5hCjSo3/aVDJuEJ7KUtzpThmrhcwigejaDoH6XqEFy1k44VmXIYebj
+         D1Fp1DNu9O35b/ltp1RGPgoeHmdWGUwuF5Bx0tC+kBZQUAGPgG0C+cA0S7ArGRtVC2k+
+         ru06JeZGczgVyCAb+zOE46OsVxewnX8tDFp/eCXFbqLJdMAGKrL1XlG2NpOXWTmg0TPX
+         7F5JgBCdUaMvHazccZV/EtGq2AkdTYlWlx+7k4V6/vyeGCf8ly1+U3g9x11VOOYg/u5F
+         qimRpfdEIrfH3EuChlhivHOzypzzV+kTrwp3UPB4m7SEOH/GihFOYhjLXHIUMg4GUhR0
+         rMeg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793314568; x=1793919368;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Kovbbk6loTr0hn1v5TMoxCLs3KlWkkhMntV1tVmNBmo=;
+        b=C3E5ZywnZadci5iC/eQNQzx5XHkxCahl/VDeaNTdln3TTCEMISdTj0iP6ulNSVWJ/D
+         21dTfkvSOcqy2aQj/oqO6Aln6lzvSQC5/sP3rxrvaZ18tz3EkmBsXz9UM0r3odZflBTd
+         yIgr/ZrZlIokjrgZDN/yZ+/x/xW8cIeJQxUVq2IabxLB+epCamrqXwKiNnMhcyjRrHvm
+         sr1Ol8HegeNRPXAUsj6+Ld+YB1hQntlcL5cKkviv8yZa7qKhJxAuyDhZQ6j6KKzLHvRw
+         navIKw5kB8eC01zIbHui2WtI9IMlRVl0/dhmgYq2CbVaNDxvjpbdwT0i4uHhck8ETwAj
+         zneA==
+X-Gm-Message-State: AFq9FYJ4qaXBZyWV+EfT1gZMnM8zQmqUIOFuHkqt0zda0tljfpXGs483
+	664xl5uoULKPvKhhMOXG/sI8w386CEA4uukBHkZKxK1QTXpky4BxR5yKgt8kzTwZ5mNg02o5UUZ
+	GZ7XC78+RLwKsuLkdSqKBN4QT5wD0XxhC1DC9o70JopIjWnBkew9VlJfxvkMzaOdjG6c152GhRv
+	hsJg==
+X-Gm-Gg: AYBFou0Eok9kPgBtRblFbAIAqJu+2seJ2rJ74dbubh+k44Kjmxd7g+BFL4YXowbs1ww
+	5OzWnFsTvM+v5eFGBBje5y2aXfR9uyFBLH50l097SC0edQvbQ3CUsLue/6gj6S+iO02KaQz/88O
+	inO9Un9jhla24RTxIGwXFUmie+ptvUqA0yiMWoCb7SiTF0tIuI/9DO/c3qN+DK1Aotm96IK7/W+
+	2Tpf/Ar8B6N4wh71rH+f/RzqyVSYtLbCAMIFXiJb+i0pQ2g1v/3ukIaJDl5qslfdoX4rMupBzQs
+	dRrnKSLZ9nYSwfY9YnowQQ3NImZwKhJV3gGU2vxkpR5hn61I+p/4QCVLq9W+neTlBqE2EeqmIE9
+	PgnbCGkENUE+1l5xCQ8IoqFURUZ3yCdNEAg1P6E+xODrQ5vBOcadvjCCh9gOJLH8se0boHy7u2z
+	Fv66/irOmfWS6+86dsrPb5pceSpaPV
+X-Received: by 2002:a05:7300:ff42:b0:369:f231:4707 with SMTP id 5a478bee46e88-36a42225abdmr958165eec.5.1793314567895;
+        Thu, 29 Oct 2026 15:56:07 -0700 (PDT)
+X-Received: by 2002:a05:7300:ff42:b0:369:f231:4707 with SMTP id 5a478bee46e88-36a42225abdmr958121eec.5.1793314567149;
+        Thu, 29 Oct 2026 15:56:07 -0700 (PDT)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a428af91bsm1644278eec.8.2026.10.29.15.56.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Oct 2026 15:56:05 -0700 (PDT)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: ath12k@lists.infradead.org, P Praneesh <praneesh.p@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20261015084445.3045925-1-praneesh.p@oss.qualcomm.com>
+References: <20261015084445.3045925-1-praneesh.p@oss.qualcomm.com>
+Subject: Re: [PATCH ath-next] wifi: ath12k: fix IRQ disable imbalance in
+ AHB ext interrupt handler
+Message-Id: <179331456572.1083805.8183504418860911959.b4-ty@b4>
+Date: Thu, 29 Oct 2026 15:56:05 -0700
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,370 +122,61 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261029-ath11k-signal-noise-floor-v1-1-dd5d6a04dcf2@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAJPF42oC/2WP0U7EIBREf6XhWRIgbYH+itkHuFy2aBcUaK3Z7
- L/LajUaHydzZ87cKymYAxYydVeScQslpNgEf+gIzCaekQbXNBFMjJwJTU2dOX+mJZyjWWhMoSD
- 1S0qZgrSceQGOWUda/iWjD/tn9yNpMRpxr+T05ZTVPiHUe/Vxm/F1bfh6BH7oU3ew+2923undj
- bjQ8hYqzLQ3yAaQRgkJ08bJ7/X/82XNG77/3a7MoEGBUr4/CqxpLqTLJdSpa0+JEUflnfVKWQ0
- wCGHl2JjaaQHa9NxLpsnpdvsAljUqc1QBAAA=
-X-Change-ID: 20261029-ath11k-signal-noise-floor-c7b10f2cd0bd
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- ath11k@lists.infradead.org
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793312148; l=14047;
- i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=an+cFuf9qofjguKNKpiOOW55It8wu9JPo5kVIgrvAJA=;
- b=Sjf7zhxr8VdGzQAV7i8iwQhfQ8UY0QGDsx4ENXSVeOOXv0iGbNrlhebYvbnR6EjHEivqRqiRS
- AVsqllwqHewA+TOpawy+k0h8TFPLcR36YEGjmvCoQ7hdEaEG7/DyPk+
-X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
- pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
-X-Endpoint-Received: by B4 Relay for
- christophergriffin05@gmail.com/20261024 with auth_id=1309
-X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
-Reply-To: christophergriffin05@gmail.com
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16.0
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI5MDA5MCBTYWx0ZWRfXw4Hg8CPdsnEd
+ vZ4pa6p0osTKvv1Qw2W9NWxv6bbgwR6jLsNRiAVO6H5bcJQlkwpxArY4QWkn1D1fFX+Za6swj/t
+ acXbhnjxWZUAqJfCch2IpBcKFYREWx1n56lZUOuK4yhdjQ0kIbPMKBwHDrBCcJYO1aKSQf9fiI8
+ y3IlBpkBoca1Lvb0l7VnTsbbSFgjXxNatTPRs6UofO8G48HV8LS1DSlHtHFdnkmi86+qfFWR2Fp
+ q2ojQtu3P14aW3IPyxJfO9g3MzeI4PwDuapuTJUBo06fL4bkPDgmBjCcO2tYXYdFq4ckxUBwdIA
+ 4sZdUsl7ojtM6PASoCjPdEG4Rcj1DLzWbvIBfYgjvP/eYfTSLvBl/mGxQOUuhJ7+nWKP2txL5ZA
+ k3cXX9C4N/GgqPlsIp3ikt7koLSOTbvTOCJPdQuiSMH2/HkG0v7XGCWoO3KuHbHVn4Gti0EpvTS
+ Jf1OjnDQXCrrtHo6x5A==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI5MDA5MCBTYWx0ZWRfX0TrovOQvBUVk
+ Y5sLjUv6DGkJU73XkU/1Vt9wl5KwyNANVLoy5xIk2LG8MbqvYxqf8sloEFs1NgxPdGPTMor3xZI
+ LKL5uuQeBqH/kyOD3mF92oMzj9bfrWQ=
+X-Proofpoint-ORIG-GUID: d0Si0ie1EX9LfQ-v3twmLyE6-NP9lf-z
+X-Proofpoint-GUID: d0Si0ie1EX9LfQ-v3twmLyE6-NP9lf-z
+X-Authority-Analysis: v=2.4 cv=TL3Q2Fla c=1 sm=1 tr=0 ts=6ae3cf09 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=n7ogJBxv0B39A75zntIA:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-29_06,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 lowpriorityscore=0 priorityscore=1501 clxscore=1015
+ adultscore=0 bulkscore=0 malwarescore=0 phishscore=0 suspectscore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610290090
 
-From: Christopher Griffin <christophergriffin05@gmail.com>
 
-The firmware gives a received signal (rssi_comb of a PPDU, the ack rssi
-of a tx completion, the snr of a management frame) in dB above the noise
-floor it measures on the channel. Without the firmware's own conversion
-to dBm (WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT), ath11k adds a
-fixed ATH11K_DEFAULT_NOISE_FLOOR (-95 dBm), so every signal it reports
-reads low by as much as the channel's floor is above -95 dBm: 5 dB on a
-channel at -90, 7 dB at -88.
+On Thu, 15 Oct 2026 14:14:45 +0530, P Praneesh wrote:
+> On AHB platforms such as IPQ5332, IRQ group 3 maps multiple hardware
+> rings to a single NAPI instance. Each ring is assigned its own IRQ
+> line, but all IRQs in the group share one napi struct and one poll
+> function.
+> 
+> When two IRQs from the same group fire simultaneously on different
+> CPUs, both handlers call ath12k_ahb_ext_grp_disable(), which invokes
+> disable_irq_nosync() for every IRQ in the group. This increments the
+> interrupt controller's disable reference count for each IRQ twice. The
+> single NAPI poll that runs calls ath12k_ahb_ext_grp_enable() once,
+> decrementing each count from 2 to 1. Because the count never reaches 0,
+> all IRQs in the group remain permanently masked by the interrupt
+> controller.
+> 
+> [...]
 
-On an IPQ8074 (WLAN.HK.2.9.0.1) the HTT PDEV RX rate stats give each
-chain's signal of the last PPDU in dB and in dBm. Their difference is
-that chain's measured floor (-87 to -95 dBm across chains and channels),
-and the chains' summed power is rssi_comb plus the channel noise floor
-of the pdev stats to within about 1 dB, on 2.4 and 5 GHz. A client whose
-chains summed to -42 dBm on a 5 GHz channel at -90 showed as -46 in a
-station dump.
+Applied, thanks!
 
-Keep the measured floor of the channel in use per radio, read from the
-pdev stats when the survey of that channel is read or a station dump
-finds it older than 10 s, and add it in place of -95 to the station
-signal and its average, the ack signal, management frames received on
-that channel, and monitor frames. Drop it when the radio changes
-channel; until it is read again, and for frames on another channel
-(during a scan), -95 stays. Chips with db2dbm are unchanged. ath12k
-already adds the noise floor its firmware reports.
-
-Tested on an Arista C-360 (IPQ8074): a client whose chains summed to -42
-to -44 dBm on a 5 GHz channel at -90 now shows -40 to -42, where -95 gave
--45 to -48. The management frame and monitor paths were not checked
-separately; they take the same offset.
-
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
----
-This applies on top of two ath11k patches I sent on 2026-10-24, listed
-as prerequisites: "wifi: ath11k: update rx_channel on a channel switch"
-and "wifi: ath11k: report the measured noise floor of the channel in
-use". It reads the floor where the second one does and drops it where
-the first one moves rx_channel.
-
-Found on an Arista C-360 running OpenWrt, where an AP on a channel with
-a raised floor (-88 dBm) seemed to hear its clients 8-10 dB worse than
-they heard it. On an IPQ8074 5 GHz radio with a floor of -90 dBm, the
-HTT PDEV RX rate stats of the last PPDU gave per-chain signals of
-40/37/36/39 dB and -51/-51/-57/-52 dBm (chain floors -91/-88/-93/-91);
-the chains summed to -46.1 to -47.1 dBm with rssi_comb at 44. With this
-patch the station dump shows -46, without it -51. On 2.4 GHz (floor -94)
-the chains summed to within 1 dB of rssi_comb plus the floor as well.
-The firmware's combined rssi_in_dbm in the same stats did not follow the
-chains on two of three radios, so I did not use it.
-
-Not tested: the management frame and monitor paths on their own (they
-take the same offset), and chips other than IPQ8074. The QCN9074 and
-QCN9072 in the same AP read their floors the same way, but I did not
-compare their chains. Chips with db2dbm are unchanged.
-
-The investigation and the patch were done with Claude Code
-(claude-opus-5-5): it found the offset by comparing the per-chain dB and
-dBm figures with the pdev noise floor, wrote the patch and its
-changelog, and ran the tests on the APs. Tested on OpenWrt's
-backports-7.2 ath11k with the two prerequisites; built with W=1 on
-ath-next with them applied.
----
- drivers/net/wireless/ath/ath11k/core.h  | 25 ++++++++++
- drivers/net/wireless/ath/ath11k/dp_rx.c |  2 +-
- drivers/net/wireless/ath/ath11k/dp_tx.c |  4 +-
- drivers/net/wireless/ath/ath11k/mac.c   | 88 +++++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath11k/wmi.c   |  2 +-
- 5 files changed, 97 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index a0d725923ef2..0901695de015 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -716,6 +716,14 @@ struct ath11k {
- 	/* valid during scan; needed for mgmt rx during scan */
- 	struct ieee80211_channel *scan_channel;
- 
-+	/* measured noise floor (dBm) of rx_channel for the signals reported
-+	 * on it, or 0 until it is read; set under conf_mutex and data_lock,
-+	 * read without them on the rx and tx paths
-+	 */
-+	s32 noise_floor;
-+	u32 noise_floor_freq;
-+	unsigned long noise_floor_time;
-+
- 	u8 cfg_tx_chainmask;
- 	u8 cfg_rx_chainmask;
- 	u8 num_rx_chains;
-@@ -1370,6 +1378,23 @@ static inline const char *ath11k_bus_str(enum ath11k_bus bus)
- 	return "unknown";
- }
- 
-+/* The firmware gives a received signal (rssi_comb, ack rssi, management
-+ * snr) in dB above the noise floor it measures on the channel. Without its
-+ * own conversion to dBm (db2dbm), add that measured noise floor, not a
-+ * nominal -95 dBm, or every signal reads low by as much as the floor is
-+ * above -95. A frame on another channel than the one in use (freq given),
-+ * or a channel whose floor has not been read yet, gets the nominal one.
-+ */
-+static inline s32 ath11k_noise_floor(struct ath11k *ar, u32 freq)
-+{
-+	s32 nf = READ_ONCE(ar->noise_floor);
-+
-+	if (!nf || (freq && freq != READ_ONCE(ar->noise_floor_freq)))
-+		return ATH11K_DEFAULT_NOISE_FLOOR;
-+
-+	return nf;
-+}
-+
- void ath11k_core_pm_notifier_unregister(struct ath11k_base *ab);
- 
- #endif /* _CORE_H_ */
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 6d95f7b343a5..8c6bec1d6fa8 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -5050,7 +5050,7 @@ static void ath11k_update_radiotap(struct ath11k *ar,
- 	u8 *ptr = NULL;
- 
- 	rxs->flag |= RX_FLAG_MACTIME_START;
--	rxs->signal = ppduinfo->rssi_comb + ATH11K_DEFAULT_NOISE_FLOOR;
-+	rxs->signal = ppduinfo->rssi_comb + ath11k_noise_floor(ar, rxs->freq);
- 
- 	if (ppduinfo->nss)
- 		rxs->nss = ppduinfo->nss;
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index cac970c92806..6cd03258a5d1 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -358,7 +358,7 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
- 
- 			if (!test_bit(WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT,
- 				      ab->wmi_ab.svc_map))
--				info->status.ack_signal += ATH11K_DEFAULT_NOISE_FLOOR;
-+				info->status.ack_signal += ath11k_noise_floor(ar, 0);
- 
- 			info->status.flags |=
- 				IEEE80211_TX_STATUS_ACK_SIGNAL_VALID;
-@@ -593,7 +593,7 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
- 
- 		if (!test_bit(WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT,
- 			      ab->wmi_ab.svc_map))
--			info->status.ack_signal += ATH11K_DEFAULT_NOISE_FLOOR;
-+			info->status.ack_signal += ath11k_noise_floor(ar, 0);
- 
- 		info->status.flags |= IEEE80211_TX_STATUS_ACK_SIGNAL_VALID;
- 	}
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 155ce76d9a2a..ada0f3a3c856 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -7522,6 +7522,20 @@ static int ath11k_mac_op_ampdu_action(struct ieee80211_hw *hw,
- 	return ret;
- }
- 
-+/* how long a station dump reports signals with a noise floor before it
-+ * reads the floor again
-+ */
-+#define ATH11K_NOISE_FLOOR_REFRESH	(10 * HZ)
-+
-+/* forget the noise floor of the channel the radio is leaving */
-+static void ath11k_mac_clear_noise_floor(struct ath11k *ar)
-+{
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	WRITE_ONCE(ar->noise_floor, 0);
-+	ar->noise_floor_time = jiffies - ATH11K_NOISE_FLOOR_REFRESH - 1;
-+}
-+
- static int ath11k_mac_op_add_chanctx(struct ieee80211_hw *hw,
- 				     struct ieee80211_chanctx_conf *ctx)
- {
-@@ -7539,6 +7553,7 @@ static int ath11k_mac_op_add_chanctx(struct ieee80211_hw *hw,
- 	 * Rx PPDU desc information.
- 	 */
- 	ar->rx_channel = ctx->def.chan;
-+	ath11k_mac_clear_noise_floor(ar);
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	mutex_unlock(&ar->conf_mutex);
-@@ -7563,6 +7578,7 @@ static void ath11k_mac_op_remove_chanctx(struct ieee80211_hw *hw,
- 	 * rx_channel with the channel of that remaining channel context.
- 	 */
- 	ar->rx_channel = NULL;
-+	ath11k_mac_clear_noise_floor(ar);
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	mutex_unlock(&ar->conf_mutex);
-@@ -7803,6 +7819,7 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
- 	if (n_vifs) {
- 		spin_lock_bh(&ar->data_lock);
- 		ar->rx_channel = vifs[0].new_ctx->def.chan;
-+		ath11k_mac_clear_noise_floor(ar);
- 		spin_unlock_bh(&ar->data_lock);
- 	}
- 
-@@ -9342,44 +9359,71 @@ ath11k_mac_update_bss_chan_survey(struct ath11k *ar,
- 		ath11k_warn(ar->ab, "bss channel survey timed out\n");
- }
- 
--/* The noise floor in the firmware's bss channel info event is not the
-- * channel's measured noise floor: on IPQ8074 it reads about -109 dBm on
-- * 5 GHz and -102 dBm on 2.4 GHz, and barely moves, while the measured value
-- * the firmware reports in its pdev stats is -94 and -96. Report the measured
-- * one for the channel in use, as the channel info events of a scan do for
-- * the other channels.
-+/* Read the measured noise floor of the channel in use from the firmware's
-+ * pdev stats, and keep it for the signals reported on that channel (see
-+ * ath11k_noise_floor()). Return it, or 0 if there is none.
-  */
--static void ath11k_mac_get_chan_noise_floor(struct ath11k *ar,
--					    struct survey_info *ar_survey,
--					    struct survey_info *survey)
-+static s32 ath11k_mac_read_noise_floor(struct ath11k *ar)
- {
- 	struct ath11k_fw_stats_pdev *pdev;
-+	bool db2dbm = test_bit(WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT,
-+			       ar->ab->wmi_ab.svc_map);
- 	s32 nf;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (ar->scan.state != ATH11K_SCAN_IDLE)
--		return;
-+	ar->noise_floor_time = jiffies;
-+
-+	if (!ar->rx_channel || ar->scan.state != ATH11K_SCAN_IDLE)
-+		return 0;
- 
- 	if (ath11k_mac_get_fw_stats(ar, ar->pdev->pdev_id, 0,
- 				    WMI_REQUEST_PDEV_STAT))
--		return;
-+		return 0;
- 
- 	spin_lock_bh(&ar->data_lock);
- 	pdev = list_first_entry_or_null(&ar->fw_stats.pdevs,
- 					struct ath11k_fw_stats_pdev, list);
- 	nf = pdev ? pdev->ch_noise_floor : 0;
-+	if (nf >= 0 || nf <= -127)
-+		nf = 0;
-+	if (nf && !db2dbm) {
-+		WRITE_ONCE(ar->noise_floor_freq, ar->rx_channel->center_freq);
-+		WRITE_ONCE(ar->noise_floor, nf);
-+	}
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "noise floor %d dBm on %u MHz\n",
-+		   nf, ar->rx_channel->center_freq);
-+
-+	return nf;
-+}
-+
-+/* The noise floor in the firmware's bss channel info event is not the
-+ * channel's measured noise floor: on IPQ8074 it reads about -109 dBm on
-+ * 5 GHz and -102 dBm on 2.4 GHz, and barely moves, while the measured value
-+ * the firmware reports in its pdev stats is -94 and -96. Report the measured
-+ * one for the channel in use, as the channel info events of a scan do for
-+ * the other channels.
-+ */
-+static void ath11k_mac_get_chan_noise_floor(struct ath11k *ar,
-+					    struct survey_info *ar_survey,
-+					    struct survey_info *survey)
-+{
-+	s32 nf = ath11k_mac_read_noise_floor(ar);
-+
-+	if (!nf)
-+		return;
-+
- 	/* keep it for the channel too, so its survey shows the last measured
- 	 * value once the radio has left it
- 	 */
--	if (nf < 0 && nf > -127)
--		ar_survey->noise = nf;
-+	spin_lock_bh(&ar->data_lock);
-+	ar_survey->noise = nf;
- 	spin_unlock_bh(&ar->data_lock);
- 
--	if (nf < 0 && nf > -127) {
--		survey->noise = nf;
--		survey->filled |= SURVEY_INFO_NOISE_DBM;
--	}
-+	survey->noise = nf;
-+	survey->filled |= SURVEY_INFO_NOISE_DBM;
- }
- 
- static int ath11k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
-@@ -9507,6 +9551,10 @@ static void ath11k_mac_op_sta_statistics(struct ieee80211_hw *hw,
- 		ath11k_mac_put_chain_rssi(sinfo, arsta, "fw stats", true);
- 	}
- 
-+	if (!db2dbm &&
-+	    time_after(jiffies, ar->noise_floor_time + ATH11K_NOISE_FLOOR_REFRESH))
-+		ath11k_mac_read_noise_floor(ar);
-+
- 	signal = arsta->rssi_comb;
- 	if (!signal &&
- 	    arsta->arvif->vdev_type == WMI_VDEV_TYPE_STA &&
-@@ -9521,14 +9569,14 @@ static void ath11k_mac_op_sta_statistics(struct ieee80211_hw *hw,
- 		   db2dbm, arsta->rssi_comb, arsta->rssi_beacon);
- 
- 	if (signal) {
--		sinfo->signal = db2dbm ? signal : signal + ATH11K_DEFAULT_NOISE_FLOOR;
-+		sinfo->signal = db2dbm ? signal : signal + ath11k_noise_floor(ar, 0);
- 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	}
- 
- 	sinfo->signal_avg = ewma_avg_rssi_read(&arsta->avg_rssi);
- 
- 	if (!db2dbm)
--		sinfo->signal_avg += ATH11K_DEFAULT_NOISE_FLOOR;
-+		sinfo->signal_avg += ath11k_noise_floor(ar, 0);
- 
- 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
- }
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 08fd6795ed9e..dfb8509ede75 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -7695,7 +7695,7 @@ static void ath11k_mgmt_rx_event(struct ath11k_base *ab, struct sk_buff *skb)
- 		status->freq = ieee80211_channel_to_frequency(rx_ev.channel,
- 							      status->band);
- 
--	status->signal = rx_ev.snr + ATH11K_DEFAULT_NOISE_FLOOR;
-+	status->signal = rx_ev.snr + ath11k_noise_floor(ar, status->freq);
- 	status->rate_idx = ath11k_mac_bitrate_to_idx(sband, rx_ev.rate / 100);
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
-
----
-base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
-change-id: 20261029-ath11k-signal-noise-floor-c7b10f2cd0bd
-prerequisite-change-id: 20261024-ath11k-rx-channel-switch-4ae05c7a827c:v1
-prerequisite-patch-id: 56c9f55a2b8fc7289ed2f2d736587a8869952253
-prerequisite-change-id: 20261024-ath11k-survey-noise-floor-c8a59c8c88f4:v1
-prerequisite-patch-id: 2d448d49f848e484eda837fc11f04458b594c770
+[1/1] wifi: ath12k: fix IRQ disable imbalance in AHB ext interrupt handler
+      commit: 216dd4fc57435726506e250ba2483f31ddc3c01b
 
 Best regards,
---  
-Christopher Griffin <christophergriffin05@gmail.com>
-
+-- 
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
