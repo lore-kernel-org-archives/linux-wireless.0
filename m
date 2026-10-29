@@ -1,55 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793244624;
-	b=PPqlBWKetJsFkHvVKdFh2iGGNNlBgOQViG8JM11hUWifsHHm/BVcP30oXo9ndAfY9C41
-	 2QCiqLG3eb7n9Ji+TNoee4kwGBKnjZC6+IdyyJvbKoyCbJhNtKUroqOfYgmxdd16WAKuW
-	 36+w6eBqZxKLrjZLYhGhFWg2fWHzNMdQlpLn/bLD4N8ux0Zaga4NObvWdAoCo/OM7owfq
-	 yFvN7UrobNZjaDjMcGtfm9XvtHG+RrbnoVjv9tGLJcS0K00ZC8RMVgHrHIoiJBFFXzeas
-	 oIengw+In32gJZj86hGX3V7nByhqcUXi6Ahy2PHLL4ljsdcz6JJc0m6CyXPh5l2NXDA==
+	t=1793247511;
+	b=mJ/jZe9SWRS4eT1GOEac231C25OS+ydnny2V0RcTrj3smYZZZnU456QthSkGYwCjbbai
+	 SN4BAgK3wMIFzmMnedKYcMc0hQ7CNngOetQY2J7A+8s/RSxQmfNxZY4ImyhoNqpz5njrT
+	 wzw+QMC46YWISz0fJWrat90vKc7+LCL8Mgp3mcyHiAmIOPABdKG0gD+KJxNcf+pDNwoNc
+	 6ME9Rs0l/G0iFotwg2ewfzvAbAui27EmwpBa55XMbSqExrMkgsmvo3U0Az5W8GhPfAAp9
+	 I50m6hlB/ZbET379RkhWRZ1G9BFkUGKoZXELbRcV6JXSDT8jFq/j+IT0i+niLjlCdMQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793244624;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793247511;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=/KBsFfO+dZZxUtdz8wSB5Vnn3P288pX2h/Ai0feaKE8=;
-	b=yi0tE6e+Anex5AL+twbHtZ/YRWum9HmkFJ6ZdPnZdDdrXlfZEEmS5uBkatdVoIVlVLYP
-	 esHaUXST/zYnyuBqepD6loPcrk90GtYE624JS6MTCxFFUMxA1Y7O/4lPDdBn07Jm3J/7p
-	 7Sv0PZiYrgItHkwMl5TM3mKhMWDVx9JFDPYwI5HapVMx8w9clEqF1oyHN2SE/GhQkCSgg
-	 ohvAOHAwAD5uxffpha8TqKR4x+RHc5EnbUUwGrpe2PceuhpSU9JyX1PDuXgNK6EVbqa+N
-	 JCc/MO0XtucQJZRhjuQG4nAz9CqBJ+3XYOqtd8k166Sr5WYCiWM8x+fGh7/4t7PFA4w==
+	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
+	 X-CM-SenderInfo;
+	bh=TIS1eakvHI8+nc46GSQLddSxCI4HVRv7Ah/8EnxGvVs=;
+	b=a1wIFsthXTRFH6GZq5kQHgEREyov4QPSTQ6xfkN/iuyjpcHxpPu3rC/53H2zBp6UNhqk
+	 RVk05pHOvFvp3Zo67zoCNHk6JT82BXJvbkzwvpH85NJBM6efuq9iF25qogHTiY/COVO/A
+	 ppHsOfpTOsDwGHo2/VI6hWuEjVr9b7RR/wOFpxnpKn8T4AhPeFsjfPh/8HOv5napnkRZQ
+	 nOSonQaBHUBxU94QVE/KfrbAcTkS+BEh/Gun6SqTSYYhY9/6hsEuHOKK/J0HqJUZdK5AU
+	 IY+ixiYAYDZYv9sHjGbpQer/jmcl3YeMk04njtjKmuW1Z8xTBfWnho050APyx/JJbEg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=GHwoA60m;
-	arc=none smtp.remote-ip=220.197.31.3
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Gr8qnu41;
+	arc=none smtp.remote-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A71606A31C
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 03:30:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E8A71606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA20606A326;
+	Thu, 29 Oct 2026 04:18:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BA20606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=GHwoA60m
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Gr8qnu41
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=/K
-	BsFfO+dZZxUtdz8wSB5Vnn3P288pX2h/Ai0feaKE8=; b=GHwoA60mE+SfDCigKB
-	xrfH7sLUuINqUT6N0CKe7+px6WztBhXlHKhXD+i03rWoEPqhpjdpG+vOOetcrB+3
-	dLtc+vky3oMbzCxkAO7S6Gch4vEFAOnNnKWjA9XmgIPQKTMNYxFreFZZf2E1PFur
-	eQk1foaMIOGy4AjZC4XU7r/bI=
-Received: from LAPTOP-BJS5C4G0 (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgCH7Bu3veJqZ003Cg--.56976S2;
-	Thu, 29 Oct 2026 11:30:03 +0800 (CST)
-From: Heyang Tan <thy15333007817@163.com>
-To: linux-wireless@vger.kernel.org
-Cc: jeff.chen_1@nxp.com,
-	francesco@dolcini.it
-Subject: [PATCH] wifi: nxpwifi: validate extra-header length in monitor RX
-Date: Thu, 29 Oct 2026 11:29:57 +0800
-Message-ID: <20261029032957.1422-1-thy15333007817@163.com>
-X-Mailer: git-send-email 2.51.0.windows.1
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=TI
+	S1eakvHI8+nc46GSQLddSxCI4HVRv7Ah/8EnxGvVs=; b=Gr8qnu41zMvgzCQFL4
+	CMliPrLiR9VssdJgAtch18G6V8SSXQz4d85j/89Sa3H/kGQBlxpwB437j8M11C+T
+	AB+OAXh9qf6VQCnGQnoEZS1aOvfYxaKwRLKUo3MNPISN9m83kL+pznqBq6Q9GQXp
+	olUEJUbqaZNHeOqVBGzAfsveg=
+Received: from pc.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3nzIDyeJqQW5fDg--.62716S4;
+	Thu, 29 Oct 2026 12:18:13 +0800 (CST)
+From: Jiale Yao <yaojiale02@163.com>
+To: Jeff Johnson <jjohnson@kernel.org>,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: stable@vger.kernel.org
+Subject: [PATCH v2 2/5] wifi: ath11k: validate hardware mode capability TLVs
+Date: Thu, 29 Oct 2026 12:18:08 +0800
+Message-Id: <20261029041811.2379878-3-yaojiale02@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261029041811.2379878-1-yaojiale02@163.com>
+References: <20261029041811.2379878-1-yaojiale02@163.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -60,48 +66,40 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PSgvCgCH7Bu3veJqZ003Cg--.56976S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ArWxJFy7GrykZr1rKw1Utrb_yoW8Wr48pa
-	97G3Waqr43Jw42qF4kGF4kZ3y5Xan3KFWUZrZY9a4rtFs0kF1rtas2vFyYvrn8Ga1fGa4a
-	yr4qvasrCF93XrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Ug4SwUUUUU=
-X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC-RvwmmrivbuK1QAA3d
+X-CM-TRANSID:_____wD3nzIDyeJqQW5fDg--.62716S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7JF4xJFy3JF4xKrW7tFyDAwb_yoW8JrWDpF
+	4xGw1UA348Jw47Jw4fAa1xZa45Kan5K34agFW7t34fWF18CF1rXFyYqFWYqFyrtF4UGFya
+	qF4qqrW5AF98t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jDL05UUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7wXGAWriyQXt7wAA3r
 
-nxpwifi_recv_packet_to_monif() reads the rxpd_extra_info structure
-right after the rxpd header when RXPD_FLAG_EXTRA_HEADER is set, but it
-only validates that rx_pkt_offset is at least sizeof(struct rxpd).  When
-the descriptor reports rx_pkt_offset smaller than
-sizeof(struct rxpd) + sizeof(struct rxpd_extra_info) while the extra
-header flag is set, the memcpy() of the extra header runs past the end
-of the received frame and reads beyond skb->len.
+The service-ready parser indexes hardware mode capability TLVs using the
+full structure stride and reads their PHY maps without validating the
+firmware-declared payload length.  A short TLV can therefore cause an
+out-of-bounds read.
 
-Reject such descriptors before copying the extra header.  A single check
-placed next to the existing flag computation covers both the regular and
-the HE copy sites.
+Add a minimum-length policy for hardware mode capability TLVs.
 
-This was found by static analysis and confirmed with a KASAN
-reproducer; in the real driver path the over-read stays inside the skb
-headroom/tailroom slack, so it is a defensive fix rather than a memory
-corruption issue.
-
-Signed-off-by: Heyang Tan <thy15333007817@163.com>
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- drivers/net/wireless/nxp/nxpwifi/util.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath11k/wmi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/util.c b/drivers/net/wireless/nxp/nxpwifi/util.c
-index ae8444a14..bc85846d5 100644
---- a/drivers/net/wireless/nxp/nxpwifi/util.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/util.c
-@@ -616,6 +616,10 @@ int nxpwifi_recv_packet_to_monif(struct nxpwifi_private *priv,
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index ef2c2c300854..047ae8f5bb60 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -167,6 +167,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 		.min_len = sizeof(struct wmi_dma_buf_release_entry) - TLV_HDR_SIZE },
+ 	[WMI_TAG_DMA_BUF_RELEASE_SPECTRAL_META_DATA] = {
+ 		.min_len = sizeof(struct wmi_dma_buf_release_meta_data) - TLV_HDR_SIZE },
++	[WMI_TAG_HW_MODE_CAPABILITIES] = {
++		.min_len = sizeof(struct wmi_hw_mode_capabilities) - TLV_HDR_SIZE },
+ };
  
- 	has_ext = rxpd->flags & RXPD_FLAG_EXTRA_HEADER;
- 
-+	if (has_ext &&
-+	    rx_pkt_offset < sizeof(struct rxpd) + sizeof(struct rxpd_extra_info))
-+		return -EINVAL;
-+
- 	if (has_ext)
- 		memcpy((void *)&ext, (void *)(rxpd + 1), sizeof(ext));
- 
+ #define PRIMAP(_hw_mode_) \
+-- 
+2.34.1
 
