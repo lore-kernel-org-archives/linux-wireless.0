@@ -1,91 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793254178;
-	b=0goe1eDaCDWJrvfLVDciT+tVXdF26/syEUh/ONTMCnJQpfbnrQHJfV2QrZ0krKD1Xyn2
-	 SykSSp/gFb83VD/aiFghv9TdewjiflXnPqsUCDLqtwK+aHxP1GRZtl72PuQY7/UZZ0/Lo
-	 UJFDQ+G2s2NANhSzyUvNEPQGoAvPcxfyPB3BjVTxTx2a170xjGEqzR/3W/Cow/AfyRmkP
-	 c2JfJin5sN8/cJ4pDTRDw6SIEtWRJYqCfQOZlXALZaghvEhZpzUbjY1H0cgLX9opEytRU
-	 DtjF1vrNHjqghoWHJGke6R6NMvyqezdHgUhSKqIGCuh1yQIpM+CtuIXvdLUAgrSpxIQ==
+	t=1793254183;
+	b=Q4n7uBaQt3CvgAJrD0AuMZ7ABuDbNqrlYxhaAgG0WyTcE8oqFxN/pTEYwhgX8FR78HCf
+	 9TN4o4sOcav4aLzPJZGtNtbDilqX0Y8g49f5hMMEryps6KBkoQvFQnScTzf0RPoO35CHB
+	 bMhHui8G7o2vHnRo7GtXNyW/nPRXfAA2QYH8KpdAdekXVi8F/pxHggeQfZhNeKZE6hTLm
+	 yxGwkWaFTgiz42N/S2bMtmu5iMdbFBU/16THqfI6Ulc9QSUTOnZJS1x8gGO+Tclj7VD63
+	 L6zk5JA6aGuc0ujhZSMSLUS1/TWUJ9ckqeYZtDTbXS1AKvLDd8JC+6gEBfLRJfdMmEA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793254178;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793254183;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=T6/N8Sdo415avv22xbVSdAnDJryYd8Tk8nbP0Dlim1M=;
-	b=AueDJuewY60/eqF4oT7xIfRyQB7+u0vccZiIZwDpUg3Wh3VdK7zdO0aLOaub2gLWMtM1
-	 GhRBfumn8FfQ1sMgNbQH6yFYNN79Ozq+iycaSIA/Px3Pa+kT6VTQ8+YY5bdrtSFlEGpAn
-	 tITEGOuXznr2RMK9PVWuBi9tabZwIKBS9i3Rvw5ZQdZihDwQ/ESTQEI/O1v2NgaUQTvqZ
-	 7OFcf9gH8EPfdJKKWGoYH3h9BUzvacLoKewjcisjy3R3ZXAFM/FlCNct7PYiHFEgiEGT0
-	 +msueGoD0FoleudPHcl+LKkNkS6wE+b++Abf5kaH/BPNxazV/8LoYE/rwIneRMuB/sg==
+	bh=SC2elIiktzsRzzpw5C8r5H1plfOjFayKw+uoorWLiSE=;
+	b=Jescm7QTNUI7iq4MS4DnW3LQ5NhluuI8y2bxq4falKCHdMOc1T80PXs364JasDl17SIL
+	 x0nVHuoEixFiSclpBgAr6LjWDdumWsaAYkbM29N7osMepqSrt7GzeCE+UFeEfNsluEsI6
+	 JYEEi0Hsj1KbqHb3ojSPu5ya2dgEM/VHEMVo4VTjO9BZGqtgakGmXgMj6wjR8dvusfXtK
+	 3g0EDf7ogr/pxJO/0L9mE8Hvr+mDCL6JoCpmAtIEhqdchCvxDU8rG7so9YcqOKpFLdRYy
+	 mcPG67BJCI9QR5wPuF4ZlHKYS3r7BKfMQZNEqu3WczuvmRN7BF9y8Vt59qZdbBxwZ6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=AkawrUEV;
-	arc=none smtp.remote-ip=209.85.215.169
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hbZQqtjN;
+	arc=none smtp.remote-ip=209.85.215.180
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0044606A31E
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 06:09:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0044606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4628606A31C
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 06:09:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E4628606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=AkawrUEV
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-cc7e79c1eaaso808220a12.2
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 23:09:37 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hbZQqtjN
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-cd61a2dfd7aso633074a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 23:09:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793254177; x=1793858977; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793254182; x=1793858982; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=T6/N8Sdo415avv22xbVSdAnDJryYd8Tk8nbP0Dlim1M=;
-        b=AkawrUEV4fnKBbg7X0/iyZreUp2uxkbyYheAYid/ZVeFDG7BNHBlCbVEh+nFRECJuX
-         CFyA+vDKLRr1F7xGR0J/1Qc94druxWe8POaeqUctnGKelaGL0Ax+PCZsq381XjNBFTLo
-         3gUgRinQh9GrBcyf6QxACh5fjlm5/CJ/CGV081JNwuYKTUvyK6T3j1IxA2mcJJuVOLE7
-         OCnJ2EgiEazE8QvelotJvj9h5MeFumDq7b8HXZ7dU2SbYL1grSEc3MRwH54UxJNEdHpH
-         CKs29fnQDeVevjgEi8MMtV5U0WBIRCxgsTV13gqHyuBorvLEaMNYFYcezEhdrOFu3TbU
-         i14A==
+        bh=SC2elIiktzsRzzpw5C8r5H1plfOjFayKw+uoorWLiSE=;
+        b=hbZQqtjNZVYgBXUF1R8HJT3A3EkYa/ox376lTYm6M/PNw2gguubk3ryfXH61ujtAFJ
+         AZdN/2AuM24jjJxytffigJT0gTSi8pokLE0ocj4nUIESWhSviYmhh/WxZHCiBFA0veFB
+         Z/pO9r083JbNm/9M1ZCw+V6ZTAUDgcbbqrlV4khoPMLHaglwM4hvmihyIKJYnIBE8vrw
+         20oHgkdVw5PtOnTPkmR/6F6PbarHlNVFj6gW9flCyV8NkKy4YPCbNY6fqnRjsqgguykY
+         JVdwZaZvzeY9+0ZrYkyOUmCq/n872PdS3RAFym7ZUveNv8GuLK7+b6NsdgvNJQ14VRmw
+         UFFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793254177; x=1793858977;
+        d=1e100.net; s=20260707; t=1793254182; x=1793858982;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=T6/N8Sdo415avv22xbVSdAnDJryYd8Tk8nbP0Dlim1M=;
-        b=mrtk/YeKEOM2+qy8OKXZTqwac1vFMbqOxERaBCVU9kQL0U2c/mQS5xiUP6Wy0uMFQg
-         /KqkRCoGfSZS3V/mazgm1sqdGM8amUKYqk42bCo3d4YN5QJlhtvLADdzeEMET6cQiQ28
-         7j1BG4PC9oXXyYOoUhJw4cxSv7UjZ85GprDEs/29im6Qps7kGCb+kb7u45LjZRBqUO/Q
-         Hw4oAuFu+cmeSk6bj9SBqIw3WI4E4DVGXBzBLlL3darzxuDAFds229AAtgHyCJHLUWag
-         wToqCrb6ldimRPB/lbFw+OF0vWfYLIqDLhb/fqD4HyjaYl71xYFPMGu/6Oj/LJXcaTYt
-         k3kw==
-X-Gm-Message-State: AFq9FYJk1SOD9az6O7SJoADkgOuyDRAnKlskTjiwP76SscNHG2B929Im
-	UTlHQBYla+f5aV2LKIESfbId6ZwR4wV4ueSESHuIgF3yjqo2c2MggTQc
-X-Gm-Gg: AYBFou1lGlkN+KPjGwBMj2oyabfUZHHBD0ThqLZ+cpg0AEBC47PYm85gsi/fty2FMUa
-	iqssClQK8unbqWy8CvwiIT9J8ffi3KIC8PpE2LkJuEXzM5+3X5rWvJ45qaeBVGR/5HVX/Fyz9fx
-	Cg611JiQR3DDVONmEMB/MyFuXeo9rubIZJ2GoftvP9I4cAzChAl0+QCSzXXakCiFXH4d1Sx/zwS
-	vkhvXb3orCLaTIk/7mmWvWqLwTOb9ptnOm8YGXT4s8LgxQTJb99lQKRKYWV7FEvhsAqjXWF8iZC
-	nujdH8jx6FRqGQXZQyFh8aBy5PHl3gkO54DN1PHaz3X/qOHtRd/NYf+nPgyYNX4TQb/vUqdBwSO
-	NvU58aa8yBF0O1G2/mFLQq1kX2Sap/jBtCzHI1q0t2gvOPl4HONtj82PvtI3/OvJB83ir9Rgjtc
-	lYuX8+SY4ywjzITFH4jJn/PNjSijYbGn7JC3NAMbnwlT80amaOjjqkAhkxp9NmuvNtU5l0Kiobq
-	b/NIx3TUmKtRDtcRF5r+keHsTMH3mHZrx2O818kjQ7SX7hGJ5omX3rOJ6O2YK/CLb81EtWoRUJm
-	pKB+D0Ads1lM7u47DSl/0/X6zqgRzz3gjswxQ/46STBlIfZFeEEpCMxmq7itoJSonGsnz9E/+b0
-	tUDs8
-X-Received: by 2002:a17:90b:510f:b0:3ac:7378:be04 with SMTP id 98e67ed59e1d1-3ae57ba6c8emr3359982a91.0.1793254177241;
-        Wed, 28 Oct 2026 23:09:37 -0700 (PDT)
+        bh=SC2elIiktzsRzzpw5C8r5H1plfOjFayKw+uoorWLiSE=;
+        b=WQlNCnsRp3hzk4/h7p4DDGYeCmHArQj92O78UVaBqWB2EXYxl2h82IV30N06Qwph9n
+         KqljFE2Pw77900Mhr7wQp6F8K8GQsLqSPi/xZla+91CS89RJUVwSyviU2WX9TXiP61i1
+         gcYVYw+5j08ZbZXRTUGcaTduxho0OlNxAPffI9Ie1aZzpMBivK3dFHAHhMmX4AbuepJp
+         F+rdHr01ujVB5xpRNMfcTpc/v4G1XvUhpy5brpLf2ysMeEq/UpI9/SYgo6zyLdvTxzEV
+         jAGkxeJAuVQtsJyqJyBwSS/qVLrMkGdz0weE+O0jLB6x7oqsWdAl3GQzYNcw9zybtv0v
+         6g4w==
+X-Gm-Message-State: AFq9FYJoyF848iCNyFSDsF+YGlDMNLrqig3fzW6wJD0RzIUMrXnEpCjJ
+	OA0R92Ly0jJ2H1NmmAya/rX3fGMrkeFOlfuGJMx8fj2RCIRje7m9u1yX
+X-Gm-Gg: AYBFou0xTw2VZ11IFRNMaQmSnWErQvz5TzCCorIlJ8HGvzgfKPX4hA3+MTEX3cQKjJ+
+	tJR62HElC+FdTpATQwLIBIbSIMRSPB5KE3xhDKKywcPorMuVVjV9OyOh0j6clS7SS0bx1WN5w8x
+	FYJ2dF6h1Ot8HFbb99tXfD6bMXqouu346G/zB4mBJRCO2DItLFiqTgI2KfHCzUjLmUtzDpNYRnQ
+	l1Rdye6cQ0oyW6j8Psmv2wtYHJKHuaLOznpgDS1Sm+vhZ1elOmH/KjVVER/ro2KGijpGbdQA256
+	/PSwRh2PDx5on0oDugSFaUISYaWxjoPu4l4JQPaepLFAiVahIUFDl8ka8vQGITNI2GYG18nW3Uo
+	U3qnzBjxnuhWVUD3U+SEOTqP9ahpXZJyJNNPfrPW6L1BqgdlQF074XjZnYafBIARRRXqfX8apE0
+	i/mjecHtY6xShcBHAzo1kihU5cS65qpRka0UV2KApikdwhouMfn/Ym/8RdVVGTCuj/e1/FN5He4
+	7n1wi6bBnaTP/BBYXkqOIm/sTAH3H/idur+uFJfCCkU94p5s4IAf4g07exlbID3xJYa5u4gonN3
+	FFOLYj2chEpfJzEz9VtB947h9j0NfuEzNIw2pJz3+VnmsRuryxPT+ecU+9CZrAsPl4ln6NXurL1
+	DElPw
+X-Received: by 2002:a17:90b:5903:b0:3ab:2d17:51c5 with SMTP id 98e67ed59e1d1-3ae57e2b52amr3368886a91.6.1793254182033;
+        Wed, 28 Oct 2026 23:09:42 -0700 (PDT)
 Received: from hostname.tail4fb79.ts.net ([2401:7400:c804:b668:65cc:625f:9c43:1e88])
-        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3ae6e83a4f1sm2697459a91.12.2026.10.28.23.09.35
+        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3ae6e83a4f1sm2697459a91.12.2026.10.28.23.09.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 23:09:36 -0700 (PDT)
+        Wed, 28 Oct 2026 23:09:41 -0700 (PDT)
 From: Ho Jie Feng <hjf3108@gmail.com>
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
 	Ho Jie Feng <hjf3108@gmail.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	neo_jou <neo_jou@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Hans Ulli Kroll <linux@ulli-kroll.de>,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] wifi: rtw88: allow driver-owned TX buffers to bypass mac80211 TX status
-Date: Thu, 29 Oct 2026 14:08:56 +0800
-Message-ID: <20261029060859.90002-2-hjf3108@gmail.com>
+Subject: [PATCH 2/2] wifi: rtw88: usb: don't report the aggregation buffer as a frame
+Date: Thu, 29 Oct 2026 14:08:57 +0800
+Message-ID: <20261029060859.90002-3-hjf3108@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261029060859.90002-1-hjf3108@gmail.com>
 References: <20261029060859.90002-1-hjf3108@gmail.com>
@@ -100,141 +104,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a flag so that the driver can flag certain frames that
-skip reporting back to mac80211. This is used for driver
-generated frames that aren't a TX from mac80211.
+When rtw_usb_tx_agg_skb() has more than one frame queued, it copies them
+into a new buffer. That buffer was also handed to mac80211, as one
+additional TX completion.
 
+Mark it as a driver frame, so that only the copied frames are reported.
+
+Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
 Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
 ---
- drivers/net/wireless/realtek/rtw88/main.h | 1 +
- drivers/net/wireless/realtek/rtw88/pci.c  | 6 ++++++
- drivers/net/wireless/realtek/rtw88/pci.h  | 1 +
- drivers/net/wireless/realtek/rtw88/sdio.c | 6 ++++++
- drivers/net/wireless/realtek/rtw88/sdio.h | 1 +
- drivers/net/wireless/realtek/rtw88/usb.c  | 6 ++++++
- drivers/net/wireless/realtek/rtw88/usb.h  | 1 +
- 7 files changed, 22 insertions(+)
+ drivers/net/wireless/realtek/rtw88/usb.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index d59f6e323adf0..7bd2e224e845b 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -637,6 +637,7 @@ struct rtw_tx_pkt_info {
- 	u8 hw_ssn_sel;
- 	bool nav_use_hdr;
- 	bool bt_null;
-+	bool drv_frame;
- };
- 
- struct rtw_rx_pkt_stat {
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 66d2e5f514447..5f6df521e9c16 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -848,6 +848,7 @@ static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
- 	tx_data = rtw_pci_get_tx_data(skb);
- 	tx_data->dma = dma;
- 	tx_data->sn = pkt_info->sn;
-+	tx_data->drv_frame = pkt_info->drv_frame;
- 
- 	spin_lock_bh(&rtwpci->irq_lock);
- 
-@@ -992,6 +993,11 @@ static void rtw_pci_tx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
- 
- 		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
- 
-+		if (tx_data->drv_frame) {
-+			dev_kfree_skb_irq(skb);
-+			continue;
-+		}
-+
- 		info = IEEE80211_SKB_CB(skb);
- 
- 		/* enqueue to wait for tx report */
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
-index 8ffdea11378f0..37d90caf8269c 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.h
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -171,6 +171,7 @@ struct rtw_pci_tx_buffer_desc {
- struct rtw_pci_tx_data {
- 	dma_addr_t dma;
- 	u8 sn;
-+	bool drv_frame;
- };
- 
- struct rtw_pci_ring {
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index dc2fd0f8f9fff..6666aa5245d70 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -1312,6 +1312,7 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
- 
- 	tx_data = rtw_sdio_get_tx_data(skb);
- 	tx_data->sn = pkt_info->sn;
-+	tx_data->drv_frame = pkt_info->drv_frame;
- 
- 	/* The TX worker may already have freed the skb, so do not touch it. */
- 	skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
-@@ -1604,6 +1605,11 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
- 
- 	skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
- 
-+	if (tx_data->drv_frame) {
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
-+
- 	/* enqueue to wait for tx report */
- 	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
- 		rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-index 6e7e6009744b0..19852077326a4 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.h
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-@@ -153,6 +153,7 @@ struct sdio_device_id;
- 
- struct rtw_sdio_tx_data {
- 	u8 sn;
-+	bool drv_frame;
- };
- 
- struct rtw_sdio_work_data {
 diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 715a2ce342d92..f03b00e517576 100644
+index f03b00e517576..34379dddf7c71 100644
 --- a/drivers/net/wireless/realtek/rtw88/usb.c
 +++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -342,6 +342,11 @@ static void rtw_usb_write_port_tx_complete(struct urb *urb)
+@@ -436,6 +436,9 @@ static bool rtw_usb_tx_agg_skb(struct rtw_usb *rtwusb, struct sk_buff_head *list
+ 		goto queue;
+ 	}
  
- 		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
- 
-+		if (tx_data->drv_frame) {
-+			dev_kfree_skb_any(skb);
-+			continue;
-+		}
++	/* report TX status only for the original frames */
++	rtw_usb_get_tx_data(skb_head)->drv_frame = true;
 +
- 		/* enqueue to wait for tx report */
- 		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
- 			rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
-@@ -655,6 +660,7 @@ static int rtw_usb_tx_write(struct rtw_dev *rtwdev,
- 	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, skb->data);
- 	tx_data = rtw_usb_get_tx_data(skb);
- 	tx_data->sn = pkt_info->sn;
-+	tx_data->drv_frame = pkt_info->drv_frame;
+ 	while (skb_iter) {
+ 		unsigned long flags;
  
- 	skb_queue_tail(&rtwusb->tx_queue[ep], skb);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
-index 94ff21dd08463..e861e9a66ab22 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.h
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -59,6 +59,7 @@ struct rx_usb_ctrl_block {
- 
- struct rtw_usb_tx_data {
- 	u8 sn;
-+	bool drv_frame;
- };
- 
- struct rtw_usb {
 -- 
 2.55.0
 
