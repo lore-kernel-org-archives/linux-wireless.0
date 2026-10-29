@@ -1,64 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793247635;
-	b=VnLe+5N3vEwcjvzZDTZnoDcumTG2qAdUjaj4FtKfxFnSsxwkeIpyoaOYOf3Bh7YIobwf
-	 BeIat9271IWgXbfMrIOAim6GXa/5u6Gkg+ZLI09/zB0p2D2fbk8GSy9TrLW83Jt+gAqP0
-	 BWirVI7jybFG4Ge0rP+11fsn3/4BBx9kXQMxUNCkxRHpFUIVDIVil+hbWaR1OyeBzLovg
-	 U540n846Jmof9S1gdfG+gr0czCsEpr4qsjpWT/PLMrhMlNQLcaurE3Zh2uf1Vmr2dOzkg
-	 lTt18kW+hGlaNSszAlTIh6YZaL/pFK2Oh9L9Oby78Nw5QyKUXGNBetF4mtI4WlxmO6A==
+	t=1793248861;
+	b=ClZLsG8AiwHnb0ztmPHoZbL3M84L6STnTBCqbN6eBAnHTHPkkVhM6R7lDg6CMBQMUzZz
+	 v1JQD/i1w4aMOYGf6d6CQpnTJbHLz8rNUFUElG+jkv654GsO9mUZZMKovaJ71KpJ2Yzm2
+	 BCz/UEqRe2F2ijLdVnAQ3aLG/mNFXyEUPAHAzwkXFRPBYNbLFdOvRab79tDRLg2zkuI8o
+	 HvvMqS74gXEIu5fgx7KfwS3UXgaiWOaCJRzN++V94bT7OE2rAU+urqt5YMQJdXx+EtiPZ
+	 1QV7KPK2EJBodDbrSUUk5EVY40zIaaqKeTZlrEmJRzg67Izx48lYS7WZdyFOdNFOXQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793247635;
-	h=DMARC-Filter:DKIM-Signature:Received:X-Originating-IP:Date:From:To:
-	 Cc:Subject:X-Priority:X-Mailer:In-Reply-To:References:X-NTES-SC:
-	 Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:
-	 X-Coremail-Locale:X-CM-TRANSID:X-CM-SenderInfo:X-Coremail-Antispam;
-	bh=dszobB3X2DrniL8erhzzfrWDq5pb/IBtHAO2jhrc3yU=;
-	b=ye42PfVuAv3omW+6el2vpCDknCUIZhwvgXwO3cYlTumrb04ZHjRaWH/FP+AFJKmN28DK
-	 hsAUNm8b1aI9W3rzIlWw/05dRHXGMZUoybqrizE8tD/BKUnUpUFO3ECaaJzEpOPmPtZRl
-	 L7+q/sF/FgkEFeMDOWx5d5bmGZbSFkc2/GOpipPZdd4gy4c5ffUNnqnvj7pWAYwLCbjRw
-	 igyPPDXHXAFwGmGTKmF0LpCW5tcW/3g/qCfbAEZMnfiGl1aw5LIGqFQP4zRLS9EoU7wjY
-	 /Z7CXwAdsHMoE/srQIyVWJVUWFaBfEobWKMNVZAtMZLvNOBmV8X19Skr4+psZOQwzUQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793248861;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:MIME-Version:Content-Transfer-Encoding;
+	bh=Tzyq7wW47Y1a/kLHOY6oQDnXew/OxbLFwLH5/BNKl4U=;
+	b=vsw46sDx3ffLpcuaxIVGaXBmiv8AMrcb2mHpe7rNTxoQWTp7jys//oEXtz5c3xtwfSmQ
+	 J8r5BNTpsB7qyAUTle4iwLArLNooLpgYRReGNVFCBHhg19QixE/l4HEa2Cdl+nKafPONk
+	 0ffJbKwF07gOcC9CkByDw8R6C5gQic8018hGz/y0bqxrNIVo2xbnXD7vZiUUqSaUFr1c5
+	 qo3oIXccDBifyw4tc3RpOcbpx0llnyCPn417kCl8BlYq6J5zftg6N1oxBIUCIT1IEfhK0
+	 WKjAT1/eTrQws1TfEjhBCs5bScFsQy9Wf5NjKKUbWBgwByYWkrUMj4kyMX1jQ+67ZJw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=HFAL8oBg;
-	arc=none smtp.remote-ip=117.135.210.5
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="lQvvWx/w";
+	arc=none smtp.remote-ip=209.85.216.41
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25112606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 04:20:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25112606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C129606A31A
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 04:41:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C129606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=HFAL8oBg
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=dszobB3X2DrniL8erhzzfrWDq5pb/IBtHAO2jhrc3yU=; b=H
-	FAL8oBgmwoNdNsmUEIoIzFvYhUo22vwkN2AWtBjPP8+YvnWdF5fwutQoRRVV0VZT
-	4Kgu3d8dr9EVDzis9MM/9KJYyqXtYLPyUCgRscChJCPmWCNyeyIeeQh9h2que45o
-	luOmz5WUHISLQ0t+G8/zcFQyPbzxacfnpA6XMyPt54=
-Received: from 19888972804$163.com ( [2610:150:c001:15:81:7818:302a:b455] )
- by ajax-webmail-wmsvr-40-102 (Coremail) ; Thu, 29 Oct 2026 12:20:13 +0800
- (CST)
-Date: Thu, 29 Oct 2026 12:20:13 +0800 (CST)
-From: "jiale yao" <19888972804@163.com>
-To: "Jeff Johnson" <jeff.johnson@oss.qualcomm.com>
-Cc: "Jeff Johnson" <jjohnson@kernel.org>, linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org, ath12k@lists.infradead.org
-Subject: Re:Re: [PATCH 0/5] wifi: ath11k/ath12k: validate capability TLV
- lengths
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <35ec209a-a62c-4fd9-aaba-edeed86dedf5@oss.qualcomm.com>
-References: <20261028051254.147628-1-yaojiale02@163.com>
- <35ec209a-a62c-4fd9-aaba-edeed86dedf5@oss.qualcomm.com>
-X-NTES-SC: AL_Qu2SAf6fuE4q5SSbY+kcn08ShO49XMOyvfoi2YFTc+0EoDzV3BInXF1gPGDxz8mkDT2vlyCFSTp15+JbY6xAC4wuYCmzPzzZjti2WuOfog==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lQvvWx/w
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ac77270fbfso959330a91.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 21:41:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793248860; x=1793853660; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Tzyq7wW47Y1a/kLHOY6oQDnXew/OxbLFwLH5/BNKl4U=;
+        b=lQvvWx/w6BpdqaTv1IdXe3t/JxxbyORY4AJK1SdaDJqv2xifqlrNWAIzsAv6zem332
+         9YSxo+KFcefUVW/ToORDvvygpFCyWKXzSKNaaT2jKCxmx3hsr7zVdmnr/446n5SAwPhS
+         zdVxRMpzN1SG6WrIs6Q8Efw12OYMkicfTObokbBqWd4vvhkCECKgamtEoKyONXXJz+q7
+         Zi4YY8f65M91YMciMpL6/f5Jope6yYFHV8DQktw92/0EEBZFIeP90JO5DNIgQXLQckGV
+         El5XC0EDN3koos7XiRrkYG88MHiOxLGLmoxu7v07cfVBxF014zvkj6J8dySnTjBOAJT+
+         9hfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793248860; x=1793853660;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Tzyq7wW47Y1a/kLHOY6oQDnXew/OxbLFwLH5/BNKl4U=;
+        b=x3c4WmsIXi3KItVzIJ2sZVs1kLRwjWBdGhJbsjPfvKd1tOFRFGRx50/hY0ANop/w6B
+         x4GXmhgZRf4VF8Spo+aBm6XilUiVwaio75Mv04aJX8/nWUv1DfrSG2svIEFDMC8kUJYd
+         Clnajeb9F0PTYp8h8NqtvjRnLH0DBTMpVxwK4hj9K4/gArI9kx1KkZe4gXzhbJBAe0gO
+         Gu2xtiprAftxvfubsuwd+zpTou9UNuajzVbAe3ile31zI5uH2ROOoRsfDoL5EG8Motzm
+         0MQQVDGuJTkTNvxut50XA+gRcM6YAOuavLtmPtbydrwpm8yfMScsqRL0Zsu23QcMHSmk
+         bfHQ==
+X-Gm-Message-State: AFq9FYL+MLOEqxt1P/QUCHQRtaW/wVbbHTPpmFIMCyGpF/5m1td0M6rL
+	X9eqrOSGWMcD4VS9URsAPKNaiw5vwYLhFynuy95aaKvC8QsWG3MAvF2CiyyQ8Q==
+X-Gm-Gg: AYBFou3iM0Yy8cCSxOMxmJ4MOiuUifAzvD2SmemGDyUVLNxs7Lwq/HjXdTW7WRgxVG6
+	AEh6hNKDCgsNl/kLSkEhotvQf7aEJVvGIF0hvMN+IKc6pU/00RmuXyxe7SFIZV57edDcs2KPiIa
+	ldTMY3AGamTJJBly1TyvekiTs2/3oZh0ab+fDM+n0UrdzgD8TJI+tvTh7AGb7UKCMIj8t4bRBXn
+	Qsasa3H1qklrR8Lsmuj1Xq0jc08NWTJxpNokueNJLDBJ+LI5Kt74B79JKH0Z4RFXZlt1ZSMqQOy
+	QTAXQIhobo/oVjU5NOYmflt+hktMq7YxYcb2GsUeAELuBMR7xTEtCECMG484AHZQ2W7ByhzZW8Z
+	bfvKvlL8JTd5GxnjHnjKp+SQlsBti6qF2MFzoiE7/ZQskz62uAqnWuihQVRg9rqmL8wZiXZ05Hr
+	pmIOTPV/5z5XFCtNiTS/2ihzvgR0jCfXRevno2Vn5v9TlQlXHZrMxqjXjDTVsE1NKXt2wMf9ouu
+	y6+wAqG/a/mBfVjFGmlScmNyObyR2eUB2gx3etB+OKTuTnlmHdFz22b240F1PMIcsPie6rRac3D
+	5seyjblWtfIqSVa4SQJwR7V4KthrHny9
+X-Received: by 2002:a17:90b:53ce:b0:3ad:a17d:f46c with SMTP id 98e67ed59e1d1-3ae5823cec2mr3187998a91.62.1793248860344;
+        Wed, 28 Oct 2026 21:41:00 -0700 (PDT)
+Received: from ThinkBook.lan ([183.13.224.211])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae6f01e8a5sm892027a91.0.2026.10.28.21.40.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 21:40:59 -0700 (PDT)
+From: Edwin Huish <edwinhuish@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] wifi: iwlwifi: mld: don't dereference link_sta->sta unchecked
+Date: Thu, 29 Oct 2026 12:40:46 +0800
+Message-ID: <20261029044046.1255442-1-edwinhuish@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -68,52 +91,121 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-ID: <551c02b7.3ba4.1a185e31205.Coremail.19888972804@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:ZigvCgD3P75+yeJq8SNjAA--.1075W
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7x7kH2riyX73gQAA3D
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Transfer-Encoding: 8bit
 
-QXQgMjAyNi0xMC0yOSAwODoyODoxMCwgIkplZmYgSm9obnNvbiIgPGplZmYuam9obnNvbkBvc3Mu
-cXVhbGNvbW0uY29tPiB3cm90ZToKPk9uIDEwLzI3LzIwMjYgMTA6MTIgUE0sIEppYWxlIFlhbyB3
-cm90ZToKPj4gU2V2ZXJhbCBhdGgxMWsgYW5kIGF0aDEyayBXTUkgcGFyc2VycyBjb3VudCBmaXJt
-d2FyZSBUTFZzIGFuZCBsYXRlcgo+PiBjb25zdW1lIHRoZW0gYXMgYXJyYXlzIG9mIGNvbXBsZXRl
-IGNhcGFiaWxpdHkgc3RydWN0dXJlcy4gIFRoZSBnZW5lcmljCj4+IGl0ZXJhdG9yIHZhbGlkYXRl
-cyB0aGF0IGEgVExWIGZpdHMgaW4gaXRzIGVuY2xvc2luZyBtZXNzYWdlLCBidXQgdGhlc2UKPj4g
-dGFncyBoYXZlIG5vIG1pbmltdW0tbGVuZ3RoIHBvbGljaWVzLCBzbyBhIHNob3J0IGVsZW1lbnQg
-Y2FuIHN0aWxsIGNhdXNlCj4+IGFuIG91dC1vZi1ib3VuZHMgc3RydWN0dXJlIHJlYWQuCj4+IAo+
-PiBBZGQgcG9saWNpZXMgZm9yIHRoZSBETUEgYnVmZmVyIHJlbGVhc2UsIGhhcmR3YXJlIG1vZGUs
-IERNQSByaW5nLCBhbmQKPj4gZXh0ZW5kZWQgTUFDL1BIWSBjYXBhYmlsaXR5IFRMVnMgdXNlZCBi
-eSB0aGVzZSBwYXRocy4KPj4gCj4+IEppYWxlIFlhbyAoNSk6Cj4+ICAgd2lmaTogYXRoMTFrOiB2
-YWxpZGF0ZSBETUEgYnVmZmVyIHJlbGVhc2UgVExWIGxlbmd0aHMKPj4gICB3aWZpOiBhdGgxMWs6
-IHZhbGlkYXRlIGhhcmR3YXJlIG1vZGUgY2FwYWJpbGl0eSBUTFZzCj4+ICAgd2lmaTogYXRoMTFr
-OiB2YWxpZGF0ZSBETUEgcmluZyBjYXBhYmlsaXR5IFRMVnMKPj4gICB3aWZpOiBhdGgxMms6IHZh
-bGlkYXRlIERNQSBidWZmZXIgcmVsZWFzZSBmaXhlZCBUTFYgbGVuZ3RoCj4+ICAgd2lmaTogYXRo
-MTJrOiB2YWxpZGF0ZSBzZXJ2aWNlLXJlYWR5IGNhcGFiaWxpdHkgVExWIGxlbmd0aHMKPj4gCj4+
-ICBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTFrL3dtaS5jIHwgOCArKysrKysrKwo+PiAg
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEyay93bWkuYyB8IDggKysrKysrKysKPj4gIDIg
-ZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKQo+PiAKPgo+SSB3YXMgc3VycHJpc2VkIGJ5
-IHRoZSBhc3ltbWV0cnkgYmV0d2VlbiBwYXRjaCAxICh3aGljaCBqdXN0IGFkZGVkIHZhbGlkYXRp
-b24KPnRvIHRoZSBhcnJheSBlbnRyeSBUTFZzKSBhbmQgcGF0Y2ggNCAod2hpY2gganVzdCBhZGRl
-ZCB2YWxpZGF0aW9uIHRvIHRoZSBmaXhlZAo+cGFyYW1zIFRMVikuIEFmdGVyIGEgc2Vzc2lvbiB3
-aXRoIGFuIExMTSB3ZSBjYW1lIHRvIHRoZSBjb25jbHVzaW9uIHRoYXQgYm90aAo+YXJlIGluY29t
-cGxldGU6Cj4KPlRoZSBETUEtYnVmLXJlbGVhc2UgZXZlbnQgaGFzIHR3byBpbmRlcGVuZGVudCBP
-T0Igc2lua3MgaW4gZWFjaCBkcml2ZXIg4oCUIGEKPmZpeGVkLWhlYWRlciBjb3B5IGFuZCBhIGZp
-eGVkLXN0cmlkZSBhcnJheSB3YWxrLiBCb3RoIGRyaXZlcnMgYXJlIGFmZmVjdGVkIGJ5Cj5ib3Ro
-LiBUaGUgc2VyaWVzIGZpeGVzIG9ubHkgb25lIHNpbmsgcGVyIGRyaXZlciwgYW5kIGluIGEgY29t
-cGxlbWVudGFyeQo+cGF0dGVybiB0aGF0IG1ha2VzIGVhY2ggZHJpdmVyIGxvb2sgImRvbmUiIGF0
-IGEgZ2xhbmNlIGJ1dCBsZWF2ZXMgZWFjaCBvbmUKPmhhbGYtY292ZXJlZDoKPgo+LSBhdGgxMWs6
-IHBhdGNoIDEgZ3VhcmRzIHRoZSBhcnJheSBlbGVtZW50cyAoX0VOVFJZLCBfTUVUQV9EQVRBKSDi
-nIUgYnV0IHRoZQo+Zml4ZWQtaGVhZGVyIG1lbWNweSBhdCB3bWkuYzo0NjY5ICgxNiBieXRlcywg
-dW5jb25kaXRpb25hbCwgZnJvbSBmaXJtd2FyZQo+cGF5bG9hZCkgaXMgc3RpbGwgdW5ndWFyZGVk
-LiBOZWVkcyB0aGUgW1dNSV9UQUdfRE1BX0JVRl9SRUxFQVNFXSBwb2xpY3kuCj4tIGF0aDEyazog
-cGF0Y2ggNCBndWFyZHMgdGhlIGZpeGVkIGhlYWRlciDinIUgYnV0IHRoZSBhcnJheSBzdHJpZGUg
-cmVhZHMKPmV2LT5idWZfZW50cnlbaV0gLyBldi0+bWV0YV9kYXRhW2ldIGluIGRicmluZy5jIGFy
-ZSBzdGlsbCB1bmd1YXJkZWQuIE5lZWRzIHRoZQo+W1dNSV9UQUdfRE1BX0JVRl9SRUxFQVNFX0VO
-VFJZXSBhbmQgWy4uLl9TUEVDVFJBTF9NRVRBX0RBVEFdIHBvbGljaWVzLgo+Cj5BbmQgc2luY2Ug
-eW91IGFyZSBwbGF5aW5nIGluIHRoaXMgYXJlYSwgbXkgTExNIHRoaW5rcyB0aGF0Cj5XTUlfVEFH
-X0hBTF9SRUdfQ0FQQUJJTElUSUVTX0VYVCBoYXMgdGhpcyBpc3N1ZSBpbiBib3RoIGRyaXZlcnMs
-IGFuZCB0aGlua3MKPnRoYXQgV01JX1RBR19SU1NJX1NUQVRTIG1heSBoYXZlIHRoaXMgaXNzdWUu
-IEkgaGF2ZW4ndCB2ZXJpZmllZCB0aGF0IGFuYWx5c2lzLgoKQWdyZWUsIHRoZSB1cGRhdGVkIG9u
-ZSBpcyBoZXJlLCBodHRwczovL2xvcmUua2VybmVsLm9yZy9sa21sLzIwMjYxMDI5MDQxODExLjIz
-Nzk4NzgtMS15YW9qaWFsZTAyQDE2My5jb20vCj4KPi9qZWZmCg==
+mld->fw_id_to_link_sta[] can hold an entry whose ->sta is not set.  The
+driver already documents this in iwl_mld_rx_agg_session_expired():
+
+	/* sta should be valid unless the following happens:
+	 * The firmware asserts which triggers a reconfig flow, but
+	 * the reconfig fails before we set the pointer to sta into
+	 * the fw_id_to_link_sta pointer table. mac80211 can't stop
+	 * A-MPDU and hence the timer continues to run. Then, the
+	 * timer expires and sta is NULL.
+	 */
+
+Three other users of the table only check the link_sta pointer itself
+and then go straight for ->sta:
+
+  iwl_mld_teardown_tdls_peers(), iwl_mld_tdls_sta_count(),
+  iwl_mld_mac80211_flush()
+
+	link_sta = wiphy_dereference(mld->wiphy, mld->fw_id_to_link_sta[i]);
+	if (IS_ERR_OR_NULL(link_sta))
+		continue;
+
+	if (!link_sta->sta->tdls)	/* ->sta may be NULL */
+
+iwl_mld_tdls_sta_count() was hit in the field on an Intel BE201
+(8086:7740) running firmware bz-b0-fm-c0-c101 (101.6e695a70.0), in
+exactly the situation described above: the firmware asserted twice
+within a second (0x85 ADVANCED_SYSASSERT followed by 0x20100508) and
+the restart failed with "FW error in SYNC CMD INIT_EXTENDED_CFG_CMD".
+About a minute later wpa_supplicant re-associated and issued
+NL80211_CMD_SET_STATION to update the power save parameters, which
+ends up in iwl_mld_power_build_cmd() -> iwl_mld_tdls_sta_count():
+
+  BUG: kernel NULL pointer dereference, address: 0000000000000018
+  #PF: supervisor read access in kernel mode
+  Oops: 0000 [#1] SMP NOPTI
+  CPU: 7 PID: 1740 Comm: wpa_supplicant
+  RIP: 0010:iwl_mld_tdls_sta_count+0x48/0xd0 [iwlmld]
+  RAX: 000000000000000c  RCX: ffff8c51a95ba0a8  RDX: 0000000000000000
+  Call Trace:
+   <TASK>
+   iwl_mld_power_build_cmd+0x11f/0x480 [iwlmld]
+   iwl_mld_update_mac_power+0x66/0xe0 [iwlmld]
+   iwl_mld_mac80211_vif_cfg_changed+0x58/0x120 [iwlmld]
+   ieee80211_vif_cfg_change_notify+0x10d/0x230 [mac80211]
+   ieee80211_recalc_ps_vif+0x41/0x60 [mac80211]
+   ieee80211_change_station+0x1e0/0x280 [mac80211]
+   nl80211_set_station+0x4e2/0x660 [cfg80211]
+   genl_family_rcv_msg_doit+0x120/0x190
+  note: wpa_supplicant[1740] exited with irqs disabled
+
+The registers match the source: RAX is the loop index (12), RCX is mld,
+and RDX - the result of loading link_sta->sta - is zero.  The faulting
+instruction reads sta->tdls at offset 0x18:
+
+    6d70: test   %rdx,%rdx          ; link_sta != NULL checked
+    6d73: je     6d8b
+    6d75: mov    (%rdx),%rdx        ; link_sta->sta, NOT checked
+    6d78: movzbl 0x18(%rdx),%edx    ; sta->tdls  <- faulting insn
+
+Since the oops happened with interrupts disabled, the task died in
+kernel mode without releasing the cfg80211/rtnl locks it held, which
+then blocked gnome-shell on the leaked lock and froze the whole
+desktop.  The impact is therefore not limited to a dropped connection.
+
+Handle the entries the same way agg.c already does, and skip them.
+
+Tested on the affected machine: builds cleanly against 7.0.0-38-generic,
+all three sites now test ->sta before loading sta->tdls, and WiFi still
+associates and reconnects normally.
+
+Signed-off-by: Edwin Huish <edwinhuish@gmail.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -913,6 +913,11 @@ static void iwl_mld_teardown_tdls_peers(struct iwl_mld *mld)
+ 		if (IS_ERR_OR_NULL(link_sta))
+ 			continue;
+ 
++		if (!link_sta->sta) {
++			WARN_ON_ONCE(1);
++			continue;
++		}
++
+ 		if (!link_sta->sta->tdls)
+ 			continue;
+ 
+@@ -1630,6 +1635,11 @@ int iwl_mld_tdls_sta_count(struct iwl_mld *mld)
+ 		if (IS_ERR_OR_NULL(link_sta))
+ 			continue;
+ 
++		if (!link_sta->sta) {
++			WARN_ON_ONCE(1);
++			continue;
++		}
++
+ 		if (!link_sta->sta->tdls)
+ 			continue;
+ 
+@@ -1937,6 +1947,11 @@ static void iwl_mld_mac80211_flush(struct ieee80211_hw *hw,
+ 		if (IS_ERR_OR_NULL(link_sta))
+ 			continue;
+ 
++		if (!link_sta->sta) {
++			WARN_ON_ONCE(1);
++			continue;
++		}
++
+ 		/* Check that the sta belongs to the given vif */
+ 		if (vif && vif != iwl_mld_sta_from_mac80211(link_sta->sta)->vif)
+ 			continue;
+-- 
+2.43.0
+
