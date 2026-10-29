@@ -1,47 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793263451;
-	b=v21TjfP7V9wHk8KFiAxCPfalLkHabIbIF5waq6EWDnm96wAOKcruBvg8Jr/ltHMI6TQV
-	 P64Q7CPifAXGLyB/lTjCqf50i5FsW4ic0BeYbfLgHocUZEwYn/lDbYlPyG/ZzihnJ59i0
-	 NyE1n7d9lsePRnG56FyW6NVKcfmxLMqq3R1VHTTvlf8sSozBQ44s/xHqRsQa4C6yYRtDy
-	 gAvbFFGoToBCOWE1RRsA5Ll/iO/Fcp9bIW7OTvAH0rgkFWAnhwpP1ydr9sPwTN3/5YU/b
-	 aQ/PC+9swqB/xI2JQLOowuOlma19vxsBO+C4nh2wd09mf0OjBUz86kIRroB8hrCQEXg==
+	t=1793267062;
+	b=IcEQhcluVSYosDejICuABYlXSJLlEMFCt9NMi0SqX/DNEQE2uwcDHmpbK+ycL3FEnIWy
+	 7AIphZuLu7neomez9avjX8TKPuo8MuP5iNqjLw8npJLsQ+rKYpqsscml9mAT+qYAwYdFR
+	 xZguJt7lZgn9fSmtCB9OvaQ01ybqdfpuGani6kjubtpsXM55wBkLrlPEhx8GmPYljn/5Z
+	 63NE8WQc75T1kJ036IwmbjDCqjNqS3gk/LMaM+ehz+LG8wvpvQNVJ4M+aRzG+TkxaeWp0
+	 qc+5vXkVE3uPlVLQYMBBRbcnDMGCCoxmcP/0Q8Edwky9kIYGJo5Beg1dkeclFmvFihg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793263451;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=NUoVKO4u1i9msND1k3Skax2mOLj1SPEw/WwPEoecEyc=;
-	b=wQgz5+DT7qlULXxwpMezRyMbWZ1CfWL24BH5LjKONUVsxr/SN0D6iggj6Zew1UdAkxyA
-	 H9MxsLxip83iq7lboIlfYfhsnr3MhJeIr5BTXtWiRH1E8OcNh9lm7ZALHNo708ucV/Di1
-	 gT61OVZK2oc8Ou3OvpL/AFIzpc/MwVf9S0lBxXWDB/5ZBL336bldCJPMNRqlcmYL3PSdI
-	 WVZ/4hm30KYDR9bph/J6t25Pnbz+dqm0otHlMjBM4y9olMNx9hC9pI3WyHkvgzCWcLKqB
-	 9CezKkHoskIf1k/N7uzIoKFBPw/IdTIBgl1rgm7TwRc4lP2F2B9G6X7Rpfb5P/YSDNg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793267062;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=UKSebZaSFVefMa83WA9Risb9bDftelK4ymQGDTUiUGc=;
+	b=MgkE6ujOF5iTcVq6ggmy4eZJmCKy6uEZRiik/jwb8Yz47KRJTkQ6KJpjnVvUgXzj0L53
+	 gr9hLCFMhGSFJiITOwa8ikcA14tmuhZzKGM4prMF2RWSJlZFPc9dE03ar6NZq0NXh2ii8
+	 R9Gor8uy7woFYmROYO4ooWE9mSDOLOiH29UildYVdiydPXGO6kHDx3OUbEvauFBgNeytw
+	 EQFEnGAP3wwSUEK9Txmhs9Uv6Yi38Z2yp10dD7SROvWufIe8cg5JzHzXxNL44a0Jgwd0Y
+	 PZwNKn/277A7Yx20X5oKhCs2WZHjRTZCT6QfSpMtLvaum0G121hhoqyHaLPTso1G7Sw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ISwL3c+2;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RhUWxnDw;
+	arc=none smtp.remote-ip=209.85.216.52
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2413606A31D
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 08:44:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5244606A330
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 09:44:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5244606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ISwL3c+2
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 483F51F01828;
-	Thu, 29 Oct 2026 08:44:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793263450;
-	bh=NUoVKO4u1i9msND1k3Skax2mOLj1SPEw/WwPEoecEyc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ISwL3c+2iRpXyO9egBLaJ8kSaif+l8RfruKdWfWhN3Or0bjihi1E+Z+oDfauX5qVq
-	 2eJMsfxxmwXQ2EmdgRntjngwnfnGOM6PLjkN+kXFs7qTeX+CvDwmXiC/u2f6xpyAE9
-	 TDHa+mqdcaro6vVVah93Fa7gZC4xwemuSCdDWkLHHzHw8+w+moQXezb/+OCuSo/pNM
-	 z6yNugBtrA74wtEwxBB7hGruNnph54PH66Er6kMTXp4hC75//yz0MX5ssVmAOsFBgk
-	 BRyY4Nj7nnF6eCrAqqNiEjrCKoHUyRaoItEhVg2O/bjALrN0GsldHwUvSfi/8okENX
-	 w6ebV3s4Kb29g==
-Message-ID: <be98ff8a-2124-472a-8072-aa7e6d3b4893@kernel.org>
-Date: Thu, 29 Oct 2026 10:43:56 +0200
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RhUWxnDw
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-3ae1d0caaedso934220a91.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 02:44:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793267061; x=1793871861; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=UKSebZaSFVefMa83WA9Risb9bDftelK4ymQGDTUiUGc=;
+        b=RhUWxnDwJvX15K7ipRR4XPyycz56J4nWxBJ9wQ+7eveSbrpw04HV1uu0M/TFmlJFmu
+         lz0Yh8IQWBwf4EE41qfAD3bAIpcDW4vWPzANZwgbOIgn8rhNRIh+vxKHE1OH2Sii3drj
+         1D9ouxhDZbqIFhW1+IUYbrnXkM7Xz9jbkkHOZ2LoBy9ZfSDgFETK+iOTjip9E+kholLQ
+         oxQmFNP2JgK2m3UOLr0n1jREU+DEtFBd8idnQhSc3UeYOaw2KEk9HtN5Yc9roucMviUc
+         lErwfgPN1F3zlPe834PQmwHx3H5ARm6HXu48UzJQYYsr+Y71lX8bzBgpV6ewGH8GTH/Q
+         13Jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793267061; x=1793871861;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=UKSebZaSFVefMa83WA9Risb9bDftelK4ymQGDTUiUGc=;
+        b=WNww3yEAekwhohLjm5AWjT1xr4lQqBSceKwcz5dovOJfSw9SAXZS/T2R4MKH/KvcrX
+         d/HSHzunv+0ikV0euQA2rO5efZ/78+m7y1+CyI9ppUg4zjr1lOm3yc9IZm4maoYEQRsv
+         oZcIR8VdRsQqgeZkxrmGhgsyjn35Ucg2jovVH0gtXzMw7qDTdAvR9ii7gEHF4gadSYpB
+         w9HMaanZVX1fHv2GXvGAaBBtqTXh71dKkyP89zjSTdrX8/IZ+HA1eqsXJLZ9wbRSU3qJ
+         CbkzS5EhM3sj2lYNvgtroGokEk3Za3ko83imJORVggGPv4g7fgSBPHssXUkVvtYet0s5
+         KvWA==
+X-Forwarded-Encrypted: i=1; AKwUvBw7ddcd4OJyBj3V0gE7TwEwXy723o8NEHI/m6nFandv+epDYgGE2WTA8EClvxZb34/hWSYX3i2exNK5ClDn5A==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJmjCZaj7R1vDg6QXi8v+2CI6xAR8VXoaP5MgIrg6BwW30uvu1K
+	1435yssbe0wTz+x5rRHxr5V2Id7c23JuJCsGckZaadNhjkFUo0okwOcB
+X-Gm-Gg: AYBFou0b/qZ/H2u61iKAERLcQ8pKv6Qyb4MayzI188VkGPXJlANKnczlYfO4RCDuw1o
+	kTyZeMl4g5BWRq328pz4FBBEP737Ve5cYnayL3iDMSaROz0Q6gVtZjx8QScIMCNh9M7G3tfG+iq
+	SRdJRZ8OeICghOis4vzqxChzE/LscqkpvH8OOPJygnDfa1t9RlTRswpVWfhl3yq4r0UuySUj6kP
+	hdo0oC6eZ78KR6QycoiKwS8gZKW7fybJWFw6VxqQ2JPCSNXy0N5Jgd8mrodtYIT/5yqin/7I5Jf
+	EYeGK634icjRbMRL9J6lCjztM01tvR3O3CK0pYbpiU4AjEkJRqNFRqJ/cfHpb/acEgKivFVSpPs
+	bSmWFWwb3LZ2dMQyVXmTbZIjtqS84T+bOezTdCIQ+afnpJQvYlRWzOjOlkjm0zfw9MA68x7857/
+	Y5ExJu8Xl6tv3sJfRex8OAQ1wJ7N8ule494JzycckZXBQQ4qowZA23ZSMxGHKPKjmJKV+AbJRVv
+	pVoE8x1FM+2nmuK9Iuqyr8LhxBQ/rtXr+/7P0RUgw6QDQW9CTXjoWgWNTfBnKe37P9RGWORK5uW
+	qvCh2djLQCI0qrBzAlepXI2UB4VFxU23JGbPylxHygROYf+8P3jybRptsm0PnmfY
+X-Received: by 2002:a17:90b:4b89:b0:3ac:17c:6e85 with SMTP id 98e67ed59e1d1-3ae581e1959mr3851734a91.47.1793267060784;
+        Thu, 29 Oct 2026 02:44:20 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([139.177.225.227])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae579c59a6sm2912203a91.3.2026.10.29.02.44.17
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Thu, 29 Oct 2026 02:44:20 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: iwlegacy: unregister the LED if 3945 hardware registration fails
+Date: Thu, 29 Oct 2026 17:43:37 +0800
+Message-ID: <20261029094336.19250-2-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261029081955.GA10212@wp.pl>
+References: <20261028142328.18560-1-enderaoelyther@gmail.com> <20261029081955.GA10212@wp.pl>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -51,149 +99,48 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath11k: Unprepare MHI on power up failure
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
- Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-References: <20261028104336.1686334-1-vz@kernel.org>
- <e67e9442-03d3-425f-85d9-0983a16ae5f7@oss.qualcomm.com>
-From: Vladimir Zapolskiy <vz@kernel.org>
-In-Reply-To: <e67e9442-03d3-425f-85d9-0983a16ae5f7@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi Baochen.
+Hi Stanislaw,
 
-On 10/29/26 07:38, Baochen Qiang wrote:
-> 
-> 
-> On 10/28/2026 6:43 PM, Vladimir Zapolskiy wrote:
->> If MHI power up fails, for instance it happens due to a missing firmware,
->> ath11k_mhi_start() returns without undoing mhi_prepare_for_power_up().
->> Then the failed probe or power up unwinding frees the MHI controller,
->> but the MHI device context and the RDDM image table allocated by
->> mhi_prepare_for_power_up() are leaked along with their DMA buffers:
->>
->>    % cat /sys/kernel/debug/kmemleak
->>    unreferenced object 0xffff00079156a140 (size 64):
->>      comm "(udev-worker)", pid 595, jiffies 4294893781
->>      hex dump (first 32 bytes):
->>        00 d0 f1 80 00 80 ff ff 00 50 f1 80 00 80 ff ff  .........P......
->>        00 d0 f7 80 00 80 ff ff 00 30 fc ff 00 00 00 00  .........0......
->>      backtrace (crc 62662f0a):
->>        kmemleak_alloc+0x34/0x40
->>        __kmalloc_cache_noprof+0x224/0x3b8
->>        mhi_prepare_for_power_up+0x58/0x548 [mhi]
->>        ath11k_mhi_start+0x30/0xb8 [ath11k_pci]
->>        ath11k_pci_power_up+0xcc/0x188 [ath11k_pci]
->>        ath11k_core_init+0x8c/0x190 [ath11k]
->>        ath11k_pci_probe+0x4e0/0x870 [ath11k_pci]
->>        local_pci_probe+0x40/0xa8
->>        pci_call_probe+0x64/0x190
->>        pci_device_probe+0xac/0x138
->>        really_probe+0xbc/0x298
->>        __driver_probe_device+0x16c/0x19c
->>        driver_probe_device+0x3c/0x114
->>        __driver_attach+0x98/0x19c
->>        bus_for_each_dev+0x74/0xd0
->>        driver_attach+0x24/0x30
->>    unreferenced object 0xffff0007916fb800 (size 512):
->>      comm "(udev-worker)", pid 595, jiffies 4294893781
->>      hex dump (first 32 bytes):
->>        00 60 04 81 00 80 ff ff 0a 00 00 00 00 00 00 00  .`..............
->>        00 10 e0 82 00 80 ff ff 00 00 00 00 00 00 00 00  ................
->>      backtrace (crc 52e9e075):
->>        kmemleak_alloc+0x34/0x40
->>        __kmalloc_noprof+0x280/0x440
->>        mhi_alloc_bhie_table+0x54/0x168 [mhi]
->>        mhi_prepare_for_power_up+0x318/0x548 [mhi]
->>        ath11k_mhi_start+0x30/0xb8 [ath11k_pci]
->>        ath11k_pci_power_up+0xcc/0x188 [ath11k_pci]
->>        ath11k_core_init+0x8c/0x190 [ath11k]
->>        ath11k_pci_probe+0x4e0/0x870 [ath11k_pci]
->>        local_pci_probe+0x40/0xa8
->>        pci_call_probe+0x64/0x190
->>        pci_device_probe+0xac/0x138
->>        really_probe+0xbc/0x298
->>        __driver_probe_device+0x16c/0x19c
->>        driver_probe_device+0x3c/0x114
->>        __driver_attach+0x98/0x19c
->>        bus_for_each_dev+0x74/0xd0
->>
->> The MHI device is already powered down by mhi_sync_power_up() on
->> failure, but mhi_unprepare_after_power_down() still has to be
->> called on error path to release the allocated resources.
->>
->> Fixes: 3df6d74aedfd ("ath11k: mhi: use mhi_sync_power_up()")
->> Signed-off-by: Vladimir Zapolskiy <vz@kernel.org>
->> ---
->>   drivers/net/wireless/ath/ath11k/mhi.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
->> index a6c9ff112c68..76c194573ec7 100644
->> --- a/drivers/net/wireless/ath/ath11k/mhi.c
->> +++ b/drivers/net/wireless/ath/ath11k/mhi.c
->> @@ -446,6 +446,7 @@ int ath11k_mhi_start(struct ath11k_pci *ab_pci)
->>   	ret = mhi_sync_power_up(ab_pci->mhi_ctrl);
->>   	if (ret) {
->>   		ath11k_warn(ab, "failed to power up mhi: %d", ret);
->> +		mhi_unprepare_after_power_down(ab_pci->mhi_ctrl);
-> 
-> For the probe path itself this is fine: when probe fails the driver is not bound, so no
-> remove or shutdown follows and this is the only unprepare.
-> 
-> The problem is that in runtime, ath11k_hif_power_up() is also called from reset and resume:
-> 
-> reset:
-> 	ath11k_core_reset() {
-> 		...
-> 		ath11k_hif_power_up()
-> 	}
-> 
-> resume:
-> 	ath11k_core_resume_early() {
-> 		...
-> 		ath11k_hif_power_up()
-> 	}
-> 
-> The later teardown in rmmod path or shutdown path then calls power_down unconditionally,
-> regardless of whether the last power_up succeeded:
-> 
-> rmmod:
->    mhi_unprepare_after_power_down()   <- 2nd call
->    ath11k_mhi_stop()
->    ath11k_pci_power_down()
->    ath11k_hif_power_down()
->    ath11k_core_deinit()
->    ath11k_pci_remove()
-> 
-> shutdown:
->    mhi_unprepare_after_power_down()   <- 2nd call
->    ath11k_mhi_stop()
->    ath11k_pci_power_down()
->    ath11k_pci_shutdown()
-> 
-> so the unprepare is called twice, while in the second call we can hit NULL pointer
-> dereference or double free ...
-> 
-> This comes from the fact the existing code does not handle power up failure correctly in
-> reset and resume. I don't see a proper solution to this, maybe we need a new flag telling
-> us whether the unprepare has been done already ?
+On Thu, Oct 29, 2026 at 09:19:55AM +0100, Stanislaw Gruszka wrote:
+> On Wed, Oct 28, 2026 at 10:23:28PM +0800, Zhao Li wrote:
+> > il3945_setup_mac() registers the LED before the mac80211 hardware, but
+> > its registration error path does not call il_leds_exit(). The analogous
+> > 4965 failure releases the driver and reaches its existing remove cleanup.
+>
+> Could you explain exacly how this is fixed in 4965?
+> I do not see this in the code.
 
-Thank you for your review!
+There is no il_leds_exit() in the 4965 error path itself. The caller
+handles it: il4965_mac_setup_register() runs from the firmware callback,
+and a failure there unbinds the driver.
 
-Due to my check the analysis is correct, and apparently the proposed solution
-will work also, but I'd prefer to introduce a "prepared" flag set right after
-mhi_sync_power_up() successful return rather than to toggle "unprepared" flag.
+  il4965_ucode_callback()
+    il4965_mac_setup_register()   /* il_leds_init(), register_hw fails */
+    goto out_unbind
+      complete(&il->_4965.firmware_loading_complete)
+      device_release_driver(&il->pci_dev->dev)
+        il4965_pci_remove()
+          il_leds_exit(il)
+          ...
+          ieee80211_free_hw(il->hw)
 
-By the way, there is a memory leak on error path in ath12 driver also, but
-the rootcause and its solution are different, there is a missing state set to
-ATH12K_MHI_DEINIT, if ATH12K_MHI_POWER_ON fails in ath12k_mhi_start().
+il4965_pci_probe() returns success after submitting the asynchronous
+firmware request. If the callback reaches device_release_driver()
+before probe finishes, the device lock serializes unbind with probe.
+The callback completes firmware_loading_complete before unbinding,
+and il4965_pci_remove() unregisters the LED regardless of
+mac80211_registered.
 
-After the testing I'll prepare a changeset including both fixes for review.
+3945 calls il3945_setup_mac() directly from il3945_pci_probe(), and the
+probe error labels never call il_leds_exit(). ieee80211_free_hw() then
+frees the il_priv that embeds il->led while the LED is still on
+leds_list, so the next led_trigger_register() takes the trigger_lock of
+a freed LED.
 
--- 
-Best wishes,
-Vladimir
+That should have been in the changelog. I'll send a v2 that spells out
+the 4965 path; the code change stays the same.
+
+Thanks,
+Zhao
