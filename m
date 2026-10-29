@@ -1,87 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793248861;
-	b=ClZLsG8AiwHnb0ztmPHoZbL3M84L6STnTBCqbN6eBAnHTHPkkVhM6R7lDg6CMBQMUzZz
-	 v1JQD/i1w4aMOYGf6d6CQpnTJbHLz8rNUFUElG+jkv654GsO9mUZZMKovaJ71KpJ2Yzm2
-	 BCz/UEqRe2F2ijLdVnAQ3aLG/mNFXyEUPAHAzwkXFRPBYNbLFdOvRab79tDRLg2zkuI8o
-	 HvvMqS74gXEIu5fgx7KfwS3UXgaiWOaCJRzN++V94bT7OE2rAU+urqt5YMQJdXx+EtiPZ
-	 1QV7KPK2EJBodDbrSUUk5EVY40zIaaqKeTZlrEmJRzg67Izx48lYS7WZdyFOdNFOXQA==
+	t=1793250648;
+	b=oDMUwIHizifmbl43HqsKFeHN0LJ2Y3ygNYfu+dn2+Fozm1Ke0GC9QvmOZ5zVBHDlHRK/
+	 eiaNuQPAMfRGJjGtwmxVFcXQDrR2hQiqzxWg17Xe4X7+wQHZyi0pFx0f0xnGabC3dvkg0
+	 NaqnsBn4bVeIf7195JuT6hWXCbRcYHn3pAuGY/LWnL+6QW2swOvCSHQg0bF6sc891Jb+v
+	 ucxMq9x6tDnxth4ZD846CmuszWk4csFfNamyrLEyn7gkG4kn6O0TB3P3WhAv8bRbWpQGJ
+	 4aDlpm2+xHhmg62/C1wsoK+VB+N5pOa7xSr5xHf99qhtP2UfFFTZz9BYzGEUhu1qIGQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793248861;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:MIME-Version:Content-Transfer-Encoding;
-	bh=Tzyq7wW47Y1a/kLHOY6oQDnXew/OxbLFwLH5/BNKl4U=;
-	b=vsw46sDx3ffLpcuaxIVGaXBmiv8AMrcb2mHpe7rNTxoQWTp7jys//oEXtz5c3xtwfSmQ
-	 J8r5BNTpsB7qyAUTle4iwLArLNooLpgYRReGNVFCBHhg19QixE/l4HEa2Cdl+nKafPONk
-	 0ffJbKwF07gOcC9CkByDw8R6C5gQic8018hGz/y0bqxrNIVo2xbnXD7vZiUUqSaUFr1c5
-	 qo3oIXccDBifyw4tc3RpOcbpx0llnyCPn417kCl8BlYq6J5zftg6N1oxBIUCIT1IEfhK0
-	 WKjAT1/eTrQws1TfEjhBCs5bScFsQy9Wf5NjKKUbWBgwByYWkrUMj4kyMX1jQ+67ZJw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793250648;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-GUID:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=L1hwVhNMNrZDpSp9Zo6hTIicT+T/hSEE+lSDb02eR3Y=;
+	b=goWfwDuT3cWCsJ+9GF+FIS+A9S04Ql3yXvb5s2p4wNgWTGiXe8QVhQYmeWiufR3Nlva+
+	 ok/9yUrb63Xt0limcDAFW6eny/mnXnijfNT+AiNir7nuHcxa/drJV1PWkVmjWDTz4q3+o
+	 36MiMtlXhzVK45s5Rjv4EIQf5eXdJDv78ZTLoRqG/ayMYOxPR+1tfQciuKqKSZ3+4niSs
+	 s2v+PRnNVY6t21t2BxcBTAGheUiE5rQEjMVULzpaonpgI0D4djQ83IsYAYTIKDfnGPpZc
+	 ps4ryxyUNelXLUnezjdDY+Gm20HkqGGvsFIWIlZPM1ZLjcjVc4XRpFQ0mNFxALBT2BQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="lQvvWx/w";
-	arc=none smtp.remote-ip=209.85.216.41
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=dWbKoIjO;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b="N1v9GSj/";
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C129606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 04:41:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C129606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB11606A31C
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 05:10:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CBB11606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lQvvWx/w
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ac77270fbfso959330a91.2
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 21:41:00 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=dWbKoIjO;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=N1v9GSj/
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69T1jhIL3948044
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 05:10:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	L1hwVhNMNrZDpSp9Zo6hTIicT+T/hSEE+lSDb02eR3Y=; b=dWbKoIjOImTRjj8I
+	eqgt4lsHWxR6UWkUQI3vdsbE3OvdnGwWFTZGqmg3PNN6C1qvsJmsVbFGcNvzt/pb
+	GiOY260ngBVwX0QX651igqVwyq6WgxgOAsFLXTV8blErYlf+6dITv0vA2KAl/kJ0
+	7vDvJYycdVXyTMLBpIalvukZV3aCPM2nxKfPiStfRQn8npQGWOuLDzPVjxQW63mn
+	XnzjAfPGhkOMRJFPh2yRq9NPzTyIVJFERDuOMDmMLANmFjIt6tolmZt2R6SiAu1g
+	GeHeXrquAc7Q050Cuy4K3mQPNwNMwg+FuRYBLEbpeAUGZk6WMl4iS/0XWgBgK1FP
+	SyFWjg==
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hkneuta2m-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 05:10:46 +0000 (GMT)
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-35c3c370b17so2852478eec.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 22:10:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793248860; x=1793853660; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Tzyq7wW47Y1a/kLHOY6oQDnXew/OxbLFwLH5/BNKl4U=;
-        b=lQvvWx/w6BpdqaTv1IdXe3t/JxxbyORY4AJK1SdaDJqv2xifqlrNWAIzsAv6zem332
-         9YSxo+KFcefUVW/ToORDvvygpFCyWKXzSKNaaT2jKCxmx3hsr7zVdmnr/446n5SAwPhS
-         zdVxRMpzN1SG6WrIs6Q8Efw12OYMkicfTObokbBqWd4vvhkCECKgamtEoKyONXXJz+q7
-         Zi4YY8f65M91YMciMpL6/f5Jope6yYFHV8DQktw92/0EEBZFIeP90JO5DNIgQXLQckGV
-         El5XC0EDN3koos7XiRrkYG88MHiOxLGLmoxu7v07cfVBxF014zvkj6J8dySnTjBOAJT+
-         9hfw==
+        d=oss.qualcomm.com; s=google; t=1793250646; x=1793855446; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=L1hwVhNMNrZDpSp9Zo6hTIicT+T/hSEE+lSDb02eR3Y=;
+        b=N1v9GSj/Y1xFG3qNjUmQvBGZtgIFWY4J+fH0yYjKP3iZjLTkPK/iuYX8DpqvUQqfr7
+         NAg/E1sfO7lCMKpo1n/xJtX9s4ZJjxknp121t/+vllJAzxe5O/oRPYVJIlW5P8YpRRbJ
+         TRhob+mZsGaHMaH5YztQAA0wfKIS9b+exOSvidlKhixsxrZF+K8UfOuDBVNcsMVfKfAP
+         1Mbf/XC8Rd4dcrRbIk7RMwqdr+5Nuj/YH2045hJpr8TdwhtMPoMJQDbqoawbjYkQtGi+
+         y2XqWiEbrdNJUOByJxpRJg9Z12Hpq82JWvz7kM5Ym58fMM5ajSJnjHkdp83TX8/bnV1b
+         jjHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793248860; x=1793853660;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1793250646; x=1793855446;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Tzyq7wW47Y1a/kLHOY6oQDnXew/OxbLFwLH5/BNKl4U=;
-        b=x3c4WmsIXi3KItVzIJ2sZVs1kLRwjWBdGhJbsjPfvKd1tOFRFGRx50/hY0ANop/w6B
-         x4GXmhgZRf4VF8Spo+aBm6XilUiVwaio75Mv04aJX8/nWUv1DfrSG2svIEFDMC8kUJYd
-         Clnajeb9F0PTYp8h8NqtvjRnLH0DBTMpVxwK4hj9K4/gArI9kx1KkZe4gXzhbJBAe0gO
-         Gu2xtiprAftxvfubsuwd+zpTou9UNuajzVbAe3ile31zI5uH2ROOoRsfDoL5EG8Motzm
-         0MQQVDGuJTkTNvxut50XA+gRcM6YAOuavLtmPtbydrwpm8yfMScsqRL0Zsu23QcMHSmk
-         bfHQ==
-X-Gm-Message-State: AFq9FYL+MLOEqxt1P/QUCHQRtaW/wVbbHTPpmFIMCyGpF/5m1td0M6rL
-	X9eqrOSGWMcD4VS9URsAPKNaiw5vwYLhFynuy95aaKvC8QsWG3MAvF2CiyyQ8Q==
-X-Gm-Gg: AYBFou3iM0Yy8cCSxOMxmJ4MOiuUifAzvD2SmemGDyUVLNxs7Lwq/HjXdTW7WRgxVG6
-	AEh6hNKDCgsNl/kLSkEhotvQf7aEJVvGIF0hvMN+IKc6pU/00RmuXyxe7SFIZV57edDcs2KPiIa
-	ldTMY3AGamTJJBly1TyvekiTs2/3oZh0ab+fDM+n0UrdzgD8TJI+tvTh7AGb7UKCMIj8t4bRBXn
-	Qsasa3H1qklrR8Lsmuj1Xq0jc08NWTJxpNokueNJLDBJ+LI5Kt74B79JKH0Z4RFXZlt1ZSMqQOy
-	QTAXQIhobo/oVjU5NOYmflt+hktMq7YxYcb2GsUeAELuBMR7xTEtCECMG484AHZQ2W7ByhzZW8Z
-	bfvKvlL8JTd5GxnjHnjKp+SQlsBti6qF2MFzoiE7/ZQskz62uAqnWuihQVRg9rqmL8wZiXZ05Hr
-	pmIOTPV/5z5XFCtNiTS/2ihzvgR0jCfXRevno2Vn5v9TlQlXHZrMxqjXjDTVsE1NKXt2wMf9ouu
-	y6+wAqG/a/mBfVjFGmlScmNyObyR2eUB2gx3etB+OKTuTnlmHdFz22b240F1PMIcsPie6rRac3D
-	5seyjblWtfIqSVa4SQJwR7V4KthrHny9
-X-Received: by 2002:a17:90b:53ce:b0:3ad:a17d:f46c with SMTP id 98e67ed59e1d1-3ae5823cec2mr3187998a91.62.1793248860344;
-        Wed, 28 Oct 2026 21:41:00 -0700 (PDT)
-Received: from ThinkBook.lan ([183.13.224.211])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae6f01e8a5sm892027a91.0.2026.10.28.21.40.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 21:40:59 -0700 (PDT)
-From: Edwin Huish <edwinhuish@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] wifi: iwlwifi: mld: don't dereference link_sta->sta unchecked
-Date: Thu, 29 Oct 2026 12:40:46 +0800
-Message-ID: <20261029044046.1255442-1-edwinhuish@gmail.com>
+        bh=L1hwVhNMNrZDpSp9Zo6hTIicT+T/hSEE+lSDb02eR3Y=;
+        b=Erfql7TooGwy2SeJSM8WkWMZoFjldRP7EY6tX1RRixg1AvxCwvWhKXFU260d3MwLuy
+         QPe20wHRtufuRPtZsjr83Sj1gxJLF5uTWg2iXmopLOlkIZ4Oij7Gl51OZAQ4j1A5UE9N
+         RKRTkki6AIkS857LvOUBcJrbmWMV3SqO/gF7suH61EEhk4x6Y6/GIAqDQTKPLJ6L9tEz
+         x8PwFPzO6seNgXA6n3cykqnQxzhVkgMuVGpteF1Cb/dB4LZe4AKVKuQ0TPsC3hayF/0j
+         XQ4WE80PjklD7loNLmABHN/EL+OepJiq3AoKoI7iZ1CT/byn80gm3gC0gYkb1bXWLeOb
+         b1Fg==
+X-Gm-Message-State: AFq9FYK+N5FB5QfKBLa/82XYesrZ33nsORS0uO0VWYAdYq8BY/0tK2ZP
+	rGn53vJEg0hOB5yXF3+5h+tytWTyILz86bPJtdHs8BKQxSxB/MAYvYKW8IGIlQEOVjrrkJw7YZL
+	TIJ7gb/Ftl/wBz3HeCViatE6PFHF/OWfTTTgKhPH209lbSRIObvhjkkz5uwEAHg/PoV8YpA==
+X-Gm-Gg: AYBFou1tGcNT7yOkOigj2n/2WrEXaOOXT/E4ma70q/Kh94U/06Ys01NrDAqye7mzb5V
+	EgGeSVGJ0w3qCg2zQZExajzoJNQe5v+0E4A8j5LczomRZInEpOiXqi7HxGDgLvSVRmDxhF19APi
+	SPEK0XjZPDX4Vlm6Z48VCR6Ofi29Q5NwEHykSyDn9CElwJbLHlD+Gq1SJkQuLKq8CvTQEeOslvf
+	kbGoDrU9ySvrV8squL7HQb0+2vUIGj6GzhRe0COSGtLQk6q4k6xr9tZHuodoJZaRaSEf0OQRvL0
+	niDosoQYsTaVA3aKo8RnZDmHym3WL2iq69FLhi96v0SOw4yfpvNS8OyyJ3nV8jqk3TNNGC9/2Vy
+	TG/G1MIGQ+0Dj0PyMFDYaIv+4+3je4RSsl454B7lzMnUf7y9C3CTCXdewSz16ip0GX0aK9IECEL
+	OTDQTi36z4oo8XtA==
+X-Received: by 2002:a05:7301:1407:b0:35e:6eae:c01a with SMTP id 5a478bee46e88-36a203febbdmr6925386eec.19.1793250646129;
+        Wed, 28 Oct 2026 22:10:46 -0700 (PDT)
+X-Received: by 2002:a05:7301:1407:b0:35e:6eae:c01a with SMTP id 5a478bee46e88-36a203febbdmr6925342eec.19.1793250645462;
+        Wed, 28 Oct 2026 22:10:45 -0700 (PDT)
+Received: from [10.152.199.23] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a23641e78sm14113652eec.0.2026.10.28.22.10.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Oct 2026 22:10:45 -0700 (PDT)
+Message-ID: <22adbcac-94a9-4528-90fe-ad5ef2b00974@oss.qualcomm.com>
+Date: Thu, 29 Oct 2026 10:40:39 +0530
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -91,121 +113,119 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: ath11k: Unprepare MHI on power up failure
+To: Vladimir Zapolskiy <vz@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+References: <20261028104336.1686334-1-vz@kernel.org>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261028104336.1686334-1-vz@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI5MDAxOSBTYWx0ZWRfX6bxXxzC6fcD1
+ NRYplJlmSCWcFmkBpUMv4xZpi6R/WaKkgza6wlNWXSJl5orglNbh5eLhR9IkBcCBDTWtjAaXXda
+ zjED4MzPaoEz7btbm0VROzCWcAPreDvB2CaXpywdzaYKg+Xtnr2ftcombYba5snCgkEQTX/YV8y
+ cM6zk3CylDajLA2tpokAQXRkHimy8dEGrqLkO4miwavfZ+h9jIkg2zY8yfKWYr2oplTIXSGqnNN
+ cGBZiCvV4RR8+i3X0+qnBmvw5NRzr3m0+Omv0PSfDEhDO+NlU4XPXDHtuB+OLD7ScZuV/WXkKY2
+ GjdsF8Nkdz/NoBKc7imHkS++5HegoV8mztfrmWYOE1pgu2Ov/8Ni69p2AsI6eET7gHRj9ueGLkv
+ OkV/dB8X77vroNNk02oMFK2y1GzwXYpu5oMD/fd4rzyM/0FaTYwOqQfhA1dwL6Y8zvnDScJdJh+
+ AV8Ga7pLxKOLkr1lfpQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI5MDAxOSBTYWx0ZWRfX/rb7tZfDNo3L
+ uhtvM8vQ6XdsJPGhgc11yyMXD3QPOEz4U4genepJ+VS7TNLgQSyuVKTZiDxecNVr4hVKd5EkxOz
+ YOny4lBMN6xlk4AI5gIeT2+2jp9lJYk=
+X-Authority-Analysis: v=2.4 cv=LoAHWXdc c=1 sm=1 tr=0 ts=6ae2d556 cx=c_pps
+ a=Uww141gWH0fZj/3QKPojxA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=ZPdQ_4gUyuuPvppjJ1YA:9 a=QEXdDO2ut3YA:10
+ a=PxkB5W3o20Ba91AHUih5:22
+X-Proofpoint-GUID: 3JdUT6t0SHLFI94SpDYzA8AmiOpqLfb5
+X-Proofpoint-ORIG-GUID: 3JdUT6t0SHLFI94SpDYzA8AmiOpqLfb5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-29_01,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 adultscore=0 clxscore=1015 phishscore=0 suspectscore=0
+ bulkscore=0 priorityscore=1501 spamscore=0 impostorscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610290019
 
-mld->fw_id_to_link_sta[] can hold an entry whose ->sta is not set.  The
-driver already documents this in iwl_mld_rx_agg_session_expired():
+On 10/28/2026 4:13 PM, Vladimir Zapolskiy wrote:
+> If MHI power up fails, for instance it happens due to a missing firmware,
+> ath11k_mhi_start() returns without undoing mhi_prepare_for_power_up().
+> Then the failed probe or power up unwinding frees the MHI controller,
+> but the MHI device context and the RDDM image table allocated by
+> mhi_prepare_for_power_up() are leaked along with their DMA buffers:
+> 
+>    % cat /sys/kernel/debug/kmemleak
+>    unreferenced object 0xffff00079156a140 (size 64):
+>      comm "(udev-worker)", pid 595, jiffies 4294893781
+>      hex dump (first 32 bytes):
+>        00 d0 f1 80 00 80 ff ff 00 50 f1 80 00 80 ff ff  .........P......
+>        00 d0 f7 80 00 80 ff ff 00 30 fc ff 00 00 00 00  .........0......
+>      backtrace (crc 62662f0a):
+>        kmemleak_alloc+0x34/0x40
+>        __kmalloc_cache_noprof+0x224/0x3b8
+>        mhi_prepare_for_power_up+0x58/0x548 [mhi]
+>        ath11k_mhi_start+0x30/0xb8 [ath11k_pci]
+>        ath11k_pci_power_up+0xcc/0x188 [ath11k_pci]
+>        ath11k_core_init+0x8c/0x190 [ath11k]
+>        ath11k_pci_probe+0x4e0/0x870 [ath11k_pci]
+>        local_pci_probe+0x40/0xa8
+>        pci_call_probe+0x64/0x190
+>        pci_device_probe+0xac/0x138
+>        really_probe+0xbc/0x298
+>        __driver_probe_device+0x16c/0x19c
+>        driver_probe_device+0x3c/0x114
+>        __driver_attach+0x98/0x19c
+>        bus_for_each_dev+0x74/0xd0
+>        driver_attach+0x24/0x30
+>    unreferenced object 0xffff0007916fb800 (size 512):
+>      comm "(udev-worker)", pid 595, jiffies 4294893781
+>      hex dump (first 32 bytes):
+>        00 60 04 81 00 80 ff ff 0a 00 00 00 00 00 00 00  .`..............
+>        00 10 e0 82 00 80 ff ff 00 00 00 00 00 00 00 00  ................
+>      backtrace (crc 52e9e075):
+>        kmemleak_alloc+0x34/0x40
+>        __kmalloc_noprof+0x280/0x440
+>        mhi_alloc_bhie_table+0x54/0x168 [mhi]
+>        mhi_prepare_for_power_up+0x318/0x548 [mhi]
+>        ath11k_mhi_start+0x30/0xb8 [ath11k_pci]
+>        ath11k_pci_power_up+0xcc/0x188 [ath11k_pci]
+>        ath11k_core_init+0x8c/0x190 [ath11k]
+>        ath11k_pci_probe+0x4e0/0x870 [ath11k_pci]
+>        local_pci_probe+0x40/0xa8
+>        pci_call_probe+0x64/0x190
+>        pci_device_probe+0xac/0x138
+>        really_probe+0xbc/0x298
+>        __driver_probe_device+0x16c/0x19c
+>        driver_probe_device+0x3c/0x114
+>        __driver_attach+0x98/0x19c
+>        bus_for_each_dev+0x74/0xd0
+> 
+> The MHI device is already powered down by mhi_sync_power_up() on
+> failure, but mhi_unprepare_after_power_down() still has to be
+> called on error path to release the allocated resources.
+> 
+> Fixes: 3df6d74aedfd ("ath11k: mhi: use mhi_sync_power_up()")
+> Signed-off-by: Vladimir Zapolskiy <vz@kernel.org>
+> ---
+>   drivers/net/wireless/ath/ath11k/mhi.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+> index a6c9ff112c68..76c194573ec7 100644
+> --- a/drivers/net/wireless/ath/ath11k/mhi.c
+> +++ b/drivers/net/wireless/ath/ath11k/mhi.c
+> @@ -446,6 +446,7 @@ int ath11k_mhi_start(struct ath11k_pci *ab_pci)
+>   	ret = mhi_sync_power_up(ab_pci->mhi_ctrl);
+>   	if (ret) {
+>   		ath11k_warn(ab, "failed to power up mhi: %d", ret);
+> +		mhi_unprepare_after_power_down(ab_pci->mhi_ctrl);
+>   		return ret;
+>   	}
+>   
 
-	/* sta should be valid unless the following happens:
-	 * The firmware asserts which triggers a reconfig flow, but
-	 * the reconfig fails before we set the pointer to sta into
-	 * the fw_id_to_link_sta pointer table. mac80211 can't stop
-	 * A-MPDU and hence the timer continues to run. Then, the
-	 * timer expires and sta is NULL.
-	 */
-
-Three other users of the table only check the link_sta pointer itself
-and then go straight for ->sta:
-
-  iwl_mld_teardown_tdls_peers(), iwl_mld_tdls_sta_count(),
-  iwl_mld_mac80211_flush()
-
-	link_sta = wiphy_dereference(mld->wiphy, mld->fw_id_to_link_sta[i]);
-	if (IS_ERR_OR_NULL(link_sta))
-		continue;
-
-	if (!link_sta->sta->tdls)	/* ->sta may be NULL */
-
-iwl_mld_tdls_sta_count() was hit in the field on an Intel BE201
-(8086:7740) running firmware bz-b0-fm-c0-c101 (101.6e695a70.0), in
-exactly the situation described above: the firmware asserted twice
-within a second (0x85 ADVANCED_SYSASSERT followed by 0x20100508) and
-the restart failed with "FW error in SYNC CMD INIT_EXTENDED_CFG_CMD".
-About a minute later wpa_supplicant re-associated and issued
-NL80211_CMD_SET_STATION to update the power save parameters, which
-ends up in iwl_mld_power_build_cmd() -> iwl_mld_tdls_sta_count():
-
-  BUG: kernel NULL pointer dereference, address: 0000000000000018
-  #PF: supervisor read access in kernel mode
-  Oops: 0000 [#1] SMP NOPTI
-  CPU: 7 PID: 1740 Comm: wpa_supplicant
-  RIP: 0010:iwl_mld_tdls_sta_count+0x48/0xd0 [iwlmld]
-  RAX: 000000000000000c  RCX: ffff8c51a95ba0a8  RDX: 0000000000000000
-  Call Trace:
-   <TASK>
-   iwl_mld_power_build_cmd+0x11f/0x480 [iwlmld]
-   iwl_mld_update_mac_power+0x66/0xe0 [iwlmld]
-   iwl_mld_mac80211_vif_cfg_changed+0x58/0x120 [iwlmld]
-   ieee80211_vif_cfg_change_notify+0x10d/0x230 [mac80211]
-   ieee80211_recalc_ps_vif+0x41/0x60 [mac80211]
-   ieee80211_change_station+0x1e0/0x280 [mac80211]
-   nl80211_set_station+0x4e2/0x660 [cfg80211]
-   genl_family_rcv_msg_doit+0x120/0x190
-  note: wpa_supplicant[1740] exited with irqs disabled
-
-The registers match the source: RAX is the loop index (12), RCX is mld,
-and RDX - the result of loading link_sta->sta - is zero.  The faulting
-instruction reads sta->tdls at offset 0x18:
-
-    6d70: test   %rdx,%rdx          ; link_sta != NULL checked
-    6d73: je     6d8b
-    6d75: mov    (%rdx),%rdx        ; link_sta->sta, NOT checked
-    6d78: movzbl 0x18(%rdx),%edx    ; sta->tdls  <- faulting insn
-
-Since the oops happened with interrupts disabled, the task died in
-kernel mode without releasing the cfg80211/rtnl locks it held, which
-then blocked gnome-shell on the leaked lock and froze the whole
-desktop.  The impact is therefore not limited to a dropped connection.
-
-Handle the entries the same way agg.c already does, and skip them.
-
-Tested on the affected machine: builds cleanly against 7.0.0-38-generic,
-all three sites now test ->sta before loading sta->tdls, and WiFi still
-associates and reconnects normally.
-
-Signed-off-by: Edwin Huish <edwinhuish@gmail.com>
----
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -913,6 +913,11 @@ static void iwl_mld_teardown_tdls_peers(struct iwl_mld *mld)
- 		if (IS_ERR_OR_NULL(link_sta))
- 			continue;
- 
-+		if (!link_sta->sta) {
-+			WARN_ON_ONCE(1);
-+			continue;
-+		}
-+
- 		if (!link_sta->sta->tdls)
- 			continue;
- 
-@@ -1630,6 +1635,11 @@ int iwl_mld_tdls_sta_count(struct iwl_mld *mld)
- 		if (IS_ERR_OR_NULL(link_sta))
- 			continue;
- 
-+		if (!link_sta->sta) {
-+			WARN_ON_ONCE(1);
-+			continue;
-+		}
-+
- 		if (!link_sta->sta->tdls)
- 			continue;
- 
-@@ -1937,6 +1947,11 @@ static void iwl_mld_mac80211_flush(struct ieee80211_hw *hw,
- 		if (IS_ERR_OR_NULL(link_sta))
- 			continue;
- 
-+		if (!link_sta->sta) {
-+			WARN_ON_ONCE(1);
-+			continue;
-+		}
-+
- 		/* Check that the sta belongs to the given vif */
- 		if (vif && vif != iwl_mld_sta_from_mac80211(link_sta->sta)->vif)
- 			continue;
--- 
-2.43.0
-
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
