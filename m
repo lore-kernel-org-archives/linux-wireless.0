@@ -1,91 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793281713;
-	b=giLh7c5DVyzF7K1jys+iU0PFVV6BqYXuvdTW/HA7En0Ue+oO35lPC4hZ7NTy7jZz6Vwb
-	 PO2Nnv4bdeqB5LulPvV/kR5svmMaEnP4WhvZTEH7sIXNg4Z5S0RP2uF8+zyquM8/n6JDP
-	 fIJrjXssnmEOUdidQ9IB4PYYZ9UZp3Xn0tbYaJXAVbYhSq9yOteBkZy6ryarwieHRe5Wo
-	 EBWqD9bpEpCj/FNgFWnb0Alk/HVzpW9WkLKDOgpeqq00jeW5dC+MOv/tynZnqsHgpMF6L
-	 xNk+4ROFdjtj3Wlx8cxsUPLcu8IGFCdvqSbOdY+EZGkfGj77hme20ZNh6BZP/xV1S0w==
+	t=1793281717;
+	b=pFHbz/Bc0IrKWyU1/CG6Ym4y0u2F64u8g/sJcr6sLkdBUsyjVbBQKMw7jUlQ2yTq1fBN
+	 iP1Gi6kgccC1qLNipE0qxHY1oLFVNu1Wj8cOV38J5zBvcClVD727JVIFrE6AjKz0UaOWl
+	 Kd257J3zobCXkcW6naWapxW/2rWGK6OqRp4HvTNPjUZmWhtLnIMsIOktlmtr7fzCDZaBq
+	 yMQIfb18cnSaH1Qn8mne/jf8ShLMIxZK796gHEG9QopdA9wroXd7+fXc7ewk88KJmODmZ
+	 df6837WUWUfbrH7ETLjK5rVL/XYkcaIvRfmiGgmSjND2SPQ1DI3BmeN2VRXClbEU7LQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793281713;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793281717;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=LiWyaPQMeEQ4XuFw6vwkxxT8nw4alPycyzQAHN0Qa8Y=;
-	b=TCCzwD7ypL+WTKj7IMjMZjJLIRBCNOdl9f3MCZU2g1/66LjOWM1Dc/YBpfAN8GcleI7T
-	 u+UBZHIAoKJlVmMzHjgy8M7e6vhwgCkFTfU/2pB/IlkNUUW+lmSjbO35Cr0FLJ7LZYX2Q
-	 nORb6G5ikfaso4MNqDQysx36OjNYMHb9INmw1RpJ22wkT7tFYyLDFAfUPVPXVpbYCaUVF
-	 TiXle2jviii55DPT0J6Naskgq9spUHPfPvtvANSKrSP4JI6MT1bjngTyAId8ACc5Q6uso
-	 tnT+hsBuoCzrvvkykbON2FI6uLdUFvb7xXEjXjUkJ0jAb67Fpi6VWgoZyFY1F/NjJEg==
+	bh=lTNzjj5RXp4oZpl4oAxMzOJeDQHpmOcQuGYre6iPlX8=;
+	b=TlpkSrhjYmdTPjDe+D33RLnIlx8WkkjeUt5NUB3l69UlWbyev9b/9y1WtmDkFmaumirc
+	 95gm67EoJ7MwLjqomOJLqTnko4Ou0JXc5UAaOofm0hKiGi9muNJIb8YJyZjCidc9S3XX0
+	 qRx0bCH9Q25/BOBLDWFJ1Si0MqfjaYPkjnAZud3WyeoDwiuNDTSpZVW7zbs6lQ9pjjaaE
+	 C4tmJ+9I5wQcETdy/IP6694fSSGlWFxXHGpXbIAUDrdJqeO4HIbkHnij7HB2vfGyP5foT
+	 Bu4O1cNwQhRYPgPmFWI+faIKWBKP4cyFdeNu/F3Ke8x5CfpvpGoyJMrKTs8JjQnUD/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ucaIss8u;
-	arc=none smtp.remote-ip=209.85.210.176
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XHU10XTY;
+	arc=none smtp.remote-ip=209.85.210.180
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E59860A261E
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 13:48:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E59860A261E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B71660A2605
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 13:48:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B71660A2605
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ucaIss8u
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-8a06e79e152so1206117b3a.0
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 06:48:32 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XHU10XTY
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-8a070755c8cso1207348b3a.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 06:48:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793281712; x=1793886512; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793281717; x=1793886517; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=LiWyaPQMeEQ4XuFw6vwkxxT8nw4alPycyzQAHN0Qa8Y=;
-        b=ucaIss8uAhSqyxJ1oyO6Fbwqn4gPEaTwQUUCLODXCd0h0GEV6R1GiPxY4d6oewxZbL
-         SXp65Np1YIhe5Je7NEcq6j41GKhaEHlk+V4BNXV05aZUjzfjJz0IxuJfhSoXhUPaMSiN
-         rHwjJ63qAxu1wWpHcjJeoW9v+WtzSC8RvMufuOvgMgC3DLtgHdZLoUtvHz9g6WE/uEjm
-         JAf6g+L7qM0dYwlNJdKJ7hS/BizSCoUwWwiw2VlgYnj9Jn2bsukUm1Hkl6IC++wxNA9g
-         5IrOb2IA1nVGbU8Mu0vGnoorqbpB2utYwDuKAf7SutX5HTgNIWxyDX/txKp18hNeiRg9
-         MNcQ==
+        bh=lTNzjj5RXp4oZpl4oAxMzOJeDQHpmOcQuGYre6iPlX8=;
+        b=XHU10XTYOELX7RDqGgN+sEsm81rhvRClEAGzhxP6NgcUjO91e0vUXDaAEhrTSdHVbC
+         QAahsvwFDV0Ga/bWysK9toNAzPv+05T5MNFinUS1pRsEXLu9UH0/x7ITjFVSSuHhzsS4
+         RIjhCu4jACBALzT5iaBXfbC+vpUL45V9ahl4VeoRPRHZTywM+xzM7+mUkTt+3FpNeuBz
+         tvkEC5t3Wyg4cQB53HVGzMjgDy1CGUSEZvDXWOOfmHqnpqwX1/nuJ5VQHed/5AZndNOG
+         DQW1iaOkeEJ79/c4eLi/QIdXN9owq2FvJ92BT7i3b1njuM9jZik2zwrIzPyF/TxMkcDo
+         NULQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793281712; x=1793886512;
+        d=1e100.net; s=20260707; t=1793281717; x=1793886517;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LiWyaPQMeEQ4XuFw6vwkxxT8nw4alPycyzQAHN0Qa8Y=;
-        b=A9i7+nYeAI3GsAaO4HIXq9dP1E8WoYLW6SiRtZUU4QbqiB1rBPB8JbP/6ca00eWA+h
-         FzHTASDaH+PX4K+NdlMHiLkISyAzD7UqiW6XGmeAZFv3Okaz0JKAEi1+XfF7gJz6d7Hx
-         P45ZnrQHRQY2JFSGJyIvkfWOt1I5sdpKxiBCTtuHnSrOoY3qNVlGYATzw5N5zFUU7sJt
-         8YvVsRUcTXBqJd7ro/vRDgtp6H3zW31OL8U93gP8PdQgEzWNE7wWp+jLguYhchHpmig/
-         j4eph4QLXn8OnjGtbXmH1jAL1kHQnJHfMpcj1o7Nb2yS+3+1ZR5pmZjZIaR9iury4oAi
-         6RlA==
-X-Gm-Message-State: AFq9FYLVgvqiR/SGGt3eK1gXTNGGvMtnmoD2n6YMEXIpZdL3cwhknuJ7
-	Afg5/h70HxqMfZ3kQ0CroAcLPJJXXujqsgWDWxl7+onlnNf7jKwYtAhe
-X-Gm-Gg: AYBFou2NiwiWLim1R0cLYWTVOX6oRI7A/k55vgZeCjaANm4//k8Ro6PVTWZ1Ufx4xz6
-	h4v9UtRLFSL/eFgN78yfsosx9XYTajcsz2/6e6+x2O7uaZeI8dQabCQ3wu1XqWP3M05U8sst9DJ
-	3yVML0GF1bOudxUKly4NYWxjx8FVvvq6rlY7qDZdG3ZCu9Qg+WIXt+EernCoC2wae6tZu3gzV5c
-	M2krNqmSrWbBeDPHsgL+rhCq/LD9ggOPYoV8/AvNaBr74glbn2knrq6o//Xm8xUuidGp7SyU985
-	7RKrzpDG153olL9PLstXoESNOQKmr5h3h9Nu+7tekaccG9QVtlwAlHwf7jEGO1BbwTSwSJuz0iF
-	0xi5d7NLTXN/bqT5/5QOhOeoshv8bVNGXNIPemJhJU+KLS1DxpSSqvmczmuR/PvFsK+Kp+W0EFs
-	aBbOwNTIsweWH9CYSxX7lUt0oP+JbAY0khDR1RI6SPoaXgAXQQtbhkWKmQ0Tdan7ZqE+SpiYwhU
-	y0W8anFcIWMpPUMtsykrgelO6bbRN1RpBoJpxra9AM50s27b9EE4qIr5soEFn/aGnj7ymx6k3iX
-	fWw7VJ5bMCa6AL91XkeGY2zY2h4z1FaF75efqW3lIGzfX32n15EJwmckNdgBQW3nRAXZvlb9ie9
-	IXIXBD/Qe
-X-Received: by 2002:a05:6a00:1d99:b0:886:ead5:6d3b with SMTP id d2e1a72fcca58-8a6e81b6fe8mr4515322b3a.53.1793281711917;
-        Thu, 29 Oct 2026 06:48:31 -0700 (PDT)
+        bh=lTNzjj5RXp4oZpl4oAxMzOJeDQHpmOcQuGYre6iPlX8=;
+        b=TRJRgljk0ixgRKJBG5+So5HbV9tgHvb0RPLOEIKjTll2kiiKTS+/0BuaDznrulngs3
+         BRsbLwmBEDttJNTcqhokd045ZeIp8j9RYCIVaz3T7FcEaRSeEdfOcRd+MlikpXh1tZQA
+         4LeEAda72Yk6PMSlnVsLiig6GatOTtZIg1zS1M8AhWtzWPGQcVeiBMZa8cTsFFahJSXU
+         55hRlsfoXT9QRobJMMVb5juaKRXtp1RfZ1iYsNWR+tADZW7gX3OMf9yC3tCNArcqOlg9
+         Ur/MQb1mPs3MXggTqcIH5PpExd9iOhyT0w+ClflHHVspBtJCc1C4HI29PGEIpUFkboKj
+         3Bdg==
+X-Gm-Message-State: AFq9FYI4Nr+nhVFTu9by7xlIJ+m++6hKI28G5UCsQF8XeDYJXeEQ/oJ5
+	20KfH3qZftoMiPF5pZGdKTBQ9AzHLEh5EtViVWDoy29HA3RlePXNYNsj
+X-Gm-Gg: AYBFou0crDBvYpupRIzfm1DIeEOzNxIQfGwdT1/ClZ2HwZSM6bVAq+jI9QZfifiP0Sp
+	Gsg4QR6QEHEnWhQf2DoJTZTIfHdcYnn7/i6QOYfBaII5J4+oqs4aMv95Ckp1q0hrrdt4WyvKq+y
+	7AVOBBdIfAR/dhsND5C8+tBP2SuuAnepK0SMgfKKYEcY6J1s0KGxJ+XaI9T+m81pwJ81VbwWVVF
+	+vLSYbp9nmF1tXXwlAs6qYUAPkYekU2vgDYUBJ6LmB9jgNtfJ1wsA5y5R/HwHQzqCQCmzd3jiey
+	qF5MInCpDWs/G9jqjeZzC5dM9hl3im18SjND8m4lPmEIPxSqwSvJIQtLDnuleapIL2EeHEnlMa7
+	jy3WXo8Hd3+XU4U32KdgLalVH6JEn6iLQU/NRArx4/WSscl56SIJ2OO4JFrOs21qOP2b2wqz1hx
+	l9xtinwnX3UbxVt5rCwbmMDSw+9t9Gcc5RLc3GCm8p/hdANq5Ccv+Pkx4qnlmcjcIZf6WSyRZvf
+	35XjjMMLESHDJK0HdlhMYuYLXPO96AS/xIMY1Ny+m+JsVaaPjg32ExNXs0d4q/35QGRVrP/HqpG
+	3bzcJ1XMuJxEkKSr6s3xHpvti9jQIm7t9JJjpkB/RV/ZfoGNM6KrvOHY2SM17uZ9ADIOSkRehNf
+	DbHf9BdVclmWX6BwfCxcs1oekuurz3Q==
+X-Received: by 2002:a05:6a00:b56:b0:899:394d:2976 with SMTP id d2e1a72fcca58-8a6e78d158bmr4556674b3a.39.1793281716645;
+        Thu, 29 Oct 2026 06:48:36 -0700 (PDT)
 Received: from acemagic-m1.tail4fb79.ts.net ([2401:7400:c804:b668:ab4c:c3be:c4b6:67cd])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a3d5baf4sm2455023b3a.1.2026.10.29.06.48.30
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6a3d5baf4sm2455023b3a.1.2026.10.29.06.48.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Oct 2026 06:48:31 -0700 (PDT)
+        Thu, 29 Oct 2026 06:48:36 -0700 (PDT)
 From: Ho Jie Feng <hjf3108@gmail.com>
 To: Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: linux-wireless@vger.kernel.org,
 	Ho Jie Feng <hjf3108@gmail.com>,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 4/8] wifi: rt2800: report the MCS16 to MCS8 fallback of RT3593 in TX status
-Date: Thu, 29 Oct 2026 21:47:45 +0800
-Message-ID: <20261029134752.1299130-5-hjf3108@gmail.com>
+Subject: [PATCH wireless-next 6/8] wifi: rt2800: set the mac80211 fast-xmit and aggregation flags
+Date: Thu, 29 Oct 2026 21:47:47 +0800
+Message-ID: <20261029134752.1299130-7-hjf3108@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261029134752.1299130-1-hjf3108@gmail.com>
 References: <20261029134752.1299130-1-hjf3108@gmail.com>
@@ -100,74 +100,28 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The RT3593 retry chain is now MCS 16 to MCS 8, skipping 7 MCS
-rates in between. Reflect that in the retry calculation code.
-
-Test results:
-   before after
-TX 27.0   29.4
-RX 70.0   70.0
+Enable AMSDU TX/RX support for this driver, which can increase
+throughput.
 
 Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  8 ++++++++
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 13 +++++++++++--
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 9d88ee698b854..de234bcc7a065 100644
+index 032cd6ac345f0..8b4458a74d33d 100644
 --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
 +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1116,6 +1116,14 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
- 		 */
- 		__set_bit(TXDONE_SUCCESS, &txdesc.flags);
- 		txdesc.retry = ((mcs > real_mcs) ? mcs - real_mcs : 0);
-+
-+		/*
-+		 * On RT3593 MCS16 falls back to MCS8, so a frame that was
-+		 * sent below MCS16 after a three stream rate skipped MCS9
-+		 * to MCS15.
-+		 */
-+		if (rt2x00_rt(rt2x00dev, RT3593) && mcs >= 16 && real_mcs < 16)
-+			txdesc.retry -= 7;
- 	} else {
- 		/*
- 		 * Transmission failed. The number of retries is
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 4d94b7062f440..823785088a308 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -329,10 +329,10 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
- 	 * lowest rate was used.
- 	 */
- 	for (i = 0; i < retry_rates && i < IEEE80211_TX_MAX_RATES; i++) {
--		tx_info->status.rates[i].idx = rate_idx - i;
-+		tx_info->status.rates[i].idx = rate_idx;
- 		tx_info->status.rates[i].flags = rate_flags;
+@@ -11861,6 +11861,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
+ 	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
+ 	ieee80211_hw_set(rt2x00dev->hw, TX_STATUS_NO_AMPDU_LEN);
++	ieee80211_hw_set(rt2x00dev->hw, SUPPORT_FAST_XMIT);
++	ieee80211_hw_set(rt2x00dev->hw, TX_AMSDU);
++	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_AMSDU_IN_AMPDU);
  
--		if (rate_idx - i == 0) {
-+		if (rate_idx == 0) {
- 			/*
- 			 * The lowest rate (index 0) was used until the
- 			 * number of max retries was reached.
-@@ -340,8 +340,17 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
- 			tx_info->status.rates[i].count = retry_rates - i;
- 			i++;
- 			break;
-+		} else if (rate_idx == 16) {
-+			/*
-+			 * TX_FBK_CFG_3S_0 makes MCS16 fall back to MCS8 on
-+			 * RT3593, the decrement below shifts it back to 8.
-+			 */
-+			if (rt2x00_rt(rt2x00dev, RT3593) &&
-+			    (rate_flags & IEEE80211_TX_RC_MCS))
-+				rate_idx = 9;
- 		}
- 		tx_info->status.rates[i].count = 1;
-+		rate_idx--;
- 	}
- 	if (i < (IEEE80211_TX_MAX_RATES - 1))
- 		tx_info->status.rates[i].idx = -1; /* terminate */
+ 	/*
+ 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
 -- 
 2.53.0
 
