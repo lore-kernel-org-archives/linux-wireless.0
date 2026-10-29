@@ -1,58 +1,67 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793299436;
-	b=VG9xRh/iWNoRWwpCmSliRydmsHK3Sw6DpeHj/Q+tkeWQIgh8oUncB8vla81ZFttHxPIA
-	 nUXv3+r/hv4+qhhfJUltuviXF5fNyUiX9AUQZHmkJQ8G+BaIn11ggN+zjb9jQUV3Oryg7
-	 4QVVxZLdKVoV04w238y+L9Ey92HkvXWdloIecUGII7fbYlCqaLmN7j3S09troH8IF4s+H
-	 L6oviwPVXNr1cChejBc/Kxhbo4exnwLCKJCzNMoL6D+9hRnK5huyzWKDjoduKaW8BkEkN
-	 hGQPT3abmSK9g881LblL734IAdyozgjEnnNBISIm8rodPX/wCg3lD4If+i7MpkMt2lA==
+	t=1793299427;
+	b=HO2bIjNCOPjyOn81/FLW2hR+uyZddm9D5xrJEwf2XxHOkT3MidBzLk03Sh8sQdnDiO5T
+	 HLmYnvQ6+zt+fA4d6+pDtHjVV03cmeYqiEIZD9koCiOMvsDNHSsXaAkEtvJrNzCaCoGak
+	 Kqm4KZyNiaTzX6c2lbotGTXe4p1sV0w9PEB95JFrWcLL/VLEUuVApFqcgKEpK19tMYlmr
+	 O2h5h4iHjsawIyiL1EueHKHiWmadL4KBlBSVYYrviyHOu+WFJF8n1eH/5OeSIQ7ncSzwU
+	 lhmI14fLl2xM0UNVst4AytkdJ4+Aao45x/V21s0Vaq1jxOufo1jOjcCMz0znw3cXhUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793299436;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793299427;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=0xZacld6o8nANioJ66Bx+wCl/dCdVGQB0X9AYNsF9fI=;
-	b=bOntLTuvUBHacQsCkGhcfFds6E6i7GDpnPL2jnUMkYaWYTZAfWGFKTmkYZ0A6SO0LAsh
-	 saExfpqBB6DsqfMCw779jxu9MfyFwbgdiBdtlj4qex+YoPqYKn/W8F/00g7HuD77PiUXR
-	 CEI2uPznUOrrS74dngZ0FBwdpsXUeidGXRRhmILW6u9y0Tc3Tv8YxV3hGJEaIiehtoNhD
-	 c8WCxCgbTZZhzDHcEyAhnXakarMKgOYku1gh3mW0gVaiOpNl6k4PCtK9KY/5U65UDC/O6
-	 etpH0chIj4CKmT4O7vVvLE0fht5jqK4TcHaTyBbWHN2SXJuSNFmdSyYpssh9obj/xxA==
+	bh=1gm75zfLnvhGfFKJnN4ctGyUHQ34iNDpJNKslNN8jhk=;
+	b=FrM5MqSagSc01jHfvkS3GNcWpyfIxwJJhKtHuigh+x8Ac7yl13ynI3skOuzRcHDnF11Z
+	 KGq5B1TpbhT5Zse4tLsaCuZ6FeD3bHl563HPmO0ZDRqCyZW5UJLCkDzRPyrxciHRGPYyg
+	 eV0reP6FrMUAgwlh3K8DZ48ObnoR9MOPh/RTmUOE//TcFg332H7TpkeXW3AAGPnxlgSsE
+	 XBGQq3qxmT5Hkh9zDuUUqDVQ7DKcx/1nC1tu8biPuJUGT41gUs7L7wljIhP6q+y1A9M1X
+	 EzruUyPG6iweDsObrXYIRqltWJJI/9hUNbOw35Ub9ztnfdPmoPslwE/Zgc2qj4JWiuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SmN3vSC9;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=feSCgdpn;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE352606A334;
-	Thu, 29 Oct 2026 18:43:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E40BC606A32A;
+	Thu, 29 Oct 2026 18:43:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SmN3vSC9
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C17591F01285;
-	Thu, 29 Oct 2026 18:43:54 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=feSCgdpn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01EB61F031E8;
+	Thu, 29 Oct 2026 18:43:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793299435;
-	bh=0xZacld6o8nANioJ66Bx+wCl/dCdVGQB0X9AYNsF9fI=;
+	s=k20260515; t=1793299426;
+	bh=1gm75zfLnvhGfFKJnN4ctGyUHQ34iNDpJNKslNN8jhk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SmN3vSC98k64fsfz4aHjrn4Y0iMOvJgctjRiEpXgTeKYgNGlG8wALHejij6yTr0eR
-	 NytKJ5XsMFE2xwIIqr6Vwj9mOh0UGROt57/tRg5evoi3+gEdOGK/m5SW0H+cf1kFx0
-	 ejou/RrooIXOI4RS1f2537V3wVHh4FAIiC7zlc3bxoHglktYCwvab6E3Y5AoUIvbiw
-	 dE92HOz3F2QijtMD9PMFifm/lihOR+C5s3LBVUul/xwcJ3RB12KQbxkw3Sz8uAipMw
-	 VGtEnLAHV9mUJlrtmFEGu0lk1BH/cO+HMgqsX/tjtdQdWnSRYOQL++obUhKNQbXtaa
-	 h/bX7KvYe+Haw==
+	b=feSCgdpn2OY7H3OU+KhljJF53i4WvcbHZvYSkB7wDb0Q3CqUXpQMPmGf0KroGVvLV
+	 YEyYgJCrI1YQqtOD1aZ42Lh5LISEIyheZYqbt5XEP1RRKpBao/H5IetUks1zpUHAaG
+	 WCOvf6z8ZGVJjQdeFf9ns641P13EC5i7FCgp/9FEauti0yryA+wV3hQA8GCjnsqeGn
+	 b+TNoys9oQIb57qXvmvHVU2t8TmJPese/MRQ9cep+0D9ox1e7Iy35snedBuWnTCOob
+	 vX/4dVvCI66NAqNowz7C8x+L3gcy/Y4aacehIQpnbmNwVPwVkRlmTqosA+T5FB6o/A
+	 IBcMYlPlxpSWw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org
 Cc: Sasha Levin <sashal@kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Yingying Tang <yingying.tang@oss.qualcomm.com>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	ath12k@lists.infradead.org,
 	linux-wireless@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Zhao Li <enderaoelyther@gmail.com>
-Subject: Re: [PATCH 5.10.y] wifi: mac80211: shut down RX BA session timer on teardown
-Date: Thu, 29 Oct 2026 14:43:25 -0400
-Message-ID: <2026-10-29-1-daily-reply-0018-mac80211-rx-ba-timer-5-10@kernel.org>
+	Pavankumar Nandeshwar <pavankumar.nandeshwar@oss.qualcomm.com>,
+	Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	Shawn Guo <shengchao.guo@oss.qualcomm.com>
+Subject: Re: [PATCH 7.3.y] wifi: ath12k: Increase RXDMA buffer ring size for default memory profile
+Date: Thu, 29 Oct 2026 14:43:18 -0400
+Message-ID: <2026-10-29-1-daily-reply-0011-ath12k-rxdma-ring-7-3@kernel.org>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261028142349.19894-1-enderaoelyther@gmail.com>
-References: <20261028142349.19894-1-enderaoelyther@gmail.com>
+In-Reply-To: <20261029095541.685879-1-shengchao.guo@oss.qualcomm.com>
+References: <20261029095541.685879-1-shengchao.guo@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,10 +73,11 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-> This differs from the upstream commit, which uses timer_shutdown_sync()
-> instead. Linux 5.10 does not provide that helper.
+> commit 15f7603b69a83a0acc7fcc8992ecbea6110f9424 upstream.
+> commit 643f0bf936176c114d5631da7547e991b5d99f10 upstream.
 
-Queued for 5.10, thanks.
+Queued the upstream chain for 7.3 as Greg asked, rather than the folded patch,
+thanks.
 
 -- 
 Thanks,
