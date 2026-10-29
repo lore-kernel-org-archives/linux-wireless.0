@@ -1,67 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.10
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793257985;
-	b=D9hsoRXcw0LOlSJHptyQpFRZ8vcehONwkXv9JtIp6TQKNEgNUVQC9MYpNHTPybH+bXn6
-	 /g/0P1YJrJjjqDCgAW6uPK6LoxndSv62jylzxrCwEaPIsGDVaJVTz0qU1JwX5YyzPf/Q6
-	 CB1VS4ii5ZHEYuRLt5tFFXTuxM0euqp4nI05y6P4m3J2zMkaoZNNNzZdDGnkTBbG/fl2i
-	 B1uL+492vxE8+PvWs2GeARBV2u/EPHsagvlmwwMTWBTJuohDaUBdEDffPqf90ssqqK3pe
-	 qVGx/ZXlfKsPCk8BYaN2eKi2bAhZdpCj9iABLC7tkQ1R2SYJ9pYgchWM/NvmTIx6oYA==
+	t=1793262006;
+	b=s+mtgciUnxAbegJZxz1mr+gXioRoeYehYm+j4TI0GKFrSpEEEWsNpy/IM/sHx11LEyOr
+	 r+9gs9BrPZXDce5PuPetiqEThj4A9DqBVpj7vwuUIIKuulpQwTa7h/NEAquFg1ledJ+YY
+	 ZsqCGks3bk3oEXwcnmboR3vCEVB+ekcxFz0+tQAzWJEKQY8OVBuDuShgJhbNgng398lJs
+	 KevpwuOrocPmxyTObACQLWFLoOcR8s6GMJ0/ReijJ9qojaD/dRBtyBtQ7bTnRAGePVBs9
+	 9j8F0O4yzQhdAbbe1TCqHTxMaTpLJEJAmQUfNQdCs5OsfVjUftoHtN5FIPk5ag4wx7Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793257985;
-	h=DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:Date:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:
-	 User-Agent:MIME-Version:X-malware-bazaar;
-	bh=WimqeynmBXGGzLPxeEW5Wa98ND5Ah4K5gVVzfixyt4M=;
-	b=Xq4Nbxg7HriqAb9iU9p+bhkNfbLGdRsIgoMY7ZepBSl7iHA6h+fcRIMSQT2WIxwU5VAZ
-	 +Yx4GlkquTd5mNTUIZGXKzofHm4Ndrzmcgus5is6KEsWo4JmhKZZzxGHzoy1gKAFgS5vZ
-	 J0BZOVJGWAVH43wqan+HTup2sXJYXzTBXYyf4BZu+QdrXUOq6584PFkxnoatCNqVvbnNr
-	 jNo+Gmg1/MmvknYVxG1rt84mV62KB6cR2MnOTW3WNYlPWsYm8QyJFWMPV7GZSMMI/THDi
-	 rjlF933pDVob3jezlg7IQi32atEtCa7IH6Rhi8OPeOvCJgKpNZ6KCEKjrGhb9vwMSRg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793262006;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
+	bh=hq49hLBHa7UxfN5Y7PY1/zeZc0Rq/8U/5K7+yWJjlb8=;
+	b=wbgWCOpnXCEK54m5Cd5xki5rESDNHiuQr5M1zuTpFqSISdOjxa7SiKKGDlos5KM4YCIz
+	 VXSAmFti79VGvfyd99gUNqgNNtETEckDgIk4R0ehhx1UTFiPcpZ4TGx1P2G7+xJ8bK5vv
+	 fMVawrml+/PnHAZbjbnBJn4KwYnIkk7gXeggl0+IWi6tpeR8hNhuo0/AP8FPFFTcSEHL7
+	 O1AnU+pLgtKyfX11AczXpabzaLuRuh5mTW4VjlkRFEK2iT9HXfFIMPYWpYIfbOesq0YUi
+	 dhRMXsLRdXsCLVs68Ry8E0Pr7XcHAyVGIxKmIGpKdK6Sk5FjlVfdBrvn9KWkc3RPQAg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b="JIt/XitP";
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	dmarc=pass header.from=wp.pl;
+	spf=pass smtp.mailfrom=wp.pl;
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=QIMHzxMr;
+	arc=none smtp.remote-ip=212.77.101.10
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA13D606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 07:13:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6B81606A31E
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 08:20:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6B81606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=JIt/XitP
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=WimqeynmBXGGzLPxeEW5Wa98ND5Ah4K5gVVzfixyt4M=;
-	t=1793257984; x=1794467584; b=JIt/XitPZdQFeoQQZJRXebsgj1lP6PWgjn9UAlX+BvrK6C2
-	sljUwv+QmsbA6/l5G16KCNa8nehEZ3J9797vnVJ3eULw6kM7UsPBHAWnzkgk4oijVJutHX9HyXf8t
-	9KcNCwzokyKdAzgBPkrEitAVzu+F+5f/jBJTYqzsnBm6YIKV8d8pR0/KU2lIG2p8c2qz6k0sGdu12
-	V0o7bWotgxqLJx3CSPIYevtKHbPfMzIMOYOF9JxS/EJo9duNG7K02H6XtXDR7Tz0/HZ5wypjKEoBO
-	smbYaHraKkjYdsIjfVZrXDN/KEWCywsGu/5pF72nS68yd2Ch7XgJaajGxE9D2Aug==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xMKJp-0000000GUEh-3YhF;
-	Thu, 29 Oct 2026 08:13:02 +0100
-Message-ID: <2b4bd7bafad25b2f13973e1b1f486395615d0bbc.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 0/5] b43: N-PHY: fix calibrations on rev7+
- (BCM43228)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rosen Penev <rosenp@gmail.com>, Luca Casati <luk00casati@gmail.com>, 
-	linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, b43-dev@lists.infradead.org
-Date: Thu, 29 Oct 2026 08:13:01 +0100
-In-Reply-To: <DMGOAJTSLTRX.3NHOMSGMQXH1X@gmail.com> (sfid-20261028_191212_602985_F54B2DE2)
-References: <20261026181543.77763-1-luk00casati@gmail.com>
-	 <DMGOAJTSLTRX.3NHOMSGMQXH1X@gmail.com>
-	 (sfid-20261028_191212_602985_F54B2DE2)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=QIMHzxMr
+Received: (wp-smtpd smtp.wp.pl 19003 invoked from network); 29 Oct 2026 09:19:56 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
+          t=1793261996; bh=hq49hLBHa7UxfN5Y7PY1/zeZc0Rq/8U/5K7+yWJjlb8=;
+          h=From:To:Cc:Subject;
+          b=QIMHzxMrXKyvbvSPf9r3zdRNpzdUXlqA9y9T+e0eXS1souqtzoh16entuXwVA90XY
+           M3fNHWJ7hzfryk1SjVAppe86hzO9mafjrdFxpQpW+uCSr77xtdbvxySibggXUMA1Hn
+           luhOT3bkTrmlVbqFPYxAVh9t25uH4kUISSUcSWnrsGn9e93jg3AGs9Cm0jFwp68v1M
+           ZUcM80POHLdc0k/otEl3iGEaPLRy+ykIVPdx9/Ln6VTShgOUvDcAu5moUZ6elDPwCS
+           BOO8kSRl0nvlV6WVHM6aJbPN3lAtRN1Ti9JkI8YCxkM5pnzVT/GU63v19qkImA1KdI
+           yZeL0RKr1ySrQ==
+Received: from localhost (77-236-11-144.static.play.pl [77.236.11.144])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <enderaoelyther@gmail.com>; 29 Oct 2026 09:19:56 +0100
+Date: Thu, 29 Oct 2026 09:19:55 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Zhao Li <enderaoelyther@gmail.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: iwlegacy: unregister the LED if 3945 hardware
+ registration fails
+Message-ID: <20261029081955.GA10212@wp.pl>
+References: <20261028142328.18560-1-enderaoelyther@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -71,18 +65,57 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261028142328.18560-1-enderaoelyther@gmail.com>
+X-WP-MailID: 075bfac9a22155880d5d6a0228c06ea4
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000001 [4eLx]                               
 
-On Wed, 2026-10-28 at 11:12 -0700, Rosen Penev wrote:
->=20
-> For all of these, Fixes: tags are appropriate. They help linux-stable
-> pick them up. Meaning that wireless, instead of wireless-next is the
-> more appropriate place for them.
+Hi,
+On Wed, Oct 28, 2026 at 10:23:28PM +0800, Zhao Li wrote:
+> If ieee80211_register_hw() fails during 3945 setup, later LED callbacks
+> can access hardware and driver state that probe has already freed.
+> 
+> il3945_setup_mac() registers the LED before the mac80211 hardware, but
+> its registration error path does not call il_leds_exit(). The analogous
+> 4965 failure releases the driver and reaches its existing remove cleanup.
 
-For the record, you could listen to this guy who, by his own admission,
-is nearly banned on netdev and seems to revel in the fact.
+Could you explain exacly how this is fixed in 4965?
+I do not see this in the code.
 
-Or you could continue sending patches sanely. A decade(s?) old
-calibration issue doesn't really count as urgent in my book.
+Regards
+Stanislaw
 
-johannes
+> Unregister the 3945 LED before unwinding a failed hardware registration.
+> 
+> LLM assistance was used to find the bug and review.
+> 
+> Fixes: 5ed540aecc2a ("iwlwifi: use mac80211 throughput trigger")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+> ---
+> Validation: A W=1 module build with MODPOST passed. Not
+> reproduced; 3945 hardware was unavailable.
+> Sparse C=2 passed. Targeted Smatch introduced no new diagnostics.
+> 
+>  drivers/net/wireless/intel/iwlegacy/3945-mac.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+> index f7ca182d1494..5e11f0597255 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+> @@ -3529,6 +3529,7 @@ il3945_setup_mac(struct il_priv *il)
+>  	ret = ieee80211_register_hw(il->hw);
+>  	if (ret) {
+>  		IL_ERR("Failed to register hw (error %d)\n", ret);
+> +		il_leds_exit(il);
+>  		return ret;
+>  	}
+>  	il->mac80211_registered = 1;
+> 
+> base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
+> -- 
+> 2.56.0
+> 
