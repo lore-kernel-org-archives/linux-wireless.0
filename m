@@ -1,77 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793239050;
-	b=fghR+1z1VgyQGsbz4a1OCVa68zZdt37/g02qNJsOze5A2icAN+95qpcXm6W6a5gCn47C
-	 Pav6tLhCRH5XlzbNFbVIfWCLaN40h7gDs986PTc52aVnGpDWrEj0kmoIFJXaZgtJ45iKp
-	 BWapVcUerpsJUanZKx8+JIp0eOSEhn8AIhAbggfmw3WjNYVUMognFGUM28T0pCvIpYU5U
-	 QA31pbcus/wup84vU1CmOoWkZAzXUsH7yROfkIXsW8BaHzBfHQSGLx927D5RmaTrA4zJ4
-	 c2RYqJwf0dvxWEM7Ue8Z4Rb9m84nIRv3YZp7+qNTDxZlL8qLkPdsjXdthXIQ7mEVr7w==
+	t=1793240352;
+	b=PP9iMcq0UXLcoqPhuV9tBni1aScQsI4cp3NbQkf69JDdipKKkxn6MTtPo+/T+LoOVaLq
+	 QzYTddJM0fUJHkWEnJMhHj3+AvH3brVSOQGnzzrbBEMhqrnUt+ANMWql9ZYVjGozNfwge
+	 fwt89d8oBg31fnEIU6WWSI4YOU9jjKAu09S0BcEjL9vZ0RSvVkzL2cdhAC+J8d9pQPD1j
+	 i8pKKdAR5etXejVxyj7j5kw3dXcRYgt/ebrHkPVLB8umOYFNK1sZ+2C0juckmLk8tRtzb
+	 OLuJhJ/LQhfgFriU90JL5r3HAUQpYT/nTG76mwN+dWaGUReuBs0ZdtjHMDRRVep52Ww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793239050;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=DVTcnbPuad1yF6DRhNOYmBJVZtpCUGa00cr3jC/F7go=;
-	b=nME/7XhtNisUw3/2KGqHMfMlp12PllvJceuorY40kDsQR8KdVcsVbAMMwbB3WWctRZVm
-	 108PD1+8uL3iw9i/b0XxKH7Sz1UFVskpbooWblPRVV23Zibn+0rVCQIGJo3lmGZTV6adp
-	 EUk/3rWkqBlEuUa9FRa+TQ2KnfeAQOta+E/jmDfNdaFaq6cwR3EiQhlDlKwqB4MYTOund
-	 omaq2C5kJAhtCr2VYLLww16A75mYe6f6PBoAB+3W3JhTur5zRg+jE4oKgNsUfx+laEZkM
-	 juEgNs4ocI4nbA7vyJ/DAuRSzGf9pDl4ANg6Ed+KU+de6ManUvpLZPc9JiNfboJdxzw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793240352;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=vZAdjot7kyn4ieMPLUMNEq4Jit4LKlTnRhG4vJxE5P8=;
+	b=czWhAlSOcZQLQGl/OAmCQjw7f5LpNqlB4cUrTlsxijVZRZgtAlTGvtlS0BrxC+SAd5Ok
+	 vmffCsiI7OrVTcTugnX0TYnKfq3uHPx9i1O4RLHIdSi0ZcvxW+RgHrFT9TXZZCOXWpLgx
+	 F4egT5sMO4Fa8gAYCIIm4TBMyw14OZ/nuTnipOTmfuApYHOEPC1M3rwW+seedZDkNh3ko
+	 0vg2lu5CATmnepI4v/Hi40Bd1s3jXrY6eqY+VpiVSk6V/TCl7tzJAIkBn4XOO+/tHc8jc
+	 VU5fj2x4XuGg+IegVYfSMC+QNOO52yIv6q86s1+mgdWbCitmFk/mOYH6eRHSsfxn0Ww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b="nM2Ptpk/";
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=XLwUyt+r;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b="aYKPa/5O";
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7052D606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 01:57:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7052D606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D694606A31A
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 02:19:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0D694606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=nM2Ptpk/
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69T1vMfyD2419257, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793239042; bh=DVTcnbPuad1yF6DRhNOYmBJVZtpCUGa00cr3jC/F7go=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=nM2Ptpk/cH8gnucMQPNAr+WsjPtcncyOUqA2WWCnkpecueTFIVjf7UBqM/X9b+YoN
-	 y8ok2+7eZcj+1fFLzoyTnvDilyJ/nfTX4A0AE3CSC454aJ7wcpNRtmcGeM7yt7L1J3
-	 a/dGI+fPhsPQgXYuUcL/Lg995TlRhI2usshf44z9DcFFJc+A/sh1PK6YRzxdl/1eqq
-	 zRL6DErVuPFkiembdYHAxEB6SWA/di+46ftAX6EaCPcujfs+8Hmo2wj7vwGNpy2zdX
-	 pq6urHS2mWPW6cyRriSNNgUQ9OV19J+6rm51SvXK6WK/Dirv0hKnac7/Hgb9Gqe8p8
-	 w0OhWNFQgkiMg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69T1vMfyD2419257
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 29 Oct 2026 09:57:22 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 29 Oct 2026 09:57:13 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
- 15.02.2562.056; Thu, 29 Oct 2026 09:57:13 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: V schurink <spam@acio.nl>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH rtw-next] wifi: rtw89: do BIP in software when not in
- station mode
-Thread-Topic: [PATCH rtw-next] wifi: rtw89: do BIP in software when not in
- station mode
-Thread-Index: AQHdYJs1nqEC/6moOkOYSlDC5jn4+LcTzu+w
-Date: Thu, 29 Oct 2026 01:57:13 +0000
-Message-ID: <1ca81a8669be41a6924ad0c5e042fcdc@realtek.com>
-References: <20261020130019.137170-1-spam@acio.nl>
-In-Reply-To: <20261020130019.137170-1-spam@acio.nl>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=XLwUyt+r;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=aYKPa/5O
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69T1jNm82827626
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 02:19:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=vZAdjot7kyn4ieMPLUMNEq
+	4Jit4LKlTnRhG4vJxE5P8=; b=XLwUyt+r96ctxW9+/lYHeJhVHOvxyWSy5xYcGC
+	81o6cYN1/R2XaGdBIELXXl32hz5QwHDYJRShKhhmMJO5tAgNGFzxQkzUlbP+LlMc
+	e1F0en38f5XcgY6A4vKD82kjpqwhRzywHcAbYm+R6WguGLPJ8S/rFFETA6s+EF5z
+	cgmZVOTXlGhRyds8Vlv+UYKE+9hJfNMTbqjl6pwZk3HXWOx3Tuv5l7otRV2RsBcP
+	5mrHEJp2QMwsi23TUEstRxAwHrwus8WajoN5D+cWlLa1A/XHvJwOuRlEIIhhgx2i
+	SSSVJXdyy1V68qZfw/W1YzZ2N+OhHbQVnOhlAl9Fljb5SnoA==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hkpgpsf0k-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 02:19:10 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2e93f67358eso15484375ad.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2026 19:19:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793240350; x=1793845150; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=vZAdjot7kyn4ieMPLUMNEq4Jit4LKlTnRhG4vJxE5P8=;
+        b=aYKPa/5OFPyznbLIBLGEDtJxntE6AQyWgN1r1YyiwPlx6fdrNHWg/KNlfj0+O5t+nn
+         n5lnsUxUExgAE+jqJ/yMNN9hJ7jyPVsUDT0pteHefwM/OvWKn6TIRxtT4oha3lZuRCzx
+         w74Nw/ZzfcfBOdl0V3DyLiWZmAkeAnJZRkiv3byUMoRT8oOaXL+u1W9VWwIxMLcFCU11
+         mFlXc10dlk1M/4mIxN4gzkJp1ZkCd+ghM72ibB8RqIzIqOZuyz4LOz00zKcWFzgIRQM5
+         KE/8MAo44Y1WtSbBw6AFKuyCz8Anq6zW0I5HknAms7DWiZ0z7nf2Rg2BwYQzvJwnz3aR
+         xnbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793240350; x=1793845150;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=vZAdjot7kyn4ieMPLUMNEq4Jit4LKlTnRhG4vJxE5P8=;
+        b=n+rYxog/Dt8AKd4zb2UBUOdkSQ+7MFTNZdrMBSj7Onxvy6hOWIzlkWd4TT9OXvJwVl
+         hsCWnrTl6Km0NfT5nSyI9a6pekePSOIafqthuie0s2TW5H9ut8Vte7AEmLjxAUjAwXKr
+         XSsKz81bW7UBACZ6SfacKkGYQhMn36cyWyHf5uwkGHV5VoBrV8eTO5Sd1M7ShMx9NaHu
+         gl7Xay0+vZMiOSVjxaSjLNbGgm6NI2p6xdwdIDiX/iTQ+N7yFt5o6k73Na4PFftXhq5/
+         EjBptiAiiX0Zb9DP4fBHmEaFz3b94v4wctIUpSQM9NCpREGmUdohIz6eUzcI8Ohh3FKN
+         fsGw==
+X-Gm-Message-State: AFq9FYLGAaCKh6djm+IO5hbrXf/2nDWDyVjLH44VqfuEo23tCJCvxB9M
+	Jwvo8KQc04a/kM9Io9Kkxl9d7XvHo0TvT+NboEE2NWuQuMxawaoCf88EwsAWBOGXDwuhrOkWj9U
+	5bPR5q//xnohZFFABz7CwfMyLflTsEt24+jdK7xJVMz3RF6PGM8K55bJc08tCTmeEg6ex/il3bA
+	yqdg==
+X-Gm-Gg: AYBFou1ofhdFbTT6jMc3+YjeJ8HpKg2UuojW2w1ZReXyXT62280Yq8aEIdF/cTNVIW6
+	rWzK8bbACiGNNc3F2U4niZ/E2f+TLXySXwrCBh47zxyxfrmW06rifo3vm2yNK/lHpVEQyLLLlbz
+	9kMwCWo36RuGCsUvr3Wbg5VUDSLmX4UJkqka62JzpljPZ3kofuIRghxLpH9nSbGdmslMJmrAS/B
+	+3i8l0EOVHduqcicwQsPEJET+VpB8auPCgaFNo/diwl06aHu9WmBuAQWROZaVocutsuMDXQao3B
+	pRec7bvCOlrd5OxKgJUwTYxUq1Rq1dfsMR+qQ5btk0mf5mYTGNi2gS2X9SACaG4jMLWXfsS0Jnb
+	zwr9FZs9Rh2zmx23Yx+1iDObJJOvLDYhOyDHUA7LQCULZhm6BEbIePiUdTbCsXWkpqefc0M8YsC
+	FeFgogRQzbGYKS7QQQFyRfxakyCmf0Ag==
+X-Received: by 2002:a17:902:da85:b0:2e5:6158:b9c1 with SMTP id d9443c01a7336-2eb00468987mr37161365ad.47.1793240349604;
+        Wed, 28 Oct 2026 19:19:09 -0700 (PDT)
+X-Received: by 2002:a17:902:da85:b0:2e5:6158:b9c1 with SMTP id d9443c01a7336-2eb00468987mr37161195ad.47.1793240348983;
+        Wed, 28 Oct 2026 19:19:08 -0700 (PDT)
+Received: from [127.0.1.1] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eaf77e70d5sm20571665ad.75.2026.10.28.19.19.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 19:19:08 -0700 (PDT)
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Date: Thu, 29 Oct 2026 10:18:42 +0800
+Subject: [PATCH ath-current] wifi: ath12k: don't advertise EHT-MCS15 to
+ firmware unless we support it
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -81,76 +114,108 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261029-ath12k-mcs15-v1-1-3bcfab101f00@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAAGt4moC/33NTQ6CMBAF4KuQWVvClGLRlfcwLkp/pFFabaHRE
+ O5u0zVxM8nLvPlmhaiD1RHO1QpBJxutdzngoQI5CnfXxKqcgTb0iA1tiZhHpA8yyYgd6bEfWtF
+ x1mML+eQVtLGfwl0hN4lcQtBuhltejjbOPnzLq4Slsq8mJEi4FFpwFMwwevEx1u9FPKWfpjqP4
+ iX6z6DZGAbDlFL8ZBq2Y2zb9gOaWB0eAAEAAA==
+X-Change-ID: 20261023-ath12k-mcs15-818b3a574813
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        Vladimir Petrzhikovskii <vladimir@dfb.sh>,
+        Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI5MDAwOCBTYWx0ZWRfX4r+lxfKBIz3F
+ qLQ48Iy4pEJtcjss0Hafeg9Lvp9cJA0M/VzNgB1t3Q92KP4wx+v7rrxgxlR1nZGoKrJ3Ol8Z+aF
+ ZhfS/TBLV1sDKBsj+BFVO1GROxEeGaEz33k2oA8vBAWFdAxmmKjJom4ZKeSkVnhqdaV2Yt4yZlY
+ uRrvJLREwecA1ZLgGaJZELuFWPbFdYkq0GP7afRt31lruLGYgP944WYQh+VU+lZ8+ZFDlj4/4zo
+ 2aKjGguZfQ/gcaDzRmDsPFr2U23G7TZJ+SviViNr1AJvaycbnCuzy7sHsqOjLWr2lYE2QR3XMAO
+ aC/vjIlvWXlIQYcVZRNjQmVB34+S27MVP6Ug8Pjz/kbS4H522+nM+PMc8aob2d5WfijWkqMhzUY
+ fKLgHmdLqTEl2sJkkfX9l3YXXcOllwivF80KFUNSQ2SPNoHWAsaZjxhqdijOgUBiQMe+QIvl38K
+ FIhMNS802muF5Dgpa2w==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI5MDAwOCBTYWx0ZWRfX9X/h2Uv9l9Oj
+ pe3aftLAz2ULJEojFMIrdKwP/DM/bW2JZlcoHTOb+vaQKnEaDlOKAEcJF2gIsht+yEKKg6YZLqW
+ yJLlLF3HnyrAWKTBTsMS8UuctYpnjRw=
+X-Proofpoint-ORIG-GUID: TGnrCCI9LBfb1TPPkrO8XTZggIMOLwYD
+X-Proofpoint-GUID: TGnrCCI9LBfb1TPPkrO8XTZggIMOLwYD
+X-Authority-Analysis: v=2.4 cv=T4oZ3PKQ c=1 sm=1 tr=0 ts=6ae2ad1e cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=JOAUSjMvcfAEtdXySEUA:9 a=QEXdDO2ut3YA:10
+ a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-29_01,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 adultscore=0 bulkscore=0 priorityscore=1501 spamscore=0
+ clxscore=1015 lowpriorityscore=0 malwarescore=0 impostorscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610290008
 
-V schurink <spam@acio.nl> wrote:
-> rtw89_cam_sec_key_add() installs the AES-CMAC key (BIP, 802.11w PMF)
-> in hardware. rtw89_core_tx_update_sec_key() has no case for
-> WLAN_CIPHER_SUITE_AES_CMAC, and the driver does not set
-> IEEE80211_KEY_FLAG_GENERATE_MMIE. Thus, an AP with PMF sends each
-> protected group-addressed management frame without an MMIE, for
-> example a broadcast deauthentication. For each frame, the driver logs
-> "key cipher not supported 1027078". PMF clients discard these frames.
->=20
-> An AP sends these frames. Thus, return -EOPNOTSUPP for AES-CMAC when
-> the interface is not a station, so that mac80211 does BIP in software.
-> A station only receives these frames, so it keeps the IGTK in
-> hardware. This does not change WoWLAN, which uses the IGTK of a
-> station.
->=20
-> BIP in hardware does not work for an AP on RTL8922A. The test used
-> IEEE80211_KEY_FLAG_GENERATE_MMIE and RTW89_SEC_KEY_TYPE_BIP_CCMP128 in
-> the TX descriptor. The client did not accept the protected broadcast
-> deauthentication.
->=20
-> Tested on RTL8912AU (RTL8922A, USB) in AP mode with hostapd 2.10,
-> WPA2-PSK and SAE, ieee80211w=3D1. The client accepts the protected
-> broadcast deauthentication, and the driver does not log the warning.
+ath12k_peer_assoc_h_eht() copies the peer's EHT PHY capabilities into
+the WMI peer assoc command as is, including the EHT-MCS15 support bits.
+Firmware rate control enables EHT-MCS15 for TX whenever those bits are
+set, without checking whether the local PHY supports MCS15.
 
-We made a RFT patch [1]. Please try if it can work to you.
+Currently WCN7850 firmware does not support EHT-MCS15 for TX and does
+not advertise it in its own EHT PHY capabilities. When connected to an
+AP that advertises MCS15 support, rate control may still select
+EHT-MCS15, and every PPDU at that rate is aborted by the PHY before it
+goes on the air. TX then stops for minutes while the association stays
+up, and frames sit in the queue until the firmware releases them as aged.
 
-I think the reason why your try in github doesn't work is missing to
-trim MIC space of MMIC.
+Keep only the peer's MCS15 support bits that we also support ourselves
+to fix it. Chips that support MCS15 are not affected.
 
-[1] https://lore.kernel.org/linux-wireless/20261029014857.9753-1-pkshih@rea=
-ltek.com/T/#u
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
 
->=20
-> Fixes: 940cd99625de ("wifi: rtw89: wow: support 802.11w PMF IGTK rekey")
-> Signed-off-by: V schurink <spam@acio.nl>
-> ---
->  drivers/net/wireless/realtek/rtw89/cam.c | 6 ++++++
->  1 file changed, 6 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wirel=
-ess/realtek/rtw89/cam.c
-> index 22f21a0..58a7e8f 100644
-> --- a/drivers/net/wireless/realtek/rtw89/cam.c
-> +++ b/drivers/net/wireless/realtek/rtw89/cam.c
-> @@ -514,6 +514,12 @@ int rtw89_cam_sec_key_add(struct rtw89_dev *rtwdev,
->                 ext_key =3D true;
->                 break;
->         case WLAN_CIPHER_SUITE_AES_CMAC:
-> +               /* TX does not support BIP. An AP sends group-addressed r=
-obust
-> +                * management frames, so let mac80211 do BIP in software =
-there.
-> +                * A station only receives them; keep its IGTK in hardwar=
-e.
-> +                */
+Fixes: 17bbb8aa74fd ("wifi: ath12k: prepare EHT peer assoc parameters")
+Reported-by: Vladimir Petrzhikovskii <vladimir@dfb.sh>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222136
+Tested-by: Vladimir Petrzhikovskii <vladimir@dfb.sh>
+Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-The first line of block comment should be empty. Even, I think this comment
-is not necessary. The change blow says that, or it should be 'vif =3D=3D IF=
-TYPE_AP'
-to match the comment.=20
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 01f8c6572f65..8f37ec6af6d3 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -3366,6 +3366,7 @@ static void ath12k_peer_assoc_h_eht(struct ath12k *ar,
+ 	u32 *rx_mcs, *tx_mcs;
+ 	u16 *eht_mcs_mask;
+ 	u8 max_nss = 0;
++	u8 mcs15;
+ 
+ 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+ 
+@@ -3416,6 +3417,16 @@ static void ath12k_peer_assoc_h_eht(struct ath12k *ar,
+ 	memcpy(arg->peer_eht_cap_phy, eht_cap->eht_cap_elem.phy_cap_info,
+ 	       sizeof(eht_cap->eht_cap_elem.phy_cap_info));
+ 
++	/*
++	 * Firmware rate control enables EHT-MCS15 based only on the peer's
++	 * MCS15 support bits, so keep only the ones we support ourselves.
++	 */
++	mcs15 = u8_get_bits(eht_cap->eht_cap_elem.phy_cap_info[6] &
++			    own_eht_cap->eht_cap_elem.phy_cap_info[6],
++			    IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_MASK);
++	u8p_replace_bits(&((u8 *)arg->peer_eht_cap_phy)[6], mcs15,
++			 IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_MASK);
++
+ 	rx_mcs = arg->peer_eht_rx_mcs_set;
+ 	tx_mcs = arg->peer_eht_tx_mcs_set;
+ 
 
-> +               if (vif->type !=3D NL80211_IFTYPE_STATION)
-> +                       return -EOPNOTSUPP;
->                 hw_key_type =3D RTW89_SEC_KEY_TYPE_BIP_CCMP128;
->                 break;
->         default:
-> --
-> 2.53.0
-> ---
-> Also discussed in the out-of-tree repository:
-> https://github.com/morrownr/rtw89/pull/135
+---
+base-commit: fab2e70afb13485ea4b198b204af33dd15b8132c
+change-id: 20261023-ath12k-mcs15-818b3a574813
+
+Best regards,
+-- 
+Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 
