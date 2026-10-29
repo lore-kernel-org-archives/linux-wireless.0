@@ -1,84 +1,72 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793237376;
-	b=QWQC0ELZU5LwZX1Cv7M1hoW2QaTETUbAVYESYsxXtkXM9BocXNxIYYT7oTRdXx/BJrTk
-	 XCCQxaBVBzihp+eiHD82n79faycT4DSfraAngMFmpTeAHvmQjEVaRiWqoXLKRQVuS9xUY
-	 9YXHMorrco2u9ysUPZvTHkH5jZGIBzInQf0JpJDGxF2bxdYoaE8HAIJSqUZgKbofsR08n
-	 kVcj7+RaUDBtVRwABVL70Ee0bgiT9nKZNOy+eAVXF3benB8d2u+52wzb9qIYrklpmBrbG
-	 YCud86OXWjec6UlTNpDxGkSyjoFeTNcKTSgnrT0uAoRABIG2/195x20WlHOGhlumwUA==
+	t=1793238560;
+	b=qevNdTVCiVFDWMnjCKV3Lm3QAVUqc90uGntWUuEpDhJbMaZFLou11aK/WpzP+Wn//6FI
+	 aHmmnduNcECjtY7LVXvr7c6vEQ1W7cA0yBMZd4+pBJm6vLdthC9rGO47mNNdPTuI6nFU6
+	 0pXl1svUX6wapADU1v4oDvuR1CWqNGShCs68tC+fTv5socbiaaFOB2ef/O4/n1gF+gSIk
+	 3/VqBbT6PEq2761cK4jBBgi8OeUk/q7dF4uXt3jSLDPzKVwuyNqpoZKiNZO2lVneBosOS
+	 BUAt+2mjtL79S+QinwqC14+yemjJR4pplIn38mB7Z9TIX6Wy+2vIPtADNfQ1JF1g2VQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793237376;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793238560;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:Subject:Thread-Topic:Thread-Index:Date:
-	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=4r+SqHACHaFkQVRR7p2Yzcc3V4kjgDrSI+WxPZ1suNo=;
-	b=4Xorh3IoJwmrgJzxtZI4pR1QSyIdChNVBnTJEw6ExJZBcFVs1sau6paE0YkPtcsP5/Ns
-	 zmSdypu7UDPys5O6AViALwoQrTphUGuKQcXHditZX2qowQ7ppUF7LTLz2pU2Kga6OsqI+
-	 ykAYU5I/JV/4DbVShER85Ro05qIVsaQnjEKlJ6O7ek/fEM5i/ir0WmaIcQg7OmMCtpKQc
-	 AMTSLfDPS5t+TFccuCvvrrvBQLAGvUWr6cz4D8VILdaMpaGOGR2QFSvKrz7wFL9lGxUFN
-	 pq3g3UM3n4BGBWPGt1Ux+V5LzzRBkmHIqtIwKSu25oN41Vc8GuBRDItGHLOwJ/gfExQ==
+	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type;
+	bh=EAJXQf0nbVRB9Eas4ZjjL8yesybYiT3AAaUZtH8Xc+Q=;
+	b=BMr/jJkLW0ySyKvXE8tDRlq68eNxlTkOLMNhy0VHJReyUIcA6CIIhimmOTUUf49RyOim
+	 jOe7CjtU7E2rAMzLa6zXdS6qxJs0SoJTlq5lD0eXltzPtpd45Mo8Ou4minqML2SR2DtaV
+	 Rc6theWOVnJXsPfdV9BDM3nPkHXzOd/dhhNYHyIiqNuFzenKmvBWoKpIVn4Xct/YmqxT2
+	 ZOy7/hy8L6ZeG8hc67T722APBYDxEmAGxLIul9K6Ye2u0GHE6rX1nAuPDoya6XnrAXZeL
+	 rOomARPm1lBMUWOLAQSfrSFiwUm/XP+LFcbsemZJjOu3vJcglp2OsXqr2jyfTfsnaeQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=kCEsaSfA;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fhP5wnHK;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5F3E606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 01:29:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E5F3E606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95D29606A31A
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 01:49:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 95D29606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=kCEsaSfA
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69T1TQMf82403022, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fhP5wnHK
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69T1nHiK52414104, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793237366; bh=4r+SqHACHaFkQVRR7p2Yzcc3V4kjgDrSI+WxPZ1suNo=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=kCEsaSfAwYI/0hmprF23Jfy7j9qEkssf7sNNbycYA9hEuRJOodHEOBmo8o0MNfO6v
-	 WF9m2f455euHKaMjf1H0oNl5IfQx+eeUXUT4xD6GG5GzExW4Ep88QfYnHc3S9aQSb1
-	 I4XQtMcyfBm8+MkqBZ1eDiaNoUX6GB0TJSbYEd5R+x8Nra84WZLOgqFf5+iDt7mM8N
-	 gb0l2jwO2qra7Q4A/UsFNWnY/sJmY2kuC8aYk8GJBkU/ErBF8dab29j+MzCVSPAS7c
-	 r8u+E72o826KUDdx5l5McIt4VEV7AKT3jTcxjaghjybktiP17EKyd+EIpNuwpq5nR0
-	 hCIwJpw7nw9pw==
+	t=1793238557; bh=EAJXQf0nbVRB9Eas4ZjjL8yesybYiT3AAaUZtH8Xc+Q=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=fhP5wnHKBGaMTzZ19EdJbSStn2oGUspEGiLbEas2Q6ryKeYKce8Nw8Z+jPri5aWrL
+	 aV3hb3ldVjGRvcpG78dsTYwpZwsvIdpzFTjV5uM+JUDNW3wT0FWj3ceKzDV64ai+y4
+	 87AY0YkEjGI23D80WNwpz2WvKXlwDI6nzQY2QY/3q88FMsXvlnITZbVhV1JcR1KqMf
+	 DA2akHyVuBPN6gRFnOJCfrhsQyEym5zov6/HWYVTo4yZK197xEGyn2/yXTGIIdrntF
+	 N5kj51uCQQpQ6ustIXfoLG/4jIxw12SoWuXAgYz36kC4AvTbDUNLps/jnslTmZz6qL
+	 VZr4E+XUIydRw==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69T1TQMf82403022
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 29 Oct 2026 09:29:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69T1nHiK52414104
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 09:49:17 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 29 Oct 2026 09:29:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ 15.2.2562.49; Thu, 29 Oct 2026 09:49:17 +0800
+Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Thu, 29 Oct 2026 09:29:25 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
- 15.02.2562.056; Thu, 29 Oct 2026 09:29:25 +0800
+ 15.2.2562.49; Thu, 29 Oct 2026 09:49:16 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
+ (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
+ Transport; Thu, 29 Oct 2026 09:49:16 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH rtw-next 0/5] wifi: rtw88: pci: Support an older design,
- like RTL8821AE/RTL8812AE
-Thread-Topic: [PATCH rtw-next 0/5] wifi: rtw88: pci: Support an older design,
- like RTL8821AE/RTL8812AE
-Thread-Index: AQHdY0HfQGIda1zW60KKJQiEj21Ec7cQnBmQgAIecQCAAPv2QIAAC2Rw
-Date: Thu, 29 Oct 2026 01:29:25 +0000
-Message-ID: <13e17aa587024dd3b6d89741e24be5de@realtek.com>
-References: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
- <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
- <152bc5bf-4e5e-443e-b191-198205ad81bc@gmail.com>
- <f5ec572f354f4c67a2a65b2b1676eae0@realtek.com>
-In-Reply-To: <f5ec572f354f4c67a2a65b2b1676eae0@realtek.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+To: <linux-wireless@vger.kernel.org>
+CC: <gary.chang@realtek.com>
+Subject: [RFT rtw-next] wifi: rtw89: support TX of BIP-CMAC-128 management frames
+Date: Thu, 29 Oct 2026 09:48:57 +0800
+Message-ID: <20261029014857.9753-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -88,26 +76,81 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-UGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+IHdyb3RlOg0KPiBCaXR0ZXJibHVlIFNt
-aXRoIDxydGw4ODIxY2VyZmUyQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4gT24gMjcvMTAvMjAyNiAw
-Mzo1MiwgUGluZy1LZSBTaGloIHdyb3RlOg0KPiA+ID4gQml0dGVyYmx1ZSBTbWl0aCA8cnRsODgy
-MWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KPiA+ID4+IFRoaXMgc2VyaWVzIGV4dGVuZHMgcnR3
-ODhfcGNpIHRvIHN1cHBvcnQgYW4gb2xkZXIgZGVzaWduLCBsaWtlDQo+ID4gPj4gUlRMODgyMUFF
-LCBSVEw4ODEyQUUsIFJUTDg3MjNCRSwgZXRjLg0KPiA+ID4NCj4gPiA+IFRoZSBvbGRlciBkZXNp
-Z24gaXMgb3duLWJpdCByaW5nLCBhbmQgdGhlIG5ldyBpcyByZWFkL3dyaXRlIGluZGV4IHJpbmcN
-Cj4gPiA+IHdpdGggYnVmZmVyIGRlc2NyaXB0b3IuIENhbiB3ZSB1c2UgJ293bi1iaXQnIGluc3Rl
-YWQgb2YgJ29sZCcgYXMgdGhlIGZpbGUNCj4gPiA+IG5hbWUgPw0KPiA+ID4NCj4gPg0KPiA+IFN1
-cmUsIHRoZSBmaWxlIG5hbWUgaXMgbm90IGEgcHJvYmxlbS4gV2hhdCBhYm91dCB0aGUgY29kZT8g
-QWxsIHRoZSBmdW5jdGlvbnMNCj4gPiBpbiBwY2lfb2xkLmMgYXJlIHByZWZpeGVkIHdpdGggInJ0
-d19wY2lfb2xkIiwgYW5kIHRoZXJlIGlzIHJ0d19wY2lfZ2VuX29sZA0KPiA+IGFuZCBydHdfcGNp
-X2dlbl9uZXcuIFNob3VsZCBJIHJlbmFtZSBhbGwgb2YgdGhlc2U/DQo+IA0KPiBJJ2QgcHJlZmVy
-IGhhdmluZyBjb25zaXN0ZW50IHN1ZmZpeCBhcyBmaWxlIG5hbWUsIGJ1dCBJIGhhdmUgbm8gZ29v
-ZCBpZGVhDQo+IGZvciB0aGUgc3VmZml4LiBNYXliZSwgJ19vYicgbWVhbnMgJ293bi1iaXQgcmlu
-Zyc/DQoNCk9yIGp1c3QgJ192MCcsIG9yICdfZ2VuMCc/DQoNClRoaW5rIGEgYml0IG1vcmUuIE1h
-eWJlLCAnb2xkJyBpcyBzdGlsbCBtZWFuaW5nZnVsIGZvciBnZW5lcmF0aW9uIG9mIFBDSQ0KYXJj
-aGl0ZWN0dXJlLCBzaW5jZSBSZWFsdGVrIFdpRmkgUENJRSBjaGlwIGhhcyBvbmx5IHR3byBraW5k
-cyBvZiBhcmNoaXRlY3R1cmUuDQpJZiB0aGVyZSBpcyB0aGlyZCBvbmUgaW4gdGhlIGZ1dHVyZSwg
-dGhhdCBtdXN0IG5vdCBiZSBhZGRlZCB0byBydHc4OC4NCg0KQXQgZmlyc3QgZ2xhbmNlIG9mICdv
-bGQnIGRheXMgYWdvLCBJIGp1c3Qgd2FudCB0byBhdm9pZCB0aGUgaW1wbGljaXQgbmFtaW5nLg0K
-DQoNCg==
+From: Chih-Kang Chang <gary.chang@realtek.com>
+
+A RFT patch for test purpose.
+
+It needs software generate MMIC header but excluding 8-byte MIC space.
+
+This only supported by WiFi 7 chips and later, but we have not yet added
+this condition.
+
+Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/cam.c  |  1 +
+ drivers/net/wireless/realtek/rtw89/core.c | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
+index 22f21a04a96d..10e1ba191a63 100644
+--- a/drivers/net/wireless/realtek/rtw89/cam.c
++++ b/drivers/net/wireless/realtek/rtw89/cam.c
+@@ -515,6 +515,7 @@ int rtw89_cam_sec_key_add(struct rtw89_dev *rtwdev,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		hw_key_type = RTW89_SEC_KEY_TYPE_BIP_CCMP128;
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 58ee5efc3b5e..4761a9f1c019 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -730,6 +730,9 @@ rtw89_core_tx_update_sec_key(struct rtw89_dev *rtwdev,
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+ 		sec_type = RTW89_SEC_KEY_TYPE_GCMP256;
+ 		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		sec_type = RTW89_SEC_KEY_TYPE_BIP_CCMP128;
++		break;
+ 	default:
+ 		rtw89_warn(rtwdev, "key cipher not supported %d\n", key->cipher);
+ 		return;
+@@ -906,6 +909,19 @@ u8 rtw89_core_get_ch_dma_v2(struct rtw89_dev *rtwdev, u8 qsel)
+ }
+ EXPORT_SYMBOL(rtw89_core_get_ch_dma_v2);
+ 
++static void rtw89_core_tx_trim_bip_mic(struct rtw89_core_tx_request *tx_req)
++{
++	const size_t mic_len = sizeof_field(struct ieee80211_mmie, mic);
++	struct sk_buff *skb = tx_req->skb;
++	struct ieee80211_key_conf *key = IEEE80211_SKB_CB(skb)->control.hw_key;
++
++	if (key->cipher != WLAN_CIPHER_SUITE_AES_CMAC)
++		return;
++
++	skb_trim(skb, skb->len - mic_len);
++	tx_req->desc_info.pkt_size = skb->len;
++}
++
+ static void
+ rtw89_core_tx_update_mgmt_info(struct rtw89_dev *rtwdev,
+ 			       struct rtw89_core_tx_request *tx_req)
+@@ -936,6 +952,7 @@ rtw89_core_tx_update_mgmt_info(struct rtw89_dev *rtwdev,
+ 	desc_info->data_rate = rtw89_core_get_mgmt_rate(rtwdev, tx_req, chan);
+ 
+ 	if (chip->hw_mgmt_tx_encrypt && IEEE80211_SKB_CB(skb)->control.hw_key) {
++		rtw89_core_tx_trim_bip_mic(tx_req);
+ 		rtw89_core_tx_update_sec_key(rtwdev, tx_req);
+ 		rtw89_core_tx_update_llc_hdr(rtwdev, desc_info, skb);
+ 	}
+
+base-commit: 9b0be45d4d52fd223994e151f169743a97abd290
+-- 
+2.25.1
+
