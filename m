@@ -1,95 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793333972;
-	b=vQMT+NkPeTaFS6otSdVGZje0HhVVzGlgbMTNPuv0+XroizUgVYzXMO/H1e5IccMMen5I
-	 HaiAnXANIndMv2Pl5biQ5TgXR30oJIMdxZ14zs/VeYYrIVgYC6LAAuTfy5dEBhukZWYZa
-	 waTVZ+s7FNabErRfj/kUjM9Yc+qaW5PQa142/qi0qXVHjEwmgcRaiwmKLTfZpJoAM6iQt
-	 J1wNW72CIYOevCBhhR0z7+MNhHR+WZr32bAzeee92sNyy4uWoeayZTvi9UEIwZRln3YOC
-	 w7FrmG3SfBYLOOUAObWCi5tCiM3rn0G6ncz6KjJnqz/uXydLrcax5csWPKjIn38D49w==
+	t=1793334127;
+	b=clOZXlHtIaru+7BnMSCJPZzREYYJV21JijpvUYOXWv3y9P1QeHTOa8gkuVSBWQxJe5E7
+	 hv7+W4QB9VcbLCQ2t8KrHDxoZtCgg8lN3DUchV59SY3b8lvHtzw96AE7hvXPcQ2v8k+lm
+	 lVgQZGJU2/5ejtNnZUQT9uCGxGV4YRIEzvazlQm0yIeR9O2WaympMtK8bulfwTh8muUwG
+	 mVA/19ktTCISd6EECYGwPxKCraN1U2woJsxGkDktY1n+oXdWdgbV7PjhNObizudjXy4lG
+	 UmOg534JzgUtRBWMm2OL9DBsHBgaGunHhsrk9ajMj9ZEVs4WPaN66E1RqgMWQHgBCeg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793333972;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793334127;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=ixvNCvc3ElMgxUSC7xZq0g0AIW9Y+WnUXNOWMqR4I1Q=;
-	b=GIa9OHRvYEG5CiFeA3DzfPyRh/o9Zrf989vwnnGShHPK2wtXSyT1291FDStbVga/qxJh
-	 i4Ib1q8C54Y9PCm8lorHRLMImBVFk882VD1PV4GSfApsXOt4DuJ1bm6iXA2q6oJ1kOpCH
-	 VKaTmlG5r1hSKsRIfCTIWCRWfia4iHmNb0lirMVdMoS1iSXzaAmKIwAE/ZJOANpKm3miD
-	 DXh60lcLpeO98vHctSMaKBGOiXhntpqDmJg5ebcezlh1aV6C6woCZnaEVh4GZAqugoPd7
-	 9wZNAQo/C5RlqkOf0AYHoBh22PstD3JXa5AiHq1NqyxZtyecu598GykBcoOjdI+uYlQ==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=0VilEBuRjBLpfrAybGiQrzjj9tQNqzv1uCR08XLAscA=;
+	b=Dq+ChuKqFO+vjX9jCV/dc9AhUHbc+caxQkdUG4oRFBNPkvPbs+/qqNmy0p0Mu9I/+vNU
+	 1xxgBWOHIBU/1v5eQftEj8HxQGo6ve1JZIdrhqnzAcg3ZAvkxfEP0BXzAXUblgcPakv+I
+	 D+CdbKOOR9292PlQWDzlgSU/XXIzWlAKkU8sEixFeN04EcbU0Bw3lKmWpBh10tbeVX+kJ
+	 V0puCZBbnXb8UGeafveqpNugPRSxzNw+DyDFL2vcPs/4ClbkvsCC5XTOIYJdROu97OkZ0
+	 I9oDn/WjoZbsieHx1MXy2X27L5s6mWj/tI20628V3FbVSpuU79fn61IsBwdy/2GS1DA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=IsgslOaG;
-	arc=none smtp.remote-ip=209.85.216.49
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+	dmarc=pass header.from=openai.com;
+	spf=pass smtp.mailfrom=openai.com;
+	dkim=pass header.d=openai.com header.i=@openai.com header.a=rsa-sha256 header.s=google header.b=RDNSZmgD;
+	arc=none smtp.remote-ip=209.85.210.52
+Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 897C1606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 04:19:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 897C1606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40F1D606A32A
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 04:22:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40F1D606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=openai.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=openai.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=IsgslOaG
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-3ae1da332bcso125808a91.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 21:19:31 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=openai.com header.i=@openai.com header.a=rsa-sha256 header.s=google header.b=RDNSZmgD
+Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-8490a7d6696so231105a34.3
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2026 21:22:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793333971; x=1793938771; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ixvNCvc3ElMgxUSC7xZq0g0AIW9Y+WnUXNOWMqR4I1Q=;
-        b=IsgslOaGls1pJvu5hBLCIrJnozn/KIWrwwwzBoV/v30/KrDa5ZNG2cwOkjyDunXVGz
-         /Puay8lmldHZyh8Ch+VmCqCZF37So1H/4U5sOFLaYS6GwtcgfSo86vEvmX3ptD1Azxql
-         NUXM9CHKeckLBjUi61W9V8wFevGFMAkUUQgEfH7+P03Azh/g1D2I5hXukEQbUK3mAy/4
-         gPAJ+KmHE4sbWH1bVeWANThWAkJduAHrie2x1PTriLftmJhq9aGunQM44TvLtNcNE1Jt
-         6P/gqLvRDs0oVAR0v9Du9fA9DV9wwfC95ZD5NKee2NZBLBGJ3Yx/3SIVe13kbDa2s7Vm
-         icCA==
+        d=openai.com; s=google; t=1793334126; x=1793938926; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=0VilEBuRjBLpfrAybGiQrzjj9tQNqzv1uCR08XLAscA=;
+        b=RDNSZmgD7Hfq7YIvLTbtFyEdLCDZpDX6jTl//bCh43JEUJVeU7EIP6jeh//AYC9ufM
+         mnwzNVxK7s+QgiG1J0G1p781rlZUO9xGf1FMLgynSQfEt85dZgbqrVrM/lAn2l6WRTag
+         mhrbHSBG48BiZbyWUeVtME7+N1niZ/i4w5s24=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793333971; x=1793938771;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ixvNCvc3ElMgxUSC7xZq0g0AIW9Y+WnUXNOWMqR4I1Q=;
-        b=rSzI4o/9+YOei/6Z4jas67moG6Jhr22CLRMVcLSGsepPQuLPGkArljNrYkj7KpdilW
-         eQhpmGjD88Zd+EQ+yxu6ZAFFidmKiBrE6Lb7eTwt9krnuXfzUn+Bj+rAuGn//0A4+xZu
-         qABai826xXpvEm/7Qm2PlMCZM/pQlfiCseEM3fKtHixQf8A0ta5D+dmwz2LbxrZFDSTO
-         /JW6oLVhQFXpCH1eiEhn9vqW6tygC/OeyRPd6vzHJzActnptP0N9F/QyweQfsdWuyyGB
-         HHH54D8t5r8LB8TslVgEvgG4rXhmgOrK7RQw2pO+nTDtfscpyHDC65We+KtoAC6h2Te6
-         Uunw==
-X-Forwarded-Encrypted: i=1; AKwUvBxW+Uq3qQIEFgGWNf2nelrZkc2x8eygnC6Xm1Mp17pKESCoQ1+XUX45z+ZD4I/g15iSQ+C+uhcbLeTkavyrqw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLxx3oVjEhApDtGVm9HgTwycXVkNVFwn15EuLGtAdiYioHiNP7O
-	KI3M5bmwX9PjqQTOjxN93hXWKiYjzei3j8T/FJl4zSn4tH58RbLUW6A=
-X-Gm-Gg: AYBFou0xDKddxRX7V3tcnaK2d43hfRJd8W7YSXjnO+jWaIlA+OVbZ6pg8A+2oRfzqtE
-	XMkn4LZPv+f6HcnJImUXwSLs95M6ZnCO+0hk72WFlKfksm9TiFr4okThEVWxfE3J++ySKcc4hTd
-	FIGC7kqFGwniKp6CaSOSVAqHsTtodtNSKsrGwM3LF4/IZSQst/UZsk6JELHR6YJi3lLVG8/+rlG
-	7MYQJ6acBD10IvmMU9oyxbUySNDJZSw4pvN2fo1X/Pru3KamsZ4eqiwEZhc8qlXXejKJFW+t0Xt
-	OLBL4fkI8Rh36We3IgKnbHUfWVcIjmi/9Lt1B5p2jX6yQqDJDUICTrH6zWoNbChWctD1D7Hf3om
-	D/14gexnF+PxnJbeFpsIT2IvKEbzVmu1SnpKZB2n4/cBBTGQEEdbSJRWPvWhFY1k/5XUGI+1+DC
-	DKdVjYQ7OFRFcfdqCyaE2zHQ7EkD7m7VrrXWqe+ioUUkpuOdlFC5ayIvp7Pi57/fCP/oOLFqLir
-	B+d/IYLNP1DB8Gp/zheA3vNQEEFKv/rS3oMRlwrSpr2c2ciD7KmRAG+nWvoa/pM2/EFP9v3IiXg
-	zu2MB2iRHBoKSyeLrO874K9CzZ5/wxkYgkQUGeR5OwjSAey85rwoLXCPxEJfMLC7jwBu
-X-Received: by 2002:a17:90b:4406:b0:3ac:b6eb:e0dd with SMTP id 98e67ed59e1d1-3ae8984de49mr744782a91.50.1793333970822;
-        Thu, 29 Oct 2026 21:19:30 -0700 (PDT)
-Received: from freddie-kane.lan ([71.212.222.246])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae85cb1bfdsm1030302a91.0.2026.10.29.21.19.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Oct 2026 21:19:30 -0700 (PDT)
-From: Burke Cates <burke.cates@gmail.com>
-To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
-Cc: jjohnson@kernel.org,
-	ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH ath-next] wifi: ath12k: fix MLO 4-way handshake timeout on QCC2072
-Date: Thu, 29 Oct 2026 21:19:01 -0700
-Message-ID: <20261030041902.2740757-1-burke.cates@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260815014329.3748059-1-miaoqing.pan@oss.qualcomm.com>
-References: <20260815014329.3748059-1-miaoqing.pan@oss.qualcomm.com>
+        d=1e100.net; s=20260707; t=1793334126; x=1793938926;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0VilEBuRjBLpfrAybGiQrzjj9tQNqzv1uCR08XLAscA=;
+        b=swEK0gXqEjeREPRj5craLsIsvbKZGFYMBQXe6VKSDgvYAQJ5BjQQaQrs8uTGy9nEcC
+         0WMJNbFQPK7AgrRG6YP1D7FlGyYD8elkCkCwWclCkiDdlcmyX9JOBLCmZ/hxqULPVi/P
+         DMK6thIrxlXYZyep/YRF9eDBiHMGgm9U4bkLC+nVNP7VGmS8rcv4jBUk+BqX/fuMco6M
+         GnzTrII1uiUfaJ/fys+acRYAcFluCnrRiDhkDA6Mf8htaX6x02iuMX/fDdwWuBm0V8um
+         1JJ9M+Mytgkbi1Q4sJOGxoZrda5w/gOCITiuMrw5Z/0kFKy5UzCfjJ3t5gRMF/fvC69w
+         ee4Q==
+X-Gm-Message-State: AFq9FYL56PandyWbTtUfC4+OorZM4NsKuJro/HruffOINWNJgUIAZCDT
+	GSJqQuGEysbVe2zh7X7z8eDhupqFdha2o0Uq5e8ejowQrubrEMm+35kmjsHDEgslyniWv+3Yupk
+	XQ3dMo/8=
+X-Gm-Gg: AYBFou2KTCdhGyL+VH8UYory2ZtHNY3t+NBAJauhnUdBZGF4jj12P00hC6+//Jg/RE3
+	ywoudDl6ircrAltZiAyb2IpqMKLOEr//5h1FwcsPndaV8pzrgQp5B3JIxWsszzLagXBkjBtW9Ld
+	5wz/EA7HJyJ4513DE1pXAR4qmZRXYkuAhuYr2JavRMkvLdrar4e28KrtVG5hZqkrIITidbK2LT2
+	OHYeVL9idP817DpzlG6AL04Kqb3JIV1GyxcTukkTa39Xc1Ujv7A1OpbXhrD/JguXctCW2f5j+if
+	sLCKHjZejoGAdd3AFDWJqXNgw0vi6tfbOWq5wSOPiaFzVfEP7ZSyTB22rcANh36JuTJniuBabxk
+	oLB5Z1NDLC0HUW4Jpu/kIsNiF6zwZ+nXB4OaoyFwEjGmDC9gaCRizBdMuhc3N75LFIBwfiGvior
+	T4q6GbFwA8v7sYyE3+amxVsQ0majtPp4vnFBo9m0XKNBvsFzm6MhT09/qEVIAiN4x5fVHjgvIFj
+	RyzYhZ50zWEGJdaQdPsiOY3fyT7a/5zB0s2QhbL2VW06J9tNQQ7qXKgb3Jyf3UH265On8KlFiBr
+	mvOgd7gaUhx6FEWyKDr/EDdGIwiTSOm0o1sHN6YD5bU0Q5v7ycF2pxqkgo3PWi+ymwT+FhqSrLd
+	RfYWxp1Zrguh9egIt0Vs2lajh+igBXw==
+X-Received: by 2002:a05:6830:71a5:b0:822:b69c:fe5a with SMTP id 46e09a7af769-85d3661ec90mr853248a34.27.1793334126175;
+        Thu, 29 Oct 2026 21:22:06 -0700 (PDT)
+Received: from com-75606.corp.openai.org ([199.47.143.5])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-85d354efebesm1177931a34.19.2026.10.29.21.22.05
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Thu, 29 Oct 2026 21:22:05 -0700 (PDT)
+From: Kyle Zeng <kylebot@openai.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org,
+	outbounddisclosures@openai.com
+Subject: [PATCH] wifi: cfg80211: reject overflowing scan frequencies
+Date: Thu, 29 Oct 2026 21:22:04 -0700
+Message-ID: <20261030042204.73885-1-kylebot@openai.com>
+X-Mailer: git-send-email 2.55.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -101,31 +94,91 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Sat, Aug 15, 2026 at 09:43:29AM +0800, Miaoqing Pan wrote:
-> This is observed on QCC2072 where EAPOL M3 uses the MLD address,
->
->   deauthenticated (Reason: 15=4WAY_HANDSHAKE_TIMEOUT)
+validate_scan_freqs() checks for duplicate raw u32 frequencies, but scan
+requests later convert MHz to kHz using 32-bit arithmetic. Values spaced
+2^29 MHz apart therefore pass the duplicate check and resolve to the
+same registered channel. This breaks the guarantee that drivers receive
+no more channels than they registered. For example, 120 entries formed
+from aliases of 15 5-GHz channels overrun mac80211_hwsim's 113-entry
+survey array.
 
-I hit this on an ASUS Zenbook A16 (UX3607OA, Snapdragon X2 Elite)
-with the on-board QCC2072: Wi-Fi 7 MLO SSIDs (SAE, PMF required; one
-6 GHz-only, one 2.4+5+6 GHz) failed with reason 15 whatever the
-association link, with M3 dropped by mac80211. Non-MLO WPA2-PSK on
-5 GHz was fine.
+Reject MHz values greater than U32_MAX / 1000 in the shared validator
+and keep the subsequent conversions unsigned. Pass the unit into the
+validator so that raw kHz input remains unchanged. Apply the same check
+to scheduled scans, including WoWLAN net-detect, which use the same
+MHz conversion.
 
-With this patch, applied as posted, both MLO SSIDs connect. I tested
-on v7.3-rc5 and again on v7.3, each plus out-of-tree Glymur
-platform/board patches; on v7.3 the tri-band SSID connected as MLO
-(on its 6 GHz link) and rejoined MLO after s2idle resume. That tree
-also carries your separate dp_peer fix (8b6b871332b5, "Fix failure to
-create ath12k_dp_peer on MLO reconnect"). I haven't tried the rebase
-onto ath/main that Jeff asked for.
+Fixes: 934f4c7dd3a5 ("cfg80211: express channels with a KHz component")
+Signed-off-by: Kyle Zeng <kylebot@openai.com>
+---
+I have a reproducer for this issue and can share via DM
 
-Tested-on: QCC2072 hw1.0 PCI WLAN.COL.1.0.c2-00277-QCACOLSWPL_V1_TO_SILICONZ-1
+ net/wireless/nl80211.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-Tested-by: Burke Cates <burke.cates@gmail.com> # ASUS Zenbook A16 (UX3607OA)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d790e204aee3..6cfa12191089 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11470,14 +11470,18 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ }
+ #endif /* CONFIG_CFG80211_CRDA_SUPPORT */
+ 
+-static int validate_scan_freqs(struct nlattr *freqs)
++static int validate_scan_freqs(struct nlattr *freqs, bool khz)
+ {
+ 	struct nlattr *attr1, *attr2;
+ 	int n_channels = 0, tmp1, tmp2;
+ 
+-	nla_for_each_nested(attr1, freqs, tmp1)
++	nla_for_each_nested(attr1, freqs, tmp1) {
+ 		if (nla_len(attr1) != sizeof(u32))
+ 			return 0;
++		/* Avoid aliases when MHz values are converted to kHz. */
++		if (!khz && nla_get_u32(attr1) > U32_MAX / 1000)
++			return 0;
++	}
+ 
+ 	nla_for_each_nested(attr1, freqs, tmp1) {
+ 		n_channels++;
+@@ -11786,7 +11790,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		scan_freqs = info->attrs[NL80211_ATTR_SCAN_FREQUENCIES];
+ 
+ 	if (scan_freqs) {
+-		n_channels = validate_scan_freqs(scan_freqs);
++		n_channels = validate_scan_freqs(scan_freqs, scan_freqs_khz);
+ 		if (!n_channels)
+ 			return -EINVAL;
+ 	} else {
+@@ -11828,7 +11832,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		/* user specified, bail out if channel not found */
+ 		nla_for_each_nested(attr, scan_freqs, tmp) {
+ 			struct ieee80211_channel *chan;
+-			int freq = nla_get_u32(attr);
++			u32 freq = nla_get_u32(attr);
+ 
+ 			if (!scan_freqs_khz)
+ 				freq = MHZ_TO_KHZ(freq);
+@@ -12118,7 +12122,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	if (attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
+ 		n_channels = validate_scan_freqs(
+-				attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
++				attrs[NL80211_ATTR_SCAN_FREQUENCIES], false);
+ 		if (!n_channels)
+ 			return ERR_PTR(-EINVAL);
+ 	} else {
+@@ -12276,7 +12280,8 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 				    tmp) {
+ 			struct ieee80211_channel *chan;
+ 
+-			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
++			chan = ieee80211_get_channel_khz(wiphy,
++							 MHZ_TO_KHZ(nla_get_u32(attr)));
+ 
+ 			if (!chan) {
+ 				err = -EINVAL;
 
-AI coding assistants helped run these tests and draft this reply; the
-results are from the hardware runs.
-
-Thanks,
-Burke
+base-commit: d89e1d186ec9271bf78e62771779e9fc03bf0fc3
+-- 
+2.56.0
