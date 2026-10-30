@@ -1,116 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793400088;
-	b=fqfs/Qz4SM0wfxqIy2Fe8MbpfYIQWzWWwlGHDcv7BMkZSDuptcDGBEmluf7o8ov/ANcu
-	 ZQcbpsvPB1xZSFZoCQWNLCYvE4BdTtHkgi7PMge8JvgsETqVcRQXZmmYhYUAhdxKgah+0
-	 zPUdVwVySaJpTJW6makF6czlK7/T61XoIKuQjbujCfi1nnyoo9aJgzBJDU/hDkMJs+IQ1
-	 xLlf8rcupFPbH4CY2/i70YNIEEYRIye5SpLJ8VRA0ZkDQzEclxPvHXn+s+zNwe/Fk+ZyH
-	 GJBhyppZOnI7qzz4xiQLWwY5BOZY5aHfbr8LZONSm5wUfQ1yZkTuMwKLjTG2PSH7BJw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793400088;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
-	 X-Received:X-Received:Received:From:To:Cc:In-Reply-To:References:
-	 Subject:Message-Id:Date:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-Mailer:X-Proofpoint-GUID:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=fl7ddgUUfyFcUOWgCrUPWCqwQYDJhSCBFACJjcSWhdk=;
-	b=d8wJ5ZhRB+2uaqNbZtN6tGAe0Fv+cjU7jN4jBnLMcmCmOlFsaLkI3Z4oOutVGKjWTZAS
-	 3L8Q2d2AVV5N5Q04//9pSo3fPYxQBd8D1Z9Wg9csznqWHwYxqCAUuUMKB4yer2mD3rJmc
-	 idC2BifqMu6ELPdjBcF5/LL2qKLYPp8G2cfpS4RVjAjGMeUVmQ/i8VThztPSmsLrZJnMa
-	 OSoxzfUDtl03X0zCo8q+qaBrhIEV8dozLykK6ZF7cBJSA9k8J7OsDHytIZwDPBZcU8Dd+
-	 +yE/TXppuYFme1uNELxCbQyzdgEy9WY7F+XSpNPOEnHF30DVg3EkIKISatwxUP5HdLA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=lvnc3Xho;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=D5LbNqXa;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793404658;
+	b=qseCcNyKLYqunl0PHBt3jrACqnP6O7kEwRhcF9EfqFPpX7IbsjPrxt62e6Z0/UI/QeES
+	 epVHqwL77FjAHX5Dnb8/b/zAr1NFaL9CHHkbSBIQF31+IXC3WpJWfvsZBoh2giQahoVr0
+	 yPcrafhxFa2thbKR3ShvOaLBH1BohdXx/gVv+OcoWlGNVRMhyQ+sW2vhRj6ZytzQkFvOl
+	 c6Ry/8QUGlFrOu8k2RmXNmGDZ+ps8nruoI/QYQ+0YSLB5Uu51IGWYrY9hFU9Xru8QqDBv
+	 IRKyls1DcSNLh0Gn/PGuSfBCKLQFfxQJYWx2Y/AXCOz5o5rZW9aVnZ6iQM4v4DmsG8g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793404658;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=4yzPnyew9QEMmru9umOoTOA+WxUeqUnPHxZ35Kso82c=;
+	b=cFw1k8zJMram/TyyZOe3FXQuZu8uYiI0C+ub4ZyVNBF+KWCJWSR0rma5ZjClJRofFgcS
+	 0x/sUw3kDL2Hcw3fLk6KdHecSk7fyqiQLllZxO+aM1oqMzf2EY84Y1Kwm1CPOoWl4z7i/
+	 U+fk4toB9QLuioADEoV95WiEIHOlcu6qX/1PV38vtEELahrvt0c/kwP0bokKGrVUjgaJF
+	 0hMRHATJRmqXD/k3viUmXefxNWehgfqSVn40VVLUnz/5dVEO9qgZ4RQAHkwAfCtqqAGrs
+	 VncwUbxzZDT0WEuc2D6QOBHvISOhZ65V9UlABmbBeVjBFq0RDh8x1AhIRzOWdUuhlwg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="F/enRrYW";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE783606A323;
+	Fri, 30 Oct 2026 23:57:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F/enRrYW
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793404657;
+	b=on4HdvmjDM3bNSPkHLImF3vmmStTJxVPn92lVhW542O0DSaO+cmv/UM/AtoTzNX8gIHN
+	 AizNPX7FdL93lcAq18ZCg9U2f+YxT/VJ1zSqGMU+myZ+dxV0yGDuUYcElBM8UgksXrY2N
+	 u1uOiJFikb8Og1szmTmBCTN1hnX6L73Dz54pgxh1CmismcN/wdHQamzjDBA+AXX0xxNdE
+	 ZFBCYcEy2kylb27VU/tV5hHPQKvTRVWqKC2qOlal+NfoDlo5okVvUDi7hK4UriVXQZf7s
+	 4n6H4G41gtnbs0AzxJvkkQcJg0wMklbADs7ZGlOvZHfmhn994wuWTKjVLzH0pginoEQ==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793404657;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=4yzPnyew9QEMmru9umOoTOA+WxUeqUnPHxZ35Kso82c=;
+	b=PPjLS1zxx5WMi5G149fFwFgjyWIe/NgWW1hEPLG/saaTMLqhLqwlEfs9FLWvV8YxDtH5
+	 DJSo2Jqd0TJdjyen5HtTr6+RoEnx7SfbZd6pbMIpqJ1eK72TNMoUs8DnB24qOPFge3eQn
+	 AlU+k3qyfN2EuwmvsOdFekespPIRcdzbxaxzzQvtJ+WG6gTJid2KfOd3TJzCFErF49TMa
+	 hmLQakQ1Cd0+5T4dAWZjMi9N+G7I0S/KGZQ2Dk3Wis74oUgL5ovuGF43OABjqf7h95rkd
+	 WdG3gQffWDfuYcbtMNm38twynZOONQfV7oLLpXp2CzyWx+//ajdT90K/7Iso8UkdlWA==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31C1606A320
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 22:41:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A31C1606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=lvnc3Xho;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=D5LbNqXa
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69ULtLew4185879
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 22:41:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	fl7ddgUUfyFcUOWgCrUPWCqwQYDJhSCBFACJjcSWhdk=; b=lvnc3XhoqH9ZnBJg
-	QYd+pKAXSa01anmX0lclKrCW+PD1UGRJ08m+sLd4jyRm0rmzfWZagAeokcL9y23k
-	Yh6nvKbBbq1kH2gxyX7117FZINqzsmqXa7rMUtOr6G40npA4fpv/DApVIKPQycVh
-	Le02so6Je1zmrMoZkevDaaJx91NSLENg2bZTROTslO8yPC1vz1L8qJ1SDD4n5lIe
-	jxRP1DdLylofbd5R3kDGXKo3RigHhE5vMKBA0AVM0PMGqSEdbnawbMj0W60uvitW
-	3AlgguaYrkkcycuqMSl982rAb7cG5wcrZOf+cVbnkYbqpXFagwlEPx7anWLucGZl
-	Hl4inw==
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hn2x109vg-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 22:41:26 +0000 (GMT)
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-36637676140so1756355eec.0
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 15:41:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793400086; x=1794004886; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=fl7ddgUUfyFcUOWgCrUPWCqwQYDJhSCBFACJjcSWhdk=;
-        b=D5LbNqXa08pyUqcAxTxsYlAMXzgEPYqHNrvsL/vw66ts7NMz6K3dOveH+syl/cA8QF
-         tD/w+2V+dsTldmQbLq/OlDgCHHpjXkliXgBk9VIsBRIXhhYVuSfo3lxyQqhdIkzPzu0W
-         m4qvlY7y5lD4AxkDBQfSqzJscwee76nBlwRnAWmX+uKdy6LZ29mFfbmcpW0nAvMeLSRV
-         jm80P75k+aqVsrGOxcKosWNt1eOGQ3zhaiKDrTf42SbswB9yE5Mvh4MS7dVfivZE6Cpn
-         6Lx1YGyIkI/l12gWGkrZOx0Pfw5mZqk7Y4YtYl4cw1n3jBe3KdNratF3TMAfNEOZUTvJ
-         qv2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793400086; x=1794004886;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=fl7ddgUUfyFcUOWgCrUPWCqwQYDJhSCBFACJjcSWhdk=;
-        b=Sh0mw3xC63CFgzvtbCE8OQiYmGmJmf+vuSQzyOqHwoGGp0V/32hWeGR2UVgOMxRA+R
-         k3tpRbOAx3oXWVRhA1dV3950/fwl135CEaabUXJneGxspzpLxvg3qnbAgq6o3mSDwZwS
-         Gz/THd2HkOqIN6+W+3CJrhKA7f9O5iL4n5UBQ3Jl16Kj9O/4Pj3vv/4Fs0/7phLdzkl5
-         RJIW6PsEx3L6SzU3pi06hFUvFcBwmjWFijoSxfjO076NtIw9reOnd5g3EEkuWJuNB8f5
-         3UOD5QqhBfQQr5YQvwqvouz9libgBrlP7RTbmNZvk9Hc6+MCDQ1cAFTDowSAxwWMXlQk
-         PCAg==
-X-Gm-Message-State: AFq9FYI2AZ03zjISA6fD5rkTZNKCz6sOhFZyqd9NMGnrzG/CCfAd7iWc
-	UBmZuNTrhb7zKusgKaXaGKCRMdaW1IGs3kuy+pkZC7F82QslqYuFeJ55yJc8yAhhm+8NCUbNa5j
-	FFl9K/oo/puN4eqaRe+uPIIoxNRwevl8ZUUV2CtqJpT/qa9e0ztorhtVL9f1U9qf/BMtXTFBMl8
-	argw==
-X-Gm-Gg: AYBFou0QRRjH6ioDQO3mfZ8Lx7WJyoGkcYzkIZghb/11GBrJjaa1nxNpNerxrX12SKq
-	GlQ1PMqOBAMt68eDOWZnH9/JFRpqG34vxJLUPC24hMoCi/P37GvVlzh1zZ0y/wVvT+3gO00eEEJ
-	z70MLpLYD2ZWAgrj1uL+YPs73pb1p/W5JcZCK4DSKhWXsu+uyMWoBBdCebT80NlU/ppuOYBqOW+
-	B6p1PUU92079e7v/GS5UoglrYd+n0CTOP1z19NnK/tTqGtZe0k28JdwPVeHmgkHMEe5mixcFS86
-	4MGhbwUzxttaQKDx/IA8sIs9+T7FD1vp6LYuw6K8I0V8n7f+oWFlaaobBOWJ051bKzqKJuzerZF
-	+xgMhZJBlglWR/hA+a7H0e7Vlb1PNiZoKaGyMzSTrCSRhk1WDZ87+Wutf2l5BpLX+BFRsOPOFa/
-	BKnJ0MT8sV/Rm++6oG4GH7I961vJs=
-X-Received: by 2002:a05:693c:895c:20b0:359:ef9:9be3 with SMTP id 5a478bee46e88-36a4236a466mr5138200eec.11.1793400085112;
-        Fri, 30 Oct 2026 15:41:25 -0700 (PDT)
-X-Received: by 2002:a05:693c:895c:20b0:359:ef9:9be3 with SMTP id 5a478bee46e88-36a4236a466mr5138165eec.11.1793400084405;
-        Fri, 30 Oct 2026 15:41:24 -0700 (PDT)
-Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a42935b4asm14002245eec.16.2026.10.30.15.41.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 15:41:23 -0700 (PDT)
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-To: linux-wireless@vger.kernel.org, Rosen Penev <rosenp@gmail.com>
-Cc: linux-kernel@vger.kernel.org
-In-Reply-To: <20261024053923.3585009-1-rosenp@gmail.com>
-References: <20261024053923.3585009-1-rosenp@gmail.com>
-Subject: Re: [PATCH ath-next] wifi: ar5523: don't select ATH_COMMON
-Message-Id: <179340008275.1790611.11842450357073169068.b4-ty@b4>
-Date: Fri, 30 Oct 2026 15:41:22 -0700
+	by smtp.kernel.org (Postfix) with ESMTPS id 099801F000C1;
+	Fri, 30 Oct 2026 23:57:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793404657;
+	bh=4yzPnyew9QEMmru9umOoTOA+WxUeqUnPHxZ35Kso82c=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=F/enRrYW6Gphbzj2+AhfjOx37f6LaueGAYR+9r11qrnYnQfED+10jAM1VIktmq0Xu
+	 N0vUXBhVz6W0oFDojXSj6KflWmSdKI6U5Te/lswv1cfOv9u1OS1wYvqOQL/4l/oQ8l
+	 4VcYl3ReckM/SD+pTkDVVbTyJFgIUa6Dnnkte2QhbBHhCu754hL2Q9tMjDnXewyWZt
+	 4gzC45norGCkx1aNIqBebzxxu9VitwtzWZk0sXjU0YZDRRrErRWwkf9hOapj4s/1io
+	 YGITfIB+YvbTK6IEetYioYhDFkFqNTx3QadkCNo+VVmT7HWmLrsf4hXTS7j4NgzWDQ
+	 ZjBO1QpRWQaiw==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 7DF0A442E0;
+	Fri, 30 Oct 2026 23:57:36 +0000 (UTC)
+From: Alessandro Petrozzelli via B4 Relay <devnull+apetrozzelli.gmail.com@kernel.org>
+Date: Sat, 31 Oct 2026 00:57:36 +0100
+Subject: [PATCH wireless-next] wifi: rt2x00: rt2800lib: fallback to default
+ RF config when EEPROM_NIC_CONF0 is 0x0000
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -121,49 +84,86 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261031-fix-rt2800-eeprom-nic-conf0-zero-v1-1-a118ee775fcb@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAO8u5WoC/yWNQQrCMBBFr1Jm7cAkQgheRVzUZKIjmpRJqsXSu
+ xt1+fj891aorMIVDsMKyk+pUnIHsxsgXMd8YZTYGSxZZ2hvMMmC2qwnQuZJywOzBAwlJ8I3a8E
+ xJO+TizE6gq6ZlPvnlzjCS5TvXCtmXhqc/nOdzzcO7ZuBbfsA3K2+U5MAAAA=
+X-Change-ID: 20261031-fix-rt2800-eeprom-nic-conf0-zero-acf88f6ddd60
+To: Stanislaw Gruszka <stf_xl@wp.pl>, 
+ Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Alessandro Petrozzelli <apetrozzelli@gmail.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2104;
+ i=apetrozzelli@gmail.com; h=from:subject:message-id;
+ bh=pnGNieAmqP5yjIcLc5cLxsweQychWUXH4HwSO++3Q88=;
+ b=owEBbQKS/ZANAwAKAeWL0WdUYlOYAcsmYgBq5S7vWn4nbiRcMvaqp7EBX+ss33CIwrO2HUe/T
+ h2jFTDGzTuJAjMEAAEKAB0WIQRWwqGiWlKpzW9/svzli9FnVGJTmAUCauUu7wAKCRDli9FnVGJT
+ mBdED/9zrG+b/kXudUEdQEzyWBsqeX5A8CLKQffEcyJbIXZ377ujdJSn+slF/duO2lK+t/ezl0j
+ HJmq/mfblroGPK1Fi8oqVStcyb2oy0TjcjtCH6tcndFu8tEbHKoJauSfHaVaDxVBPI/cGGCvUxw
+ 7hRPKkGrZa1vN7+2lNItzTEFZ63ruXKyF8tQfhbJm2nH1DCObCeXpd0v9rQTRSbMMUN/wZz2yOZ
+ pXi0kTkpFI3Yu6pAmizOpL2rd63CXnwCloYIhhvMjTknimowjSEptJzv2WK3NcV2ZmJ9Oy46sky
+ a6VpYKId1GYhV5RG2zzcfLCRTdwjoJKX25iSehmXQGDUWJ1ZnLuNtwN+NJtYikEp03ifn6Lly3N
+ 8iF/NxIiGif5hXAZQffJMpQC/Ove1xY4G05nITD32LcsQcS1OBSTGvfvynDzwYyGwEaMy8ZMuSQ
+ ylFFKvPX6FyBULTIVnBM4josv2srr/GUxHb19brtpQh1NmMgBHL/YmciHR2MPhODsthauZbAIb6
+ nDMXNrnTlBG9Owo86IozepfohFYpOE2Zv36I9P+t6KG+pLRHwfGqovoMPhD5r9JITrxCX0ZOaxv
+ ZeoaH5OadjfyFo77gkpiXIMKiqqC8FYVyovlUCf68Ybg1FUCqTKlL1TPa5NAPziwERqWaL4EFRt
+ Ose45R/z35s7cOQ==
+X-Developer-Key: i=apetrozzelli@gmail.com; a=openpgp;
+ fpr=56C2A1A25A52A9CD6F7FB2FCE58BD16754625398
+X-Endpoint-Received: by B4 Relay for apetrozzelli@gmail.com/default with
+ auth_id=1366
+X-Original-From: Alessandro Petrozzelli <apetrozzelli@gmail.com>
+Reply-To: apetrozzelli@gmail.com
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.16.0
-X-Proofpoint-GUID: 2MdXJ_VGT6fTDnUWNuxs-1iMYNQK3plK
-X-Proofpoint-ORIG-GUID: 2MdXJ_VGT6fTDnUWNuxs-1iMYNQK3plK
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDA5MCBTYWx0ZWRfX+TfDql4gVVAu
- efI9ZEFq+QvO+9NxIkgn91n72emIOENCLAElOYiGF5/lrCUqEZ+TDnyCiGRx3KXFqW/3Cp9cHFQ
- jjT/iww1vcTLL7/SdUN6HN/bLpDB+c8=
-X-Authority-Analysis: v=2.4 cv=abD0Dhot c=1 sm=1 tr=0 ts=6ae51d16 cx=c_pps
- a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=EUspDBNiAAAA:8 a=zlQJhSe8P0IDTZ8m2KIA:9 a=QEXdDO2ut3YA:10
- a=scEy_gLbYbu1JhEsrz4S:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDA5MCBTYWx0ZWRfX9Q0LSBRzN9oR
- l5D+gGSHFE4KAp26aiMgKsk2mo4maD6GxjuBYxCsATaHBCsTo5UtxJRkIK1mTL84xmEfIRbLydf
- b+bxe1W067cELkY4NZNhRs4lxGNa2P2vJMLW3kk5JxxFso/os+lbcONC5vAC1cmC9u+WnlgVdi7
- RBIgrZCpdxRUyYuySNP2Ti4i4z6y/pBJhl/WtRUS3MPENH+xRaGDfvhaGnEnuk0xlLX6HBM0GXC
- eojLFkPXgR/7SWC2J0T5ShUhpDtqcLt+cASx2diB0T+5y+ddAkoeLwX/LPbu6ASJPfmSVXWJdgU
- XLnDl96Caaj/F/SkCXaRmyvcISCCrs/jMpebo6oeSYRaOuGt7MVjGP5HIL8VJXozEmQKa+3kKfI
- gHLh+cicohEYfq7Bxfo8WUiLrIUlLMqjpKeV8E4bw9L16T3TcIHVjMSHIuYgSzHS+mQJCbVpsB/
- Pyfh/dI2Yab9DRTgyBQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-30_07,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 adultscore=0 lowpriorityscore=0 suspectscore=0
- impostorscore=0 spamscore=0 phishscore=0 bulkscore=0 clxscore=1015
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
- definitions=main-2610300090
 
+From: Alessandro Petrozzelli <apetrozzelli@gmail.com>
 
-On Fri, 23 Oct 2026 22:39:23 -0700, Rosen Penev wrote:
-> ar5523 does not use anything from ath.ko, the module does not depend
-> on it. Selecting ATH_COMMON only builds ath.ko for nothing when no
-> other Atheros driver is enabled, so drop it.
+On some Ralink PCI/PCIe wireless cards, such as the AzureWave AW-NE766
+(Ralink RT2790 / RT2872, PCI ID 1814:0781, subsystem 1814:2790) bundled
+in the ASUS EeeBox PC B202, reading EEPROM_NIC_CONF0 returns 0x0000
+instead of 0xffff when the EEPROM word is uninitialized.
 
-Applied, thanks!
+Currently, rt2800_validate_eeprom() only triggers the default RF2820
+(1T2R) configuration fallback when EEPROM_NIC_CONF0 is 0xffff, unlike
+other EEPROM validation checks in the same function (such as LNA gain
+fields) which already check for both 0x00 and 0xff. As a result,
+EEPROM_NIC_CONF0_RF_TYPE remains 0x0000 and rt2800_init_eeprom() aborts
+device initialization with -ENODEV:
 
-[1/1] wifi: ar5523: don't select ATH_COMMON
-      commit: a3ddbb45768717b5c9f923489387cf55c838d1ad
+  rt2x00_set_rt: Info - RT chipset 2872, rev 0200 detected
+  rt2800_init_eeprom: Error - Invalid RF chipset 0x0000 detected
+  rt2x00lib_probe_dev: Error - Failed to allocate device
+
+Since 0x0000 is never a valid RF_TYPE (valid chipsets start at
+RF2820 = 0x0001), extend the EEPROM_NIC_CONF0 fallback check to also
+handle 0x0000 so that these cards initialize and operate properly.
+
+Signed-off-by: Alessandro Petrozzelli <apetrozzelli@gmail.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 2e2e382b6..dda5ba2ad 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -11047,7 +11047,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	word = rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0);
+-	if (word == 0xffff) {
++	if (word == 0xffff || word == 0x0000) {
+ 		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RXPATH, 2);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_TXPATH, 1);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RF_TYPE, RF2820);
+
+---
+base-commit: 2c50cd5d10e8723797f28c7978f1f61688e0c0d2
+change-id: 20261031-fix-rt2800-eeprom-nic-conf0-zero-acf88f6ddd60
 
 Best regards,
--- 
-Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+--  
+Alessandro Petrozzelli <apetrozzelli@gmail.com>
+
 
