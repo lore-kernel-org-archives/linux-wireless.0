@@ -1,98 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.161.48
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793360062;
-	b=lcijDKH4eG6GWlfClJtwUF5MkEyXS0x1Jkg7XCIBOSUQzn2hGknHIr5eNqU0ZB2mVEko
-	 zyYZzMtEEsrgS5488l2XshZCYRelKhlYzz1kcfwhCFbuPoSVTVGtIycXsLrBNFmUecJW/
-	 Whu1765OyRvDoBczHX7NJwEPs0pGBjHoAJmG3f25q1EAsynDPhX3SlbbkSWtp69b8Qhps
-	 sKmMi8qyvsFV7LhAoE2UAXpS3JaCrPo20V4dMaxGjRvY/EtU6CUwURxuqKHNbSLZRwLz2
-	 nG8mDOdxDnTlWvQLJCL5XR5wnuo2zLwz9Tp5SUt6buW4MXENslGOB2rbN53+lvqj4tA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793360062;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.45
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793366512;
+	b=NrUV5wjDRPZNJl/vJroQJzaV8QonWCY9U0Q8hB6fc14mXmBcN1sXXNQk/Bq34bCEEg1K
+	 AFlpMxxRZFoJokXD6u+IBJKutxemBaQBfGr5Znqz37gF6XJXmkCu2f5fwdJWCCkXwVSnn
+	 4kfINVWFcg9SX8nyz8DumR9oxeDjZ0Focj1FZByVdp/yaGpG0uNek4iFtJqRzNCTW8pqt
+	 KESwsqmMm6mUZgVJSam+nsNb+C510tmjQorwgiusmeWfLdsAGDswX656UCflamawb6vg3
+	 jMZ7J6jE80BKsPwqR24Uo0N/I4BrT12XXNgTqs/cPppgRPA0aHSBLAp9TzVWg1cFOlQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793366512;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type;
-	bh=CJXv3k/n7KXs20ZCrHngIKsI9Ju9rPGpQzEVjeHfCaE=;
-	b=qaA0kp88gt6x9pKOhVvxaGPEN+CCflafzhN+7P66qLWDvAY3FLIuAOFzo04633cXKEMx
-	 5Ao6okrMLOd1Zs18KuMyE3uHyC00ZnzIRimBH240guVYVUsSidnxa9JXNNGX/KrtZB/4s
-	 e/ZXv04pJ0mD7pVQc8wEjZVXeD7O5KwycupCzS4T0iRRRiIVFdX9Ar77yZ59It/x8Sup2
-	 9Z3jM0mcsCNUBg1GltGu8ifIbjjuoEqdi1BWl3P/k5F+6/+NkQsQyV2869tJqOx99xX9D
-	 jGfg0YUqUDRqPuwa9UYf/ofh2T1sKKxOwcmzGVQwXdGl66KX6teZvXsnW1Z0II6lhqA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=HviuIgC87E/yRdmzffRcUTRCSi2vUjjI/a/n/qNyN10=;
+	b=lBqPuH+pAy9pU8J71JFYMJMNG/zZay9icFMAHY4Cz4d7F5LdUaNIRvDyVijBLwt9IwL3
+	 ORY04zfvx3J4A4ApPp3X01Ep36391+FvNCScgB857HeSvl95IWWG3O+Fq+FQZ+eJmXq6G
+	 CAzM5tnNhvnk9Xl5+5RgyUj+xxaSDRNyK10mGlALS9rv86h6BMPEbs7dVEmcU7uwPbGLT
+	 OmQYLfLgzcjUH25Umjaz8H1IxkAEjsWUJQp7nudGLS4RXJhB245644c+HbBjrlnkVPP4A
+	 fjTgSgY3a830a5SU6Ro9gtDLapG3zSOQyPUzR4fg2Dxtk5BxAT8muw2hwy6UVroYNVQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FE2zVtbx;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.161.48
-Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="fCdBm/fa";
+	arc=none smtp.remote-ip=209.85.128.45
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA01606A31D
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 11:34:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BA01606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55739606A31C
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:21:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 55739606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FE2zVtbx
-Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-6b19e291cc6so559910eaf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 04:34:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793360061; cv=none;
-        d=google.com; s=arc-20260327;
-        b=KE0nJIh0FLWMmLaUxryg24o+99RL4hB1BYbKiWh4BufUHlJcwEqjL5RJoPT9c7YwZO
-         geoGwTyoGlk+GejBIHfUCnKt04dxCnz+Y4rR2DB15Rsq200mHdihzJ/cN66ouhE6vp94
-         xh2oUwtodFyrh9jX0LLKbDKhai/aroIU0ZrNai0eh1ZABj2CyyH2gSnRmRMNNgBc/OFQ
-         1rykHBf4IHq+U6IfHkhnMVxuN5S8y1U7QHviOaAGXub8IuMIdR6Q8jZ8EyaB2ZcTAAS2
-         4SW1kqPRPypVTvHF0epzPTtrEKZ+vNEU7l7OKcBzH8MS1rzgjUyO77McQp/2ZqZRQljo
-         npIw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=CJXv3k/n7KXs20ZCrHngIKsI9Ju9rPGpQzEVjeHfCaE=;
-        fh=f9hFQUVjbQq8USMzmbA7B+6DLDxgXYGTKGlXxISsNwQ=;
-        b=Gp8jjL5DLOfFSSBllk2xCezb3upw1l5RHm0nLQcMi/6iNgcTzeOGvDdtyTJkl1OdBr
-         G7Z4n0fG9lBcH6HfKwARdrIynjm8dKs20NhaFjFJF1pCqQ7vtrmBN7zqL9LVVcTv/n6W
-         gI7KoiTCEiGd4De5XpcXCYORatAxFFw3s+MVzv0/7mqDtxjaQKZYTzQHCqsXDwhqbr1y
-         ZrVPV4P/UblaJOra8FBwvC0sjSrJ4WGkKeBpj0bXemmNL/pdM8pi2816r4n3/Pf8G/mb
-         mQP+OF4mR1N963g8XWh3rmdLG4aJOMdQqiqPJwyQrTUoqZwR6WvWAWg/02clEsLPnR5l
-         xhug==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fCdBm/fa
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4a5177d78c7so6974455e9.2
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 06:21:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793360061; x=1793964861; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20260707; t=1793366511; x=1793971311; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=CJXv3k/n7KXs20ZCrHngIKsI9Ju9rPGpQzEVjeHfCaE=;
-        b=FE2zVtbxSuofRjs86yss68iCq8FcHOY4DtzD1sxfY12zyLwIXgYrc46UI5m0U89T12
-         xj40d78w2zSXYg88OCXk8N/frh1g1kIYDjEPX0uxjwRuF4w54pxEbg81qS3QJOL/a/VK
-         dp4dJ/u+rDZijJZLv2Bb+A+Gy+zrqGpFvgQiMZyzf9ALO72FJvGBHPAbRNUiYR9DMUJG
-         hhmGZ9UH7aCWQvVhj17+LUYIYRiqVcU2iqHDjFrdLoldnG/yPKMWBh5ZTpTeKiKQi3RG
-         VTyIWNmC7830QD3L6wGB5aGt1imejnwze+mTL/gHDKF79zwnSxSTXS4pZTDEkYpyRsYI
-         nL3Q==
+        bh=HviuIgC87E/yRdmzffRcUTRCSi2vUjjI/a/n/qNyN10=;
+        b=fCdBm/fa/JyARCTD9TVi/fK3vJTkZEiIKkIsKNBXfjERuJrW7l+eD58q6lNCqvJ0DA
+         DYl4V6Tshl06yRP5PdXWEWKCcaEDwYjymZb7IIcbyzMvk6vxQeMXv4evwhfoUZdOyG0v
+         2J8SWRpA/2bWWopGl7idEY27kcoqFPE45kVrcZqxZS1rMW6wWN3+zXMMEiR81mVJxm8D
+         m51P+y8tqWDcwfZSY0AlVz7piv6vM9IWNwohCDPkVVc/Pus9Ki9w6kr2v4ATn4IarR/F
+         o4YaGCy2cF7RCKhLhT4HXsW9GnYMqFpDjt425VfraEPBij432JNf528O3rHZJLPohItj
+         WJYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793360061; x=1793964861;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=CJXv3k/n7KXs20ZCrHngIKsI9Ju9rPGpQzEVjeHfCaE=;
-        b=ye1bOmm6s7B7PQREljgsbn6LbHXEdKrdLsmTDd28wW/62FVVEOuFrOcJZsCTlRazmE
-         9+NFh5ad/G9y02Yi2cWmUeZKb2T9Nvmjvvg2diKauBzkVZnqGSsO4i9eLtR9IDBmYZPp
-         eOGYbsYm0RFOm320hx6fan8WcJnJ8RxHif9FkVhbgqK/lK1DW6VPSVUK0EnN96sW/tjn
-         fBqTcj9OaQw694E7PgqJVDPz5JASCZdB5NNE9MRW7HpIOhBzGyJ5D/s/Z2fhZWYAA/hB
-         MhE1CVrY5McAi7CB/xDyCGFAjqJ5uvAujL1e3IOPQs0ONclZv4S5G7gFPEPZA+zXQk1Q
-         1aqA==
-X-Gm-Message-State: AFq9FYJ2xaHo+6YeRYQD6ayPAr0oPX1hXdwo/JbckAi8gplPrENMg0aD
-	gu4GgjXBFJD//Rjrnc+nCDi2Y2FqKqV38NVHGarvpjrEWKrv1pnkZlkv6jO+Dm2nv0tlK0vE+YN
-	zzOOj5E91gi4vLc3Fzxl5zfSvS5FXqwg=
-X-Gm-Gg: AYBFou3XD8BnCQpEpQTfgGfB+AvjtMFHiBwYU9qxPoRFo9ZiSBxw01MsPktMRMpHdKu
-	CnO+PsZrMepdENEDeTfWqwiT1NhaYGzMmGwpxZElOql3aaZ5YiR/VD7rmkA5iATIij3ihv44QrL
-	iEwWCEi4lWUNIEfjlu8GZXHjrWCv7uEVWzv4DfMgDR/W28U4GT2mor4BstLtNfSW+Gx/Z2uCcz+
-	PFa+QQ4aNE55i/dqM7WWTLRGX9hJ75coL5zeEfFv3emKiHDy5MtIlokAaedRS1AC7eaEayYL/pX
-	zNPfjM+NygH3eWPMohuUnLg0+xyqQW9TIEHwr9o3MCgVRe1Kd0fAc2HPi2US58oCJ+tbyuFUOW/
-	Cjx8aNbvH7bQWAvqpJozc1ktMV0hD9ZqdQ93XjBHqchbd/XxYrB6fkMxr+tCiijHxRcDMaXs=
-X-Received: by 2002:a05:6820:221a:b0:700:5222:ca29 with SMTP id
- 006d021491bc7-714f2a1abd4mr1049728eaf.70.1793360061203; Fri, 30 Oct 2026
- 04:34:21 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793366511; x=1793971311;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=HviuIgC87E/yRdmzffRcUTRCSi2vUjjI/a/n/qNyN10=;
+        b=qFhTq53VfdIiJ81qeniEAgtPQWE53KzxEMstxbKLfHrKEylZBgI8bRjeQBjWqjy0qo
+         qKqmB/D9mqe2tQRJiM+RvdVpi5q6sQMEhtmTeCaFwy/bkZK+wGyGVYw9bJBqJq8l2vAr
+         lV+7hqjN+6szuyTRX49bpNOhspJI9PsI9SnHe+uS5GQR9MxwyhP4APWInY/swizXaTbS
+         tOsvkfZMLE6P44zbdq9krEFb4eo6FA50T9vfqXSU4pd1UTBaZFAjOrRBNLuyC2ZF00ky
+         a5fbTcyybewahMQOpBPI4MZq9a5fDv4MwxKe4mxV5QjRNSW9HOmr8Lsa65vLR6JLY/en
+         LqdA==
+X-Gm-Message-State: AFq9FYJcZhQ7nfI3oXLb0nHqzHzphPObVFy+wui1izX9gXA2qz6PgK4O
+	8IdbG5gUR6ZzgLlQbbGVy8hs1Jo91/PEZ4k9QtrLIyOBJakfdzSG6CNb
+X-Gm-Gg: AYBFou3lIKOUxMm0bwLEc9JpLusl0qY2xXho0vNgtDQM+U2VjfW92Ps3L/AgsakDrCn
+	bIohbl5k66wmJP1Q4mAmD7LZGOqy/dM1rF5W4W4fKsU5FqttwBwGV9lhYGWeogs2WhvdOkxHKlN
+	aFdJT+lJoNYUYUB1mYDyvXgDT/hnd273uXt1PXhXTpM/yCkJ/2PKIDTC065PaecCWH6l1rP3dLa
+	680UGsJtoVxO2QBemjyUX0G9UZIlHcbsf5Gte4EaPBvHJrFYc2KbXsn3yMCXQamnT52rg3ZchRB
+	OMJ28hUsF2861lNg7m7gFqaqzc5aW7s2UuwjkuaB+1EpGTtJsQjIwlE0PQx+M1eTra2seTU7lfw
+	Lll7yaxczFsQ8gTTYJJMy7lylb28yK3H95dlLT4hdnSNa7wDm0xIiuYLoqiYKN+58tBduH9qnXP
+	omJpq3JFWOm596nDmmwIJTWWlvFZogvqH1wzYk9hEsu4SVHlvzRUECASfNx03YNxxo/LXSpu6tc
+	dyIRC2/rpb1fETD1pmp7sMiOen9bsQFneh7pIiMkTsTrS8PzT6OFvnmNv1bzxfGvtixzDR6oVpS
+	JQRKvbPhjtOVw/2WRocHPj6TMRs9KeC1/K6HZgJ6r58C9RGRuiJueM8bgmfDslsmerCqqHqhM9r
+	Y0FXD
+X-Received: by 2002:a05:600c:4f86:b0:4a7:669c:c988 with SMTP id 5b1f17b1804b1-4ac18b7df2cmr50002535e9.23.1793366510349;
+        Fri, 30 Oct 2026 06:21:50 -0700 (PDT)
+Received: from [192.168.1.7] ([31.176.170.175])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa81a896ecsm144128695e9.9.2026.10.30.06.21.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Oct 2026 06:21:48 -0700 (PDT)
+Message-ID: <2070cf87-bc38-4237-a58b-6554572a8842@gmail.com>
+Date: Fri, 30 Oct 2026 14:21:46 +0100
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,59 +91,35 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261029134752.1299130-1-hjf3108@gmail.com> <20261029134752.1299130-7-hjf3108@gmail.com>
- <20261030091743.GB27096@wp.pl>
-In-Reply-To: <20261030091743.GB27096@wp.pl>
-From: Jie Feng <hjf3108@gmail.com>
-Date: Fri, 30 Oct 2026 19:33:44 +0800
-X-Gm-Features: AclHuK-N6QpbeSEmhZfwg765GOgC1QPRQIYNjXEw7z2xfYb6Cqp8FGOOTtNKHCY
-Message-ID: <CABOQOSX6mBCtTTg9eJX665t7tj65jo=9hVTgr7pmFRB6csG2Yg@mail.gmail.com>
-Subject: Re: [PATCH wireless-next 6/8] wifi: rt2800: set the mac80211
- fast-xmit and aggregation flags
-To: Stanislaw Gruszka <stf_xl@wp.pl>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] mac80211: move static function from header to
+ referenced file
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+References: <20261017155509.128114-1-omer.e.idrissi@gmail.com>
+ <20261017155509.128114-2-omer.e.idrissi@gmail.com>
+ <b60d12eb-dad1-4482-89ca-155dfcb410b9@oss.qualcomm.com>
+Content-Language: en-US
+From: Omer El Idrissi <omer.e.idrissi@gmail.com>
+In-Reply-To: <b60d12eb-dad1-4482-89ca-155dfcb410b9@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, 30 Oct 2026 at 17:17, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+>> Move static function from header file to only c file it's used in.
+> why? all the drv_ inlines are in driver-ops.h
 >
-> On Thu, Oct 29, 2026 at 09:47:47PM +0800, Ho Jie Feng wrote:
-> > Enable AMSDU TX/RX support for this driver, which can increase
-> > throughput.
-> >
-> > Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
-> > ---
-> >  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > index 032cd6ac345f0..8b4458a74d33d 100644
-> > --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > @@ -11861,6 +11861,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
-> >       ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
-> >       ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
-> >       ieee80211_hw_set(rt2x00dev->hw, TX_STATUS_NO_AMPDU_LEN);
-> > +     ieee80211_hw_set(rt2x00dev->hw, SUPPORT_FAST_XMIT);
+> first rule of commit text is to describe the problem you are tying to solve.
 >
-> IFICT this flag will not take the effect since we have SUPPORTS_PS.
-> Also for WAP3 (802.11w) we fallback to software encryption -
-> that will prevent fast xmit as well. To truly enable
-Yeah, that is true. I also have a patch that enables hwcrypto in that case.
-> fast xmit, I think we would need add hardware encryption support for
-> WPA3 and also compromise by remove Power Save support (which is disabled by
-> default, so that's possibly fine).
-I think maybe a more general patch to mac80211 to enable fast-xmit when PS
-is disabled and not only checking the feature flag will be better?
+> don't add unnecessary churn to the wireless code.
 
-> Regards
-> Stanislaw
->
-> > +     ieee80211_hw_set(rt2x00dev->hw, TX_AMSDU);
-> > +     ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_AMSDU_IN_AMPDU);
-Although I think this flag will still be useful for this patch.
-> >
-> >       /*
-> >        * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
-> > --
-> > 2.53.0
-> >
+i moved it because multiple files include the header and when those are 
+compiled they don't see the tracepoint definition because the next patch 
+ifdef guards it under the same config that enables the only file the 
+static function that uses the tracepoint is called from.
+
+this static function was only used in that file and i didn't see any 
+obvious reason for it's existance in that header so i moved it to the 
+file where it's used.
+
+commit messages are kept in the git history. should i send a v2 with a 
+better commit message? or is the patch series problematic otherwise?
