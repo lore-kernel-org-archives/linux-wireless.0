@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.166
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793371023;
-	b=Cogc6pNsmrHaLDOrh6wNC+Z82K3tWXrO6EZMEDoytXbXuUU+CtaKcSb+nwMoChBanoGV
-	 vTpcyprj2Uchq1VfX+F54zPFKBqci5iAvsqjFUqkvEcs8t0wNOzmEOtN5VYWQOdsUOWA3
-	 BxKNqzamstoPI1QG4Gz324siM1l0zwshfGB89T9NXYMQd+g1ekUA36VLS6Osoz9Z94amT
-	 hpZfuFUDmIOw2Hxt1QtVWrT7ydxmGMakAT1Y4VTK3na4KGSw0zsiNymMz3BrczICWTNPT
-	 lldfICv8YCcCYhwOKaw+5ncFE5u3bkc3BWttG8qDGDK+aQx1Mv0uTVnoqSCnZa4ofbA==
+	t=1793371907;
+	b=0LrKSviQokU7g0GUqoRoyXpHmLbZqMXixw9uaLbBRifL82RbcwhSDjGfqdmayo4GcHhC
+	 Yv8LSTTLqaj9NgnigIC8jG5hIvHinIzaWOx9D7DzGf8fqU3TgYFMabHJ/J7IxB2393T+I
+	 T/KSC+hEwOjbRZ4LyJdzLfwzrcCQTvBQjx7SvUc+w7770TFqNOE/vIGQhI80iugfWS99A
+	 MzJ9zbqYgv9LNct1+lUxblqpcqnElYbYa99V/jNqd733/j/8cY+YYEjGg9kmNDjfuNZSw
+	 VMH6B7HwZXEWe5JEGz2/XiuMJQ5NI8+6a718rAEgyD7KQPpb9HqeSos7PTA73NJVqRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793371023;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793371907;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
 	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
 	 In-Reply-To:References;
-	bh=wiIa6Cr2sZaLCXVMCzH0OBX7W4amt0iKKKNP2eGSOzc=;
-	b=MvXpeWj1y5idd9djw7GXOOiVLBhGlQC9thtFYb185f2o1IFIijxcGXwEiJ1x6pwAF+M2
-	 /xvsO1amMRQM6gIQhbLx0eK2b94OO4ExanupIosy1nT5wKreEZlCgSMni0sbsnqJXXA8d
-	 8QvfDq7qs9Ni+s9bU82oznrebtzgqLhgbA8Sdf3y10m1shf/3dasGkEksM3GXcIGHmXUc
-	 jZiA1wLER1VMzNYxlXdxotqLszlhZA1PcQGcvYQWNTC0bhWC8Q+ZdkqfuEj77c0KRKPDr
-	 nrCo1wl/Ssp3N+YWBwDX3418JoiBKv0EXZIjCZXUJF3JkSoFeYRR7C+LDQhk61OOi4Q==
+	bh=2HtbNoPaGhVx1oIleRCrYh9Q+TVpcVTko3WuWXqXEEE=;
+	b=3xFch0xOwd7fP5sQn+Nmqzz1g35INltq+gQsMMSoW7oseLvhYacFC8McLO6TJU80PWmS
+	 Dcq/bmHxL8fnOUML5AkRhbodvQmEefoYTutOIWwUDaUP5UF232tgLn1ZIoxVRp9FjIxNk
+	 uG8XFTrrEJM7Lq3Sa7wrLdwt2uSxbUQJ3tIL3rMrdwTQAR5z6EwZAGD7vRB0wyO3myzAh
+	 e1DLES7uCt5zb0Rf1jwWptwT+PkrKwrHYpFAZI/k4tZ5LTT6XTiZH1Nyu7RpDjW7n/cm/
+	 R2/FqfUAKGty+QfdoggD16RcFNnZqinjS1efd78iQTJ4b2ispY2EKJgNBaaqzpwYlVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QDLxa3VS;
-	arc=none smtp.remote-ip=95.215.58.53
-Received: from mta1.migadu.com (out-53.mta1.migadu.com [95.215.58.53])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=IG002WtX;
+	arc=none smtp.remote-ip=91.218.175.166
+Received: from mta0.migadu.com (out-166.mta0.migadu.com [91.218.175.166])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0640A606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:37:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0640A606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB25A606A31E
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:51:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB25A606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QDLxa3VS
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=IG002WtX
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=qggKogTdOwOMj/yNNYKeKJscDWkEFiFK71V3XLb/xGk=;
+DKIM-Signature: a=rsa-sha256; bh=HKmC/zLtQ35zzhpn8XzyD4VRPec5/dy8PDlsxOcGW5A=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793371019; v=1; x=1793975819;
- b=QDLxa3VSJeSVFow5vrSVdIKi+2nO6uShhD/b0bHUolKnFeYATxk9qqXCAIP/40kpzDe19/jz
- 82kiy1OaxaOCl1Ih2+hLl1uE75FDy3FXJHbt6jNYFahDi8zdaMHhlRQOxBmEbawwTOrITaSbiU3
- orYVD+g0RSPVcQKnnf9rpCtQ=
+ t=1793371903; v=1; x=1793976703;
+ b=IG002WtXR3CahR9dJc7fQkF613xha+VIj85wMJAmnpxDyjG2MBwfsK5A9mA8a554UmeaMeZU
+ +wxyeBs9vTKbHz3jT499XGFHJg2FXGBVvSFVi6293YEE1377/Dy3uLg/jTqDfklJQJjhcyG5HBl
+ QiEy+H4cRqu6FQLtL5nKXflE=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ca7b49e6f113364b;
-	Fri, 30 Oct 2026 14:36:59 +0000
-X-Mizu-Trace-ID: ca7b49e6f113364b
+Received: by smtp.migadu.com with ESMTPS id 0481539a351a8ac5;
+	Fri, 30 Oct 2026 14:51:43 +0000
+X-Mizu-Trace-ID: 0481539a351a8ac5
 X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,70 +56,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Fri, 30 Oct 2026 14:36:58 +0000
+Date: Fri, 30 Oct 2026 14:51:43 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <1c6b269275da44f667b6cab73968fee752860eda@linux.dev>
+Message-ID: <4a555879477e2c5b8eb2f2cd430157adef580461@linux.dev>
 TLS-Required: No
-Subject: Re: [PATCH rtw-next] wifi: rtw88: drop C2H packets shorter than the
- C2H header
-To: "Huihui Huang" <hhhuang@smu.edu.sg>, linux-wireless@vger.kernel.org
-Cc: "Huihui Huang" <hhhuang@smu.edu.sg>, "Ping-Ke Shih" <pkshih@realtek.com>,
+Subject: Re: [PATCH] wifi: rtw88: usb: stop RX work before unregistering
+ hardware
+To: "Zhao Li" <enderaoelyther@gmail.com>, "Ping-Ke Shih" <pkshih@realtek.com>
+Cc: "neo_jou" <neo_jou@realtek.com>, "Sascha Hauer" <s.hauer@pengutronix.de>,
+ "Kalle Valo" <kvalo@kernel.org>, "Hans Ulli Kroll" <linux@ulli-kroll.de>,
+ "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
+ linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
  stable@vger.kernel.org
-In-Reply-To: <20261029170017.832708-1-hhhuang@smu.edu.sg>
-References: <20261029170017.832708-1-hhhuang@smu.edu.sg>
+In-Reply-To: <20261028141904.8707-1-enderaoelyther@gmail.com>
+References: <20261028141904.8707-1-enderaoelyther@gmail.com>
 
-Hi Huihui,
+Hi Zhao,
 
-I have two comments below, nothing major.
+Thanks for the fix. One comment below.
 
-October 29, 2026 at 6:00 PM, "Huihui Huang" <hhhuang@smu.edu.sg> wrote:
+October 28, 2026 at 3:19 PM, "Zhao Li" <enderaoelyther@gmail.com> wrote:
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wire=
-less/realtek/rtw88/fw.c
-> index 945fedcd375b..2e37c304cde0 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.c
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
-> @@ -353,6 +353,12 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtw=
-dev, u32 pkt_offset,
->       struct rtw_c2h_cmd *c2h;
->       u8 len;
+> diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wir=
+eless/realtek/rtw88/usb.c
+> index 64e1c3420e0a..1d2759eb96bf 100644
+> --- a/drivers/net/wireless/realtek/rtw88/usb.c
+> +++ b/drivers/net/wireless/realtek/rtw88/usb.c
+> @@ -1370,7 +1370,10 @@ void rtw_usb_disconnect(struct usb_interface *in=
+tf)
+>       rtwdev =3D hw->priv;
+>       rtwusb =3D rtw_get_usb_priv(rtwdev);
 >
-> +     if (unlikely(skb->len < pkt_offset + sizeof(*c2h))) {
-> +             rtw_dbg(rtwdev, RTW_DBG_FW, "C2H too short: %u\n", skb->l=
-en);
+> +     /* Stop deferred resubmission before killing the active RX URBs. =
+*/
+> +     disable_work_sync(&rtwusb->rx_urb_work);
 
-Small thing, skb->len here still includes the RX descriptor, so the value
-printed is not the C2H length. Maybe print skb->len - pkt_offset instead,
-so it shows how much of the C2H actually arrived?
+As far as I can see, rx_urb_work can't bring an URB back at this point.
+rtw88 doesn't set soft_unbind, so the USB core disables the endpoints
+before it calls the driver:
 
-> +             dev_kfree_skb_any(skb);
-> +             return;
-> +     }
-> +
->       c2h =3D (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
->       len =3D skb->len - pkt_offset - 2;
+        usb_unbind_interface()
+          usb_disable_interface()
+            usb_disable_endpoint()
+              ep->enabled =3D 0;
+          driver->disconnect()
+            rtw_usb_disconnect()
 
-This takes care of the header, but as far as I can see a C2H with only
-the two header bytes still gets through, with len 0. Most handlers read
-their payload without looking at len, e.g. right below in this function:
+After that usb_submit_urb() on the RX pipe fails for the rest of the RX
+teardown, and a failed submit only queues the work again on -ENOMEM. So I
+think cancel_work_sync() on rx_work alone already closes the race, and
+the same change would then work for the older stable trees too.
 
-        case C2H_SCAN_RESULT:
-                complete(&rtwdev->fw_scan_density);
-                rtw_fw_scan_result(rtwdev, c2h->payload, len);
-
-and rtw_fw_scan_result() reads payload[0] unconditionally. So if I read
-it right, skb->len =3D=3D pkt_offset + 2 ends the same way as your test c=
-ases
-1 and 2: scan_density is taken from the byte right after skb->len.
-
-rtw_coex_info_response(), rtw_fw_c2h_cmd_handle_ext() and
-rtw_tx_report_handle() seem to have the same problem. They read fixed
-offsets in the payload and don't get len at all.
-
-Would you be willing to add length checks to those handlers too? Maybe
-as a separate patch, so this one stays small for stable.
+Keeping disable_work_sync() doesn't hurt, but then the commit message
+shouldn't say the work can restart a killed URB. Or did I miss a path
+where we get here with the endpoints still enabled?
 
 Best regards,
 Luka Gejak
