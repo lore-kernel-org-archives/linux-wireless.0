@@ -1,96 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.176
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793394236;
-	b=vONevsy/hqqZEC9a7bYjiJhJbuHF37mmFDO8WxyW0sv7TQF7oVTNTelRshHwbNIl2mmx
-	 OtwDAKvkQuCD9ejnm8xu9KNsW4O3eHFJeQ+RTzbCvYBHJ86CJEnp6tIscy6UWjuz91En3
-	 QhoLRD8rSaxyiyLFe6sPc+kuXLOx/LeRSi4Lqo8vhIaxh9mg/v3PTgD4LOoQWe4Anz4TA
-	 UlVGlMmXi18dqpmqxA9CFY9K2v2jxorVpxm0Dkw71mM3eLUdQfLCddflV4nwiE5ypgJBD
-	 NPx3M8tEL/5h968aYx3VSWaRedagrrztBOL5sFrgZXpDKrroV5edFfkph3aJWjTf7bw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793394236;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Content-Type;
-	bh=8cw2VznT115t7XvjisUuqdBWNpKN4PUjAu1fVe5hJRw=;
-	b=yv29l9Tnm91T+OWURi4cd4IA0Kw/UnwGseQI0oYj34nDXXwdI8cCMKSDDkKTG7G3VYly
-	 PEHPwA2OkuN5tn3aTIyuYct/fOWYoS4hh+LXAqhdwtSWFOD15qY2yo0EC/ml/VB17uBR/
-	 +88f7PJ9rZJc/+j8GiOhi5WfyNIJ8wf6Yma3myOIr4kj+tCcStSvcKaH/UmL8wLCMscJB
-	 ZM8fSapTJhnBG9ss3R3uScRCWKVohjMrLGGrs49JHZnRx21M4A4v3z2R8bOBda+fjMTAg
-	 qMa+zhTb+OX9jkij6JhXAwOdIgbwYNgxO5QhzxiM4OA3IGPCZ/jbf2fEF9KbTTAWTuw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=YGUTD3fg;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.176
-Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com [209.85.221.176])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793394571;
+	b=gpWEWMczRMPG/BN31qqzQSyZwV61PxCuVQ2g8kG5T2tSzcEqIXwuZllREAPuOGzJdR+P
+	 Scy8A0JFef5sRPU8v3n7Tg+XZ6+nNcxkLf2lKO/eGfcQ4EsOnDzftF3Uu5oPe1t4YficW
+	 BidMeUkF4tYVWtCCGPK93Mj5gTPDEBeAF6PcwIMMNmIyVUJ053fh9HTqhDFkw539c2xKO
+	 t2h6dDsZquzLBUaYc3Fk6bGWoCLkpfgmIAlx3QStqge5V1Q6V1GgGmV/p+BBmx3azmPx/
+	 C4CFK6gDcPFYz3CP3PBok5ZXYef+rCKhAm+bYEOndUIEXq1gcNB3eiLfLtHm7M2YJhA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793394571;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=WyqmVzX7xZ8NzVi/5Q8p54DyZ0b9jXCdRbzCnZn/r1c=;
+	b=n6d8sIPQpH0Gd7G2rTxGxF/rFKHj1R63F4qWG0FBPjH5OoPuZ4CrZWexefoWqBwnLP0N
+	 REVUxjKirpNhnOc2sZnwSU8SW0riR2qjZ7yWZEZeoPWeReQZwt4lIamo7JPkwOtnt+g19
+	 eA+wMHIFCf1t/v4xtcXuP92iqih7yynJzPwAcZM4DK6Zo2G0JbNWCZqYZh1xyEQkpv/xB
+	 NlriYs5D62t+at3BiG150N99fReXr/0EXQG2EHaRHqYNl3elJObUhF+rypvuNhtu+uslk
+	 q1CJrHdimNYWDLpqgY81zAnFxZuy0rSz2k2WCrTi50lXQzRaPvSSx1Zbfeu8Xeeu7vA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=CypdlOSS;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=NGvI4Dbi;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 681A5606A31D
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 21:03:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 681A5606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D344606A31D
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 21:09:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0D344606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=YGUTD3fg
-Received: by mail-vk1-f176.google.com with SMTP id 71dfb90a1353d-5eafaeb8684so372300e0c.3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:03:56 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793394235; cv=none;
-        d=google.com; s=arc-20260327;
-        b=ado/mJF1MTrNWaMtZITl64InveebRRHxE3CPZDnJ+kHC4SpIQZtVq5PiKXgf5s10oG
-         aWsaCz5A2RlM17kF3cm429SoD5VF0L7/h1D6wqZ9bgLWLGqvpREvt+ugFXi4OtQbRW7l
-         eej+D89wqIcKRgeIVSuFoHGq0iAqqezTAweaAWUkTxRRuKg46D9XhW488ZLqjdggYIUY
-         KTkue3jexdim/UeDK/+kNTNJ4j06Jx8rRMPs4Dxfi0cboMjEH4LlwfNVdChi684kbKfr
-         FdScpM0zmjrDVwh0KCWH91CRTRrxJL1RhqQUza2LEIMIq38wwYBtlbWI3I2l14bqLaQ6
-         x5HQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=8cw2VznT115t7XvjisUuqdBWNpKN4PUjAu1fVe5hJRw=;
-        fh=BOBxn3vZOTDitorcGFvbeWPHWPTm8fcHGhxz3wt6muU=;
-        b=fYKFd/9Mqyj3uJCNn+zbZxYjlaGwyixXYC2pyk42AVlMswg+UQji52W4cqpOwqyOGD
-         h+ntCnkjjunVfeZ/UmDyrj4o7pg9y0jc36FYcDmWG2lNOIiNCeqTSePwQ1GoVHuXCT4X
-         r8T/imM3ipOJichqvmnwBKgZdGjUWTQG6gNt2zJSVCzpJuNjNmQfoDGiShcRkIFKsZ6O
-         VAsAsdepkVqdfYLcVM9qytooJGniCWgMtOcu1AOdDIlpIs0KSma44YVYiF+Ti7cVROD1
-         KC0mesRdEmMeXSZMzD30Zoc6AOLO/UBUh03jqo4EX96y5X+MXuc6p+MOjbA1v+NWVEq5
-         whtA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=CypdlOSS;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=NGvI4Dbi
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69UIiS1J514346
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 21:09:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	WyqmVzX7xZ8NzVi/5Q8p54DyZ0b9jXCdRbzCnZn/r1c=; b=CypdlOSSajFHnoDj
+	0/CsXLC4vGq2TCnPC1nXPvvQHSQL7VAg4TfLDpcT1JVA+2ZlBOj5dSs3+AyD/HpU
+	ffuAalABjBiIwk9Vt2sxEsGuyD9363kEKlweElchT6MulJwLn44vyNKxYCuroV6F
+	GC9aJx2/zSUjUI+1RL9bkNfej/6NITLxVXvrNTPt3vKAhLhs5OQ7V622HcRN/r9w
+	KvilI34xeHRJ5V9OXq7X7AA3RsKYp5L9tGlGZZCqj+UbkfJS/OWsGkgOck1leZIj
+	YDlE716cQUB6AwWMnldKmq3AbDMxk0KjhdIaXqQOYQo1jzoLqbRf1SJM3y+JxUpc
+	V8kgHg==
+Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hn0sj8d87-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 21:09:27 +0000 (GMT)
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-36637676140so1678594eec.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:09:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793394235; x=1793999035; darn=vger.kernel.org;
-        h=content-type:to:subject:message-id:date:from:mime-version:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=8cw2VznT115t7XvjisUuqdBWNpKN4PUjAu1fVe5hJRw=;
-        b=YGUTD3fgG1qop0rdN/EpjxxnlovfKVhyX4+IZpX5Q2RB9cRbvDaHA9BXRiWGiAROcR
-         /6CVBz5UHIKTtdj27eWoWlx35ZumEmAAKtym0i8ouSrHcaJ7qh/WliVtvTpud6PnEHIz
-         N9S7uxO/on45kQnjEn8efl1t6L5ZPyVKI5PJCKi7i28MqjYI8XuAA0oMp5OfL9mYYJ83
-         xGbcxfQwyGixOkP6GHQULjw/T6+hS7TtWLCDMOiD9rW+DK4hUaJL5F2go0nA4CliaE8O
-         7EO9py3gjPcb+Ur9ugO5GYQtOqHkW8S0NqJ4i/rLwcNm91QtxF3SToJbsi5Y0w/HjfwU
-         hM/w==
+        d=oss.qualcomm.com; s=google; t=1793394567; x=1793999367; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=WyqmVzX7xZ8NzVi/5Q8p54DyZ0b9jXCdRbzCnZn/r1c=;
+        b=NGvI4Dbi9B2EBfWE8wxN/w0KFPVv7KLJky7V38TOL3EzDaowLFiMK8v/alvQwJWH8u
+         f7HoQYgonxZYuUA6C1IP+rls2rghom4mGiqRGl0oimOpfryE3qmmu4LRLNNzXgiuaUrM
+         zoIgCDGNv2068wA75Q943mzRT1xKv/OmtFXUkGNtMdbpV50KXaG4aIxSoP9xe/0rxM85
+         Tume3gDMAzLetjIK/GxKo/dbwYEim8RhK9k0a6/GuWhWHtekGEzgv1RX8tTIELZwHJZ9
+         tO8VpTYsNgLswkX3Ef42Fss1bBJE91W1aEq28UFZ9HalsngB6NAZ+1KP6W30p+/0iHqN
+         vgXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793394235; x=1793999035;
-        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=8cw2VznT115t7XvjisUuqdBWNpKN4PUjAu1fVe5hJRw=;
-        b=ieTPocUSw6mzoBaSaFIAWJCtr15Djp93TsijwvynHFPWsFAztdS7xFjwmxwMWSj7BH
-         V1cN8sayQK8miPJbMJJP5CA5JK/NsGYu58o/A0buFWqqfwuYWfmn06t2ZSLveslX1blq
-         DxVL1gTxe9ZdR3t5ZTUCE6+GICB1xoIKUXRzh5n1Lcetx4ueu7HXTZQ8t8BtgJ/ME9G8
-         HhCVgrrtLvEZIjOKd5SrKNnc6eybmDMZxSoxZRT4jbb5xZIlX5e0Y4kKKmrHiY6ZHF4y
-         MUOtZit/UO63VNGMkY6CRXw/xltXBnRUqVSvg1gJ6vjwfP1pkFk7R0p8X8c6ZSTcW0bg
-         8i9w==
-X-Gm-Message-State: AFq9FYLCr2hX3+97OantvoNxFkSMtjhA5a/85AAcN2U86ZIz3m3jSm19
-	6bcV0czqP9HOP9BwRgEWYmBoxDDBrL3e0q0BME3/4p9E8S6xZ3NRTatHvyOPkIfEVgLOdNzhhUZ
-	MjaNjCZr7cLdcIJvjq8fsLRsx1N0g7nnWTp0x
-X-Gm-Gg: AYBFou0VdqdAhcXLREb/AqtBZ2Vp+x7s81We7Q9QchTJ52Q66WyL732oFcfGLIybhAO
-	SJZuDtvsZBvx62C6rbuJ2HUKnZpTub5DZ601uN/Dg1MwonlKuh0Y0NnQAdJUCQHecIDPJ0CsrVp
-	ptbISB0SbaVRjXG/dnMYbcaumTWa1x2Yey+31+Nivd0CoIRWTDRHvV7WWrKjTEUXI+MXkDUVYkl
-	TxPoxVpwU21D/Jb0yblA+9k7Y8rOWIA7n3iymQrhNqPSA95Wj/T30jDlkC/w9y/mADvsJT7cIZq
-	rRdnB3yuLylndAHjFxapdV7BYuuReibFeuScmoap2VN9jjY+PfqBuYkX9TfAXS0QZHv+cQvKJ1c
-	gAWRgxycMQcDgsAKwd0ooncIj5vVkGPaRHWWr75sd5n+6VU0O/Uiln27FIWkcTeakMAHEjDvgVI
-	6FVAiKbRfmD9BKDvgU
-X-Received: by 2002:a05:6122:4b86:b0:5ea:f220:fd6e with SMTP id
- 71dfb90a1353d-5ec6881fc37mr2433469e0c.11.1793394235358; Fri, 30 Oct 2026
- 14:03:55 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793394567; x=1793999367;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=WyqmVzX7xZ8NzVi/5Q8p54DyZ0b9jXCdRbzCnZn/r1c=;
+        b=pVlb2iRkMe2yFBkBsF9tpb3M3d6jTrtLSIJgWZCVmL7ReralgsRnzfp4BDD/oOD2uc
+         kBDBXVJrOZRQ7tmfUtBrJodhJm62DD9V1Q340xWteu0yNwr3tQKgc1vfkYTx/bqbrKMZ
+         L1Hv9EXb2lVRiAQrzEvkfrWySn6lPdwj9XOvYJbzBXqwxrToJ94ekHG4/GbjnxJc5bd+
+         8VH0HzhwBmJnHmDWzQTlPefLk8F4mtYqlyCePC0VbFPP5YEnrmjVFgpTV4VsFNrF+uTz
+         02a01LzhZifLDX5XO3P4eMMtubr9WMKV7LZJwnJOJt7SIbCrdENNiw/VxASEsbqc2oN/
+         /UVA==
+X-Forwarded-Encrypted: i=1; AKwUvBxTE/U6lJNMcog6CEcQNhgHT4rhkkc3O6v5BaVySCg/05La2bLnK/yOr57a1pyrxjqQ2KjQgVAzYRQCTxCKRw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYId8FI3TlgRlVKp+WhHgqYvu8iPlHAhlkLDPdUwG9WSulMKuePT
+	/+dm9unetLMxfcoGqyL9hSOAD2CAQVxWa126gifAtyKBd0VEP3hIoWg3GoQA5MdNRMScAxYpAKq
+	4vCTmNHw0nGoKWePxyqxBialm+eKPUPh69vB/FKC8gFIATa+o7iaiymdQbe5HfOG8JP7KoA==
+X-Gm-Gg: AYBFou1keOEWr9STHqa8Ha2LVSrC/BiIlGWyEI1/0Us/bHqmkbTSsl8VvOBii1j/tin
+	hOfQIRpdgg1Y6tzSymild++haS+M/xcUZXO3Yl6ZA41OmvCzdM2JVVgUWz1HX0CdBA789F87f+o
+	btiUhjeBEQPxAP+VkdjumEzlkYjzwVNsoDN/y6IKmxxCvrKEXdCfcLmQtU0Fx9p4oETkNYOYfmP
+	pichNI/JOdWdf9QWEAMVSUqob2Dc59iqRusgRyGHRj0hY7pkbVg11ZGA6+XLTiGxZHeth7GI3eg
+	qZfvq+cZI3c+CDE/u7d+CCLXavE2uGQVlkQIngE0iRl1sBmWLPA8ETsJES6mGHFRNWFJm6ZjTOj
+	6Vh2P2cnwIQeLEKq0/SALFaN30C9h236vZV7wtg8GEC3W1W869Q9yS8E00jKJI6SW3eUoyANQSx
+	8VHC2Lacg35VM2kskSQmBzxeMn89W409g=
+X-Received: by 2002:a05:7300:c01c:10b0:36a:50ec:db3f with SMTP id 5a478bee46e88-36a50ecdd21mr1043565eec.7.1793394566719;
+        Fri, 30 Oct 2026 14:09:26 -0700 (PDT)
+X-Received: by 2002:a05:7300:c01c:10b0:36a:50ec:db3f with SMTP id 5a478bee46e88-36a50ecdd21mr1043508eec.7.1793394565946;
+        Fri, 30 Oct 2026 14:09:25 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a428ecb61sm8561611eec.10.2026.10.30.14.09.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Oct 2026 14:09:25 -0700 (PDT)
+Message-ID: <44bc6f1b-6f04-46ee-8578-caff30ab25e8@oss.qualcomm.com>
+Date: Fri, 30 Oct 2026 14:09:23 -0700
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -100,57 +114,96 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: Work Money <work62153@gmail.com>
-Date: Fri, 30 Oct 2026 23:03:43 +0200
-X-Gm-Features: AclHuK9R0WB1q7BU-kTmrsOlmQbI-jyrnFyfsmVGDjzJ7zODOf5dHRMCYPJhA7Y
-Message-ID: <CAEVijA0t2UkokNOpKN-Uje4n-ub9CwZrZN0evhWnn2eL1CvzPQ@mail.gmail.com>
-Subject: MT7925 (Netgear A9000 / MT7925U): UNI_CMD_CSI 0x4A acks but STA
- firmware emits no CSI reports
-To: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org, 
-	nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com, 
-	shayne.chen@mediatek.com, sean.wang@mediatek.com, deren.wu@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] dt-bindings: wireless: ath12k: allow calibration
+ variant for WCN7850
+To: "Rob Herring (Arm)" <robh@kernel.org>,
+        Ernest Van Hoecke <ernestvanhoecke@gmail.com>
+Cc: linux-kernel@vger.kernel.org, ath12k@lists.infradead.org,
+        Conor Dooley <conor+dt@kernel.org>, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Andrew LaMarche <andrewjlamarche@gmail.com>,
+        devicetree@vger.kernel.org, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Jeff Johnson
+ <jjohnson@kernel.org>,
+        Ernest Van Hoecke <ernest.vanhoecke@toradex.com>
+References: <20260907-ath12k-calibration-variant-v2-1-1a9d6c47dade@toradex.com>
+ <179337193753.3936464.10436179036151297295.robh@kernel.org>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <179337193753.3936464.10436179036151297295.robh@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: k4JDgyIntdrZ5_gtowD47wuvJB7jPOM_
+X-Authority-Analysis: v=2.4 cv=Uun2pOwB c=1 sm=1 tr=0 ts=6ae50787 cx=c_pps
+ a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=VwQbUJbxAAAA:8 a=m8ToADvmAAAA:8 a=3poil_INJ9H8gjXqE2EA:9 a=QEXdDO2ut3YA:10
+ a=6Ab_bkdmUrQuMsNx7PHu:22 a=kCrBFHLFDAq2jDEeoMj9:22
+X-Proofpoint-GUID: k4JDgyIntdrZ5_gtowD47wuvJB7jPOM_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDA4NCBTYWx0ZWRfXwous+U8zcZgO
+ NdsVyW99134tWoBnjuC1aTPre2JS9Ezm2eTXBdQOOlrFjCIjRbr4fnHTYsyzbKpCzV/D2sPWpq6
+ EHVFbt9+gwEopB1wIWeihFc+TrN2/RtXE4KWqDTFeKEz6oRsfDPBvEc0WobrAdwmKArmOyNCiu7
+ jmETMQUKuTDWJDWylc4Uypnd2Hu4dVNAJP15y9PbYgzsJzpxZwaPjc8TYtYs7FXgT2pJKLRthA+
+ YyZXRBYBJNHyBM0YEIi9m3xIa2DePbklDPtzaSYoPjvWufrulxK/GikmutPzF8YAyyjEq0cRlhv
+ Q9VAXE8vf23gaKitncWAKE1m7eZ2vzpzwsss1qv8W6Xq90a+8c7drrLBpiBfbfXSKU9q6VrDniU
+ dtpig4TqK9WiFxWSdkDnPsPoEUph9SB3SOvCkXsQWPjTw56bQmXd+bc1bXih9q1IYs0ECI0CHUN
+ i6Yvch0EHGTlc8UKkSA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDA4NCBTYWx0ZWRfXxMqLTS2y+zBv
+ ly47QfsrveF7oFyV8yluiGwJHpNoZVtCyVWHIyxiBujFaYGNu8YoLDm0ttxsC/vpQlh2Wc+XkVQ
+ fOaDj4N9VgzhlVfrq8TgA6hOtKqUOhM=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-30_06,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 suspectscore=0 phishscore=0 bulkscore=0 priorityscore=1501
+ lowpriorityscore=0 adultscore=0 malwarescore=0 spamscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610300084
 
-Hi all,
+On 10/30/2026 7:53 AM, Rob Herring (Arm) wrote:
+> 
+> On Mon, 07 Sep 2026 16:17:20 +0200, Ernest Van Hoecke wrote:
+>> From: Ernest Van Hoecke <ernest.vanhoecke@toradex.com>
+>>
+>> qcom,calibration-variant is the generic Qualcomm Wi-Fi DT property for
+>> selecting board-specific calibration data when the device identity alone
+>> is ambiguous.
+>>
+>> Commit 06cca100ad08 ("wifi: ath12k: support calibration-variant from
+>> device tree") implemented support for this property in the ath12k
+>> driver.
+>>
+>> WCN7850 can be used in systems where the PCI device ID and machine
+>> compatible are identical across product variants, or across regions with
+>> different regulations. For regulatory changes, the hardware description
+>> does not change, but the vendor-provided calibration data can differ. In
+>> that case neither the PCI identity nor the machine compatible can
+>> identify the required data, so DT needs an explicit calibration variant.
+>>
+>> The ath10k, ath11k and ath12k WSI bindings already allow this generic
+>> property for the same class of board-data selection. Allow it for
+>> WCN7850 PCIe devices as well.
+>>
+>> Signed-off-by: Ernest Van Hoecke <ernest.vanhoecke@toradex.com>
+>> ---
+>> Changes in v2:
+>> - Rebased
+>> - Updated commit message
+>> - Link to v1: https://lore.kernel.org/r/20260701-ath12k-calibration-variant-v1-1-d3eddaabf026@toradex.com
+>> ---
+>>  Documentation/devicetree/bindings/net/wireless/qcom,ath12k.yaml | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>>
+> 
+> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+> 
+> Sorry, not sure why this wasn't showing up for me. You may want to 
+> resend it in case it is not in wireless queue.
+> 
+> Rob
 
-I'm trying to get CSI (Channel State Information) out of a Netgear
-Nighthawk A9000, which is an MT7925U (USB, WiFi 7, connac3). My end
-goal is WiFi-sensing research.
+It's in my queue, will pick it up now.
 
-What I've found so far:
-
-- Chip: MT7925U, mt76 driver, station (STA) mode.
-- Firmware: stock WIFI_RAM_CODE_MT7925_1_1.bin, build
-  t-neptune-main-mt7925-2249 (MT7925_E1_ASIC_ROM_RAM_CE_2249,
-  dated 2026-10-16). All code regions are encrypted (ENCRYPT
-  feature flag, ~8.0 bits/byte entropy), so static RE of the
-  blob isn't an option.
-- Command path: I'm using the connac3 UNI_CMD_CSI_CTRL /
-  UNI_EVENT_CSI_REPORT (both 0x4A) from the mt7996 SDK CSI patch.
-- Behavior: sending CSI_START (tag 1) returns a success ack, but
-  the firmware never emits any UNI_EVENT_CSI_REPORT events. This
-  matches an earlier linux-wireless report [1].
-- Kernel side is already built and tested: vendor netlink
-  interface, ring buffer, debugfs, and event handlers. The only
-  missing piece is the firmware actually emitting reports.
-
-Questions:
-
-1. Does the MT7925 STA firmware include a reachable CSI emission
-   path, or is CSI reporting only wired up in AP builds
-   (mt7996 / mt7981)?
-2. If a handler exists behind the ack, is there a specific TLV
-   parameter, sub-command, or precondition (monitor mode,
-   bandwidth, sounding/beamforming enabled) that triggers it?
-3. Is there an MT7925 firmware build or roadmap that enables CSI
-   control in STA mode? Since the mt7996 SDK already implements
-   0x4A, is a port to the MT7925 STA firmware feasible?
-4. Any alternative route to per-subcarrier channel estimates on
-   this chip -- ICAP / spectrum-scan mode, or RX descriptor
-   fields -- that doesn't depend on the CSI command?
-
-I'm happy to run tests, share full dmesg/mt76 debug logs, capture
-traces, or try patches on real A9000 hardware. Thanks for any
-pointers.
-
-[1] https://ratatoskr.run/linux-wireless/2026/04/15794137
+/jeff
