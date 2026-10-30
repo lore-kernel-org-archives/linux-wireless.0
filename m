@@ -1,52 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.166
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793371907;
-	b=0LrKSviQokU7g0GUqoRoyXpHmLbZqMXixw9uaLbBRifL82RbcwhSDjGfqdmayo4GcHhC
-	 Yv8LSTTLqaj9NgnigIC8jG5hIvHinIzaWOx9D7DzGf8fqU3TgYFMabHJ/J7IxB2393T+I
-	 T/KSC+hEwOjbRZ4LyJdzLfwzrcCQTvBQjx7SvUc+w7770TFqNOE/vIGQhI80iugfWS99A
-	 MzJ9zbqYgv9LNct1+lUxblqpcqnElYbYa99V/jNqd733/j/8cY+YYEjGg9kmNDjfuNZSw
-	 VMH6B7HwZXEWe5JEGz2/XiuMJQ5NI8+6a718rAEgyD7KQPpb9HqeSos7PTA73NJVqRw==
+	t=1793372042;
+	b=MKXSRZJKUle7LXaIba2P8IxsKAR4HiWyGkn3BX1AiSjIJPwByexdBiX9+875dKub178r
+	 3hnL+C7gI0+BXBhkPYc3WlvrI9+40yQ81Jd8N2IjlV4tlKOlptWhoeu28UTnUTbb77Jpm
+	 HzzWZz4ZTztMhFytPa074v9fYPDUSJHFKhR9d0byETUt/mwjoRvQZLMj1yjiQIW5tanJC
+	 QOkS7s1gq+yqyPZ/OQcKUPiqK+Jd8JuvIOHRvR84pZuTZq1rrvQWQSA8YlBfY5fKfMR59
+	 9IiuLp8ATE2lfDsqBY3rhidIuZFI1pe8ysR+mmOcQU6qrJkBwdX+l4SE7yDXqasGz9Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793371907;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=2HtbNoPaGhVx1oIleRCrYh9Q+TVpcVTko3WuWXqXEEE=;
-	b=3xFch0xOwd7fP5sQn+Nmqzz1g35INltq+gQsMMSoW7oseLvhYacFC8McLO6TJU80PWmS
-	 Dcq/bmHxL8fnOUML5AkRhbodvQmEefoYTutOIWwUDaUP5UF232tgLn1ZIoxVRp9FjIxNk
-	 uG8XFTrrEJM7Lq3Sa7wrLdwt2uSxbUQJ3tIL3rMrdwTQAR5z6EwZAGD7vRB0wyO3myzAh
-	 e1DLES7uCt5zb0Rf1jwWptwT+PkrKwrHYpFAZI/k4tZ5LTT6XTiZH1Nyu7RpDjW7n/cm/
-	 R2/FqfUAKGty+QfdoggD16RcFNnZqinjS1efd78iQTJ4b2ispY2EKJgNBaaqzpwYlVQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793372042;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=Jau+PZuEPRdnI6rZvYHlpRwrBnMws6uBKUU9f9SsPHc=;
+	b=a7CZYv2jGjx8kyZUlDAq3HDD1Vtpxla/XRnkRsT5raZoPSSnPww7EPwF7pHE/Wy2h1iN
+	 EFsqwozkjB0fY2TRcwb6JmlqeKrauKfa2lCJvVu2PET2i1c9desPUOZm0rrAp75+eXGBW
+	 FqsEmK1A/4W5mjzJhwoG6LYojLABSptIMlM3uZimVT/A2sk0WHQru/kf4zzzKBW/mvPxX
+	 5XXCE4tZRy1lNHWpNIVLE1ul7Z+WdSZErAxrqARUxqiBk36SYWNMXKeDedxmDuttT+p3J
+	 Pw3ft24OerHANV1Xk+q22jx0PaBXbZURxbYzoRI9eg7ZwNOs9eeNjan0Is7Ec/vxLIw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=IG002WtX;
-	arc=none smtp.remote-ip=91.218.175.166
-Received: from mta0.migadu.com (out-166.mta0.migadu.com [91.218.175.166])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BLpYs2cb;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB25A606A31E
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:51:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB25A606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FF10606A325;
+	Fri, 30 Oct 2026 14:54:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=IG002WtX
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=HKmC/zLtQ35zzhpn8XzyD4VRPec5/dy8PDlsxOcGW5A=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793371903; v=1; x=1793976703;
- b=IG002WtXR3CahR9dJc7fQkF613xha+VIj85wMJAmnpxDyjG2MBwfsK5A9mA8a554UmeaMeZU
- +wxyeBs9vTKbHz3jT499XGFHJg2FXGBVvSFVi6293YEE1377/Dy3uLg/jTqDfklJQJjhcyG5HBl
- QiEy+H4cRqu6FQLtL5nKXflE=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 0481539a351a8ac5;
-	Fri, 30 Oct 2026 14:51:43 +0000
-X-Mizu-Trace-ID: 0481539a351a8ac5
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BLpYs2cb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02D3D1F00A18;
+	Fri, 30 Oct 2026 14:54:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793372042;
+	bh=Jau+PZuEPRdnI6rZvYHlpRwrBnMws6uBKUU9f9SsPHc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BLpYs2cbXAHOdyOfNBb1ztSow/pDm1JHqoEBGyS08uofb79chz6YmYz0s5/b6fK8H
+	 m0YYKS7nZZsXbYJ4Qu1fb/J0YJhOAMQFXvGArlTF0C1F8rxE9ohgAck2pbYjk1gHTo
+	 76SC4wCY8ZRFsAa17Ekn7+IzQ4HgOcXJUcDWiJ6TRn95oBHQa0C3pyL9uVcBzSwZWA
+	 rrPOvyJmdUoFAIX4havbXGS0QaNIxAJOMOliJ7wqCh68m4piundA2PJXEmGhnR+H0w
+	 OzCyOHwoRg13NWv99jjUVYvJntQgd3nHDGTOrOQRByQUav3SQtX4TVqiJ7QKsITfCZ
+	 71Ga/cKCxWnAw==
+Date: Fri, 30 Oct 2026 09:53:58 -0500
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Ernest Van Hoecke <ernestvanhoecke@gmail.com>
+Cc: linux-kernel@vger.kernel.org, ath12k@lists.infradead.org,
+	Conor Dooley <conor+dt@kernel.org>, linux-wireless@vger.kernel.org,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew LaMarche <andrewjlamarche@gmail.com>,
+	devicetree@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Ernest Van Hoecke <ernest.vanhoecke@toradex.com>
+Subject: Re: [PATCH v2] dt-bindings: wireless: ath12k: allow calibration
+ variant for WCN7850
+Message-ID: <179337193753.3936464.10436179036151297295.robh@kernel.org>
+References: <20260907-ath12k-calibration-variant-v2-1-1a9d6c47dade@toradex.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,62 +64,47 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Fri, 30 Oct 2026 14:51:43 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <4a555879477e2c5b8eb2f2cd430157adef580461@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH] wifi: rtw88: usb: stop RX work before unregistering
- hardware
-To: "Zhao Li" <enderaoelyther@gmail.com>, "Ping-Ke Shih" <pkshih@realtek.com>
-Cc: "neo_jou" <neo_jou@realtek.com>, "Sascha Hauer" <s.hauer@pengutronix.de>,
- "Kalle Valo" <kvalo@kernel.org>, "Hans Ulli Kroll" <linux@ulli-kroll.de>,
- "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-In-Reply-To: <20261028141904.8707-1-enderaoelyther@gmail.com>
-References: <20261028141904.8707-1-enderaoelyther@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260907-ath12k-calibration-variant-v2-1-1a9d6c47dade@toradex.com>
 
-Hi Zhao,
 
-Thanks for the fix. One comment below.
+On Mon, 07 Sep 2026 16:17:20 +0200, Ernest Van Hoecke wrote:
+> From: Ernest Van Hoecke <ernest.vanhoecke@toradex.com>
+> 
+> qcom,calibration-variant is the generic Qualcomm Wi-Fi DT property for
+> selecting board-specific calibration data when the device identity alone
+> is ambiguous.
+> 
+> Commit 06cca100ad08 ("wifi: ath12k: support calibration-variant from
+> device tree") implemented support for this property in the ath12k
+> driver.
+> 
+> WCN7850 can be used in systems where the PCI device ID and machine
+> compatible are identical across product variants, or across regions with
+> different regulations. For regulatory changes, the hardware description
+> does not change, but the vendor-provided calibration data can differ. In
+> that case neither the PCI identity nor the machine compatible can
+> identify the required data, so DT needs an explicit calibration variant.
+> 
+> The ath10k, ath11k and ath12k WSI bindings already allow this generic
+> property for the same class of board-data selection. Allow it for
+> WCN7850 PCIe devices as well.
+> 
+> Signed-off-by: Ernest Van Hoecke <ernest.vanhoecke@toradex.com>
+> ---
+> Changes in v2:
+> - Rebased
+> - Updated commit message
+> - Link to v1: https://lore.kernel.org/r/20260701-ath12k-calibration-variant-v1-1-d3eddaabf026@toradex.com
+> ---
+>  Documentation/devicetree/bindings/net/wireless/qcom,ath12k.yaml | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
 
-October 28, 2026 at 3:19 PM, "Zhao Li" <enderaoelyther@gmail.com> wrote:
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wir=
-eless/realtek/rtw88/usb.c
-> index 64e1c3420e0a..1d2759eb96bf 100644
-> --- a/drivers/net/wireless/realtek/rtw88/usb.c
-> +++ b/drivers/net/wireless/realtek/rtw88/usb.c
-> @@ -1370,7 +1370,10 @@ void rtw_usb_disconnect(struct usb_interface *in=
-tf)
->       rtwdev =3D hw->priv;
->       rtwusb =3D rtw_get_usb_priv(rtwdev);
->
-> +     /* Stop deferred resubmission before killing the active RX URBs. =
-*/
-> +     disable_work_sync(&rtwusb->rx_urb_work);
+Sorry, not sure why this wasn't showing up for me. You may want to 
+resend it in case it is not in wireless queue.
 
-As far as I can see, rx_urb_work can't bring an URB back at this point.
-rtw88 doesn't set soft_unbind, so the USB core disables the endpoints
-before it calls the driver:
-
-        usb_unbind_interface()
-          usb_disable_interface()
-            usb_disable_endpoint()
-              ep->enabled =3D 0;
-          driver->disconnect()
-            rtw_usb_disconnect()
-
-After that usb_submit_urb() on the RX pipe fails for the rest of the RX
-teardown, and a failed submit only queues the work again on -ENOMEM. So I
-think cancel_work_sync() on rx_work alone already closes the race, and
-the same change would then work for the older stable trees too.
-
-Keeping disable_work_sync() doesn't hurt, but then the commit message
-shouldn't say the work can restart a killed URB. Or did I miss a path
-where we get here with the endpoints still enabled?
-
-Best regards,
-Luka Gejak
+Rob
