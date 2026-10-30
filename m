@@ -1,91 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793398127;
-	b=TXG3kjPh1D9AFK4ferdzhVl6sGQ/Mk/AuI91tDD6dpmu0Oys4Ev6rn4OMtAuM7bvA1AZ
-	 +QRDiH64WQ3qPEbIZcjR+vRKM/BiQlzglBLj0wpf9HCC8DYl2bp4ydTs59as9ANbalSt5
-	 e9IFsG7/X5j4aVflxxNj2VpyuGOrGLEZkRm4CzguBxymHnNTjiJayKFeqso4YPTJAdiqj
-	 H1wdQsm1m8h9+rdzljpMuMUuH+DLDdPrHSlm8RP92EeV2rSWn4DzJmkKMHTEIb2tcf1cl
-	 AwnWzbezlAUqlY+Yztqnq8NBHmtAJySydxaw/yYHwODRjUUnJ/OpEEJT13djTccW4JA==
+	t=1793398122;
+	b=vYjrFX+JpJytyAgoQQQc6fS5bWu7Zj9V4OiMie9KdgCUSRdVa6ouroG5CQP3ckwkTlsw
+	 ke4GOZc+2q+t74ow2VNM2w1IpYzkK9RDlbfJ4J63Q3NoRyCyJnwy4K0cQJzlpFIqIOHO0
+	 ViiazKInC/sZiHoKWBYskdzmeXhTVP/yEdOYZ91ZZsdHUvMPBECS+Lpgi9gpWHSaxiJVl
+	 NkZZuBImCtcDUJtdsKz3+/hTY7N3fn2mFdGPtlAMYPSXcYRJIqZA98FF1Bdx+CYinXeA8
+	 gZ8ktdcE7Tudboz+wxjcQ/s1AxVi7iQlX7c5SeAJFmrDarNiHoedekb2aKWgAShVuJA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793398127;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793398122;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=5Y4WIvJDYTWJv68p7KaCr9/OdFM6n4ms38ALF2iW0Oc=;
-	b=GVZQf1oW9hcmg68lBx8x0Ou3dxlyTDQzkQ35ZXE490v49Ekg7UuB2vEyl6fhA30ytyLU
-	 zZpJLYjL1JV9dXoWh2EKivYxqTWM9JFjnmUzbfpmors/TyRJNICCE/Mp4ANVIweRNz1TI
-	 ImMjRpX/DJp7RCTshG7jeaBpY2gvRjMN1ZbcEvqv4hnjh9e4GTeg1IHWQQ/E8hLQ6JnWq
-	 IMx65ThCQsD74sr2SYUEPc8Gx8yfl3qTyy5t6osTXKxpgl/55lu8QcEkn0UVzP4AAVokN
-	 mcUxR2vhD/BtdksLSuONHMehAq4OXu2iloxC8f8E1t51VWYGp1xoPjIvIm9DCLkDFXw==
+	bh=Pye18a12Mt0GkSw7sJj+cBOXoMwNJjFwpHtVV9nHTBQ=;
+	b=aQvBSQd+FTyIrR8ljw/NU6WZ/XNAUE4ajxKKGjL461g6hwG2x4TPMDqItlCQeCr86mbO
+	 101gUsS5snmHhdEBq3b+6NJ+Z0uAz42uEoKYvYbIF3Itrh7ei9LFlpGmm84woeKd04lb0
+	 OTO+eAZ80GZu+0YQY0My8S0mcXSRoTTa2RJIr66HSdAM+GUqW+DMJZKvTD3Rk1AP+LET5
+	 CqNvSB2M4/jhQ26dYwG/FkiKXExfgRBKsprQcH4jCAp/JLMm3VKRdj62mm8qVo+GlUNuz
+	 pVJCA1kF2i1Di709i6ufge42w7D11IxFRN+6tk2LsfxbLDHUmTwmvL1D0b4VVftZU/w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WGqc7XOc;
-	arc=none smtp.remote-ip=209.85.128.50
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MnmewSsL;
+	arc=none smtp.remote-ip=209.85.128.52
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D77F606A329
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 22:08:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1D77F606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D405606A32D
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 22:08:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4D405606A32D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WGqc7XOc
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4a2d6cf958bso6207585e9.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 15:08:43 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MnmewSsL
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a2000d5fb1so7341955e9.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 15:08:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793398122; x=1794002922; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793398121; x=1794002921; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=5Y4WIvJDYTWJv68p7KaCr9/OdFM6n4ms38ALF2iW0Oc=;
-        b=WGqc7XOc0E0qsd7/OwyF5TfYzrtkzudDHUIXfC3R5ZKXfviFMHazCARavIbMHu3OJD
-         dFYAEoZPEsvtJcOjXNojB7QboDiA+WpiEoupeKNXCCVhruOfzLjSa4I9oT19O4MjV+Pg
-         n0tT8YtK6Oc0j7j/Ba2usYKcEH9wGgtSFxyF3SgwtD2C0jQ0N1xy4q9m2Am/oyWBUZXh
-         pyRvI5K2PNYmYMTMIteM6qt3R+y0Zbl5Gqak0Ao59FfwZH4w9+EBy9K2y1RFsISXJiun
-         LN36Y9UJY2Y288iNhvHKaRj6CT7OSHGr5wWC6ElCAlfCTPgFfjmhaWx5P01l5e5ZKvsJ
-         jjeg==
+        bh=Pye18a12Mt0GkSw7sJj+cBOXoMwNJjFwpHtVV9nHTBQ=;
+        b=MnmewSsLup4jlaPeETsaD4WcEc8i49f0eTqi+NUjJort1TS9RcvTFCS6TnaAHWFusj
+         au5Lw8wH0pI2S1at1Chtr6IOZjdv82hTevEf0vHgEiVQGN8V9MIPyemJ4sTVBqRqOBZF
+         r+wQvWIzQVQ9qQ+OWwlFCEB/QhZFAjMmdB9HQPjpQY7x94EQwNFOnUsSMKCoXco0nqMW
+         oFFVrAm3lLLZb86wRc8hRoMTZ/MMl6NtPX1quYSovOko/Rs1+XnY4gIwVC3PWrpJKill
+         XaDWvQlhk2u6t5ywP7aZ1P3gWQo5IibMMFdsYMUv5q/zd45E++Bp6sISwlSn84O1BNsd
+         +82w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793398122; x=1794002922;
+        d=1e100.net; s=20260707; t=1793398121; x=1794002921;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5Y4WIvJDYTWJv68p7KaCr9/OdFM6n4ms38ALF2iW0Oc=;
-        b=Mp8ZDikHcOflhQfF/wVUlcUfMK/3sMSZBNDgopxsP6IwXg3CYf8ieYvYRz5jrmlR3m
-         kM29KeQknBPlTIzqAEY9FhYC0wZGlPBGkfNbpOieA4PpjtxssY47fzc4MHllHcedoz+4
-         3ry9A3sk5Owsz15scmd34VWCtUQt1Qs9rgcd8vb6zyQSBRaQ47HKKZSfz7IKvnqL5J7k
-         nN2OuSlaBia1wYnr8bGMr2sWEDp/9b3Tu5lCnCXwG+QycUO0HOo8+QVpAUkwWyp1JaL0
-         joPvAZgBwMAFa4ruisOXBNpQ7bsxuq97fmE/ft2fyXW+NmsVOJUqgb1SmsZskJ030SEo
-         Y9+g==
-X-Gm-Message-State: AFq9FYKkzAM2iSF7hw4VCNqclefS6D5pTn4QWlRLdFU0IuaD6vyoAumc
-	m1ldAgu9lGHFIbCqzY7BOn48Fi8qZLykJIDbKGI8/8jsjQene1PTm0Z+
-X-Gm-Gg: AYBFou1R5huFJjs5ZF1PM0f2RNqqlFP5ecqJYIdYuknadiWmXzCTo9pvOVv/vp0Mupp
-	0j7n3x1cKzpEJIHTGOIwodppQk1Zkf/pd/BWyRji8fIiEOVcxN1QM1tbJoixnQwmGeGA79s+F1V
-	4pGEiubFl9hM/hELLiiw/VU5MCcc9MP5b1IrIqEas9FHR+cjD2UYkuqBbeKNMhvz84r6TeNARaD
-	8zVC1pzJskEiitzFzz0A/G3zY23FAXS86TUjhFgB9wUlb7vXN+UKIAoXxt9S0AysVLtnY5mpeis
-	4IgtCjCykCWWDlamGSN9XGf8Zh95A8I0vIRq+7eQDcIdbLhe5zswGD9+ip0GOzpTD4Ji9Kzk9r4
-	xasz1cemhEm8uXM1Jg588aePvKvp+ntdwbSJ9f6BV7wDJFoejqPS9bXfmm8eAg4Z7ybc0RJ4gn6
-	e6iSfiOLJ0T+jLv8YDI8i4qSB6NCGS+nryz5iTauUHxKLg1qo1qTXIRhS1U6Iwyx47avs9XORHf
-	ZJQgog7eEDjUvxR3ubEzaxqA98/dT9pibtLRannu0fPISjvF1vmiuqHdHYAUAbAqGe+fbd7kKjy
-	YCqknFkWYF41sbVnJNG2jsptKcXwuQ1B2ih1tb+YoACdCyekiN5ddyP4JdemhqrhJS54R5qebti
-	tBpu/w0F0dS9K4z6eYUICXkJSgJ9x2+CANeBT5sO5wrYNhyeLHjfi/iu4hQ==
-X-Received: by 2002:a05:600c:474f:b0:4a1:f8cb:7d70 with SMTP id 5b1f17b1804b1-4ac1793ed87mr83381555e9.24.1793398122427;
-        Fri, 30 Oct 2026 15:08:42 -0700 (PDT)
+        bh=Pye18a12Mt0GkSw7sJj+cBOXoMwNJjFwpHtVV9nHTBQ=;
+        b=nxrFP2OdFikL08gxAoH0sBCbTwqrocK6K/mO8esPGBCMdT1G0m+RQDm4d4uqAcdatI
+         uNItkgLmMv8l2PYlqj0WgIbWLDLuchQv1fEQD5I13V4hUZdnFiTzDB3pGU7y4iyDZ9bX
+         +w32IR90nsvi30fYU9CJW7rEvlVGnzllOI4KScrW+xLdwH+ml1QKj2reixz8ZJSnvizc
+         obIsITITcfv+AOlXzt+xWIXEJ3U4tab2bI4kOCs0XTTwL7MsNco+4e3fOmLPu2Iico+w
+         1QblpkB+x4QlNzOAQ80qMERD7fnesrpm7Q19cQ1VRpuslydw6+eAC3D4ECwbMBWu8BIb
+         EbFA==
+X-Gm-Message-State: AFq9FYJaD/KfJ2MyZY9LdfD1GX2vbYezwQmRwpjLaT1p+25iIhr0EH29
+	Fya68HfHU4RJKCtkQTfm4CD8PCOl1P3d8WTdV6+NKgmWantDsrXTnqMx
+X-Gm-Gg: AYBFou125VbOLZ+Ok9UWjz/GUEob8z8iqDIjgXIPzz2jfFb9JUGm/swQHw1GvX0awYn
+	nqK/9mmpBe+ykwZ/B0Jsf9wvW1wpyLiCWg5MczuukYeZCffV3Zq5uLgLcjnb8JO1OeUcHygE0av
+	KCzwjLjutGOwdnjDodjGjlR4sA3JjRpXPKtY3jPxaxN8UtKbUWYmCAY/0811kZ6GL1fDcNGZT1T
+	ILUOiBVYqiXOVLGgbKPDztQot09Sf0isJ4VfNe9PGPLlR8rCGSHUtju1Dy37cS16ZIFIILeJmhz
+	EorIgWZqJITIGxfrNtcny1kfS/lzGA5IW8s6FtgAOSTuAc7ktDkrpt+HhZlsJ5XnMLi0SEmu7e/
+	3sk52RjUdi3ix5CteixFPbQUJFOH2hz90BdOdlTqnKAWGg/g5A5gI1Bql63yX0qmceQUZ6BdjUc
+	Ep3KDojxL0uYM07Q/1zpQTh+Lcr9DJq+gzNBxGDvLAKkHuxkc6FNjeVahKFh6qEQEuDC8EzDHKp
+	iyEYjcZgYsl8UQRknawGp7PeECMsRbqLPnAVo1uarR2I1glAia2qVsbpbppOiIXla88Xs8GStja
+	6nKXtVlGsckHRIsj1t7m5uEhy4pPHu5mH/EyEALXLcbGz46PHjQnYWClxXOAK3M7hGUkpYR2OFI
+	3j480dVgF8mB+1FLW+ODmsJd6h54DDFbTtsyjsuW8TbajBZeCbopcqoBk5Q==
+X-Received: by 2002:a05:600c:3b1a:b0:4a8:b8b4:6226 with SMTP id 5b1f17b1804b1-4ac18c73d17mr79226395e9.28.1793398120539;
+        Fri, 30 Oct 2026 15:08:40 -0700 (PDT)
 Received: from u1804.home.lan (152-43.dsl.iskon.hr. [89.164.152.43])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abe7706516sm56230305e9.0.2026.10.30.15.08.41
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abe7706516sm56230305e9.0.2026.10.30.15.08.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 15:08:42 -0700 (PDT)
+        Fri, 30 Oct 2026 15:08:40 -0700 (PDT)
 From: Goran Sustek <gsustek@gmail.com>
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org,
 	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH ath-next 3/3] wifi: ath12k: name direct buffer ring modules 2 and 3
-Date: Fri, 30 Oct 2026 23:08:24 +0100
-Message-ID: <20261030220824.915760-4-gsustek@gmail.com>
+Subject: [PATCH ath-next 2/3] wifi: ath12k: skip unknown direct buffer ring module IDs
+Date: Fri, 30 Oct 2026 23:08:23 +0100
+Message-ID: <20261030220824.915760-3-gsustek@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261030220824.915760-1-gsustek@gmail.com>
 References: <20261030220824.915760-1-gsustek@gmail.com>
@@ -100,35 +100,99 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Qualcomm's WMI interface definition (WMI_DMA_RING_SUPPORTED_MODULE in
-fw-api wmi_unified.h) lists direct buffer ring module 2 as CV upload
-and module 3 as Wi-Fi radar. QCN9274 firmware WLAN.WBE.1.6-01243
-advertises module 2.
+Newer firmware may advertise direct buffer rings for modules the
+driver does not know. QCN9274 firmware WLAN.WBE.1.6-01243 lists
+module 2, and ath12k_wmi_dma_ring_caps() treats it as fatal:
 
-Add both to enum wmi_direct_buffer_module so their capabilities are
-kept instead of skipped. No ring is set up for them; that needs the
-features themselves.
+  ath12k_wifi7_pci 0000:06:00.0: Invalid module id 2
+  ath12k_wifi7_pci 0000:06:00.0: failed to parse tlv -22
+
+It frees the capabilities stored so far and aborts the parse of the
+rest of the service ready ext event. Initialisation continues only
+because the service ready ext2 event completes it.
+
+Skip unknown module IDs with a debug message instead; the driver only
+sets up rings for the modules it implements. Store the accepted
+entries contiguously and set num_db_cap to the number actually stored:
+ath12k_wmi_alloc_dbring_caps() zero-fills the array, so a hole left at
+the index of a skipped entry would read as a spectral ring with zero
+sizes.
 
 Tested as part of the series.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
 Signed-off-by: Goran Sustek <gsustek@gmail.com>
 ---
- drivers/net/wireless/ath/ath12k/wmi.h |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath12k/wmi.c |   43 +++++++++++++++++++++------------
+ 1 file changed, 28 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index b508aa759bd8..9444a1f29813 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -2378,6 +2378,8 @@ enum wmi_beacon_gen_mode {
- enum wmi_direct_buffer_module {
- 	WMI_DIRECT_BUF_SPECTRAL = 0,
- 	WMI_DIRECT_BUF_CFR = 1,
-+	WMI_DIRECT_BUF_CV_UPLOAD = 2,
-+	WMI_DIRECT_BUF_WIFI_RADAR = 3,
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index d5160af60e00..4d4f8e9caf07 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -4938,8 +4938,8 @@ static int ath12k_wmi_dma_ring_caps(struct ath12k_base *ab,
+ 	struct ath12k_wmi_dma_ring_caps_parse *dma_caps_parse = data;
+ 	struct ath12k_wmi_dma_ring_caps_params *dma_caps;
+ 	struct ath12k_dbring_cap *dir_buff_caps;
++	u32 i, n = 0, module_id;
+ 	int ret;
+-	u32 i;
  
- 	/* keep it last */
- 	WMI_DIRECT_BUF_MAX
+ 	dma_caps_parse->n_dma_ring_caps = 0;
+ 	dma_caps = (struct ath12k_wmi_dma_ring_caps_params *)ptr;
+@@ -4965,26 +4965,39 @@ static int ath12k_wmi_dma_ring_caps(struct ath12k_base *ab,
+ 
+ 	dir_buff_caps = ab->db_caps;
+ 	for (i = 0; i < dma_caps_parse->n_dma_ring_caps; i++) {
+-		if (le32_to_cpu(dma_caps[i].module_id) >= WMI_DIRECT_BUF_MAX) {
+-			ath12k_warn(ab, "Invalid module id %d\n",
+-				    le32_to_cpu(dma_caps[i].module_id));
+-			ret = -EINVAL;
+-			goto free_dir_buff;
++		module_id = le32_to_cpu(dma_caps[i].module_id);
++
++		/* Newer firmware may advertise rings for modules this driver
++		 * does not know yet. Skip them; the driver only sets up rings
++		 * for the modules it implements.
++		 */
++		if (module_id >= WMI_DIRECT_BUF_MAX) {
++			ath12k_dbg(ab, ATH12K_DBG_WMI,
++				   "skipping dma ring caps of unknown module id %u\n",
++				   module_id);
++			continue;
+ 		}
+ 
+-		dir_buff_caps[i].id = le32_to_cpu(dma_caps[i].module_id);
+-		dir_buff_caps[i].pdev_id =
++		dir_buff_caps[n].id = module_id;
++		dir_buff_caps[n].pdev_id =
+ 			DP_HW2SW_MACID(le32_to_cpu(dma_caps[i].pdev_id));
+-		dir_buff_caps[i].min_elem = le32_to_cpu(dma_caps[i].min_elem);
+-		dir_buff_caps[i].min_buf_sz = le32_to_cpu(dma_caps[i].min_buf_sz);
+-		dir_buff_caps[i].min_buf_align = le32_to_cpu(dma_caps[i].min_buf_align);
++		dir_buff_caps[n].min_elem = le32_to_cpu(dma_caps[i].min_elem);
++		dir_buff_caps[n].min_buf_sz = le32_to_cpu(dma_caps[i].min_buf_sz);
++		dir_buff_caps[n].min_buf_align = le32_to_cpu(dma_caps[i].min_buf_align);
++		n++;
+ 	}
+ 
+-	return 0;
++	if (!n) {
++		ath12k_wmi_free_dbring_caps(ab);
++		return 0;
++	}
+ 
+-free_dir_buff:
+-	ath12k_wmi_free_dbring_caps(ab);
+-	return ret;
++	/* count only the entries stored, so no zeroed entry looks like
++	 * a spectral ring
++	 */
++	ab->num_db_cap = n;
++
++	return 0;
+ }
+ 
+ static void
 --
 2.47.0
