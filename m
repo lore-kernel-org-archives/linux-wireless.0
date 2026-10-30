@@ -1,60 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.12
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793351425;
-	b=bhqKHiFmUKO/92FvsggNeAmkUnsOWQ0Uu5IzmlotxZM//PvPYaNQ3TQXA2KKMFV6ftL4
-	 EMFMWE+BvbWsVkMQXunqvHjmNa3RUL7fCV7b7ieNMRkPRPtuQiwaakZa8Gw7cd1dME0VE
-	 Lxj4StZ0ibqnlRm2fEPbFWmvkXdmv8aQVXqFfTuA2dkVfSy5/bTPf4poXXOVuWafL167P
-	 ew5bjioRkPIap+erqdFayjb+aIMXY8YuGbzPA0FeJnsvQbGnPFh4snuSQc5Rck6e4D3sr
-	 5C9tWcd/nZs4K+7KGVYufQXnnqHv9FZyc/0fbSPYFzDA6ILSdf6l/OYo+mG1JY1kSlw==
+	t=1793351876;
+	b=qlhzM03aOrF0gX1J0dcHk2CZBPU1mcYUFqYItcampLgT5Ni3zbR0WP/jAz1yiK2joQ9u
+	 7Im9pQhhyANTuZyCK0ewkXGSorNRmKJzOUUIC6G+fnu1IES7PJ8Mnpz9K/mB6xHMopjjc
+	 IiVDoUrnYwMYEgQoBEuoPP+h2+AGPualn7ZHq8d6eri+B0ttpZG8+gjTiLGP5QGpurFjh
+	 pUtDKkDA3aagEIyQA4YjuLqorYnieR/e7CHy7tplxusmE3mgyr/S3og5cHnh6867T6pxE
+	 EPEL3W5dZTGkCwh4/6rUJ/C7LK2MDDRSrfjLJDZ78kCvg+te1dpJo89AlMwUWfheVSg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793351425;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793351876;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
-	bh=4hgR5T0jPLaVaLkO/iArq9dix1LSfTZRwSEApEKRMCI=;
-	b=HINbyVUFcp6XJXt4qKCsBmMniE+mYZdEqMvoKcy2W6nWEO3baLpcjfFp5dvQCAfXOdCS
-	 8rH+YNx3KpjKWCPwDfDoSNnkZiZUX/xnRwTIyfwvSIoCkh4wH39k1uTqYzS6Uhw6r25Bh
-	 K0aj3DO5zSTGfd5Rug3f5ND7ZJ2+TfWm4NsrGsHSvLYE1TkctxaT91PsRc1D1og+1Ol96
-	 Dk7k5iQu5e/0Q6gqkppgssfm4ItA8zoruXOIO532CThbqHloERBMarmr9RtrIdGLhrqxW
-	 Y2DkVq1TkT60SxlsAwyOMIrmYlYrf0GWxg2HLEtUwUz8teKptp1JNZ6cKOxVeInPv6g==
+	bh=3S2IdpDO85JMPoOoqxv8aNu5TabINF8tpl22mIJyXDQ=;
+	b=pBo35t2bGHRIuDvC6MWiRzaxv6HxQ9Ui6WENVR7dL1OWgvo5V3H8efhBF51wmGjFWUHN
+	 BtFUiIZyIswlJDxhV9yU8r54Bkd7xtirTnqtY8+ulcltIJTi40llaor86g9NJV5SUO6SW
+	 1j7qmwYNWD+jfDjeq3zPJkW776VkM+UjHgatPTtEMFmKFYpDdeAk8iqkh4hlvJRPMscYK
+	 Ddlz7bTl7EF22f4lke2u6sn0T3Fai8k7gjyOauzs9mgvojg4YddR5RvK1al230uN8dY3v
+	 Sd62esfsR4oXYbZj5umlKIcbFlVJSHpcup1I/qJu2k5ggQr71n5OplahdkqEcJOV+Bg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=wp.pl;
 	spf=pass smtp.mailfrom=wp.pl;
-	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=L4qYkkRw;
-	arc=none smtp.remote-ip=212.77.101.12
-Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=lflLrKli;
+	arc=none smtp.remote-ip=212.77.101.9
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D0BB606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 09:10:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D0BB606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2933606A31E
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 09:17:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2933606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=L4qYkkRw
-Received: (wp-smtpd smtp.wp.pl 15358 invoked from network); 30 Oct 2026 10:10:21 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=lflLrKli
+Received: (wp-smtpd smtp.wp.pl 42632 invoked from network); 30 Oct 2026 10:17:46 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
-          t=1793351421; bh=4hgR5T0jPLaVaLkO/iArq9dix1LSfTZRwSEApEKRMCI=;
+          t=1793351866; bh=3S2IdpDO85JMPoOoqxv8aNu5TabINF8tpl22mIJyXDQ=;
           h=From:To:Cc:Subject;
-          b=L4qYkkRw2NmgiQVGZOEC0FKeX3Mypf/5MDUl+bZKtG4jDFmri8b7JSdvrU4Uhu0UU
-           nJfkQZXpyh7K7OMg7aBaHqrhxT1j+TsM1iJaO0RQCQfyK0Mbhhtqtw77xzexLakmOK
-           5Xvf23SdqyOKIpevrT4in348Z3h3M4fNmCdSW6mfptiS+C1jgMeCOCmnJG9e2B/EZT
-           6csVVJhuBoV03bAnGRB2xuSH8IO8Ubt/PrYq10Svf3FmLK5/OzSYvHkd9Ft0ljTfOr
-           hbuBNNN9EcWahAwIaPaKMKftJ7yDeWyAGdwxLzPU5rlbymwarXv8WTcMWXm5hHep3C
-           lkzq2mkiNynKQ==
+          b=lflLrKliuOP6RnqC/CAFPgGN678YPldzYVIPjK1Ok0X2YQnOzMLYzLmcskTacDLNz
+           J6lo+3DgvPg7zskjE88nuHcL1pjYBLMwBt9jnwxTA2fgT7Cn1lgXM1DjpqlU2KkrRz
+           8LyCbOFM+u/elt9nA7QMrxmOpbl7wkX7jMp8inNhjNdqmP2WGqajfob/UcN/s/c9Z+
+           IK0rD1W6/WApHmMrQnVG3urToC5lbhgnGrVaITMdXcylrzLa9Uq50WIeojjveEtocZ
+           XeFsdBi2ilqESj8UKOL4ehwOhJ+gnYJLwcimXETfCkxwitSwKrjlW36TCDrX3WlDj/
+           9aFRjaskKRedA==
 Received: from localhost (77-236-11-144.static.play.pl [77.236.11.144])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <hjf3108@gmail.com>; 30 Oct 2026 10:10:21 +0100
-Date: Fri, 30 Oct 2026 10:10:20 +0100
+          for <hjf3108@gmail.com>; 30 Oct 2026 10:17:46 +0100
+Date: Fri, 30 Oct 2026 10:17:43 +0100
 From: Stanislaw Gruszka <stf_xl@wp.pl>
 To: Ho Jie Feng <hjf3108@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-next 0/8] wifi: rt2x00: improve the throughput
- of rt2800usb
-Message-ID: <20261030091020.GA27096@wp.pl>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless-next 6/8] wifi: rt2800: set the mac80211
+ fast-xmit and aggregation flags
+Message-ID: <20261030091743.GB27096@wp.pl>
 References: <20261029134752.1299130-1-hjf3108@gmail.com>
+ <20261029134752.1299130-7-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,63 +67,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261029134752.1299130-1-hjf3108@gmail.com>
-X-WP-MailID: f134606cdd34bfe0524bc0c49f2019f8
+In-Reply-To: <20261029134752.1299130-7-hjf3108@gmail.com>
+X-WP-MailID: 20180c3f55c8943a67058771b48cccfa
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [MXMB]                               
+X-WP-SPAM: NO 0000001 [0VIx]                               
 
-On Thu, Oct 29, 2026 at 09:47:41PM +0800, Ho Jie Feng wrote:
-> This series improves the throughput of rt2800usb.
+On Thu, Oct 29, 2026 at 09:47:47PM +0800, Ho Jie Feng wrote:
+> Enable AMSDU TX/RX support for this driver, which can increase
+> throughput.
 > 
-> Implements
-> - Frequency offset calibration
-> - Better fallback rates
-> - Aggregation
-> - GRO
+> Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> Tested on WNDA4100 RT3593, 5 GHz with perf3
-> 
->   patch                          before        after
->                                  TX    RX      TX    RX
->   2 crystal calibration          27.7  31.6    28.5  69.7
->   4 MCS16 to MCS8 TX status      27.0  70.0    29.4  70.0
->   7 RX bulk aggregation          30.5  67.8    30.5  80.9
->   8 threaded NAPI with GRO       30.5  80.9    30.5  161.7
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> index 032cd6ac345f0..8b4458a74d33d 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> @@ -11861,6 +11861,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>  	ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
+>  	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
+>  	ieee80211_hw_set(rt2x00dev->hw, TX_STATUS_NO_AMPDU_LEN);
+> +	ieee80211_hw_set(rt2x00dev->hw, SUPPORT_FAST_XMIT);
 
-Nice work! On what host hardware did you take the measurements,
-PC laptop/desktop or some embedded board ?
+IFICT this flag will not take the effect since we have SUPPORTS_PS.
+Also for WAP3 (802.11w) we fallback to software encryption - 
+that will prevent fast xmit as well. To truly enable
+fast xmit, I think we would need add hardware encryption support for 
+WPA3 and also compromise by remove Power Save support (which is disabled by
+default, so that's possibly fine).
 
 Regards
 Stanislaw
 
-> RT3070 did not have any visible change for both TX and RX.
-> 
-> Ho Jie Feng (8):
->   wifi: rt2x00: start the link tuner when an interface is added
->   wifi: rt2800: calibrate the crystal of RT3593 with the beacons
->   wifi: rt2800: use the 3SS fallback table of RT3883 on RT3593
->   wifi: rt2800: report the MCS16 to MCS8 fallback of RT3593 in TX status
->   wifi: rt2800: don't report an A-MPDU length to minstrel_ht
->   wifi: rt2800: set the mac80211 fast-xmit and aggregation flags
->   wifi: rt2800usb: enable RX bulk aggregation
->   wifi: rt2x00usb: use a threaded NAPI with GRO for RX
-> 
->  drivers/net/wireless/ralink/rt2x00/rt2800.h   |   1 +
->  .../net/wireless/ralink/rt2x00/rt2800lib.c    | 115 +++++++++++++++++-
->  .../net/wireless/ralink/rt2x00/rt2800lib.h    |   4 +
->  .../net/wireless/ralink/rt2x00/rt2800usb.c    |  33 ++++-
->  .../net/wireless/ralink/rt2x00/rt2800usb.h    |   6 +
->  drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  16 ++-
->  .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 105 ++++++++++++----
->  .../net/wireless/ralink/rt2x00/rt2x00lib.h    |   2 +
->  .../net/wireless/ralink/rt2x00/rt2x00link.c   |   9 ++
->  .../net/wireless/ralink/rt2x00/rt2x00mac.c    |   6 +
->  .../net/wireless/ralink/rt2x00/rt2x00mmio.c   |   2 +-
->  .../net/wireless/ralink/rt2x00/rt2x00usb.c    |  52 ++++++--
->  12 files changed, 307 insertions(+), 44 deletions(-)
-> 
-> 
-> base-commit: 734bef548a96e8774d6eef5dfa2026c6edc4e80b
+> +	ieee80211_hw_set(rt2x00dev->hw, TX_AMSDU);
+> +	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_AMSDU_IN_AMPDU);
+>  
+>  	/*
+>  	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
 > -- 
 > 2.53.0
 > 
