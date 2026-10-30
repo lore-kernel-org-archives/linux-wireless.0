@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793367043;
-	b=dg3ufOOjxtRKIa0dRqEWoALJttPR3nN8WIZETTEF0+E8yXdA+Is4zLlsDrXLY2HMHDk3
-	 q+AJMXlm1/9uvBqYECNuTxp5bbSCWc4jEUV0qzGBW4e2KCvPs5wlZXmLrrp6HYCxq/nZ9
-	 08B6DqWGXsNRt7391TliLr8JV3rMMF8fe6UjaAKRfRBjUMyT0Z/mGf9p6V7r12SSCyGFA
-	 62tfGTqzpBEp/rnkZx1zZsO9PlokdEfEkZqfiy810C+RiFXk0mHp/iOZ/efK1lGAz5cJw
-	 a+nYGX9biuMjWre4cJ7AyTVaJ8ITeAsALpMgiHLnHUhj6UDYlLq5ICPJPEi1BhzInSA==
+	t=1793367046;
+	b=QXLWOf13Gdbna4IKFE1cS8G8nvRusNAx5S7MRHSsN1VsMbk6DLFxQZZQIHFbDZ32LO51
+	 Mx/rRdqbTqdAZ9h08JJd5P7x6KGSGu5SbvPgazW0HD/Cm1mVj/j9sGNSqZK6DQHHzv31o
+	 GRw6II8tWroPdJKrKopffyDDc4kkkglBWzWV7wkQTPNpNe5/nyNZPE43OsJdeMfnzV8zf
+	 8t546/HrXOchgXmZkg8KWrBDAP1KoNG/P7fK/AiqJXn/52j//vJ93PiYCnczA2WRveCuA
+	 VmqFsuLHmBcUvEivVabm1jThFS1KQzUqQYWG5YTKf6YSFoOOMm61yp8gfIkLxD8PVuw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793367043;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793367046;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
 	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-Id:
@@ -16,98 +16,97 @@ ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-GUID:
 	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
 	 X-Proofpoint-Spam-Details;
-	bh=rPyInSdtwHFm8J8lRv+0ueGJMWPT9x7I5KlIa89a4VA=;
-	b=1JiMm9EQbnlXJJCFBpOvda/H/y1dyjzLWbFEXpYZVjv6gDVgyasKDz0A5zRD0X0WC8+K
-	 14ygZSx2VLAF/6pYqrt2Z6W5Kp/h2/8aM9oZy1mzfRcHnHTA+q8whp6Muv1zfgZ0a+p0S
-	 eCVqdD6HOghB9GPvBSXfxCRKljaDv0u2Ew7NoAIt3o9STsg6E+1ImKBAurrHAeh2+1Wxu
-	 ak1Ie+nsJggRglpECagmY+OEtmXYh5IQck8Z6P7SB2UxO7hHpG2Xah4J30NfvGx7ApCro
-	 E+qbzWMGJ4yOfWroDtVX5HKLaVT8xz9KoW0qxpsd4cOcwph9pD5OnsktqLJjWroDPfg==
+	bh=+nWiKkBddv/FpNjlZUT+0ofjv6dN3IlSqc6YQb7f9do=;
+	b=ec8/kwMRijnQpI98nFkaBUZtifTG6PTQWPq7+dDjfemXXcAb7N86/HDkBONO2pgqHe//
+	 WKURp4wd6dx7CNyHylJ0T3dHA4A1FWbm0QFgDAExEDlUyaYNWc3GbzUCGSLtNrc9EAqTU
+	 4yYUTBtkjGeZZ2mQG3gGYCp/a9d3xhGDcFkpFI25lKFBJiBPRkLee1rJsWCYIfeSPURq9
+	 keoZjISv0JVkmDgiOUWCDNqqCoGUNyU3CLQpDOO4TRBB9g+AHeOZ78jmwykxcmfekX3xG
+	 ZRCgoWYizrKOvlm6Y/JdoRZtLe4rYSF89jMwbHfrcxE5ny+V5cfm2RF9XZB4avWNkxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=LdUEH4+O;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=jOtI2G4u;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=aMeuv9bi;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=MxBuDZFL;
 	arc=none smtp.remote-ip=205.220.180.131
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 540EA606A31D
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:30:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 540EA606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ECF9606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:30:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0ECF9606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=LdUEH4+O;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=jOtI2G4u
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=aMeuv9bi;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=MxBuDZFL
 Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69UBGKxQ3130272
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:30:42 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69UBGNU13130313
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:30:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=rPyInSdtwHF
-	m8J8lRv+0ueGJMWPT9x7I5KlIa89a4VA=; b=LdUEH4+OE5yiwPwSZJZrnaqBnju
-	vR1780YDlwtsTOkxE/3ctDHD0VYNcjw6+WdjKn3HKiExOTpeBroAl8t/aGIzXfDv
-	UOXbTQQCtJQNu+GussZiCogy4wjIg7/5IrTEVR63bQESLEFsJIh5Vn90i7Ky5F7s
-	CBA7FnM3GfGGhsT/AhTU4kyeHkPvIQU26U/AQrUrFD2L/x9ZN86GtHyy1So9Dz8N
-	JbzshhON/fT8my5qM2w/v/Aq7XmBRTTUnczu4HiE9YZ2W6of+er2gJNPAYnxIIT/
-	4tywBzlTADALlfMDnmnpDFw9/nJyPyP1eG6Xfu+8Ls9HyzDXSIRExoWR/dA==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hme6qk6aa-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=+nWiKkBddv/
+	FpNjlZUT+0ofjv6dN3IlSqc6YQb7f9do=; b=aMeuv9bivbQsvGTlwraM5P1Hy8d
+	+WKv77j2vNcHVAFuvJJoEiShl73wn4fDZ1NRmsKSuDwlacr8zySxnlxcWEExyUiW
+	h42jCo4WI6RxijTyzFPZ1j+mF2aOgX70SOqHdn71JYnMh+xFu0fianlGAEQnVIRP
+	RSf73yYqNcDEKKxEMaqDQ1ilqEX9P/vQ2Z7N8z3HYDmhwNh1jHaRnI9anA0OlIkZ
+	qA/hdOXFMCuCWJT11MW78s/4D5J3e/xGdLxOzfo0sCmo4guJB9VJJVzSVLsBSwBt
+	lrN6/bYE4SHzjCZ6LcamIE7i9zQlab/kuAWUQkbIdynagIz/oC2tzzlZJcw==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hme6qk6ap-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:30:42 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3ae73921fd1so663027a91.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 06:30:42 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:30:44 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ac6795617aso602579a91.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 06:30:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793367041; x=1793971841; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1793367044; x=1793971844; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=rPyInSdtwHFm8J8lRv+0ueGJMWPT9x7I5KlIa89a4VA=;
-        b=jOtI2G4ueki0NiD9s7Pa7oRAWYd83/PzpCryxAm6tIFf8o0/mkh1mQXIH88UfcgKtH
-         2SdejIQHKAie/x92OrprHO46365mz9SUGNysjwQsW3WflSlZi9CdOaRXQ9pw5/N0FwI0
-         D8KZCWLwX1/BkVxlyy0cAw6s5tWv5pkQH9iLcE0sMQaCDOOdH+acr9SxehvnNDYayFgF
-         BWJWSbSIqwnfManYFBUYRloXn5kMBJNTrdls/4OIQAkRXxW9ukMkGbg8OgQaoS1vQFrN
-         0C1qVyXGekzCIW8ucIAIWv6Nw46aO9+gHzBNOGCGHidF1DDNT1igXqm7ATOZtmM0MQWK
-         fbSA==
+        bh=+nWiKkBddv/FpNjlZUT+0ofjv6dN3IlSqc6YQb7f9do=;
+        b=MxBuDZFLDtu+BBtZktEozBAyWVRGz/Tt8IAQdCl2YJu+iySQp0Rs03xD0473nrVZ8h
+         fsOjacz4LA74ncgfdY/+aGfSJhbHI9FN/J1YMQeOfpAACp91hCq2MZ9ewHL+qMRCjFud
+         sW3YQI6Vi+DsmV6vz9uo9VDuj8Ege2VUvoCDDM77aDP7RS4rIyMuidvfJlySZqfEMMGO
+         sTXGewhheXOr1ERIZfUSDO7qzmRp1l6Ze8YlyHQ224Ncnu4eZXqiyPHk81DLHupaYAjE
+         6x0qm/mK9JfrMq9Vy89r5z9owEocDc1c/xg+N7yQ9QdDub2SCuj8+OJRr+mt7L8FrsUd
+         dg9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793367041; x=1793971841;
+        d=1e100.net; s=20260707; t=1793367044; x=1793971844;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=rPyInSdtwHFm8J8lRv+0ueGJMWPT9x7I5KlIa89a4VA=;
-        b=hDTZhhPvY8H1SAJVqL2TS4/s/Q/+9HfUJOX+1ZHM48etKVKNd9u8yv5FlNNqzzmfBI
-         /8Eisgvl4Xwa+/wOkbtjoIwtsGMhkU5ABX8H4pySoRYNK1Xyre6zo5ZMbbPeH5zwKFb2
-         mN0Bvm8LPkC3xk6/DF9zdc4b5vqacos3qBXb4j+m3v+cxPcz1GSvEVlrMaqc74eZHXbw
-         u8pfTxTfa6WLedWakZ6Za3rqqLnt+oljSE4RsW2T/10tMNsAxsjoWgwEClxiXQmB8O03
-         md83+aBhWvx1ZvdI93YE7RXPCsQaxLhKqrACbFmepDoleVBZeP6mdicVVBH7UFsPqd6D
-         Q8Gg==
-X-Gm-Message-State: AFq9FYJAe6JGRBWeLQxzxikDh8LfI/8DK3dn+Jkxa4S2WON+B/vt9e8f
-	ZXWFf6h/CQPfGG6NgEXrPVUivMvNiF1nfP27fmCZ9Ie1vp6Lrod9IfxHTq7fbsJEabLgGyBJd7b
-	RAaPHWfc1VXUkHSN9s5uBTXM11O6VXjVxeUOAfA7lYvX56vaag5/C7d/FOU+VUPW2wWMcF0Jzwc
-	RCOQ==
-X-Gm-Gg: AYBFou0ulQ2Rad3ixNVvweQEx52L8b1TAuBrP/EaJY3Q0ndZeQpZCrS+fLV9mWkp0nQ
-	S/sufmrHYdfeL74GrFBtEAjRf2G+/C+DTR+K0f6SOJqlv30NgIFFwkvIwcMgF7kyNNU/WUDT/JV
-	Hgn0+wnbFkynwGB1ujiWD4bEbfJwAON+cM/SQKLn5BCYNPtqCd7bXDzKv8Dmf+QlxsoaYXlegEp
-	6CMrHsggXU/7J21mPOiSiG/wolfQh2Qhe5kCqft3uRewpmYg8wIBsXUpLPDt+HSOjIULXueR1U6
-	EEk8BOlYpyjc53UwQd8j5EyyPtYv+lWV7kbX7NBlzHaoHBN3+q9nYx82+pXvt5mqqA5PnFJsGxx
-	oaqgGbDdWelULVV/u82trFNDtEX95NhF6P/hwjr096b+Uq77fZzJLWgmdIiPguKVgtPjkHybH0J
-	xRV+39Q2y1dQ==
-X-Received: by 2002:a17:90b:1c07:b0:3a8:cb54:e135 with SMTP id 98e67ed59e1d1-3ae897c9501mr1943320a91.19.1793367040956;
-        Fri, 30 Oct 2026 06:30:40 -0700 (PDT)
-X-Received: by 2002:a17:90b:1c07:b0:3a8:cb54:e135 with SMTP id 98e67ed59e1d1-3ae897c9501mr1943290a91.19.1793367040424;
-        Fri, 30 Oct 2026 06:30:40 -0700 (PDT)
+        bh=+nWiKkBddv/FpNjlZUT+0ofjv6dN3IlSqc6YQb7f9do=;
+        b=h1gxa7XneSx7G/NrtHmC2uJUulROVdATgf7Y/U+PyQL2T4zSCgknaqf7+fy+5cjXSG
+         1iCCBnpwaSSvbHy1VtRmPEP6XZF80FG3olYqgzMqhQbx15ZK3h5tdQk3YV7Z5eX4FtsW
+         iU1n1pdl0kZUdOYAsBdWg55WlOjPqtXBaONnMGxvCODun7n9TvlFDZJQ9FlD4Kmnp1x1
+         NdN0zO6vhqedLKOBSxPUJHaP/m7FcxeZ8i9YNtaEQOSGLYT6gf9nRT1r7agOzdDBrNeG
+         9ILTK79bcqSC185/0rjNvn8vWknGDcan8NfDU3BBbT2RxKoSbPGNS8MGuRzvqth27SMW
+         cPuA==
+X-Gm-Message-State: AFq9FYKk261GlrqP71TldMJL5WAmfGNg2gyOEF7YLBt804tlJ5iVv4Uq
+	VgiNDQ7VNyuVdiVRNeYD4M+M4s3ofBsC3+H1AT/AgoEgyETolOSeVEHC3t3opwMR3hxkrNVjhrw
+	mgchg4RlYNg30X0ETq7NY3hrr9hbXQ5B4DltmYJhmmfJibim6eucwNmJfPRAzCs1ZFnNtGA==
+X-Gm-Gg: AYBFou1G7iHG08485Fv0wpwMnmIP24wJSPlYENiOx/EhJzjDRoPoq7tvN+4aZfvzKsL
+	rx2HzrN63hrsGOagio2I0nfbE/Tk4X9A49BlbzzWfamJlx5ArfS+f0+ztMrA9QPJ968LGS4Ow2t
+	Fgtjd7rkikSi3m/LODKjUqd7/2qcctZBCwYApB4m8g3cTVBodopCM6TuH+YMgP12JaKpuhgBdmf
+	J+je4vfN8opq7EaQY1IeXEF1JIIo3mD+zLBPkln5o7Rvh3ojSwO0i+hQDauwifjoobdhtwATP4T
+	sCSG8R+cBcjjn6qTfYUuspX0gOspZYhioZuqiCliLoQmhuYMfhio6rknrKkvvtjN2a9ymMFX4SE
+	/+aUuM4FfWpS4WRz9WXlreOSUmOL9206dk39gv7ENaF1DBhgjgw1suQJTfXTulcWfemwLhTKfJO
+	pqUfSHwADxGQ==
+X-Received: by 2002:a17:90b:1811:b0:3ac:9176:e836 with SMTP id 98e67ed59e1d1-3ae897ccb04mr1874579a91.21.1793367043739;
+        Fri, 30 Oct 2026 06:30:43 -0700 (PDT)
+X-Received: by 2002:a17:90b:1811:b0:3ac:9176:e836 with SMTP id 98e67ed59e1d1-3ae897ccb04mr1874523a91.21.1793367042919;
+        Fri, 30 Oct 2026 06:30:42 -0700 (PDT)
 Received: from hu-shivbara-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae87f99899sm1678718a91.2.2026.10.30.06.30.38
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae87f99899sm1678718a91.2.2026.10.30.06.30.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 06:30:39 -0700 (PDT)
+        Fri, 30 Oct 2026 06:30:42 -0700 (PDT)
 From: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org, kavita.kavita@oss.qualcomm.com,
         vamsin@qti.qualcomm.com
-Subject: [PATCH wireless-next v1 03/16] wifi: nl80211/cfg80211: extend NAN match indication for discovery offload
-Date: Fri, 30 Oct 2026 18:59:59 +0530
-Message-Id: <20261030133012.3009774-4-shivani.baranwal@oss.qualcomm.com>
+Subject: [PATCH wireless-next v1 04/16] wifi: nl80211/cfg80211: add NAN ranging FTM capability
+Date: Fri, 30 Oct 2026 19:00:00 +0530
+Message-Id: <20261030133012.3009774-5-shivani.baranwal@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261030133012.3009774-1-shivani.baranwal@oss.qualcomm.com>
 References: <20261030133012.3009774-1-shivani.baranwal@oss.qualcomm.com>
@@ -121,24 +120,24 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: cfRJaHrdO4AB-Yy2tk1hr9X8kjKSpFuf
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDA1MyBTYWx0ZWRfX7DZNpVEyRkWa
- WjGTojmyG5rsgen8Vtsdvedb7Gd/6OBRU99b2eJLNWR5ULs7cr2O2Ht77sxCsS4aL0CxdPeKQlJ
- XKcb+JiQDpBJWd8yNypbVCxGgHTXZPQ=
-X-Authority-Analysis: v=2.4 cv=DfSCOftW c=1 sm=1 tr=0 ts=6ae49c02 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+X-Proofpoint-ORIG-GUID: EJ0shQLcwohctyibsO4BNaZv8wWNI8t5
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDA1MyBTYWx0ZWRfX+wYphZTFfGPz
+ KhbhEs80s0SDTxBvIpCS33AyNoVp3n5tgNKuurU54b3KZzLzllNKG3PPKcLheZ+MD9HBQ5hJZGG
+ ophX9Ay8zz5EnIOixDVtySrISJMzFkc=
+X-Authority-Analysis: v=2.4 cv=DfSCOftW c=1 sm=1 tr=0 ts=6ae49c04 cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
  a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
  a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=EUspDBNiAAAA:8
- a=hKTRxPxM3hmCZmPyJGQA:9 a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-GUID: cfRJaHrdO4AB-Yy2tk1hr9X8kjKSpFuf
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDA1MyBTYWx0ZWRfX3wqBWgOgTSU+
- +jUuLSt7IO+BgABVmzX9ctbrOYhJeQyHdXBsYtBvt7GBSm71AdEZUmHp4/RBaBWn0NlGoVLZcFl
- fynzH9LvhvX58up22HBwlVJPqU8l9u3RTluxbdLum2bo35rBujtTW5WcTb2l/Bt5TeGGn+3jh+V
- KkGkVQSFIG6CBCr4rmOX0Zr6sNXYexyhCSqqlPC9DteHA0a0+2/V/YUzeQDD3YS4RMmj9iQ/yi0
- w4iVme6O5PMDAMItPZrGzfcLSqLZQzCaLUC46+La64OKvbOJNmZOOrIfdkmwj9G12QDSirGJ1i9
- JBH/2wJWEvBlSr17JJqdxojpUACYOrZuC5sp3/NtG3ajHxI+FCD0EWdMGJzx1TJzWNCFUXKNCPc
- 4XME4tkfYtQBOhn1W5e/V0ThW4vHIjepFuJy/CK4YE6MPEg9RCzmkurI5eQ04BZ0/3cXBqAWEfm
- IHvf5hmZslLZCvsVAxg==
+ a=iUW0qKhjulv4phxyPqsA:9 a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-GUID: EJ0shQLcwohctyibsO4BNaZv8wWNI8t5
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDA1MyBTYWx0ZWRfXyR1OySwuV95c
+ ncj0fxrcd96HKRtwsIcjoJHTTVprKJDGB3ygePFrEUzzxKqjc7ZoX3vevZ4gMX6olwWrYMa+qa/
+ JdAa3Sb8uH7p0EVYahuuBaR43kg9ei+iRyXD3hbU7x2fuwaStXTWg8NwnkpihRyBcsigkcWGrCm
+ kiiQWz7BUdm9HW5ryPtQ3GSc4seOt0fCbcr/JR39PnfbVOv3YW3Air63dCnfbtiitx7MNQNbJVU
+ u45t/UEpwqGyHYrDi17w6ErqI13QjiP80eAMPjmH11SQ48dsITxDkTQ922MFJ1NQyOlDcbxT1AB
+ WGYcs/mVZOXlrFiYfuVTWCFhGcUwImMetrfpxxDIwiUEJMwhm+9p000u8cfZ5gOZ9ZHBNcMCT8C
+ UQsjEb7f29O2qq3DC2rKqG9D1z+9SNDNMBFWP04OCrXBsPV3rRjUlXFdc154HHEOtHWX6FHtK+c
+ 6ne4cVk5l37J4m/xXfw==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-10-30_04,2026-10-21_02,2025-10-01_01
@@ -148,168 +147,94 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610300053
 
-Extend the NAN match indication with SDEA control field, pairing
-capability, cipher suite, extra service specific info, additional
-elements, and RSSI attributes reported by the driver when the NAN
-Discovery Engine is offloaded.
+From: Kavita Kavita <kavita.kavita@oss.qualcomm.com>
 
-Add parsing support in cfg80211 for the new fields in
-cfg80211_nan_match_params and serialize them in cfg80211_nan_match().
+Add NL80211_PMSR_FTM_TYPE_CAPA_ATTR_NAN_SUPPORT to the FTM type
+capability enum so that userspace (e.g., wpa_supplicant) can query
+whether the driver supports FTM-based ranging within a NAN Ranging
+Session before initiating a NAN Ranging Request.
 
+Add the corresponding nan_support bit to cfg80211_pmsr_capabilities
+and include it in the capability advertisement in
+nl80211_send_pmsr_ftm_capa().
+
+Signed-off-by: Kavita Kavita <kavita.kavita@oss.qualcomm.com>
 Signed-off-by: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>
 ---
- include/net/cfg80211.h       | 30 ++++++++++++++++++++++++++
- include/uapi/linux/nl80211.h | 30 ++++++++++++++++++++++++++
- net/wireless/nl80211.c       | 41 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 101 insertions(+)
+ include/net/cfg80211.h       | 5 ++++-
+ include/uapi/linux/nl80211.h | 4 ++++
+ net/wireless/nl80211.c       | 7 ++++++-
+ 3 files changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5dae55db355a..83b66473f8d1 100644
+index 83b66473f8d1..6fc7b2513904 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -10589,6 +10589,23 @@ void cfg80211_free_nan_func(struct cfg80211_nan_func *f);
-  * @addr: the MAC address of the peer
-  * @info_len: the length of the &info
-  * @info: the Service Specific Info from the peer (if any)
-+ * @extra_info_len: the length of @extra_info (Extended SSI)
-+ * @extra_info: Extended Service Specific Info from the peer (if any)
-+ * @ies_len: the length of @ies
-+ * @ies: additional elements from the peer's Service Descriptor frame (if any)
-+ * @sdea_ctrl: SDEA control field from the peer's SDEA attribute. Bit 2
-+ *	indicates Data Path Required, bit 6 Security Required.
-+ * @pairing_bootstrap_methods: bitmap of the peer's supported NAN pairing
-+ *	bootstrapping methods.
-+ * @csids: array of NAN cipher suite IDs advertised by the peer.
-+ *	NULL if not present.
-+ * @num_csids: number of entries in @csids.
-+ * @pairing_setup: if true, the peer supports NAN pairing setup.
-+ * @pairing_cache: if true, the peer supports NAN pairing NPK/NIK caching.
-+ * @pairing_verify: if true, the peer supports NAN pairing re-verification.
-+ * @rssi: received signal strength in dBm at the time of the match.
-+ *	Only valid when @rssi_valid is true.
-+ * @rssi_valid: if true, @rssi contains a valid RSSI measurement.
-  * @cookie: unique identifier of the corresponding function
-  */
- struct cfg80211_nan_match_params {
-@@ -10598,6 +10615,19 @@ struct cfg80211_nan_match_params {
- 	const u8 *addr;
- 	u8 info_len;
- 	const u8 *info;
-+	u8 extra_info_len;
-+	const u8 *extra_info;
-+	u16 ies_len;
-+	const u8 *ies;
-+	u16 sdea_ctrl;
-+	u16 pairing_bootstrap_methods;
-+	const u32 *csids;
-+	u8 num_csids;
-+	bool pairing_setup;
-+	bool pairing_cache;
-+	bool pairing_verify;
-+	s32 rssi;
-+	bool rssi_valid;
- 	u64 cookie;
- };
- 
+@@ -6246,6 +6246,8 @@ cfg80211_get_iftype_ext_capa(struct wiphy *wiphy, enum nl80211_iftype type);
+  * @ftm.type.pd_support: supports peer-to-peer ranging as mentioned in the
+  *	specification "PR Implementation Consideration Draft 1.9 rev 1" where
+  *	PD stands for proximity detection
++ * @ftm.type.nan_support: supports NAN ranging as defined in
++ *	the "Wi-Fi Aware Specification v4.0, clause 8".
+  * @ftm.concurrent_ista_rsta_support: indicates if the device can
+  *	simultaneously act as initiator and responder in a multi-peer
+  *	measurement request. Only valid if @ftm.rsta_support is set.
+@@ -6296,7 +6298,8 @@ struct cfg80211_pmsr_capabilities {
+ 		u32 min_allowed_ranging_interval_ntb;
+ 		struct {
+ 			u8 infra_support:1,
+-			   pd_support:1;
++			   pd_support:1,
++			   nan_support:1;
+ 		} type;
+ 		u8 concurrent_ista_rsta_support:1;
+ 		u32 pd_preambles;
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d610b3f8ab96..fcbf613b19a9 100644
+index fcbf613b19a9..96d1b072d4a5 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -7863,6 +7863,27 @@ enum nl80211_nan_srf_attributes {
-  * @NL80211_NAN_MATCH_FUNC_PEER: the peer function
-  *	that caused the match. This is a nested attribute.
-  *	See &enum nl80211_nan_func_attributes.
-+ * @NL80211_NAN_MATCH_SDEA_CTRL: u16 SDEA control field from the peer's
-+ *	Service Descriptor Extension Attribute. Bit 2 indicates Data Path
-+ *	Required, bit 6 Security Required, bit 10 GTK Required.
-+ * @NL80211_NAN_MATCH_BOOTSTRAP_METHODS: u16 bitmap of the peer's
-+ *	supported NAN pairing bootstrapping methods per the Wi-Fi Aware
-+ *	Specification Table 9-321.
-+ * @NL80211_NAN_MATCH_CIPHER_SUITES: a set of u32 values indicating the NAN
-+ *	cipher suite selectors advertised by the peer.
-+ * @NL80211_NAN_MATCH_PAIRING_SETUP: flag attribute. Set if the peer
-+ *	supports NAN pairing setup.
-+ * @NL80211_NAN_MATCH_PAIRING_CACHE: flag attribute. Set if the peer
-+ *	supports NAN pairing NPK/NIK caching.
-+ * @NL80211_NAN_MATCH_PAIRING_VERIFY: flag attribute. Set if the peer
-+ *	supports NAN pairing re-verification.
-+ * @NL80211_NAN_MATCH_EXTRA_INFO: binary attribute carrying the peer's
-+ *	Extended Service Specific Info (Extended SSI), if present.
-+ * @NL80211_NAN_MATCH_IES: binary attribute carrying additional elements from
-+ *	the peer's Service Descriptor frame, if present.
-+ * @NL80211_NAN_MATCH_RSSI: s32 attribute. Received signal strength in dBm
-+ *	at the time of the match. Only present when the driver provides a
-+ *	valid RSSI measurement.
+@@ -8473,6 +8473,9 @@ enum nl80211_peer_measurement_ftm_capa {
+  *	the device supports peer-to-peer ranging as mentioned in the
+  *	specification "PR Implementation Consideration Draft 1.9 rev 1" where
+  *	PD stands for proximity detection
++ * @NL80211_PMSR_FTM_TYPE_CAPA_ATTR_NAN_SUPPORT: flag attribute indicating
++ *	that the device supports NAN ranging between two NAN devices as
++ *	defined in the "Wi-Fi Aware Specification v4.0, clause 8".
   *
-  * @NUM_NL80211_NAN_MATCH_ATTR: internal
-  * @NL80211_NAN_MATCH_ATTR_MAX: highest NAN match attribute
-@@ -7871,6 +7892,15 @@ enum nl80211_nan_match_attributes {
- 	__NL80211_NAN_MATCH_INVALID,
- 	NL80211_NAN_MATCH_FUNC_LOCAL,
- 	NL80211_NAN_MATCH_FUNC_PEER,
-+	NL80211_NAN_MATCH_SDEA_CTRL,
-+	NL80211_NAN_MATCH_BOOTSTRAP_METHODS,
-+	NL80211_NAN_MATCH_CIPHER_SUITES,
-+	NL80211_NAN_MATCH_PAIRING_SETUP,
-+	NL80211_NAN_MATCH_PAIRING_CACHE,
-+	NL80211_NAN_MATCH_PAIRING_VERIFY,
-+	NL80211_NAN_MATCH_EXTRA_INFO,
-+	NL80211_NAN_MATCH_IES,
-+	NL80211_NAN_MATCH_RSSI,
+  * @NUM_NL80211_PMSR_FTM_TYPE_CAPA_ATTR: internal
+  * @NL80211_PMSR_FTM_TYPE_CAPA_ATTR_MAX: highest attribute number
+@@ -8482,6 +8485,7 @@ enum nl80211_peer_measurement_ftm_type_capa {
+ 
+ 	NL80211_PMSR_FTM_TYPE_CAPA_ATTR_INFRA_SUPPORT,
+ 	NL80211_PMSR_FTM_TYPE_CAPA_ATTR_PD_SUPPORT,
++	NL80211_PMSR_FTM_TYPE_CAPA_ATTR_NAN_SUPPORT,
  
  	/* keep last */
- 	NUM_NL80211_NAN_MATCH_ATTR,
+ 	NUM_NL80211_PMSR_FTM_TYPE_CAPA_ATTR,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9900f8b91a83..40966cfe5d86 100644
+index 40966cfe5d86..d92673c67407 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -17878,6 +17878,47 @@ void cfg80211_nan_match(struct wireless_dev *wdev,
- 		goto nla_put_failure;
+@@ -2739,7 +2739,8 @@ nl80211_send_pmsr_ftm_capa(const struct cfg80211_pmsr_capabilities *cap,
+ 			cap->ftm.min_allowed_ranging_interval_ntb))
+ 		return -ENOBUFS;
  
- 	nla_nest_end(msg, peer_func_attr);
+-	if (cap->ftm.type.infra_support || cap->ftm.type.pd_support) {
++	if (cap->ftm.type.infra_support || cap->ftm.type.pd_support ||
++	    cap->ftm.type.nan_support) {
+ 		struct nlattr *pd_caps;
+ 
+ 		pd_caps = nla_nest_start_noflag(msg,
+@@ -2755,6 +2756,10 @@ nl80211_send_pmsr_ftm_capa(const struct cfg80211_pmsr_capabilities *cap,
+ 		    nla_put_flag(msg, NL80211_PMSR_FTM_TYPE_CAPA_ATTR_PD_SUPPORT))
+ 			return -ENOBUFS;
+ 
++		if (cap->ftm.type.nan_support &&
++		    nla_put_flag(msg, NL80211_PMSR_FTM_TYPE_CAPA_ATTR_NAN_SUPPORT))
++			return -ENOBUFS;
 +
-+	if (match->sdea_ctrl &&
-+	    nla_put_u16(msg, NL80211_NAN_MATCH_SDEA_CTRL, match->sdea_ctrl))
-+		goto nla_put_failure;
-+
-+	if (match->pairing_bootstrap_methods &&
-+	    nla_put_u16(msg, NL80211_NAN_MATCH_BOOTSTRAP_METHODS,
-+			match->pairing_bootstrap_methods))
-+		goto nla_put_failure;
-+
-+	if (match->csids && match->num_csids &&
-+	    nla_put(msg, NL80211_NAN_MATCH_CIPHER_SUITES,
-+		    match->num_csids * sizeof(u32),
-+		    match->csids))
-+		goto nla_put_failure;
-+
-+	if (match->pairing_setup &&
-+	    nla_put_flag(msg, NL80211_NAN_MATCH_PAIRING_SETUP))
-+		goto nla_put_failure;
-+
-+	if (match->pairing_cache &&
-+	    nla_put_flag(msg, NL80211_NAN_MATCH_PAIRING_CACHE))
-+		goto nla_put_failure;
-+
-+	if (match->pairing_verify &&
-+	    nla_put_flag(msg, NL80211_NAN_MATCH_PAIRING_VERIFY))
-+		goto nla_put_failure;
-+
-+	if (match->extra_info && match->extra_info_len &&
-+	    nla_put(msg, NL80211_NAN_MATCH_EXTRA_INFO, match->extra_info_len,
-+		    match->extra_info))
-+		goto nla_put_failure;
-+
-+	if (match->ies && match->ies_len &&
-+	    nla_put(msg, NL80211_NAN_MATCH_IES, match->ies_len, match->ies))
-+		goto nla_put_failure;
-+
-+	if (match->rssi_valid &&
-+	    nla_put_s32(msg, NL80211_NAN_MATCH_RSSI, match->rssi))
-+		goto nla_put_failure;
-+
- 	nla_nest_end(msg, match_attr);
- 	genlmsg_end(msg, hdr);
+ 		nla_nest_end(msg, pd_caps);
+ 	}
  
 -- 
 2.34.1
