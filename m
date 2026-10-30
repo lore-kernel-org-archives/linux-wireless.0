@@ -1,115 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793367077;
-	b=L/M6hT640/Y/+X/cD7SDskrbMnOh7pmxh06sqnDJu1wFRDeI/wnSxOVhhUmZHy5Zkq+6
-	 yzYSGsK5SKlRIiieJZ1RXMtWiZoU9sDuNDjcZCXPq3YzeqezNY6r53NnIgB93PxUfLpyK
-	 wS5+5/xPnwbp2degmtqQkso9/4QqzhfC5FX1f5Y8WpSUpZxAVcC+rBbYD0PWK0pyYXJqI
-	 NW9XJVc5AZHbAga4Uf8P3XDSVOuox/sy3YLuH8bGU6m1c6Lub3Kypk9x1miE+K9/JDg0O
-	 Tqbh2LPMW7yKWjzySvhM7sTWN32NlwnXhpXjVKQOzGbC94ZrEb9PqgkPPJGMS9AgPfQ==
+	t=1793371023;
+	b=Cogc6pNsmrHaLDOrh6wNC+Z82K3tWXrO6EZMEDoytXbXuUU+CtaKcSb+nwMoChBanoGV
+	 vTpcyprj2Uchq1VfX+F54zPFKBqci5iAvsqjFUqkvEcs8t0wNOzmEOtN5VYWQOdsUOWA3
+	 BxKNqzamstoPI1QG4Gz324siM1l0zwshfGB89T9NXYMQd+g1ekUA36VLS6Osoz9Z94amT
+	 hpZfuFUDmIOw2Hxt1QtVWrT7ydxmGMakAT1Y4VTK3na4KGSw0zsiNymMz3BrczICWTNPT
+	 lldfICv8YCcCYhwOKaw+5ncFE5u3bkc3BWttG8qDGDK+aQx1Mv0uTVnoqSCnZa4ofbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793367077;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
-	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-Id:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=YbKVz9GwLYeeEfhn7NvgXf3SHykGnCWzO+01JoTTvQ4=;
-	b=us0NOCWvCs/FrP21U3lXzVc9SU76bmHxQMXPXa3hea0AlybQEwtOuZpYNrX13BTwBmav
-	 Y8rLrbwcRTeavf9Lsw9WCVvTMXE09lrhjgrcIF7Um07Tn9fjgAFZ84XCj1yz6/C5iIYve
-	 KoOZi7l1qIpWVUAcQxwUjF/OEevx2gxPGyWbTI1VIrY8JtNvdgx+0S4WLYxMvNfL/chVm
-	 p+A+thK7Rt0gERlnOjDAaUg01Wc2lMjpDW+eKBaSLGiZskpguoGsCqeTd3h1Hr9DhnC8c
-	 HG6KybkBxIt4EQ5uSeuTC4w1FY1nyMDfCstAaHvRLKGLlUftHcBic9Ldvofz+fltJZg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793371023;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
+	 In-Reply-To:References;
+	bh=wiIa6Cr2sZaLCXVMCzH0OBX7W4amt0iKKKNP2eGSOzc=;
+	b=MvXpeWj1y5idd9djw7GXOOiVLBhGlQC9thtFYb185f2o1IFIijxcGXwEiJ1x6pwAF+M2
+	 /xvsO1amMRQM6gIQhbLx0eK2b94OO4ExanupIosy1nT5wKreEZlCgSMni0sbsnqJXXA8d
+	 8QvfDq7qs9Ni+s9bU82oznrebtzgqLhgbA8Sdf3y10m1shf/3dasGkEksM3GXcIGHmXUc
+	 jZiA1wLER1VMzNYxlXdxotqLszlhZA1PcQGcvYQWNTC0bhWC8Q+ZdkqfuEj77c0KRKPDr
+	 nrCo1wl/Ssp3N+YWBwDX3418JoiBKv0EXZIjCZXUJF3JkSoFeYRR7C+LDQhk61OOi4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=QePK1eEE;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=XZVZY14e;
-	arc=none smtp.remote-ip=205.220.168.131
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QDLxa3VS;
+	arc=none smtp.remote-ip=95.215.58.53
+Received: from mta1.migadu.com (out-53.mta1.migadu.com [95.215.58.53])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 244A2606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:31:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 244A2606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0640A606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:37:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0640A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=QePK1eEE;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=XZVZY14e
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69UBG3oK4116535
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:31:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=YbKVz9GwLYe
-	eEfhn7NvgXf3SHykGnCWzO+01JoTTvQ4=; b=QePK1eEENKlXNKR1NN6t2ZTjkwo
-	JEtha0FxgRaVy5wbHl9PxQ4tP7cPDJOTHo2J0GQ6ukHniATmmDOyw10p2IGLhzSy
-	yJ63UeWKLxgWmpbGoWhH6dMkJN3QQpIUO7TPUXRf67racxiy1s8+y6Cc2ydgSwKE
-	cFznv/2x6Pcvp0bkJSucmTBOAi0uqyhPMlN5cJuE0E4qmildaFw3Ff6Fv11bYyNs
-	U22fQapqWi36Td3q1rcBlkvMzim2PP77SSszgWTDWq/RFFTxclzEBbxIxkiSZw1n
-	v42gnnhrDZxc5YpAMyMz08wSDvyoy+BNNSysQKMnlWS86jRuon01MNZXgFg==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hme6rkat3-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 13:31:14 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3acc98e3b3cso650111a91.3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 06:31:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793367074; x=1793971874; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=YbKVz9GwLYeeEfhn7NvgXf3SHykGnCWzO+01JoTTvQ4=;
-        b=XZVZY14en5O6+dkvsPdSuSAGVH2VpmDBUoXXHB2cPEj0n++BvkX6gHZx3sbqeppNuX
-         aqyZ3XcaeJ6np/i64Qh0PHeq655HffEOZ+HHTvcSGTd58QllBIyfnGXyB7x5VImPy+Fl
-         kEd2pGsmgPl9tYhpVhfvBOkVadAA5xooFe/Pq8ycVB2rcgE8hHUoikyG8EI0eTQ4GWqv
-         MC/0kWZkYdvgmSokya5vMaBY9d7m5ba8su+JmU9xo7vQA9ZuEnBq8ESTnlx3bNe7VgZY
-         dcGOS/8iDL68EQaXmRYasDVKdjMu9mgu4crpjxmDBF86PkCOTZ+1B+axB9kZx9vRSZJX
-         +8BA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793367074; x=1793971874;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=YbKVz9GwLYeeEfhn7NvgXf3SHykGnCWzO+01JoTTvQ4=;
-        b=xRgEYbfgVbOrkqqlVtJM28J5xWKRcn16ZQt8lV960YlOOE3py5TYotcbSOWMZocgx9
-         SZWWihMauax5J0nFZNr/9gRNoq8r6kRtYmCHdZBcRiiUrvW6JGfZUk92p4BYPMZuMBQv
-         kFIicgXn/RxzuMotUn8Au1uLN5x5/MkThaKmxMspgIDoj1vbm2FCsjYeMIgbOh2jqMjm
-         1aw0zV2dhGPePs+YS+cfpUWrXvITz+BzaPN1hZLC4jx+SSz7vCuHpm2G6huoTMu2QfJJ
-         DdKY+1NreSrYI6rDKY2sgAUdTn6w/QxH12Yr1sIESUsqq1t6gml5yawOWBCPzrukVNFD
-         Ws1w==
-X-Gm-Message-State: AFq9FYJsLdlLoZImWsWlpBZX+8vBHBNVgpD0OtT8EIHxyzyWS2k0/HgL
-	zYeRIwSXirnU1Od1+o5x2IgJzCd+FFb1Xw5WPylFqOPAYxkoXzx2wkjRBrds30Wf+QdMU6nUzbK
-	Ey3sdBQ8Y+jwWuWtKHLE1zkcB/VxhX6zeJ1ngOPqvM+u9YDJbpbQlgufJwos3l+q0X0wjww==
-X-Gm-Gg: AYBFou2cjr5qR3pHe9s9fp1Nu8kcWu7Y4X2oeuTR6alZ+Uv2hLNancs4cheYozX6deV
-	QfH8YN39ZZdYZRU9uTq/6c1YbLp/tPsPqYl5VfyAJMy/fIFNxSqiP4HGrSNCzIY1ee83sGsAELx
-	yjeq5iIQHgCrCsrpOTb7OKfTenaSbVFKHf0WajDXlrqQO1kpgNCxv5Rpp/gMhxZzyAdrnSEQXcq
-	JQFCC+9hOOc0fRw3fY2mCI1lOeSlEguPr8u3e2wzbJd/f1u5oqSARWoeBAB4KCZkFhTUajJjYzs
-	4hJH5WQowyjfuQZSt8MTwKm9i6GNeO2DNYUKtqkU0blx6yLvDjApTlHTL8dgf8TQApEgGoH3H6w
-	fEPc7daYUr9EGv0nmnpCQF5UzoIxzR3poy8HjVSYL2YUQtS2wGi/u0Hw8O7RkgRcjE0HvyMiE7R
-	LTL3O78GQmYQ==
-X-Received: by 2002:a17:90b:4986:b0:3a7:da33:ff2d with SMTP id 98e67ed59e1d1-3ae89849d1amr1853252a91.48.1793367073938;
-        Fri, 30 Oct 2026 06:31:13 -0700 (PDT)
-X-Received: by 2002:a17:90b:4986:b0:3a7:da33:ff2d with SMTP id 98e67ed59e1d1-3ae89849d1amr1853220a91.48.1793367073319;
-        Fri, 30 Oct 2026 06:31:13 -0700 (PDT)
-Received: from hu-shivbara-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae87f99899sm1678718a91.2.2026.10.30.06.31.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 06:31:12 -0700 (PDT)
-From: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, kavita.kavita@oss.qualcomm.com,
-        vamsin@qti.qualcomm.com
-Subject: [PATCH wireless-next v1 16/16] wifi: nl80211/cfg80211: pass Instant Communication frequency for NAN offload
-Date: Fri, 30 Oct 2026 19:00:12 +0530
-Message-Id: <20261030133012.3009774-17-shivani.baranwal@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261030133012.3009774-1-shivani.baranwal@oss.qualcomm.com>
-References: <20261030133012.3009774-1-shivani.baranwal@oss.qualcomm.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QDLxa3VS
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=qggKogTdOwOMj/yNNYKeKJscDWkEFiFK71V3XLb/xGk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793371019; v=1; x=1793975819;
+ b=QDLxa3VSJeSVFow5vrSVdIKi+2nO6uShhD/b0bHUolKnFeYATxk9qqXCAIP/40kpzDe19/jz
+ 82kiy1OaxaOCl1Ih2+hLl1uE75FDy3FXJHbt6jNYFahDi8zdaMHhlRQOxBmEbawwTOrITaSbiU3
+ orYVD+g0RSPVcQKnnf9rpCtQ=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id ca7b49e6f113364b;
+	Fri, 30 Oct 2026 14:36:59 +0000
+X-Mizu-Trace-ID: ca7b49e6f113364b
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -119,202 +56,70 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: ReCjUO1vqS8rpxoFnS75fk9afECF1d3e
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDA1MyBTYWx0ZWRfX/DZZW4tplehh
- ZeSCoChgRGThIffJZU+4T9yW7iPt0w1B6OdQlZsM79OKTcx5v+uC0rRsnTHtKWWNRvAMh9v9Fko
- KVPqsXJAmOvG9aKiBh7kmLD82821NC8=
-X-Authority-Analysis: v=2.4 cv=PIqaavqC c=1 sm=1 tr=0 ts=6ae49c23 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
- a=Xa71DiGtEIgbf1JriuAA:9 a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDA1MyBTYWx0ZWRfX3Fo6SRZkOh9T
- 9lLHY8D7WhEXNIJRbwkhaVqoIjmErI3KyYn9oR83bST/Qh4kbsok2tkRVOCr+BwbAnfKiQlGtMl
- lgyx6RdtrCtgFKT/m0UANI4FXGt3xoMGzdaLUiuvQHWIvmNiCga+g4ui/K0rzBtXQOcj4M9eXvn
- 11Evq7pSgYeWq6yvdZgVqOiUJ6Dl+1LTDTUigmRExOWCdLFYMarAG5R23gOlQFNY0f3v7RZUB/W
- OFzzGMnL5jP0C7A6G/Ovf02nwdtu9hzQwjAI27Wf+kQ09xZBWp+i2FE5yWkQahxfnV0+9AJ7Epc
- Z40RoQTkbAaJrMM7/J5n6pTtpes9qPConkfRE/xo9i0fYVbZiWgI/jx4L5hmCWSQ+n2QPowc31S
- sWLFUHm2MdsHphpvwunEPP7Au/tTBDRbnySSyNLgbdR9mPdaQzNCTcG5SKHK3xMBlwj6vKBdxTq
- dJRmkqfhs9zVb6KXyow==
-X-Proofpoint-GUID: ReCjUO1vqS8rpxoFnS75fk9afECF1d3e
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-30_04,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 bulkscore=0 impostorscore=0 spamscore=0
- lowpriorityscore=0 suspectscore=0 phishscore=0 adultscore=0
- priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610300053
+Date: Fri, 30 Oct 2026 14:36:58 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <1c6b269275da44f667b6cab73968fee752860eda@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next] wifi: rtw88: drop C2H packets shorter than the
+ C2H header
+To: "Huihui Huang" <hhhuang@smu.edu.sg>, linux-wireless@vger.kernel.org
+Cc: "Huihui Huang" <hhhuang@smu.edu.sg>, "Ping-Ke Shih" <pkshih@realtek.com>,
+ stable@vger.kernel.org
+In-Reply-To: <20261029170017.832708-1-hhhuang@smu.edu.sg>
+References: <20261029170017.832708-1-hhhuang@smu.edu.sg>
 
-Add a NAN configuration attribute for the Instant Communication operating
-frequency. Require the frequency when IC is enabled with NAN Discovery
-Engine offload while preserving schedule-based standard IC operation.
+Hi Huihui,
 
-Signed-off-by: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>
----
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h |  6 ++++++
- net/wireless/nl80211.c       | 28 ++++++++++++++++++++++++++++
- net/wireless/trace.h         | 18 ++++++++++++++----
- 4 files changed, 51 insertions(+), 4 deletions(-)
+I have two comments below, nothing major.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 20cf7f580d3f..b543204d93cf 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4203,6 +4203,8 @@ struct cfg80211_nan_band_config {
-  *	notifications.
-  * @instant_comm: if true, start Instant Communication (IC) as defined in
-  *	Chapter 13 of the Wi-Fi Aware Specification v4.0.
-+ * @instant_comm_freq: frequency in MHz for Instant Communication when NAN
-+ *	Discovery Engine offload is used.
-  * @band_cfgs: array of band specific configurations, indexed by
-  *	&enum nl80211_band values.
-  * @extra_nan_attrs: pointer to additional NAN attributes.
-@@ -4219,6 +4221,7 @@ struct cfg80211_nan_conf {
- 	u8 discovery_beacon_interval;
- 	bool enable_dw_notification;
- 	bool instant_comm;
-+	u32 instant_comm_freq;
- 	struct cfg80211_nan_band_config band_cfgs[NUM_NL80211_BANDS];
- 	const u8 *extra_nan_attrs;
- 	u16 extra_nan_attrs_len;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 3b105cd56c24..297e4acf80c7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -8065,7 +8065,12 @@ enum nl80211_nan_band_conf_attributes {
-  *	start Instant Communication (IC) as defined in Chapter 13 of the
-  *	Wi-Fi Aware Specification v4.0.
-  *	%NL80211_NAN_CONF_DISCOVERY_BEACON_INTERVAL must be set as well.
-+ *	%NL80211_NAN_CONF_INSTANT_COMM_FREQ must also be set when NAN Discovery
-+ *	Engine offload is used.
-  *	This is a flag attribute.
-+ * @NL80211_NAN_CONF_INSTANT_COMM_FREQ: Frequency in MHz for Instant
-+ *	Communication when NAN Discovery Engine offload is used. This is a u32
-+ *	attribute and is required when IC is enabled in offload mode.
-  * @NUM_NL80211_NAN_CONF_ATTR: Internal.
-  * @NL80211_NAN_CONF_ATTR_MAX: Highest NAN configuration attribute.
-  *
-@@ -8082,6 +8087,7 @@ enum nl80211_nan_conf_attributes {
- 	NL80211_NAN_CONF_DISCOVERY_BEACON_INTERVAL,
- 	NL80211_NAN_CONF_NOTIFY_DW,
- 	NL80211_NAN_CONF_INSTANT_COMM,
-+	NL80211_NAN_CONF_INSTANT_COMM_FREQ,
- 
- 	/* keep last */
- 	NUM_NL80211_NAN_CONF_ATTR,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a94ca48bc06e..ea5805a76599 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -817,6 +817,7 @@ nl80211_nan_conf_policy[NL80211_NAN_CONF_ATTR_MAX + 1] = {
- 		NLA_POLICY_RANGE(NLA_U8, 50, 200),
- 	[NL80211_NAN_CONF_NOTIFY_DW] = { .type = NLA_FLAG },
- 	[NL80211_NAN_CONF_INSTANT_COMM] = { .type = NLA_FLAG },
-+	[NL80211_NAN_CONF_INSTANT_COMM_FREQ] = { .type = NLA_U32 },
- };
- 
- static const struct netlink_range_validation nl80211_punct_bitmap_range = {
-@@ -17289,6 +17290,25 @@ static int nl80211_parse_nan_conf(struct wiphy *wiphy,
- 			nla_get_flag(attrs[NL80211_NAN_CONF_NOTIFY_DW]);
- 
- 	conf->instant_comm = nla_get_flag(attrs[NL80211_NAN_CONF_INSTANT_COMM]);
-+	if (attrs[NL80211_NAN_CONF_INSTANT_COMM_FREQ]) {
-+		conf->instant_comm_freq =
-+			nla_get_u32(attrs[NL80211_NAN_CONF_INSTANT_COMM_FREQ]);
-+
-+		if (!conf->instant_comm) {
-+			NL_SET_ERR_MSG_ATTR(info->extack,
-+					    attrs[NL80211_NAN_CONF_INSTANT_COMM_FREQ],
-+					    "Instant Communication frequency requires Instant Communication");
-+			return -EINVAL;
-+		}
-+
-+		if (!conf->instant_comm_freq) {
-+			NL_SET_ERR_MSG_ATTR(info->extack,
-+					    attrs[NL80211_NAN_CONF_INSTANT_COMM_FREQ],
-+					    "Instant Communication frequency must be non-zero");
-+			return -EINVAL;
-+		}
-+	}
-+
- 	if (conf->instant_comm) {
- 		if (!(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_INSTANT_COMM)) {
- 			NL_SET_ERR_MSG_ATTR(info->extack,
-@@ -17303,6 +17323,14 @@ static int nl80211_parse_nan_conf(struct wiphy *wiphy,
- 					    "Instant Communication requires a discovery beacon interval");
- 			return -EINVAL;
- 		}
-+
-+		if (!(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE) &&
-+		    !attrs[NL80211_NAN_CONF_INSTANT_COMM_FREQ]) {
-+			NL_SET_ERR_MSG_ATTR(info->extack,
-+					    attrs[NL80211_NAN_CONF_INSTANT_COMM],
-+					    "Instant Communication offload requires a frequency");
-+			return -EINVAL;
-+		}
- 	}
- 
- out:
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index fbe3eb69cd14..3557cbc14a66 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2387,17 +2387,22 @@ TRACE_EVENT(rdev_start_nan,
- 		WDEV_ENTRY
- 		__field(u8, master_pref)
- 		__field(u8, bands)
-+		__field(u8, instant_comm)
-+		__field(u32, instant_comm_freq)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		WDEV_ASSIGN;
- 		__entry->master_pref = conf->master_pref;
- 		__entry->bands = conf->bands;
-+		__entry->instant_comm = conf->instant_comm;
-+		__entry->instant_comm_freq = conf->instant_comm_freq;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT
--		  ", master preference: %u, bands: 0x%0x",
-+		  ", master preference: %u, bands: 0x%0x, IC: %u, IC frequency: %u",
- 		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->master_pref,
--		  __entry->bands)
-+		  __entry->bands, __entry->instant_comm,
-+		  __entry->instant_comm_freq)
- );
- 
- TRACE_EVENT(rdev_nan_change_conf,
-@@ -2409,6 +2414,8 @@ TRACE_EVENT(rdev_nan_change_conf,
- 		WDEV_ENTRY
- 		__field(u8, master_pref)
- 		__field(u8, bands)
-+		__field(u8, instant_comm)
-+		__field(u32, instant_comm_freq)
- 		__field(u32, changes)
- 	),
- 	TP_fast_assign(
-@@ -2416,12 +2423,15 @@ TRACE_EVENT(rdev_nan_change_conf,
- 		WDEV_ASSIGN;
- 		__entry->master_pref = conf->master_pref;
- 		__entry->bands = conf->bands;
-+		__entry->instant_comm = conf->instant_comm;
-+		__entry->instant_comm_freq = conf->instant_comm_freq;
- 		__entry->changes = changes;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT
--		  ", master preference: %u, bands: 0x%0x, changes: %x",
-+		  ", master preference: %u, bands: 0x%0x, IC: %u, IC frequency: %u, changes: %x",
- 		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->master_pref,
--		  __entry->bands, __entry->changes)
-+		  __entry->bands, __entry->instant_comm,
-+		  __entry->instant_comm_freq, __entry->changes)
- );
- 
- DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_nan,
--- 
-2.34.1
+October 29, 2026 at 6:00 PM, "Huihui Huang" <hhhuang@smu.edu.sg> wrote:
 
+> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wire=
+less/realtek/rtw88/fw.c
+> index 945fedcd375b..2e37c304cde0 100644
+> --- a/drivers/net/wireless/realtek/rtw88/fw.c
+> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
+> @@ -353,6 +353,12 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtw=
+dev, u32 pkt_offset,
+>       struct rtw_c2h_cmd *c2h;
+>       u8 len;
+>
+> +     if (unlikely(skb->len < pkt_offset + sizeof(*c2h))) {
+> +             rtw_dbg(rtwdev, RTW_DBG_FW, "C2H too short: %u\n", skb->l=
+en);
+
+Small thing, skb->len here still includes the RX descriptor, so the value
+printed is not the C2H length. Maybe print skb->len - pkt_offset instead,
+so it shows how much of the C2H actually arrived?
+
+> +             dev_kfree_skb_any(skb);
+> +             return;
+> +     }
+> +
+>       c2h =3D (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
+>       len =3D skb->len - pkt_offset - 2;
+
+This takes care of the header, but as far as I can see a C2H with only
+the two header bytes still gets through, with len 0. Most handlers read
+their payload without looking at len, e.g. right below in this function:
+
+        case C2H_SCAN_RESULT:
+                complete(&rtwdev->fw_scan_density);
+                rtw_fw_scan_result(rtwdev, c2h->payload, len);
+
+and rtw_fw_scan_result() reads payload[0] unconditionally. So if I read
+it right, skb->len =3D=3D pkt_offset + 2 ends the same way as your test c=
+ases
+1 and 2: scan_density is taken from the byte right after skb->len.
+
+rtw_coex_info_response(), rtw_fw_c2h_cmd_handle_ext() and
+rtw_tx_report_handle() seem to have the same problem. They read fixed
+offsets in the payload and don't get len at all.
+
+Would you be willing to add length checks to those handlers too? Maybe
+as a separate patch, so this one stays small for stable.
+
+Best regards,
+Luka Gejak
