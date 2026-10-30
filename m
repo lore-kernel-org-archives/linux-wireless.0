@@ -1,72 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.12
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793351364;
-	b=Zclb7t4kw1hGi/VGwQwSYFWlYe82tTKqY3y/ZVF5wDJjqOY0z+WEsqOUsiiuD/wFUxZy
-	 0yt7UAhF0BA2J+vO7RzCB4gduFwY2fD1B9g5Rg0QzC5Mko+z2sc3Psb8XiJHimlxpFVIo
-	 ZWCuVNJcL/CQFrrQ+zhlMzm8rtg2enFLanrcJoxcP37rnYz4AkkLqMKwHY5f0WTJXn1Uz
-	 2Nv+7Ei1uu3RbuqPTtD7AbatdRfl4fpmEGp3SCAsYri9MbGUgREx2PGC9vLbtym59Eb7N
-	 RaKeMuhBM5C3dPu0dXan0lfvpkOo4GQrmKmhQhNF5UV00FqXprK9kPATUvJzf6CUGig==
+	t=1793351425;
+	b=bhqKHiFmUKO/92FvsggNeAmkUnsOWQ0Uu5IzmlotxZM//PvPYaNQ3TQXA2KKMFV6ftL4
+	 EMFMWE+BvbWsVkMQXunqvHjmNa3RUL7fCV7b7ieNMRkPRPtuQiwaakZa8Gw7cd1dME0VE
+	 Lxj4StZ0ibqnlRm2fEPbFWmvkXdmv8aQVXqFfTuA2dkVfSy5/bTPf4poXXOVuWafL167P
+	 ew5bjioRkPIap+erqdFayjb+aIMXY8YuGbzPA0FeJnsvQbGnPFh4snuSQc5Rck6e4D3sr
+	 5C9tWcd/nZs4K+7KGVYufQXnnqHv9FZyc/0fbSPYFzDA6ILSdf6l/OYo+mG1JY1kSlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793351364;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
-	bh=ZkMDNCTbHZPjo1kRABP18CGjONpKH16ExnHAKYrhxSk=;
-	b=hOESbP6iaGwlvt70E0lEot2/3B7NbKvDwihje1lPPbWD72vHg6F/OmnF7sjrWJ4rFvg5
-	 iUoezqJFIGWN+FSt1bJ3t9upjVennaSIL/mp37mps+qQbT2DMseSsQQdKh0VYh7O7sS1H
-	 psoqcQ+rrV5tCr9/3RCOWCG2L3eiZDlWFwsMAnA+5YdUwMqwat1F0olRok6i163OUdTW1
-	 sZZZ8KYtu0y9299SCajJ+pHekcCsSixrkhhFSdEDqiPiPQ1xm58TCkVjB3GlVUbBPoN4z
-	 n76d3o3xts7pcsJfcUKcImCwz3/I60WtxbngKloGmi2nhBxFPUCIV5/YRfjc+T/8y7g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793351425;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
+	bh=4hgR5T0jPLaVaLkO/iArq9dix1LSfTZRwSEApEKRMCI=;
+	b=HINbyVUFcp6XJXt4qKCsBmMniE+mYZdEqMvoKcy2W6nWEO3baLpcjfFp5dvQCAfXOdCS
+	 8rH+YNx3KpjKWCPwDfDoSNnkZiZUX/xnRwTIyfwvSIoCkh4wH39k1uTqYzS6Uhw6r25Bh
+	 K0aj3DO5zSTGfd5Rug3f5ND7ZJ2+TfWm4NsrGsHSvLYE1TkctxaT91PsRc1D1og+1Ol96
+	 Dk7k5iQu5e/0Q6gqkppgssfm4ItA8zoruXOIO532CThbqHloERBMarmr9RtrIdGLhrqxW
+	 Y2DkVq1TkT60SxlsAwyOMIrmYlYrf0GWxg2HLEtUwUz8teKptp1JNZ6cKOxVeInPv6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=AVBK7MtD;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=pass header.from=wp.pl;
+	spf=pass smtp.mailfrom=wp.pl;
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=L4qYkkRw;
+	arc=none smtp.remote-ip=212.77.101.12
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B79B606A324
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 09:09:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5B79B606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D0BB606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 09:10:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D0BB606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=AVBK7MtD
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793351363;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=ZkMDNCTbHZPjo1kRABP18CGjONpKH16ExnHAKYrhxSk=;
-	b=AVBK7MtDNROxqDvOvWLbU6tKLnKZzA1nhIKqHySqpiKZQIDFTcW+T6xVhf/gDG1W+cdHlr
-	cmbmtrKcSONeMymv5IL4jf0V8xYRPnBdoc0uS1IJP47ky+m74BMGTk59wRWTW3ar0S5s35
-	cTa71VRZLy0AlF/fPMVDCKzjJHz5YHg=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-647-_isT2R19MFe_XnFa7sZTSQ-1; Fri,
- 30 Oct 2026 05:09:13 -0400
-X-MC-Unique: _isT2R19MFe_XnFa7sZTSQ-1
-X-Mimecast-MFC-AGG-ID: _isT2R19MFe_XnFa7sZTSQ_1793351352
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 59E2E1955EB0;
-	Fri, 30 Oct 2026 09:09:12 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D0AC11800495;
-	Fri, 30 Oct 2026 09:09:09 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jjohnson@kernel.org
-Cc: ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH] wifi: ath12k: fix wrong register read for RU start index of 80_3 segment
-Date: Fri, 30 Oct 2026 10:09:06 +0100
-Message-ID: <20261030090906.298234-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=L4qYkkRw
+Received: (wp-smtpd smtp.wp.pl 15358 invoked from network); 30 Oct 2026 10:10:21 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
+          t=1793351421; bh=4hgR5T0jPLaVaLkO/iArq9dix1LSfTZRwSEApEKRMCI=;
+          h=From:To:Cc:Subject;
+          b=L4qYkkRw2NmgiQVGZOEC0FKeX3Mypf/5MDUl+bZKtG4jDFmri8b7JSdvrU4Uhu0UU
+           nJfkQZXpyh7K7OMg7aBaHqrhxT1j+TsM1iJaO0RQCQfyK0Mbhhtqtw77xzexLakmOK
+           5Xvf23SdqyOKIpevrT4in348Z3h3M4fNmCdSW6mfptiS+C1jgMeCOCmnJG9e2B/EZT
+           6csVVJhuBoV03bAnGRB2xuSH8IO8Ubt/PrYq10Svf3FmLK5/OzSYvHkd9Ft0ljTfOr
+           hbuBNNN9EcWahAwIaPaKMKftJ7yDeWyAGdwxLzPU5rlbymwarXv8WTcMWXm5hHep3C
+           lkzq2mkiNynKQ==
+Received: from localhost (77-236-11-144.static.play.pl [77.236.11.144])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <hjf3108@gmail.com>; 30 Oct 2026 10:10:21 +0100
+Date: Fri, 30 Oct 2026 10:10:20 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Ho Jie Feng <hjf3108@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless-next 0/8] wifi: rt2x00: improve the throughput
+ of rt2800usb
+Message-ID: <20261030091020.GA27096@wp.pl>
+References: <20261029134752.1299130-1-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -76,48 +64,65 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029134752.1299130-1-hjf3108@gmail.com>
+X-WP-MailID: f134606cdd34bfe0524bc0c49f2019f8
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [MXMB]                               
 
-The RU start index for the fourth 80 MHz segment (80_3) is read from
-rx_usr_info->info2 instead of rx_usr_info->info3. The bitmask used
-(HAL_RX_USR_INFO3_RU_START_IDX_80_3) is correct for info3, so applying
-it to info2 extracts garbage bits, producing an out-of-range shift
-exponent that triggers a UBSAN splat:
+On Thu, Oct 29, 2026 at 09:47:41PM +0800, Ho Jie Feng wrote:
+> This series improves the throughput of rt2800usb.
+> 
+> Implements
+> - Frequency offset calibration
+> - Better fallback rates
+> - Aggregation
+> - GRO
+> 
+> Tested on WNDA4100 RT3593, 5 GHz with perf3
+> 
+>   patch                          before        after
+>                                  TX    RX      TX    RX
+>   2 crystal calibration          27.7  31.6    28.5  69.7
+>   4 MCS16 to MCS8 TX status      27.0  70.0    29.4  70.0
+>   7 RX bulk aggregation          30.5  67.8    30.5  80.9
+>   8 threaded NAPI with GRO       30.5  80.9    30.5  161.7
 
-  UBSAN: shift-out-of-bounds in drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c:302:22
-  shift exponent 284 is too large for 64-bit type 'long long unsigned int'
-  Call Trace:
-   ath12k_wifi7_dp_mon_hal_rx_parse_user_info.cold+0x3a/0xef7 [ath12k_wifi7]
-   ath12k_wifi7_dp_mon_rx_parse_status_tlv+0x621/0x990 [ath12k_wifi7]
-   ath12k_wifi7_dp_mon_parse_rx_dest+0xa9/0x2b0 [ath12k_wifi7]
-   ath12k_wifi7_dp_mon_srng_process+0x34f/0x560 [ath12k_wifi7]
-   ath12k_wifi7_dp_mon_process_ring+0x205/0x270 [ath12k_wifi7]
-   ath12k_wifi7_dp_service_srng+0x1b4/0x5e0 [ath12k_wifi7]
-   ath12k_pci_ext_grp_napi_poll+0x43/0x100 [ath12k]
+Nice work! On what host hardware did you take the measurements,
+PC laptop/desktop or some embedded board ?
 
-Read from the suitable info (in this case info3) like the other three
-segments do.
+Regards
+Stanislaw
 
-Fixes: 5db19c488413 ("wifi: ath12k: Move MU user processing to Wi-Fi 7 module")
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
- drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
-index 1e29c13ad66d..0e69d9fe138b 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
-@@ -293,7 +293,7 @@ ath12k_wifi7_dp_mon_hal_rx_parse_user_info(const struct hal_receive_user_info *r
- 	}
- 
- 	ru_type_80_3 = le32_get_bits(rx_usr_info->info2, HAL_RX_USR_INFO2_RU_TYPE_80_3);
--	ru_start_index_80_3 = le32_get_bits(rx_usr_info->info2,
-+	ru_start_index_80_3 = le32_get_bits(rx_usr_info->info3,
- 					    HAL_RX_USR_INFO3_RU_START_IDX_80_3);
- 	if (ru_type_80_3 != HAL_EHT_RU_NONE) {
- 		ru_size += ru_type_80_3;
--- 
-2.56.0
-
+> RT3070 did not have any visible change for both TX and RX.
+> 
+> Ho Jie Feng (8):
+>   wifi: rt2x00: start the link tuner when an interface is added
+>   wifi: rt2800: calibrate the crystal of RT3593 with the beacons
+>   wifi: rt2800: use the 3SS fallback table of RT3883 on RT3593
+>   wifi: rt2800: report the MCS16 to MCS8 fallback of RT3593 in TX status
+>   wifi: rt2800: don't report an A-MPDU length to minstrel_ht
+>   wifi: rt2800: set the mac80211 fast-xmit and aggregation flags
+>   wifi: rt2800usb: enable RX bulk aggregation
+>   wifi: rt2x00usb: use a threaded NAPI with GRO for RX
+> 
+>  drivers/net/wireless/ralink/rt2x00/rt2800.h   |   1 +
+>  .../net/wireless/ralink/rt2x00/rt2800lib.c    | 115 +++++++++++++++++-
+>  .../net/wireless/ralink/rt2x00/rt2800lib.h    |   4 +
+>  .../net/wireless/ralink/rt2x00/rt2800usb.c    |  33 ++++-
+>  .../net/wireless/ralink/rt2x00/rt2800usb.h    |   6 +
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  16 ++-
+>  .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 105 ++++++++++++----
+>  .../net/wireless/ralink/rt2x00/rt2x00lib.h    |   2 +
+>  .../net/wireless/ralink/rt2x00/rt2x00link.c   |   9 ++
+>  .../net/wireless/ralink/rt2x00/rt2x00mac.c    |   6 +
+>  .../net/wireless/ralink/rt2x00/rt2x00mmio.c   |   2 +-
+>  .../net/wireless/ralink/rt2x00/rt2x00usb.c    |  52 ++++++--
+>  12 files changed, 307 insertions(+), 44 deletions(-)
+> 
+> 
+> base-commit: 734bef548a96e8774d6eef5dfa2026c6edc4e80b
+> -- 
+> 2.53.0
+> 
