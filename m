@@ -1,92 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793395386;
-	b=Ek48qDdjR7deAADUZ3CHuJN9bRInKwbZCt876kb8v3Cw+e8akiDMlA7UNYvXWG6ZKNs0
-	 Dr5cdUa48+O/yDz8U6HkSutIFcPMbyMOsb7TFjZ8W95F1z1aqoz7eT4WTdPPmZFuFG0+H
-	 pbKXi6OhbH9MwOBB71t8axAwbk4efn15xBgrtlma2+qdqOiVoBvShJwK7qBvdyt90eOZr
-	 wSMg0tVGwH3G6WwcAVW5E7DU+dv1c5aUH9Y1LCxgnHghk18r8I2rWETkAM3tTfsXoNTQ3
-	 1kQLe9PMtauOg+FDZw4BJrtl/yxZQAUB41pmxJ6VpFdzSDMsZLAAv5Uvxrpcksb7Xsg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793395386;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.52
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793395477;
+	b=zXtd+316eROSer4KZ2XaS6MbpAdC1O5xXTN6KjWYbUAVCY60nR8O0EOLIgTmE/svtOMo
+	 ANb7UT7SHVlXsePc9Bf4RrAVVpZBgO8L5YzwHQdB+mykh+F2PiPmo59MoWhUW029oybB/
+	 l00oHp4G0j7FfSrPQ+XH12g9ZjrwdH8wym8XlXnCYM1rIHTfNBMyAUVQy97YD15cf2Uch
+	 y4U85m3ujE7OiCKATStnwGhAz06ZpdGsfAkYZNbtWi+DfEDSq3KkGQ9WmOFCvSNSwU0Ty
+	 0FTRaF6XNex5U4CHNIXaJSi/BjS5iOtixTiQYo39lrvD1dAgBIDx121VWcoezXIlFNA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793395477;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=lY/l1/aO9GT8bDZSLqLaJYY9fXdCTCZbR0oyw2U3AJY=;
-	b=Iia0ZInyZko8T61R4CbVBYpgAm4fG4o3FmeYGY3qWcexDSypiXcv9r+nBzeB8xcRSeCi
-	 QUGiWkiTndmRt2ZolBCi2er4PkDcmBeWXzZWcSxjKv+enmw+6ChPvjhNdxRUqAQsuxGB+
-	 0QmHl2vUj3+rMn3TmMIN7j+E4Vv22GzNEP45yb7d3AMMZ+4+glhXqPCeLyEWlS8Qs0IfO
-	 f2gj3CEiJIIYLtXMQpgl1z4e9GMfI9VZaZULXzvcxMcj7mONBZi33C5WWGByTir+ZYUO1
-	 mNl8Z2A7zYsNKP07puzxEZheTpXNnUJSM7luPUMnWhj+fhwHUJw5637xnglcqhigkzw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="LGaijJ/P";
-	arc=none smtp.remote-ip=209.85.128.41
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type;
+	bh=VD5yToGOxft/iAlbljIC7sImw3W+GTcv6yvpKGraM1E=;
+	b=KvgjgcFQDUxhh16A0tcmG/FkVGdiDQt21TMC8MrJkD6OOQJT4Wid5PPo0+fv1QcLbBrO
+	 92OaSBAmAj2b2mpgzodfOzR/86CGuAXMvGMy7fIaGBtVbyAYyhqYVGir3ywqLsk4sxUJo
+	 XChixhhJgVuy3ElaY8QvT4bvpXDXbYnwBCuuhj2l/I5bn6HR3iwjEEw4ALY4akcPcvY56
+	 QwZ+pvRhaylFkFer0zXQ7iPd4kHH8MRzHX1i/E08WlqQlY2mVn8iToY6ARAqKV1ksCiWf
+	 5uGs6flbCBsdYZZyX6tZDZi+Gj05n6v+cvhl4man12LP4O54K/3nVca3zpnzbXKUVFw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=none header.from=karpenko.ca;
+	spf=pass smtp.mailfrom=karpenko.ca;
+	dkim=pass header.d=karpenko.ca header.i=@karpenko.ca header.a=rsa-sha256 header.s=google header.b="Px4hgcJ/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.52
+Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B344606A323
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 21:23:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B344606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F02E606A9B9
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 21:24:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F02E606A9B9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=karpenko.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=karpenko.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LGaijJ/P
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a35ac4475dso8483575e9.2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:23:05 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=karpenko.ca header.i=@karpenko.ca header.a=rsa-sha256 header.s=google header.b=Px4hgcJ/
+Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-49e08af5fd4so541112fac.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 14:24:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793395475; cv=none;
+        d=google.com; s=arc-20260327;
+        b=hTjsAx4gmQZg4C3YAK+X/tYmtaRlmqGFXwE+mOugZ5ZwGQWqGiNeVCEhdzzj8u1y7U
+         trGl8vt8GNXfhRbqP5Cngakx2SACBSLtV9yX1CHK1F/nPK+MZsHrJ2hBDN6CJ7CmBwcO
+         xSplUT4V/KiWvVtxyZnCyVwKBm+Y3+8F+KN3OmMgfrj3v7QLQqoerI1qHavojSL2BB0Y
+         X4YQByrxyipYt4q9Ng6Ce9rQnGcwtw1u1ckFnHJxdxqfIVHmNhUp1wGqHvmnrjKSrbhP
+         DCNs5uv1RNPltFC+Vob2bnDQnf5KtwJm46GGXwNwutRh0t0h8zwYrPtjEFIjE8EkhP8N
+         QYTw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=VD5yToGOxft/iAlbljIC7sImw3W+GTcv6yvpKGraM1E=;
+        fh=S2kTH8TVJzzg0VICz768S6nlu3JbZQ7Gvvl4gHcFg2w=;
+        b=c3xdvnvEOC2J/KFJ81nEdYc6q4fJ6H5KIuN70W1PB5I2nQsKOKoKRWngnNeQatGOF8
+         KkARq3Sfkm9rgxrpAjvDJM3imRbxtLlM013neRz0hPr8f5UrFWfaAMt3anAtmBDFbJd6
+         ikXY1F28XQqcr7l480tep5XK7pKjOeYmkkT6WQOI4UwNyVCg70yvYVl/i8O0bF/EpkoL
+         vdBfvwgHYDKnj9LB9QTzRggaZP9s1+xMs2cKzrXUPFYoFozpEfvwmAhMRW0Tf06kveg9
+         tA8C0m5SujQDAkUb+iRfs3FeZZc0oHfhUmla0s7aj8L7nIAmdBsLp7DdZMBSuje5H8yA
+         pzkg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793395384; x=1794000184; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=lY/l1/aO9GT8bDZSLqLaJYY9fXdCTCZbR0oyw2U3AJY=;
-        b=LGaijJ/PP/4xmLlx98OS8KmffsL2nQx++A7yfV+utTh4fvLe+WUBuMkaIrsPbExsh8
-         7wYTEiOxJ9F7gmDZAQB1bnprSqNLj+gAbVViGrxmwE+0UuwMJ/zP+E9L/iuj4cC5Qixk
-         l3h+EnXjpem4LbrkoPfsCwLuJOML2LceAypHnolW/eXpGVvBd7QogFnG2DQdZ/tFA9G8
-         4PwHJDjULJL1AtM+UmB4nwvcv7WQCBU+8J8wo2vipuFozDWLCQje/9ApBIiqRlpt9qtV
-         GMTRuwcQJuJFwcwKVcyPFTQQvYGxsQK07A1amamsIylZoqmrZ7Ft6U0odUkhvcm73WIL
-         o6hA==
+        d=karpenko.ca; s=google; t=1793395475; x=1794000275; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VD5yToGOxft/iAlbljIC7sImw3W+GTcv6yvpKGraM1E=;
+        b=Px4hgcJ/sYaCuC00ri6gDqqWDKcid5bvvhe7LNPjmP7qRqhJOY7Q1MGFSALjyJjAKt
+         uYYPOG7lEcpIBxeblxHwXQtHnct7HMzaPlzVGc8iILQLpN0Musn0XAl0Tc1ORGTmrYFy
+         5E/OoE89iFQDYxuTAkHwAYkVxNNV6EWtQgnHGrYmKm+IzVB7D6tUcY4eCI20izFUkCqJ
+         4QXEhbZSiWBoYtCNBeNZFQrW2GvcfRsu4LFC6KBccZe/s1T/VVVKGSQylenEvcA0WgMR
+         i0CPi6g80YGDWCJLhyaK8f7Nm41yyLhrwMPzYl8Tk+aQnF5eQCSaFoca66Pu5dXf1WTo
+         P+5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793395384; x=1794000184;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=lY/l1/aO9GT8bDZSLqLaJYY9fXdCTCZbR0oyw2U3AJY=;
-        b=yjQqj3t7LoMJNHicwfcg+z7O/zzTRPietz6sWL78FlvhAVGCCw2NYzmHnp6/MuxdJc
-         8fjHUm7ZFPWeDvuLwmE0t4LkXCDvc9ilS7oM8Au8OQIn1c2XwnclCF0hQW2UYNAiWV8L
-         nUkbgVE9yXxy88K1LUuSUi3wAzcOAgE9cVjGz+swCes791y2eLYjyPrNs3BST9Jo7dtf
-         m7wFiGzNg+LiuzFuotlH+Ou5W7CmoQAmLtmYT/5r5d7JmoQa9VYkIe+XOGAclfejOhhj
-         kMwgWV9YbOpmckn5rHMC+5RJgi/sbw/Jn3EyjE+UU/UBF15NlGaMf1M1iulO/FZGwXtU
-         ayVw==
-X-Forwarded-Encrypted: i=1; AKwUvByp+y61AWAcMtoR93fkK6CyPTMA1FBUU9aa3KyuWZCe0WNyaF09oKgQ22JkvfpN1YmaI1gWjSEPbT8nm3oOVw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJlJjB3WHLbwAVokb7CoecRuAfeQP9x/0uyetjnGa3laWqcmAMV
-	GnEjGzQ/wDkdFlRHOR57EqHV1aVUXkcUmopffk2/WFGUTroT+DXQbc+9
-X-Gm-Gg: AYBFou3zFUKYPZUzbdLjZCKe974cQxpxS/F02LrCZBSBf5cWMzFu5OBHd4e23z4mF4e
-	L0/kJKKA6Aet+tsQ4dph5EZ9BuXcBpz20ofBNHafdZM6HOpVzGAp5T9WBL8fP0Z83Q09KPbTyFF
-	iFvMLrtpCjGSFQ9+4F8pO/DeWgU4J7X0asM+NzjrTABZ9oTQnDi9RhCXa6GLJx6G2YBsj5DXJF4
-	RgmzGSq0snQvRkb7/P487rDI/leoj3tx+e1/yiAgiU2bcXcDjgDlqwtqKoMxt1brVBvOaqJVDHl
-	lvQd/UWlnApMfkstXATVvCbnkdx/L03wKF5AQYEdUlHwaA0GFDzFg2edcgv3xOLyswEPSrbwV61
-	006SYw/2plaPQx7+AvpeHvNAlBXfxRsW09mKj6bc0YFdd0ebQiKMHz7YLKKkE1gbVegxK3dBdtR
-	K3u8RTwVFreGQoo9he8GSBJXDCdyfO6cDpSJsv4iCDvkznACj/W/bJT+7LL2cjdeLnzMIcOT+PP
-	7wlHItidgQVHRrbvVV2B1KuoKFXefGuBRjnX2sam2Ij3JnA7QHAOvbPIJ6CeKNzEm9Earj9YKPP
-	EydN7FBfUd3rFr87PLx5abK0wIgoL5NigKIyHTHf4LBJiADjN2byM6hK+C/67mK/8UzWS6xJKYB
-	b2u8ET5EE07PpWwY1CwmRv2tyrcLP8KnhQJlLJzGeI+A=
-X-Received: by 2002:a05:600c:8709:b0:4a1:9078:911 with SMTP id 5b1f17b1804b1-4ac181e75b7mr86458555e9.31.1793395384275;
-        Fri, 30 Oct 2026 14:23:04 -0700 (PDT)
-Received: from ahmet-f ([176.220.65.136])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abf7146621sm88691595e9.13.2026.10.30.14.23.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 14:23:03 -0700 (PDT)
-From: Ahmet Duran <ahmetdur10@gmail.com>
-To: wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Cc: Ahmet Duran <ahmetdur10@gmail.com>
-Subject: [PATCH] =?UTF-8?q?wireless-regdb:=20Update=20regulatory=20referen?= =?UTF-8?q?ce=20link=20for=20T=C3=BCrkiye=20(TR)?=
-Date: Sat, 31 Oct 2026 00:21:08 +0300
-Message-ID: <20261030212108.24494-1-ahmetdur10@gmail.com>
-X-Mailer: git-send-email 2.56.0
+        d=1e100.net; s=20260707; t=1793395475; x=1794000275;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=VD5yToGOxft/iAlbljIC7sImw3W+GTcv6yvpKGraM1E=;
+        b=sBwEhp6Mt7VV3BbSfJm4TDOX+T7eCl6ghFXo7e4Zdthh35bQztzdPEIcaeT0LmxPfo
+         exDtWR+nKq9mRUf9mV//nYJtOPGH5wtnbcDxXTCOiuvJsFaTTSeVvBKTf+9L+dKGE+Da
+         muwVKQbuo+IUOaLyMrqKF/05JnSPJKi31r2nIqR6q9gZjyrL6tA7dUbGE6y8TKXQ4RPT
+         0S1/Giun4OnKe6NRsSCglMxy+kEIWM3Z5EdT8hBnmcvXeN5dE7TaStns7J5gAFJWRwkV
+         HfQT19Ajio+qopv7a0BaM2Mw3N8S3l/enP2uBwK63JYYn8j/ClGeDZa0YRaM+XKXDTBT
+         w/9w==
+X-Forwarded-Encrypted: i=1; AKwUvBxzJdK255Kg440x0CEY4l7oY0pGt5xav4sNPjdVNSI25PrsEZ9RUxmrFMIzQHTzg5WDIzK5GBHXh2+tGxNeJQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYK4DkMJ9Ad14s3YSrBVygZI5QearXpzRJuOqtcUHancrlcgw3cV
+	9YhGiwr5UqMUe+ca1byMYItloek+87uKjZ6hSOUo1cbCl9cxdykk0pNprQ7pKTBNaNgIhjxKruZ
+	ze0y2CkACXYWRUOqeCS/TKTSmZEY8WCQyt1cLkPJL1CEOdNdcqAusA6A=
+X-Gm-Gg: AYBFou2Zx2/9Y2nftjzFp+naeMP2U/kyEmO2PzayiBoZgqmRHwxU06qzlBfO8NbAjfq
+	LNW8AkE+rvwvd5/rXjoiZXPJ2f8IP4gDeTnzDHENxtljY5sOzqKS1/62Eku7mHTgf8snFWZ6ygN
+	yPClPEK1R/d8JSU8MPfwW5xTxYnU3O1MDFaTgMWmELui6b1AxEVP5oNROpnMF4IZDZ6DcYJM7aV
+	n2mtpPn4aY51aIx+xqESt+uyzIVS8YYlOhTd04lkrMtrdoR/4I812MUZFrEzexTfYI2jSbsbUyJ
+	4rWhKv9mHGYoIxeN0ObObMfvIN8NhodKFjPRhNTeBROOXGwTehOV32F+m3psL6auc2PrAnmnn2l
+	FyXJgJhDIKDj9eP50K1ymRqJqW7EGw+ibcPXtvayLT0qyxJey15xJ4Vn2+jBmdozYCQZHkmOGhB
+	AEdPOTFY2gd2XgQw==
+X-Received: by 2002:a05:6870:d3ca:b0:4a6:942c:7b05 with SMTP id
+ 586e51a60fabf-4a9076f991amr2445401fac.32.1793395475309; Fri, 30 Oct 2026
+ 14:24:35 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -96,36 +102,24 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Alexei Karpenko <alexei@karpenko.ca>
+Date: Fri, 30 Oct 2026 14:24:24 -0700
+X-Gm-Features: AclHuK_LC0lC8hHw_UwEONtzcp3mlVEURddifkSfuchxQbiy1tD1SUIUgYTw23g
+Message-ID: <CAOHMRc8bR13o3BpkMbBhs44TpQYbjTUQsoah0xvtB5-Yo5fd_w@mail.gmail.com>
+Subject: [RFC] ath11k: firmware RX cache-clean range
+To: ath11k@lists.infradead.org
+Cc: jjohnson@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-The previous reference link for the Turkish regulatory domain is dead.
-Update it to point to the current official regulation document provided
-by the Information and Communication Technologies Authority (BTK).
+Firmware: WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
 
-Also added a fallback search link to the BTK regulations page to ensure
-the document can easily be found if the direct URL changes in the future.
+RX refill clears descriptor offsets 0x50-0x5c, but cleans only 12 bytes
+from descriptor-8. Dirty writeback can overwrite hardware-updated status,
+including msdu_done.
 
-Signed-off-by: Ahmet Duran <ahmetdur10@gmail.com>
----
- db.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Proposed correction at 0x01500fa8: r1 = #12 -> r1 = #104.
+This covers all cleared attention words before buffer reuse.
 
-diff --git a/db.txt b/db.txt
-index fdc2c13..528a9ec 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1703,7 +1703,9 @@ country TN: DFS-ETSI
- 
- # Source:
- # Technical Criteria for Radio Devices and Systems Excluded from Frequency Allocation, Sept 9, 2022
--# https://www.btk.gov.tr/uploads/pages/ftm-teknik-olcutler-ek-5.pdf
-+# https://www.btk.gov.tr/s3/web-btk-site/7708c26c-5161-4919-8b3d-daa31d4ac8fb/2026/03/0965cb2b-c346-4626-85f6-fa06fb722be5.pdf
-+# Fallback search link for the latest version:
-+# https://www.btk.gov.tr/en/regulations?search=Frekans+Tahsisinden+Muaf+Telsiz+Cihaz+ve+Sistemlerine+%C4%B0li%C5%9Fkin+Teknik+%C3%96l%C3%A7%C3%BCtler
- country TR: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (20)
- 	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
--- 
-2.56.0
+Could you incorporate this into the firmware source?
 
+Alexei
