@@ -1,110 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793347177;
-	b=On17L+jyhB4AebhZHMNQqOqRsOAybmG5DH6OE3d2ZAGGzQaAaVZNMJ06+290ltaOqxo0
-	 yENIWp8zkVj3fsd8IFCUfrMJXzedM8zFClhooMbCIX6Fmb5SyvM80GZMyEalS1Y8LwwMg
-	 wjpo7v5hO96gcyU5zJ/QCRaA+OrLg+LdLgzSE6LdnF7MHIPp6paGlvQY32983FWHfsKeZ
-	 nX3/AxvudnSqH7LA4bHQmVeEin8JMk30helpUpeD/WZnDicWpn5lO5ecwHBZ2nIqL351X
-	 8jsdVJnm5yElteoIObGeOzCsweg2OInzx+AQeYBH1O//Mkq2DD1hy52bQnBRLL1S7ww==
+	t=1793350350;
+	b=2kYZ/B0yEaAC0xTt14mtxWIsOTZFIbDOxsgp2enFsfVQryaoa33IRCsEoKLh9UIe6ZP/
+	 IEIx5catE22rd0mgQa5RSJ/Uedjre8h0DG/rEgGfoEHkwP7AOf5uRKwxWy9LbZ7ba5+jo
+	 LXbymFJM31tnWK6rs47Q7rMvpZzRntPGosTwqD2dKRBvIW86D4j5GPbIScAyw+897fPh5
+	 PG+V/76Iob1MBZjMBA0j+V/OfdqrQjIB7IxrfL2mND1pbRlnrCCEz67uJS+pRlxyOWV6Q
+	 Yrq651ZkY218Kl+huWb6dDwVoq8XZ4RnRMAKAgs1n1bXnSUWNrvYbBgDXdHgT57AVTQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793347177;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793350350;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
 	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=L/bbJavlObQ7jDu0caKT3HK1qaIAEj88zWLFtN2ScFA=;
-	b=yDiVlzTL156UB670ARYyifRUus22IFVZe3nPS8S50G59hPMKY86REN2lJwrZbtKne95N
-	 6T3saQRSMuJnj7l++SzLqK5DBaabRIIdYatJJvpfffOf90m2m6NQaxwHoa/eABuGsnsJK
-	 ElgbRmPB4Nn6gNyNkQj9nVFCK81fO8sew2pl4t/jnWePEzSRMhYt1sLd6COjYPytzW5CP
-	 MUc5I+fbQ2qrTJIhII9paATcQT6NFaCIZruKsoUEXSLIATnyU7k2Th9DbG9zuIYidQOsx
-	 b69RzeV435RPtZ78vSrbVA94OHGn4NHb/hRNTph+fH6LEMD201JMkdvQmbtEQASMRPQ==
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=9c8FC79mNw1az87e+cHhmiKEEh8DNlKxvltdbJhUyoI=;
+	b=WduXx5ngL38PqeTL89ycf84FG3QyVVMJhQBeLaOuI24r6mUdFszV4KuBycSPsxyZZlaQ
+	 1QvW/BnrV9x+GjW6dZ/xZF6KP3SCTfeQuAGN8CIybdyhuI4qQMpdoeyXBVcRb3npY5Nlh
+	 8p1kLCxRXlrRuLxILHJ/meUHJgAUgXTwPBZhTanxRiIUCfroawqB5mTw4xTs5EEk64yxP
+	 yGhtfwcP5ApQFHvNx/ynqmbebe/1uBaCEFeOEVrx8IZQ4ep/cvgBzugg9a/7zDaghaZUj
+	 4MiewmIukwcX5x5VCSm/U6Xz3vMsUAdfImApJ4PwffiBnFROvX00QgcCM2s4wIhTC2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jZerbPfE;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KoGCF1AP;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=oqTDMPws;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=QeSsv6Kg;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8FF606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 07:59:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA8FF606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 894A5606A31C
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 08:52:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 894A5606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jZerbPfE;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KoGCF1AP
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69U5FBca2871218
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 07:59:35 GMT
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=oqTDMPws;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=QeSsv6Kg
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69U8F1xu3737853
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 08:52:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	L/bbJavlObQ7jDu0caKT3HK1qaIAEj88zWLFtN2ScFA=; b=jZerbPfETMR/Ugz6
-	fOhQebqBFWC3NoOF9GLWKg0P4yEkFgZcTXXXL385j6rTfjamCBko5ImPJ+sIxixa
-	iX1mPx4gqbuTfVZdSolbBKYaqqsc8dUaLUu7Y2KP1PUFNik4ZO4+j/UVB4RQqFFz
-	0b2WVTmYikH7w4Pjn4Vu9azuPR8FqLJD0zkJRUwU7h+qPXl0YnY/x7xC9HjNwbrQ
-	S7uLKrrrEG3L5tyEByhuCnUb+nTZ6FHZkSpLzl/vi2EJKeKUePZyU2zUWAJOQDQP
-	f4OSe3Nb9Ku1D+i79tq+bIcOYh53J0eF9XzxkyH98xYdAXhjCNIBLk2Y/H1hwefT
-	WOeDuA==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hme6qhw78-1
+	9c8FC79mNw1az87e+cHhmiKEEh8DNlKxvltdbJhUyoI=; b=oqTDMPwssrVKUSMu
+	TMAsd0UjLfO+JYoiCLtSW/spNV6D/aRYII/HT8jCpfvlojvhBJ4OKAl49/33j+F5
+	EY7HzAJ/DeLoRPW9Ou5QfEH/l27Udq7SiMjxDjEnLh8h0g/cF+PnZtCJRS5ViUWe
+	qPsXWCANRpvI6n9887WKkLWQ61SoW4kGdPHfmTDSsHj7tDrTBc18uSxYZa7PiUHv
+	uXqcEe+3sPHgdE/iXUYebsbxagonZ0hVa6m5AkjeCzdsquGoWfB4ip9bIC/75G6p
+	TceNJ9kenRDe+4VXs3IRF2NvJOQmWPDzmoa6KF+Ar+p9uifaAUm5zEuSHfh5KXbg
+	C75KHg==
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hme7521en-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 07:59:35 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3acc98e3b3cso431694a91.3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 00:59:35 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 08:52:29 +0000 (GMT)
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-139b62317d0so1533100c88.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2026 01:52:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793347174; x=1793951974; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=L/bbJavlObQ7jDu0caKT3HK1qaIAEj88zWLFtN2ScFA=;
-        b=KoGCF1APzHL6WVHrlHiBuJvBg0rg1aoEuJbPTH9WLWQDPnDiikDWeLUvYKs5/3XC9A
-         /XlRvnzSbkcAf6YM2ZtH5yOMkDMKQSubTtgFjRIDSvXa6tx292ttI4i7sXHbXGfwWkgN
-         2I8gzaZrfBSntF52lNE4AbLR7tsF7EufwLEXqDUc7WNm4SKmsNvvf4tx4u3F7FVH2ia9
-         5GJ9b1cOZm4ZXFpn54KjzIl2/POWk3L4Kr7RgVS/KiS6tGNv194tMy9roeo4Z4yfu7hM
-         lWMG4zn5Ubr8JLjexX15FUCsiELT4U8rxWJT3jLpbjGauG3oldj4llWcOYxs+zijPBaF
-         pc5Q==
+        d=oss.qualcomm.com; s=google; t=1793350349; x=1793955149; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9c8FC79mNw1az87e+cHhmiKEEh8DNlKxvltdbJhUyoI=;
+        b=QeSsv6Kg5EqwJVOAV+NljeUL0WSNCQm/yUgNAEKQOZZQIlG/+nH7TrSMsqnNDSz9l9
+         ChiImmYihzDtmRjPHp9plesh+S3ZUulXgjTnJP2IOsyRBWmLJJZGt4bJRspmMPbTP2he
+         r7i4oI6WXJ5fJcjxPW8UzBMDb7UpFosVrnBHWmyMu0+BrO9pkL6IW1f8J3w+DKs3M7LU
+         0NTU4uzNC4YYxbdssqLKCZKnPDdPO//tTl1lJDLTgJ4AVqYXnZ5Ys/tu0GX3nzXTuwqg
+         LgHnfxELx/aLuWMASIpk4+5tpVt2GEp0rxOjg1LKJmGFLydDIrU+xQXEZ9Jhuqx01nlM
+         h6eg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793347174; x=1793951974;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1793350349; x=1793955149;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=L/bbJavlObQ7jDu0caKT3HK1qaIAEj88zWLFtN2ScFA=;
-        b=ZlI55qvVDAaNTupIlX5rBWnz4zonTgN1Lj5gpzmb0OsqgO1odVouy7qdRj5xAeGWUF
-         FtAiRPPJ7l9oEfDRLx05opI8n0KA5OOsjDo7T9bTd7rCb9qdLGaoW3z7bC3UQHdNsnvl
-         A98Hb/ZNZ2pbTLerKGfTk7vCtbAZXJ0H91NIRMYi/kZa08pYVp8UJNoYq2FtnZAzzbXG
-         jTZovk4D/rHTZBbxQeQs+gdd4rFvDpozPrQgwfXlpkGva1/HJgaZxL7gmUgBCwxZ/hVO
-         dldgMJuY+mrsMPH43S64PHQsmVTDe+iBQFwaxO+XXiTANAvVdFAR6z91dwylVf7fMPOd
-         4ijw==
-X-Gm-Message-State: AFq9FYK8n5NkqbjpkEBdM4KunVQEMRHhmMxYHnqWqKaVezFd26l0N6gL
-	p4y+XzoffybCUpawcDdW/E+KzTDYSZAud+bhavntP71qTMJQ35mkty3AkfwPgJNAzULsFdSFGeM
-	q9sTkCSDu16GTJuxFe3Sxu/HZM5IE2m4bpNGbitC9RHE1tTkXEY/NNHAtVA3StEXtygMvgs9Cll
-	ZHbg==
-X-Gm-Gg: AYBFou22OTL/u8jW2VK1OMuyGhhJXckjAFl6+B5pxt06zYEEcHPq+WAnlpc2g8dEnea
-	/jLBdOqDj1VP+6Iut+WaaMgqs7q1FZg33cpCl9lDlXXGY5sHv55MJklHQGyIUaR0htQHwTq1Giz
-	7qlww1jwG0JKK7/PdmLMni5anvUST0TzBexzL8v+T7Z/WxCNTu1ch6C8YB+Eh6aLSPPiQwnHOCf
-	BFVGTxFy5RkOdxYPk8REtK07dO5whrX1opSG/WY19wN76h7ptpFZ/Bn5UHRr3oK3MPsTXBFs7ID
-	RNenRk2Ytx3zWe+Cve9EnWZAuEuJb9oCaL4xxMZAEqr8Vqs/fzeSZhlAGFViHvGCiQyQBFWGTf5
-	tuTEuhgu4wTiu50//79NDmvIUXm0hfFdb3DfdkAbbA458fypWok24tpsHP9n2DkrYUk3+AXkdFF
-	V/D8+AM9CZCiMorWjKvhz+NTJdJ+iZ3mCsEEkflibwHL/n
-X-Received: by 2002:a17:90b:4986:b0:3a7:da33:ff2d with SMTP id 98e67ed59e1d1-3ae89849d1amr1192457a91.48.1793347174377;
-        Fri, 30 Oct 2026 00:59:34 -0700 (PDT)
-X-Received: by 2002:a17:90b:4986:b0:3a7:da33:ff2d with SMTP id 98e67ed59e1d1-3ae89849d1amr1192432a91.48.1793347173818;
-        Fri, 30 Oct 2026 00:59:33 -0700 (PDT)
-Received: from [10.133.33.77] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae845fb9f6sm2969811a91.17.2026.10.30.00.59.32
+        bh=9c8FC79mNw1az87e+cHhmiKEEh8DNlKxvltdbJhUyoI=;
+        b=P2UJZgeMY3e7fGMiobA57aRK3z0jEZTy7Cykavm12rh005dVtUOQDjZ+OKQXo/Sayl
+         YWSUlfHwJDswiOtpqKo2xjehHM+D20uelvuze62ljmRY5IXX8S3aJZcEv5PLzpoj1nSy
+         cP1ZZvasLg23KeSCeQreC12HBOsfutr9XbAabf/9zmtM4+nq5tpULXWBQFN2oNWkWi5Z
+         2elLAX9LezhOJsVeQomGWE4tDQQV5LnSGdrgpLe965hO33AwM9PoZ/zddRhIszzPEYGp
+         FhtHcBG6vRIZ7d7xqCUZs6L9LwSH12Hf7NEMHIdML2IYE/Ti+/sHN1tzhBm7RocSDarO
+         DdEw==
+X-Gm-Message-State: AFq9FYIdmQ6M9sQH4pBsVdXv+CG8ozfAbm1zq7Iq7GZC0M1acnbryu41
+	dUoviyTG/hKJNtbnGA+A2vhrz4bT6JSORblMvtiKcSndbwPZC1z8ratgH54dCHDvV3izS5Qy48R
+	2EoFTJNZ9IXdu0CYKMuQ4yGaaTc6W4LM41IJirvlSxxPiIY+S1zm63MO7DwcjxkAU4fJgxA==
+X-Gm-Gg: AYBFou0c3AB/WVKHXjl9P7+vzOOzDZE7+108S1ogLlL0q2+EZv83GKsIS5LtWoa4AGy
+	zC/qZDGEcJGqgJSgwPbNsG/Za3N7T5UYbX0QNfunPh2NPq44nhlgHWss/3pfDOAS0lRHIDu+JyU
+	hGFcQhk7j4+VuP8pL4ahZpNZrJf+BjVJ6EB4GPV+dO99LAE+wjFol10TCpjDZHyFXicFanmQFA3
+	FTzv6El+oMk0oYxUl/RhJNxOgrLv9B+T/1Qodx7xylADYMB5cJoikDyFLu9p3XxcdkhkGI8Y+cN
+	8ttFr4YkPUwAHxdz1x4k4abHO0LhswIr9Wva1fXnfNnc58Wr52oq8rEuxAemja60+jbdMLWEjIm
+	niuBd1fTpANqHmYFP04BM4cG5dCvxAsOjNj3qIjKLZhbaoRtgl1lU3HUSTBBmH69DaATaLoA168
+	hL+IYnKYn18g/65OwXvBNQ
+X-Received: by 2002:a05:7022:3c81:b0:1a9:f97a:34d with SMTP id a92af1059eb24-1ac5bbb4858mr2126246c88.13.1793350348795;
+        Fri, 30 Oct 2026 01:52:28 -0700 (PDT)
+X-Received: by 2002:a05:7022:3c81:b0:1a9:f97a:34d with SMTP id a92af1059eb24-1ac5bbb4858mr2126219c88.13.1793350348187;
+        Fri, 30 Oct 2026 01:52:28 -0700 (PDT)
+Received: from [10.152.221.90] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac19c6b969sm5157429c88.14.2026.10.30.01.52.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Oct 2026 00:59:33 -0700 (PDT)
-Message-ID: <e4b963f2-84c1-410b-ba92-7cc914294a69@oss.qualcomm.com>
-Date: Fri, 30 Oct 2026 15:59:30 +0800
+        Fri, 30 Oct 2026 01:52:27 -0700 (PDT)
+Message-ID: <e197c34a-9cbd-42d0-b2b2-878b4f37520c@oss.qualcomm.com>
+Date: Fri, 30 Oct 2026 14:22:23 +0530
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -115,81 +115,71 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH] wifi: ath12k: keep regulatory frequency ranges per
- radio
-To: Lang Jianjun <jianjun.lang@ntu.edu.sg>,
-        "ath12k@lists.infradead.org" <ath12k@lists.infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "jjohnson@kernel.org" <jjohnson@kernel.org>,
-        "gsh20040816@gmail.com" <gsh20040816@gmail.com>
-References: <SEZPR01MB733849AC81EF5F9EB7B9B6F0A26D2@SEZPR01MB7338.apcprd01.prod.exchangelabs.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Subject: Re: [PATCH ath-current] wifi: ath12k: don't advertise EHT-MCS15 to
+ firmware unless we support it
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+        Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        Vladimir Petrzhikovskii <vladimir@dfb.sh>
+References: <20261029-ath12k-mcs15-v1-1-3bcfab101f00@oss.qualcomm.com>
 Content-Language: en-US
-In-Reply-To: <SEZPR01MB733849AC81EF5F9EB7B9B6F0A26D2@SEZPR01MB7338.apcprd01.prod.exchangelabs.com>
-Content-Type: text/plain; charset=UTF-8
+From: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+In-Reply-To: <20261029-ath12k-mcs15-v1-1-3bcfab101f00@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDAzMSBTYWx0ZWRfX3L9lfwY3PcaR
- 73CGTXpq0P4HxMKweBLt+t0VM5VYSCIQJ4VnCbfEzSGIaDB9yrdMZrZCAWEUQXdtLyraUFzSHvK
- 1YK5j1j2S5jL5USfCCSmBHLHXzo40//noOczhv97ySng0H/pa8KdWs1z22cPN4aYtDWCBI1kQ+v
- eKFb+AH7RwZ1B0wvxaf+zLq80qXytt5+DA0Nfs6ykL+nDXGD25P/SlGyP/JAbxKX05L3fVJLJ12
- rRmAiQdfYFhmGFcJhN8xrlarwRhx4WBZ+fEWP77Cwux1+wU/0bhkwoHD3gFD7JtHID9ssU5nFbI
- 5gLNF/Xdew1x705/XTL4J0Ka+glGhceC85pTZe8mlcemrWRCCeOyr25MwHfkrOuYBLCg0/5CmfD
- vjqjsMF2qX3UBKuMBlV531Q9wn96hkYfDTCwJhod04Rw4QjCls0fZfTon/2ZwCTdCbNryzC/OqC
- TYLZDYVMhFSehj74RqQ==
-X-Proofpoint-ORIG-GUID: 9aZaOMfW-qIjSd3qImg0gcT1Qg6XWdg2
-X-Authority-Analysis: v=2.4 cv=IeoSymqa c=1 sm=1 tr=0 ts=6ae44e67 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+X-Proofpoint-GUID: IKkaaLKmitYu8TDSWmQSZ4h-doV_0lAi
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDMwMDAzNSBTYWx0ZWRfX41QakmDVc/Jh
+ U+/4p3LGdLakK921maGh8vAXTbsiJLr5i3xcDc7SqC2lpc0HhyfhfLf7Kqn/oOLZ4qM2O19bMTd
+ 3OsF9LUD9MdWJNFsi1EFlZfUwG0k9Lf2FwgnrtS8WdnMYnXwZa5b0EKFZy/TBWQ3d6DneOex/pM
+ Hpwl1ut6U5XnsmZl65IThahhWbU3YWQv+xcAo71ttfd88TwJGHH124Ym5801Ro2t7Pu1ZZwB27h
+ ss/iSC1gYcZwBPUFfhOyN4AFvQR00UqeZTfd6LE8cpSIhMG1Isu7/uLOgzYSKUBhWCaZJnZOvtw
+ 9FVmb9aCT6ttaeHETn9RyzWBtG7DLZC5fNYHayMm+8tvvsv/vspkEKa0yvBfLQ6lKIXufEygLk5
+ qRRYJJwqNpqquZfZ1XrwdOwuDt3EQBPD+2BwkhMkfSIMZiaxXryXrkNXvLekd4Q2M/LAZE2K6UA
+ dHfo4HjfCJxlFF1bWYQ==
+X-Proofpoint-ORIG-GUID: IKkaaLKmitYu8TDSWmQSZ4h-doV_0lAi
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDAzNSBTYWx0ZWRfX6amuvXEd9bi4
+ 03CvI42lBCiDAzL1iaX5Qs8zBCe7MzGqPWKYFckDAqTl40RxUzW1rOCAVKMnFO2ZkTr7cGn+D00
+ 3jSFCWxqjD8CeHsoqFHABoeme/2iXVM=
+X-Authority-Analysis: v=2.4 cv=KdtHIgYD c=1 sm=1 tr=0 ts=6ae45acd cx=c_pps
+ a=bS7HVuBVfinNPG3f6cIo3Q==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
  a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=luFj5LIaC5_7LFMtheMA:9
- a=QEXdDO2ut3YA:10 a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDMwMDAzMSBTYWx0ZWRfX2VDJevfRCIv7
- 7S8YSh/sF/gf2kMCiV/9FVklauBA3KdlIQKW7YoxiTZcfVcbBq52P81eAPwse2DQ5CoH5tJclEK
- u/woFfeYe5eyo0wPeMMtDT6/TrPiYmw=
-X-Proofpoint-GUID: 9aZaOMfW-qIjSd3qImg0gcT1Qg6XWdg2
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=KICNIvf8-xFwCwObymsA:9 a=QEXdDO2ut3YA:10
+ a=vBUdepa8ALXHeOFLBtFW:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-30_02,2026-10-21_02,2025-10-01_01
+ definitions=2026-10-30_03,2026-10-21_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 adultscore=0 spamscore=0 lowpriorityscore=0
- bulkscore=0 priorityscore=1501 malwarescore=0 impostorscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610300031
+ impostorscore=0 bulkscore=0 clxscore=1015 spamscore=0 phishscore=0
+ suspectscore=0 priorityscore=1501 malwarescore=0 adultscore=0
+ lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610300035
 
 
 
-On 10/30/2026 11:34 AM, Lang Jianjun wrote:
-> From: Jianjun Lang <lang.jianjun@ntu.edu.sg>
+On 29-10-2026 07:48, Baochen Qiang wrote:
+> ath12k_peer_assoc_h_eht() copies the peer's EHT PHY capabilities into
+> the WMI peer assoc command as is, including the EHT-MCS15 support bits.
+> Firmware rate control enables EHT-MCS15 for TX whenever those bits are
+> set, without checking whether the local PHY supports MCS15.
 > 
-> WCN7850 uses one pdev for multiple bands. When it receives CN rules,
-> ath12k_regd_update() skips the 5 GHz range because supports_6ghz is set.
-> There are no 6 GHz rules to extend the remaining 2.4 GHz range, so the
-> firmware channel list loses every 5 GHz channel.
+> Currently WCN7850 firmware does not support EHT-MCS15 for TX and does
+> not advertise it in its own EHT PHY capabilities. When connected to an
+> AP that advertises MCS15 support, rate control may still select
+> EHT-MCS15, and every PPDU at that rate is aborted by the PHY before it
+> goes on the air. TX then stops for minutes while the association stays
+> up, and frames sit in the queue until the firmware releases them as aged.
 > 
-> The ranges also live in ath12k_base. An event for another radio can
-> replace them before the first radio updates its channel list.
+> Keep only the peer's MCS15 support bits that we also support ourselves
+> to fix it. Chips that support MCS15 are not affected.
 > 
-> Store the ranges in ath12k_pdev, indexed by nl80211_band. Build each
-> set locally and publish it together with the regulatory domain under
-> base_lock. Take a complete snapshot for channel initialization and
-> regulatory updates. Copy the selected regulatory domain and ranges
-> under one lock acquisition so a later event cannot mix generations.
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
 > 
-> Use the presence of a 5 GHz rule range instead of supports_6ghz to
-> select the 5 GHz update. Use nl80211_band indices for the hardware PHY
-> lookup and refresh the 5/6 GHz hardware limits for single-pdev devices.
-> Reject empty hardware/rule intersections before converting MHz to kHz.
-> 
-> This follows the per-radio design proposed during review of the earlier
-> single-pdev fix. The earlier report and review are linked below.
-> 
-> Fixes: 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update")
-> Reported-by: Shenghan Gao <gsh20040816@gmail.com>
-> Link: https://lore.kernel.org/20260715065218.41232-1-gsh20040816@gmail.com/
-> Suggested-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-> Link: https://lore.kernel.org/9dd4e992-5810-429f-bc54-036c4eb276a7@oss.qualcomm.com/
-> Assisted-by: LLM
-> Signed-off-by: Jianjun Lang <lang.jianjun@ntu.edu.sg>
-duplicate with
+> Fixes: 17bbb8aa74fd ("wifi: ath12k: prepare EHT peer assoc parameters")
+> Reported-by: Vladimir Petrzhikovskii <vladimir@dfb.sh>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222136
+> Tested-by: Vladimir Petrzhikovskii <vladimir@dfb.sh>
+> Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 
-https://lore.kernel.org/all/20261027015919.277156-1-mrmrmidoessam@gmail.com/
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
