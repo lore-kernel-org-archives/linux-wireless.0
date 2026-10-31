@@ -1,89 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793430614;
-	b=oeDxRfDNosGAxHRnsvJi/TLX6ampNcRH+pxLyNiCpxy4ZkvCCeO7TplMNeHPg/QRzUNw
-	 WHeEytn9h/Sh8dH+BVkzL6h1cJ2BOZqBEh9bAiHiwCDuUxVYg0TcIvclt4d/ZAVjSt+Te
-	 hgeLvYdo3oiyLN1ldbuVhXQASqehUxMo8IKum9pR309dKefVNXUtLMXTMaiXXl+2ftA1P
-	 Y8qGM8BZjIDOCcn+WWlDEWKR80IWwqzOuX1D3lWAhnDBseRK2ipqZQuBTwFxGmnT0eJav
-	 UHXN5k/xC7s6aykWeeODoFtuylrXyelt5bmmfSQdcSQlHyTN6EAtr1cNMSt5dX1oJZA==
+	t=1793430618;
+	b=JpNCMu1KsmJBppkUo7Bal3+2s/ElvxHFyiqurALaAexb1cIqzqbsa1gPzglcpzmwLktK
+	 bvntmAEkeji8XXI1K3gKra4lrcar5ddncxp/sU723orbBsFd0ocEHT2wwF+45hqlOo2C6
+	 54dkJK2jytPB0IeRxfbSQNUogF/dbiUdQIAEo1DglNvyj+Qrk1B9WymjPOgkl8HkkjNCt
+	 YIlclyMfeRcsYX91ne1HUJs+6xOoGWTEg8INpTy9jc5MOCkTnI17cM3Pd/T4qReRnPb6B
+	 5xR6zQ82szvosfBcLp8xFdqfyMzTwv6Bf9Pg6g4oXeEohe6PhB8Sy6LUJw/Qq+TzoSg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793430614;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793430618;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=QI7b231Rt4XSgEEjFLLe+HgL1JDcd/InrpJCQqwg/vk=;
-	b=xrxIMAax8IpRRsIonD65Yh85sDrnABnqPCAdxz7RkltZF60q+mwUETyde1l+cqUD84ki
-	 VhFIK0h0dvUkzBhORyMb+b3RUp9Fqyog/6hynOMxr3DpdF5rRQpXNsO7Eod519k2+Y75Z
-	 Uh4LmHsQgnF//9CvHj3PBgWljCCR5JuAFaJuJ4V4dWzd9Sz9F3Dr9ImwjGfqLglC8K6OF
-	 H+OhogEP68XPrbKzePzGFrtaHbbYG4QIOxMpncvycfJsvTU9ILpNdWSkmBHqbeFw5/egd
-	 KDD9uQOXrTRJL5wnWAt+GL/ERjKgShvz+dOs8l11xhhSuZC+f/CuOwgz1S9ESF/1Exw==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=7sbNY/WAMdhZH7Xnw9o8nY/TwGJho7QORrZFGT4Ce9s=;
+	b=lplirCa38uoL2v/PlIbet2ZFQbVveKGLJSFS8aSg7qusbdbq4bAlG+zB1X1JQGmIvatH
+	 t9+Q0M3bWSzwoiuauoX+46Qm1ii95pO4IPYIHSFkAypPOB4XPrTAtHrr9NAMKaFQQZn0c
+	 z4vSf0JRiZq4Bx8V0/NT0mfDBpmnY+9juXHR9vgvPJhV3cczKMV44Ng542DRBNQCAaphK
+	 ZCkDOV9rIQVVPa1vMn9Qg9G484+r2p4WwsSet0rI+v7ctZTY8GMEVfFc2uKh9UQYFN7Hk
+	 TpYSPpF/YsjNOdWa2AF7YqM8gR2f6/7igmO1SQL3QeTRps5LBOHHkaTiFtkJJXrtqPA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=umHfYLPL;
-	arc=none smtp.remote-ip=209.85.216.48
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NLM4ZQqN;
+	arc=none smtp.remote-ip=209.85.216.47
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3C1A606A31C
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 07:10:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F3C1A606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519EE606A31C
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 07:10:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 519EE606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=umHfYLPL
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3adc4590de4so1268399a91.2
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 00:10:13 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NLM4ZQqN
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3ab2cb8d577so1104816a91.1
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 00:10:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793430613; x=1794035413; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QI7b231Rt4XSgEEjFLLe+HgL1JDcd/InrpJCQqwg/vk=;
-        b=umHfYLPLqLzUW3IFpKivsHtxeyVOT2FLHGSEYQPWx9t1pu/H0A3WPgMuxfG1M6cx3S
-         y4j8oSkfk02kdYwP17P4Ts7Eja4zvK8f55sWY8Mue94WpzahFYucKSwIQqtnXoCx8E1F
-         sBBaFdguVqVktgoz0XgWfi6VdQz5ZxrbLfN9ijeFZy2ZvIwujWSE/YWmrwYnlVaR3I8r
-         tSP3ZovJa8k6Ffn1AG2zkPr3ceiiyr/oSnvYN4PRu4uwLbuckPb1hX+avvLFW1l+nL/c
-         MMMyli04Vgmjqmznq73/LxApu/axhD6cvLwuEN9q0HxyxJ+fjpmKStQ0LCLuWXf4ZtSH
-         o7eA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793430613; x=1794035413;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793430618; x=1794035418; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QI7b231Rt4XSgEEjFLLe+HgL1JDcd/InrpJCQqwg/vk=;
-        b=dSzAqFgcGQ8meE4yJl2Nr8dhdwcx/ZBJST1+AEjjtfxDkE/qLPRYHpGoKnRUwNRx5F
-         Ns9o/t+9G4R4NtIBH4u+Xr3HeFeRCQDQj2Bg2IT1rWntb8veHhhDtKdU+0m6EqkiRKSj
-         s+GMNSVG9BqBnAqtKOiuyvrbirIEyN1uUfM9d176FMEIIZ8tXyYpwEdvcvzawP4EGG7t
-         GRmiroMg03BO9/9q+AYuLH+RqAACAcOPIvwBx7ipwdm0MCi3Gtk2dSMXYIs54TKjG+Vo
-         /93/iveN8boBMqOOxAjUfj0YXXMRulYSOJctkrpMgzBvgK03rE3i2ecld19Gxe6krhgP
-         yfYw==
-X-Gm-Message-State: AFq9FYLY0O//3u77T507C9YJAvo51B2PkAm2JZgoFsJzqqyjf+NuwGih
-	XFGMaoVZRgWH8V1QBQx9y12d4cO0+TYLeNabudK6B7OiMZRZ7RR2SUVc
-X-Gm-Gg: AYBFou3jt7GQ10xADj7FSqOrf0oIWpeskukjNSqYlGa284RuNgCme0hN8wsBBr3g5HA
-	yuGVcxyeBN7rG5GTJysWREfG3hyMOv/ixSvuT/+Lj6eG+2ExsRZBpjRQCuNb3UwYlnfbgl8VM25
-	UYkVp8bhrUCfdkctg6XJ/uLMh2npjLPGfQjK9mxH2m7sOfAKDQk764itFUdaiKk//rrfr5h2xJT
-	SMaSF878/EDr9oOAQmBlvpZ2ikJ/MoVQJrFMFNYNjJPbNZqxBmZqCyDd8ZgwNZfpAzepNYyU6y0
-	+zhQe1nMT2zsLk/pNioaMtTqwyZ0BH4Stfi2G5kfHi1czTJoU2Pd+7AR+SdBFdw4gg29mjM4zrC
-	YaolC80Bzy0myiXXNKgQH7FLMFJ5UuZOLYAMOiQCR9Y0Zc0kwupE0flk7JGVd1K/NruXggMysiI
-	gzt0pFq52i5xwnq0W86+xQ5eZaPS17VNwwxNmF+aW85lh5+UEkVnqhLHrXFd2XCwtioQCP1Qr4W
-	ZrjY4ui5NklnH9sPimCdNDgxbM9BLFhsVtz6C2mAu1BwpmcixGIHTT3h1fxSa6SFJN8xEASfOom
-	9U9Ue5gY8UJsE78WoqLZCx9vjTSIs8HaD3qSoKL2IX/Hj8Epa8hadER2Askpa4esMlQEPrMzI9i
-	Vz9Pj
-X-Received: by 2002:a17:90b:570c:b0:3ac:8897:7ba9 with SMTP id 98e67ed59e1d1-3ae8985d52dmr4026759a91.56.1793430613156;
-        Sat, 31 Oct 2026 00:10:13 -0700 (PDT)
+        bh=7sbNY/WAMdhZH7Xnw9o8nY/TwGJho7QORrZFGT4Ce9s=;
+        b=NLM4ZQqNONPnpKieAdDSk9C/hRkzE8HmIXy8q/e7aW58dZ9rbH8X/YHnCZP7Jo7OHv
+         +YRmTGoGtWVHK0Cl3zWH+Ucf7KvCrU+P5n/x/zobyRgMyoSgPA6v0S/s2MtYvU9N0M0n
+         35d/QUI1i6PunuDhQrQzH68J4ip4ebn40U9QjRJZhwPGNg7ZsrBDVpSkZmXitZWPJuJO
+         H1X5MSXbN9hXXW9isG52mxdmAjj8H9gXBI8zTv9PRIaXTdznlVY9Nlw/a1T+ahrGIrl+
+         /mC0WfdrklOwn18QOFroTtBa8RambCw+e97xBGyu65JKtr9rTrrJ4fFdRTZJUMgU6OGU
+         goFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793430618; x=1794035418;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=7sbNY/WAMdhZH7Xnw9o8nY/TwGJho7QORrZFGT4Ce9s=;
+        b=vIs4C5MHaJPOv4t482PhffRFddlL60atN2t5yuMZMSN0hH27qoIr9AFzeoj3CUUxef
+         ntJ/QF2dJUhmALN7v7Oi9a6QUsAX/jRy6JrmZAii3B4kdB10ihC/tX1nZLVcPeDjw68p
+         AhJgLGdDGqo1yg/xklkGs92sRFr7fFSpqGa+ooQvXHkW54E2eIfA3mCRwKCdeAqPZk1K
+         dk6GLYLiDn2kgaw8XuK1G335Pl2XhOri+1pbIJFI0S/UwYGbOECMz+SNc2h999wO6EvZ
+         LIh1bYABq0KJwb4ttVGWsPtJQk+WzonDtHPbEQl+p4+sfr3sJUmY0odnhFX4ivgRptzC
+         c1Uw==
+X-Gm-Message-State: AFq9FYL5OfvVa3zFL9l85woY1i0xnvVAg0oWc0rMr0Awe2cHFZOYYzc6
+	ltjzUZ/LXMtNlfjF9K2161CfiKf1YUQudyBiPRIrv/5s1Fan1/gwPvGsx5ke5Unq
+X-Gm-Gg: AYBFou1+n5h272Zi84Odn5YTQP4svZwRHqZDRUl32bporBKHWZWoCnE78SooxhpSk1J
+	Pvj9Gg071roBlHKv9VUKvqwOxONEb8UlTrtB/QpkDyNrP86Z2J03hvOK4lvw7UHrUpU2n4Dzzok
+	hh5Tl25NPn9FcBaA00mn7js4XmLbk13XcKKppzgOnb8Fyk12c4ChC7QCJHgDUZWVE06Upen+7O7
+	ngzblZhsu2spC3QTTxjUnps0Detyn4fXcUbkW+HiUYRIPcj6/25aD0dRbTtkE6gE7YYqoTgj5m8
+	vx8zJWuhlEBe1G41YsmT6VnUVBqNIaEPpH81Ux5DF8ZYepNRbS0BuPvmvyDjQBqUKBCfosgDtap
+	gEr+DxG6oBok/RYm+VavIJn2WdXpIb4ji/9Gi4Bc7u0/HHtbm/Klb2iYIuLT0PawVomAxOdSm26
+	irz+MJXN5pPZiR9co8ZgGjIkI2ztwKi5a9NRv6bp0z3loljMFfoHdP+6gcG+0nUOOHvaCZC7N87
+	XLa4/ioe4rxZ5Q75hdyYGZ+JkZOKMUkFY+vBDNR9WTEZ6gtUIysz1jgdwbVBsclAiQByDznaBrP
+	z7Ry8j+32M7V0sNED4759RFmzz60nhjwMbrzVpsiCJqIsgiOBkxSplXBEM1yS13/CaYAHIKPCxA
+	AULO3
+X-Received: by 2002:a17:90b:390c:b0:3ab:e588:c2a8 with SMTP id 98e67ed59e1d1-3ae8985c4e4mr3656477a91.64.1793430617736;
+        Sat, 31 Oct 2026 00:10:17 -0700 (PDT)
 Received: from hostname.tail4fb79.ts.net ([2401:7400:c804:b668:65cc:625f:9c43:1e88])
-        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3ae845432e4sm6670459a91.3.2026.10.31.00.10.11
+        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3ae845432e4sm6670459a91.3.2026.10.31.00.10.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 31 Oct 2026 00:10:12 -0700 (PDT)
+        Sat, 31 Oct 2026 00:10:17 -0700 (PDT)
 From: Ho Jie Feng <hjf3108@gmail.com>
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
-	Ho Jie Feng <hjf3108@gmail.com>
-Subject: [PATCH rtw-next v2 0/7] wifi: rtw88: extend 88xxA support
-Date: Sat, 31 Oct 2026 15:09:40 +0800
-Message-ID: <20261031070950.425176-1-hjf3108@gmail.com>
+	Ho Jie Feng <hjf3108@gmail.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH rtw-next v2 1/7] wifi: rtw88: 8812a, 8814a: enable STBC for HT transmissions
+Date: Sat, 31 Oct 2026 15:09:41 +0800
+Message-ID: <20261031070950.425176-2-hjf3108@gmail.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261031070950.425176-1-hjf3108@gmail.com>
+References: <20261031070950.425176-1-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -95,42 +100,52 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series enables HT STBC transmission, VHT SU beamformed reception,
-carrier-frequency-offset correction and adaptivity on supported
-88xxA devices.
+8812a and 8814a support STBC, enable it.
 
-Tested on RTL8812AU together with the driver-frame series.
-TX went from 136.0 to 144.2.
-RX went from 215.5 to 249.2.
+Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.c     | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8812a.c | 1 +
+ drivers/net/wireless/realtek/rtw88/rtw8814a.c | 1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
-Ho Jie Feng (6):
-  wifi: rtw88: 8812a, 8814a: enable STBC for HT transmissions
-  wifi: rtw88: 88xxa: receive VHT SU beamformed transmissions
-  wifi: rtw88: prepare frequency-offset correction for more chips
-  wifi: rtw88: 88xxa: correct carrier-frequency offset
-  wifi: rtw88: 88xxa: adapt channel sensing to receiver gain
-  wifi: rtw88: 8812a, 8821a: respect peer A-MPDU size limits
-
-Jie Feng (1):
-  wifi: rtw88: correctly expose beamformee capabilities
-
- drivers/net/wireless/realtek/rtw88/bf.h       |   2 +
- drivers/net/wireless/realtek/rtw88/main.c     |  14 +-
- drivers/net/wireless/realtek/rtw88/main.h     |   1 +
- drivers/net/wireless/realtek/rtw88/phy.c      | 116 ++++++++-
- drivers/net/wireless/realtek/rtw88/phy.h      |   2 +
- drivers/net/wireless/realtek/rtw88/reg.h      |   1 +
- drivers/net/wireless/realtek/rtw88/rtw8812a.c |  25 +-
- drivers/net/wireless/realtek/rtw88/rtw8814a.c |  68 ++++-
- drivers/net/wireless/realtek/rtw88/rtw8821a.c |  24 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 100 +-------
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |   3 -
- drivers/net/wireless/realtek/rtw88/rtw88xxa.c | 234 +++++++++++++++++-
- drivers/net/wireless/realtek/rtw88/rtw88xxa.h |   8 +
- 13 files changed, 474 insertions(+), 124 deletions(-)
-
-
-base-commit: 9b0be45d4d52fd223994e151f169743a97abd290
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 0f23498b5c96e406581c06a524e9f270873866ae..f7d7b66844862ff01533b8b640ed35738169673d 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1585,7 +1585,7 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
+ 
+ 	if (rtw_chip_has_rx_ldpc(rtwdev))
+ 		ht_cap->cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	if (rtw_chip_has_tx_stbc(rtwdev))
++	if (rtw_chip_has_tx_stbc(rtwdev) && rtwdev->hal.rf_path_num > 1)
+ 		ht_cap->cap |= IEEE80211_HT_CAP_TX_STBC;
+ 
+ 	if (efuse->hw_cap.bw & BIT(RTW_CHANNEL_WIDTH_40))
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8812a.c b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
+index 781b66ccde675a96c41f69cfb80484ba67c20c16..55f1d3d3240be24580bdc4a7b3456b8ff8340e70 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8812a.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
+@@ -1077,6 +1077,7 @@ const struct rtw_chip_info rtw8812a_hw_spec = {
+ 	.rfe_defs = rtw8812a_rfe_defs,
+ 	.rfe_defs_size = ARRAY_SIZE(rtw8812a_rfe_defs),
+ 	.rx_ldpc = false,
++	.tx_stbc = true,
+ 	.amsdu_in_ampdu = true,
+ 	.hw_feature_report = false,
+ 	.c2h_ra_report_size = 4,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8814a.c b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
+index fa02aa299b5e9925428f591a609db2d9f8627ca8..5bb55606f14a126806acb354658c150150ae0cce 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8814a.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
+@@ -2200,6 +2200,7 @@ const struct rtw_chip_info rtw8814a_hw_spec = {
+ 	.txgi_factor = 1,
+ 	.is_pwr_by_rate_dec = true,
+ 	.rx_ldpc = true,
++	.tx_stbc = true,
+ 	.max_power_index = 0x3f,
+ 	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_2,
+ 	.amsdu_in_ampdu = false, /* RX speed is better without AMSDU */
 -- 
 2.55.0
 
