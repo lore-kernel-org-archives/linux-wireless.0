@@ -1,62 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=119.15.109.137
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793417765;
-	b=v7N7Lto6ygQPu2mhwVKLfmGp9M1/5ht8BBlcUh2llzn9mZmJ32yX35jTl6i+gsYW2xov
-	 /qGDMEZmk6mB5ModaJMkSAn3CNJ0rWdsDQP8tWXNR25bILrUeFJcQ0ArpoJhfcRxTyDSX
-	 lMQxh9Q55qPT5eNGpq8V0OSz+BqgZkLGzMhNgFC9OdlE39e/QAa5y+8GkUIvTtustrE9I
-	 ueR9p9hr175ZNXI9YtM7sZX+GCZ6bZsBTKGyzhiOSwd6fR62w/7OQq7CEtJC9B7LCbpsn
-	 g1CY4uUuY1+SKJWQ/FUu3xDLpwL9/JOtbL+2vA9ohCMC02B4Q++dhbdgS+/TMYQPDmA==
+	t=1793417758;
+	b=0UVW/POD1UTl0p8SSUxBMCBdmBrv1+XaMQ//g2Us+RSyZaGpTExhjGDIMA8XO1UnviFK
+	 p9trc2l94gOhvYp27VhkcG2wYEQKoALg2FydZtAGvqGhmL1J0Dii8CHMD8Nsn2Jb3aeFZ
+	 OQm0qUilMotMvcwyyUjz1jaAWtJgCZmv9VvbrOJJ8EOznlIJnHKkXxEijTFCoumrA2zLN
+	 NOxfO0+we5SvMk52qKCeGqJF0BDlg6zMNukOq/W02lPLD9BrCAs6hhksXjXw9LzbfTrYt
+	 45UhUop8RxwPCZst1XwXz4hUXyXIk61r1I0hJPo3yVl9qn6DWIPvweFgnP8PVhAyy6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793417765;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793417758;
 	h=DMARC-Filter:Received:DKIM-Signature:X-GPT-Reason:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=4Na50D0QOOyHfeH63Jpl8GSNXR3NkGq1Q86qFqEh1Nc=;
-	b=eoZNCUzy7LyflJWsgpRTc0TLZ6uty0tTH+yb6svncmNpf9renUpX1SSTRJMHtlfBX4da
-	 cNa4IidEHnNBaunvcWiYKydYvvMNgt2M+8s5ZagHVkplRoaEphDSZUISoXmEdZQnnWoj8
-	 oOATetfizSbFRM/yzQebP+bPKzmEKq631QCGRKe7e7kDRuZzub1qlkXh3S1Q3jfN8q7og
-	 fIE0TFlEQa3+YDnFtcuwJuNUNpykXadMQ2SzJegwzXWwZmKPVJsxCvSAXjGssMdtJerUS
-	 QEE162WTfmM41xerJ7XHewREqkrIoJUtWVN1V7asvWam9BL/+fzcGZYtlUUiQ5abieA==
+	bh=u2GnwU/gssAsHL9M1O/zXGt4+/EXK2+c+Gy35OwqvXk=;
+	b=X7x6pD3SzeUmsqGJGn2jhc7HF2dI1lVP2idjdaylJkqZCJ3kExAJd+sn9+izdnxZJiw8
+	 KCRCZ4uR2hH+L0hSPMsCmlKo0irv0GcrdvI9R1C6Ns9F8vqvkAF+BjFpehglRBSfUPMAb
+	 hhBJPlZx3iPRDpc2JvfQBxa6MA0WqNqVI6CDIEbPrl9+2Seu4MKkSOWOTpxCK4PvRz5O3
+	 nWRR4LhjorY4L6FX6RJ3U/J1hOMvbYw4ZDoYWl7bCSvx9sbBpX0k5wNoebs7IRzrY5+XG
+	 zHUp754aixrnLOd+ld3G6Ij6KocixcjYjRR7/ICofUnf98YikC9aUIvpWdA+4cC6NoA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=d-silva.org;
 	spf=pass smtp.mailfrom=d-silva.org;
-	dkim=pass header.d=d-silva.org header.i=@d-silva.org header.a=rsa-sha256 header.s=2025a header.b=k7Wl3rFF;
+	dkim=pass header.d=d-silva.org header.i=@d-silva.org header.a=rsa-sha256 header.s=2025a header.b=UK6gA2qY;
 	arc=none smtp.remote-ip=119.15.109.137
 Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90998606A31D;
-	Sat, 31 Oct 2026 03:36:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90998606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB73B606A324;
+	Sat, 31 Oct 2026 03:35:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB73B606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=d-silva.org header.i=@d-silva.org header.a=rsa-sha256 header.s=2025a header.b=k7Wl3rFF
+	dkim=pass (2048-bit key, unprotected) header.d=d-silva.org header.i=@d-silva.org header.a=rsa-sha256 header.s=2025a header.b=UK6gA2qY
 Received: from Hawking.lan (hawking.lan [10.0.1.4])
-	by www.nmnhosting.com (Postfix) with ESMTP id 656CC41404;
-	Sat, 31 Oct 2026 14:35:56 +1100 (AEDT)
+	by www.nmnhosting.com (Postfix) with ESMTP id 919B741403;
+	Sat, 31 Oct 2026 14:35:49 +1100 (AEDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
-	t=1793417756;
+	t=1793417749;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=4Na50D0QOOyHfeH63Jpl8GSNXR3NkGq1Q86qFqEh1Nc=;
-	b=k7Wl3rFFfZxN3NeXM6E2en27tCzGA+C7b5ZmEpgT2chsCqVAcWtrIx+GwasEkKzjLnL0pi
-	VUVPo72KEsuQN1G3M23yZ5uQzUxkxMPCC6Lw7fy3aklQiS0jBpJbb7/fnzPzMOrdRhYYPg
-	NFPIzgcQCCYeTkgmvQexevTwYjiBI5RpTR8GewfWvNtrSXnJ8nkJwhNhUExGuT2ArpKQAT
-	fHP78GFBjzLGWE6ik3UlNBIqEJIeLFFxrqaS+Ry9gaM/94qgi/UigG5fCCRxm5it225rCn
-	yNKX6OMTv37YWMvX9HmyHB4VIaKZ775triXbqJlnNvpu+xc6F8NHUB1M0rKqMA==
-X-GPT-Reason: This email is classified as legitimate. It is a
-	technical software patch submission (Linux kernel style) sent
-	from a personal/professional domain (alastair@d-silva.org) that
-	matches the "Signed-off-by" signature and the "From" header. The
-	content is a specific refactoring of a Wi-Fi driver (rtw88) involving
-	architectural differences between 8051 and 3081, and it contains
-	no marketing, urgency, or suspicious links. The message follows
-	standard open-source contribution patterns with clear technical
-	details and acknowledgments from real-world entities like Realtek.
+	bh=u2GnwU/gssAsHL9M1O/zXGt4+/EXK2+c+Gy35OwqvXk=;
+	b=UK6gA2qYkoxfOP6luNXxbSHqZZzjzK6r2bUbVC8FjF1Rm8x5hBolla/RppTL/t5Qu4h5fS
+	tK1dKuTbDyYhqrJ5QXQJEnVhvlzWbmEKhHUZBAJHC+51tvXAKNUVlED+MZCkse1ovWEjOU
+	kV+CBHYYe7slA5/pIAQPc7N5eDbuWtvvdkJZmktCHVRH61wUcSjNtOLJskBXtXo9P3Qm6n
+	ldRg+k5VbpAB8C43XhCSo+pArrOfHHdBcTm1dnzdJb1hCmUDpeOfk2keEVPokJEXT6dAH6
+	m6lqQPTverHJzY1+P011VGTTyVyFLVM77NxWx9m7nQwKmIxw0lli1vEFYQsg1w==
+X-GPT-Reason: legitimate; the message is a technical kernel patch
+	submission that perfectly aligns with the personal/professional
+	mailbox of alastair@d-silva.org. The content describes a specific
+	technical fix for WiFi drivers (rtw88) with a clear "Signed-off-by" and
+	"Fixes" reference, shows no marketing or phishing indicators, and
+	contains no external links or urgency tactics. The From domain
+	(d-silva.org) matches the recipient's domain, and the content is
+	entirely consistent with a developer workflow.
 From: Alastair D'Silva <alastair@d-silva.org>
 To: linux-wireless@vger.kernel.org,
 	Ping-Ke Shih <pkshih@realtek.com>,
@@ -66,10 +65,11 @@ Cc: Luka Gejak <luka.gejak@linux.dev>,
 	Jernej Skrabec <jernej.skrabec@gmail.com>,
 	Ulf Hansson <ulfh@kernel.org>,
 	linux-kernel@vger.kernel.org,
-	Alastair D'Silva <alastair@d-silva.org>
-Subject: [PATCH rtw-next v7 4/4] wifi: rtw88: sdio: Split rtw_sdio_rx_isr into 8051 and 3081 variants
-Date: Sat, 31 Oct 2026 14:35:26 +1100
-Message-ID: <20261031033526.474710-5-alastair@d-silva.org>
+	Alastair D'Silva <alastair@d-silva.org>,
+	stable@vger.kernel.org
+Subject: [PATCH rtw-next v7 3/4] wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+Date: Sat, 31 Oct 2026 14:35:25 +1100
+Message-ID: <20261031033526.474710-4-alastair@d-silva.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261031033526.474710-1-alastair@d-silva.org>
 References: <20261031033526.474710-1-alastair@d-silva.org>
@@ -84,119 +84,129 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Split rtw_sdio_rx_isr() into separate 8051 and 3081 variants to be
-clear. The two differences between the architectures are:
-- Register size: REG_SDIO_RX0_REQ_LEN is 16-bit on 8051, 32-bit on 3081.
-- HISR behavior: 8051 re-reads REG_SDIO_HISR on each iteration, while
-  3081 drains based on rx_len without re-reading HISR.
+On 3081-based SDIO chips (observed on RTL8821CS; RTL8822BS and RTL8822CS
+are inferred to be affected as they share the 3081 architecture), clearing
+REG_SDIO_HISR_RX_REQUEST requires both a software W1C acknowledge and an
+empty RX FIFO. Masking this bit out before writing back to HISR prevents
+the software acknowledge from happening, leaving the bit asserted even
+after the FIFO is drained and causing an infinite interrupt storm loop
+that locks up the system.
 
-This is a refactoring without any logic changes.
+8051-based chips instead clear this bit in hardware once the RX buffer is
+empty without a W1C writeback, and software must not clear it.
 
+Split rtw_sdio_handle_interrupt() into separate 8051 and 3081 handlers.
+For 3081, disable interrupts via HIMR, acknowledge all pending status
+bits via W1C writeback (preserving the existing full status word
+writeback used on non-RTL8723BS chips, now including
+REG_SDIO_HISR_RX_REQUEST), service pending events, and re-enable
+interrupts under irq_lock if still running.
+
+If unread packets remain in the FIFO when interrupts are re-enabled (or
+if new packets arrived), REG_SDIO_HISR_RX_REQUEST remains asserted and
+re-triggers the IRQ line. For 8051 chips, preserve the existing behavior.
+
+Fixes: 65371a3f14e7 ("wifi: rtw88: sdio: Add HCI implementation for SDIO based chipsets")
+Cc: stable@vger.kernel.org
 Assisted-by: LLM
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
 Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 ---
- drivers/net/wireless/realtek/rtw88/sdio.c | 58 +++++++++++++----------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ drivers/net/wireless/realtek/rtw88/sdio.c | 73 ++++++++++++++++++-----
+ 1 file changed, 57 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index 75a5f5a96169..352ebb380a3e 100644
+index 253467250ee6..75a5f5a96169 100644
 --- a/drivers/net/wireless/realtek/rtw88/sdio.c
 +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -1441,17 +1441,13 @@ static int rtw_sdio_rxfifo_recv(struct rtw_dev *rtwdev, u32 rx_len)
- 	return 0;
- }
- 
--static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
-+static void rtw_sdio_rx_isr_8051(struct rtw_dev *rtwdev)
- {
- 	u32 rx_len, hisr, total_rx_bytes = 0;
- 	int ret;
- 
- 	do {
--		if (rtw_chip_wcpu_8051(rtwdev))
--			rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
--		else
--			rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
--
-+		rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
- 		if (!rx_len)
- 			break;
- 
-@@ -1461,33 +1457,45 @@ static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
- 
- 		total_rx_bytes += rx_len;
- 
--		if (rtw_chip_wcpu_8051(rtwdev)) {
--			/* Stop if no more RX requests are pending, even if
--			 * rx_len could be greater than zero in the next
--			 * iteration. This is needed because the RX buffer may
--			 * already contain data while either HW or FW are not
--			 * done filling that buffer yet. Still reading the
--			 * buffer can result in packets where
--			 * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
--			 * end of the buffer.
--			 */
--			hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
--		} else {
--			/* RTW_WCPU_3081 chips have improved hardware or
--			 * firmware and can use rx_len unconditionally.
--			 */
--			hisr = REG_SDIO_HISR_RX_REQUEST;
--		}
-+		/*
-+		 * Stop if no more RX requests are pending, even if
-+		 * rx_len could be greater than zero in the next
-+		 * iteration. This is needed because the RX buffer may
-+		 * already contain data while either HW or FW are not
-+		 * done filling that buffer yet. Still reading the
-+		 * buffer can result in packets where
-+		 * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
-+		 * end of the buffer.
-+		 */
-+		hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
+@@ -1481,6 +1481,58 @@ static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
  	} while (total_rx_bytes < SZ_64K && hisr & REG_SDIO_HISR_RX_REQUEST);
  }
  
-+static void rtw_sdio_rx_isr_3081(struct rtw_dev *rtwdev)
++static void rtw_sdio_handle_interrupt_8051(struct rtw_dev *rtwdev, u32 hisr)
 +{
-+	u32 rx_len, total_rx_bytes = 0;
-+	int ret;
++	if (hisr & REG_SDIO_HISR_TXERR)
++		rtw_sdio_tx_err_isr(rtwdev);
++	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
++		hisr &= ~REG_SDIO_HISR_RX_REQUEST;
++		rtw_sdio_rx_isr(rtwdev);
++	}
 +
-+	do {
-+		rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
-+		if (!rx_len)
-+			break;
++	/*
++	 * RTL8723BS keeps raising the interrupt after resume if undefined
++	 * status bits are written back, so acknowledge only the bits this
++	 * driver defines. Other chips keep the existing behaviour.
++	 */
++	if (rtw_is_8723bs(rtwdev))
++		hisr &= RTW_SDIO_HISR_CLEAR_MASK;
 +
-+		ret = rtw_sdio_rxfifo_recv(rtwdev, rx_len);
-+		if (ret)
-+			break;
-+
-+		total_rx_bytes += rx_len;
-+	} while (total_rx_bytes < SZ_64K);
++	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
 +}
 +
- static void rtw_sdio_handle_interrupt_8051(struct rtw_dev *rtwdev, u32 hisr)
++static void rtw_sdio_handle_interrupt_3081(struct rtw_dev *rtwdev, u32 hisr)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	rtw_sdio_disable_interrupt(rtwdev);
++
++	/*
++	 * Acknowledge all pending status bits via W1C writeback. Unlike 8051,
++	 * 3081 requires REG_SDIO_HISR_RX_REQUEST to be explicitly cleared by
++	 * software.
++	 */
++	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
++
++	if (hisr & REG_SDIO_HISR_TXERR)
++		rtw_sdio_tx_err_isr(rtwdev);
++	if (hisr & REG_SDIO_HISR_RX_REQUEST)
++		rtw_sdio_rx_isr(rtwdev);
++
++	/*
++	 * Unmasking HIMR re-asserts the IRQ line if new packets arrived or if
++	 * unread data remains in the RX FIFO (e.g. if the 64KB budget was
++	 * reached or an RX error occurred). On 3081 hardware, clearing
++	 * REG_SDIO_HISR_RX_REQUEST requires both the W1C writeback above and
++	 * an empty RX FIFO, so the bit remains asserted as long as unread
++	 * data is in the buffer and re-triggers the interrupt when unmasked.
++	 */
++	scoped_guard(mutex, &rtwsdio->irq_lock) {
++		if (rtwsdio->running)
++			rtw_sdio_enable_interrupt(rtwdev);
++	}
++}
++
+ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
  {
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
- 		hisr &= ~REG_SDIO_HISR_RX_REQUEST;
+ 	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
+@@ -1499,24 +1551,13 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
+ 	rtwsdio->irq_thread = current;
+ 
+ 	hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
+-
+-	if (hisr & REG_SDIO_HISR_TXERR)
+-		rtw_sdio_tx_err_isr(rtwdev);
+-	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
+-		hisr &= ~REG_SDIO_HISR_RX_REQUEST;
 -		rtw_sdio_rx_isr(rtwdev);
-+		rtw_sdio_rx_isr_8051(rtwdev);
++	if (hisr) {
++		if (rtw_chip_wcpu_8051(rtwdev))
++			rtw_sdio_handle_interrupt_8051(rtwdev, hisr);
++		else
++			rtw_sdio_handle_interrupt_3081(rtwdev, hisr);
  	}
  
- 	/*
-@@ -1517,7 +1525,7 @@ static void rtw_sdio_handle_interrupt_3081(struct rtw_dev *rtwdev, u32 hisr)
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST)
--		rtw_sdio_rx_isr(rtwdev);
-+		rtw_sdio_rx_isr_3081(rtwdev);
+-	/*
+-	 * RTL8723BS keeps raising the interrupt after resume if undefined
+-	 * status bits are written back, so acknowledge only the bits this
+-	 * driver defines. Other chips keep the existing behaviour.
+-	 */
+-	if (rtw_is_8723bs(rtwdev))
+-		hisr &= RTW_SDIO_HISR_CLEAR_MASK;
+-
+-	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
+-
+ 	rtwsdio->irq_thread = NULL;
+ }
  
- 	/*
- 	 * Unmasking HIMR re-asserts the IRQ line if new packets arrived or if
 -- 
 2.53.0
 
