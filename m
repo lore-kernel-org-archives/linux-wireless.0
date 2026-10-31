@@ -1,95 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.75.126
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.180
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793469417;
-	b=5Mk9tPgVWnSF+tZTjON9ybuiN4wYD4qnHqZEIjPF7uULTD7r/jSncdH+WdG9IHyoZRga
-	 VpSIX5RYeFdokzi5YnqVuvNF41l0VxaBT/oSnMdKCq7Eeak/VIudcrYznOnDv/KSAhibm
-	 Q5NACs4tpXoe/ZOfTw1OIs6YBaD5MDHZUi0qhJQ1SM5GHktiQn9FyCxGcVXynERCwEjJm
-	 5CDAS88/ffI+EHPuwmr1rUFE6KDuo3f4pNSr+SgUMVO2QYLyjsutWFXvegXe4as5hD0RS
-	 zRiBFjBhC9TLIJ3ZHXOfMlpMfs/2lklWJJZPx8asH6X/R3hTd/SrvTPdRR9rSs/3lkA==
+	t=1793476512;
+	b=40hc1YBG47qTn3iMz9M1za3NEnhaMMgAFjk1lRGleWWOboUGc/2AFJa4Xt/MCraPe+eG
+	 hA1lx+rFxxkefdHCK5vBPUSwwzPadEiRakOc8qp4j3w1ZenqmYZAYwtoU7bw2/i9qc1QC
+	 B9csIAnHUSxItH5z2GLYNKwQ3wuQWffpKv+0y4fYNVBcOmxBO6EdUcqFE6nhohqnjiXni
+	 WkKNDtuECLUapt0jx9s7NelkZSd5sOOCcjD/C63R2sRFh2X9CHOT/UMFT6zFgAdBhbC7+
+	 u41THsD5N20ggXiNXysu4TzHhfpKY30IfIS2tN1n4C5ggfL/sFXURGd9iu/Q/LboxVA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793469417;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 Content-Transfer-Encoding:Content-Type:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=xcrUgKjM8lEbGzVUGhktPg3rpV/CCVtucJlOkfz+Www=;
-	b=Qqp3TFUlzSkrzFVnOoS00rERywDOSpVxY/CgYiE+wjaVzA/MuClP5wSi8NWD0h3mtw9T
-	 ZewRixK1neJ4SZ7IliICAFbGSTQICRDocJxRijd+BXVbxaI0UqfnkNdkUY2aaPaYhyZ5J
-	 JF5gSGBfJeeNDCrkYbEe+vmrFhHI8Cp0dzaA36mHxqS+I9H93pq20pYRSZeaDIZsAT3Fz
-	 5YNJU1jnlxjWXoE+icq6S0xQPjM9PkVSswRb6Y4/orM009iw16sBBQB5LATNSowIsWFhn
-	 R8/sOQnfZCcoNkMGgusG40i5Bd1e4qEI9bEe0znqmDYHZslPF8SEOeXiWB3VnRAjUVQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793476512;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=5O5IADadRA7OjjYl6cdAuBGkPA4cHFlxrAeTL7mxKBk=;
+	b=mr+UX0pAQ1nlnb05r9pkydAxzcwBlKd4rsuAduDwu1aUGbnGt5ubcMN/vZUF7KTr9sAU
+	 Yrm5kiJZt49gG4CUP7VS5FfuN9gUUbd4ugXs7zOCITiI6OdVyfuw9KgYzVIKS5UAfubBe
+	 8M++KfProXHUiiqyJI39tV5nIgfNIBTxoZlLp/9O4ZQe5WlSk+O+2uIUHY6yCp3ervkX7
+	 ALG+KkbZXRkJqkxsa1rmdink6sMJdEmiyavgsnNp/phpds3Pdg0Vua517z4vTMflItGiu
+	 DPlpQ7qgSUk916H4nHIKJ9t9vCy5j9bNTtXQ+7DAQU+sgu7zsX4PlnV3IvG9ULn0i3Q==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=smu.edu.sg;
-	spf=pass smtp.mailfrom=smu.edu.sg;
-	dkim=pass header.d=smu.edu.sg header.i=@smu.edu.sg header.a=rsa-sha256 header.s=selector1 header.b=ZT+NGXuE;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.75.126
-Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11022126.outbound.protection.outlook.com [40.107.75.126])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=bairaktaris.de;
+	spf=pass smtp.mailfrom=bairaktaris.de;
+	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b="STiIltO/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.180
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42760606A31F;
-	Sat, 31 Oct 2026 17:56:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 42760606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=smu.edu.sg
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=smu.edu.sg
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2FC606A31C
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 19:55:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0A2FC606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=smu.edu.sg header.i=@smu.edu.sg header.a=rsa-sha256 header.s=selector1 header.b=ZT+NGXuE
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WccJ9uyUukfBvFyMzrJgie3SOymgLyG2YdzGOG+ol7PrrTwnaktQsy6EAcOPwDIEvT7wh3hmrx/qOLcgPsyGptJuJQuEJXIQTxyYLGL129BrE7D+WHkcesDKVBBRGhr5YHPVmKdi63mAqgHpP8yTGno82vQ+dsH0x/bbpMRr2nCWk/ALGGLLjmmFGijsckrraKGHE87zGHNnkte9p2uuXAmH058amKEifp/BiGoBwQV6NScFPhju/adj5b9mjsRjH96q5mVBXasz6Ad4cbAIm7N7R0XL2EOi1+t2oRmrkDje9XDs0zwKvQzGL+ZhG+ycS6wRXOGpHXsEV4qqPHMcBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xcrUgKjM8lEbGzVUGhktPg3rpV/CCVtucJlOkfz+Www=;
- b=cIr+Bhc5tPY8CpkS7IZWjqQBNtXTDICKHkjvIfOpksVVTY1+j84edIq6Kqfy5f5HfhJ/LHlhNhDg5P8LhzxBNakOL869eb4RyB5p9Os6C5e8VgIIjMP+v4RK/RC2DqIeoOXkInNeeLi4BeW7Kzuk71PQxAxpdeiN8PtPfFfDeXarDNVfl328eu6+Vdk8937TfHBFLBXN3z5yz72ui23kq7SiQm5Fr1BnNAPlCnWBiDPDknNhxKydjZAO9Oc5tfXR2EcKW62R3cT5Hc5x/6pzQSSRPpGqAPZFTBh/ZO65Plgo6/zm8P5aU+5lBjsWQPJvRQYIRIVxExU6IBov3EWXPg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=smu.edu.sg; dmarc=pass action=none header.from=smu.edu.sg;
- dkim=pass header.d=smu.edu.sg; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smu.edu.sg;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xcrUgKjM8lEbGzVUGhktPg3rpV/CCVtucJlOkfz+Www=;
- b=ZT+NGXuEpLDqFu9Du58qxkMcwjsSfpcY/S3yVN71J1prx0QkCeaIxvwMRsZYSCFgF0puJcqXqI9oj5dlWxREKcIcyKsS0cGpT8XjGbVodr+7q/P9ct4e/toTyMsA7MQ1DoK20md1TQaN7JQ+ijn6q/WBtECGb9QE/fQuKBYzhkvIOdBHf+Nghg0t690po3BUZSPczf4dDyJLErGlgTlzJynthA7TXMYnC2Y0nMNETSw4762HFD8FF01X4RkG6mDImkAy6oCWKB5qFA3KqhJ077Q70/LyaqDlBiT1bPVLaA6u14EQD+MX1ggWLSglXDfEKhyW7e/Nc1kgl1UYTWV1xQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=smu.edu.sg;
-Received: from TY0PR0101MB4264.apcprd01.prod.exchangelabs.com
- (2603:1096:400:1b3::11) by KL1PR01MB5904.apcprd01.prod.exchangelabs.com
- (2603:1096:820:125::6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.11; Sat, 31 Oct
- 2026 17:56:45 +0000
-Received: from TY0PR0101MB4264.apcprd01.prod.exchangelabs.com
- ([fe80::9272:a3a2:eb34:7382]) by
- TY0PR0101MB4264.apcprd01.prod.exchangelabs.com
- ([fe80::9272:a3a2:eb34:7382%5]) with mapi id 15.21.0569.010; Sat, 31 Oct 2026
- 17:56:44 +0000
-From: Huihui Huang <hhhuang@smu.edu.sg>
-To: linux-wireless@vger.kernel.org
-Cc: Huihui Huang <hhhuang@smu.edu.sg>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Luka Gejak <luka.gejak@linux.dev>,
-	stable@vger.kernel.org
-Subject: [PATCH rtw-next v2 1/2] wifi: rtw88: drop C2H packets shorter than the C2H header
-Date: Sun,  1 Nov 2026 01:56:20 +0800
-Message-ID: <20261031175621.2228762-2-hhhuang@smu.edu.sg>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261031175621.2228762-1-hhhuang@smu.edu.sg>
-References: <20261031175621.2228762-1-hhhuang@smu.edu.sg>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI3PR02CA0007.apcprd02.prod.outlook.com
- (2603:1096:4:295::9) To TY0PR0101MB4264.apcprd01.prod.exchangelabs.com
- (2603:1096:400:1b3::11)
+	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=STiIltO/
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-8b0d91601bdso22832517b3.1
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 12:55:11 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793476511; cv=none;
+        d=google.com; s=arc-20260327;
+        b=eZgdoYXIxGup8QwzWURBxpDPYn2vRMJpHAUUzM0h84MQI6vdkL/eioyX+cGFEmYeXW
+         +62P7T3WUHWf7z77nvzRCdu0zQxqlhTC0jJ09Z2sZzw/rxHmIVa7hmAnbZbVYleivEHA
+         4dyROFZhtKVK0KPphBUM+gNQotjvKkRDZ0wSWl+zGUm2zMxQ1r2kuPdyHUYWEQH5OoZN
+         TrZnXd4otG/t16jqHCG3WBII8voKAxTERON8OprT5cRFlgr4lStXyFmzDnfQK680tI1F
+         eAPNAVAb8xv1oh4kb1DcMw8X+/sDTTlpxp3Vdv2F5WLCrFueAvcDgmN3/lOPUMcB4KSr
+         5IAQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=5O5IADadRA7OjjYl6cdAuBGkPA4cHFlxrAeTL7mxKBk=;
+        fh=aBj4LCg/Axcumx+CaF+Kl5PsZv2xO8Vf2BamhIwISrY=;
+        b=CrjrLUderhaCTNLV8A7j0csclZrVE4YjY1C34cotuDbBA/x1dv7gLhjxRRfBX+vu29
+         q8KlLbGhKqz4p0t/q3avu7J5XrnIg4qISKXqzZEzUQ3rIfWVHOT3cN+0INmYW1Ig1ptb
+         WsDCz+xNsbugo1XX4zZjxbtGEQB9JJt5EhdEvznQ4qjQd/jeP7gpfsR6a5X+u4B3jBFq
+         5a+QGIiAEgx5Ky0KnT2Rc5qabeN9h17sCXWkLuUf+cpPIVAc0tjOBsIBor0vJLKd5etA
+         AoP4WQv+Bg2bASmmleRPhyIPYhTpEXIlVaMLq9XmrRhrbf5Qrwaxd+J1aOR6U5dvTi7t
+         vu8Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bairaktaris.de; s=google; t=1793476511; x=1794081311; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=5O5IADadRA7OjjYl6cdAuBGkPA4cHFlxrAeTL7mxKBk=;
+        b=STiIltO/aqKmnKiUqXHcjXT6P/2qN7QUM0q+/n4EgGThq8OvAxvoQ80ETa9YMtYGjO
+         VX2c8EEV7d8VCgCeuPgqP3pbjamibnVJQTW1fOst0t2iouJACwrAHGTKavgV8n1ZK7Lu
+         iTte4wR+EAOE0Nh1dOrnv8ZEsXgKYQFvEtWqJHeqbOFOIEFQ4I47jRwdWoTHn+Cb7RWT
+         eKgj9UDHraGLjIy/F/ihfoA86jyx7bK6URZkBM/2O7X7mgq/IbwaNx1Wx+Hyj4/aZ27w
+         vo+NjOBzJtAdRBAySh7FM6PRRlaltQWSPh10UxMdqDRaH04TyoJVhfV4CKGgv/Zs6yzE
+         /Sxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793476511; x=1794081311;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=5O5IADadRA7OjjYl6cdAuBGkPA4cHFlxrAeTL7mxKBk=;
+        b=Nau7hl3FHEIvsppD+z8Jk9kUB2hVhjO3Ws3ZI3jSdzT3JKFzfx++xmC13VTVA65X2s
+         fP4EANpqioWLNNNuFdw1h4J30JyFlQ1pIy4RPamnXnwKti1UKiHdWJofGlt5/WINLII2
+         R3q26iWGkopIbxFQBNxorOEo2m2A3vs9yhHJQV8tQ72xYBqJG+nj3qMRZxJv27+3V8eT
+         x+rdhVYP7xeCG/y72dGiBrbJ9O5I8s/8GAPZdQc4Fxghn/YfWX+Uo9FKH7j5GTgRB8wQ
+         MfWNEU8I0mHbGBb9xQmlp+0XZ28WemUDNXlx7cA6NvxqnlGkpYk05V1qgC77yzw3zxNt
+         Kvbw==
+X-Forwarded-Encrypted: i=1; AKwUvBzVxykvkLmyNXuZW7N3mJK1W/xUnAIoc8nPCI8aaxXxm4X6FwOpOID9cY7AigzXX2fDdaBOgcFVHZs+bRKI6g==@vger.kernel.org
+X-Gm-Message-State: APuU4Z/ynl/WbcjaGl/JCESivfuNWtnE6ys6m3B4Tc9ed2b/7vAj9KDw
+	Z8okTiq7jQjuBKYh+B5HO7gKtE7v2ZHVluxNytNxRm+ejRPUeABRhQXyTxqEJld5eaLRiuqI1NU
+	JgI7OjExzX4vPHgyiZpedK5WMf084mBML9iZRP3mD
+X-Gm-Gg: AYBFou2i12CGwT2TjjIlzUhABZu48xfbIMOPE+IVtDN1SeJzO4qyMzEsUFfejDng1XF
+	Ens8FQUjW7VEi4lSmy6XaQRFhZg3/W5LD3cDW7jeLlIhr0YNr2w6TPBXhl5UTaRJwzDnoGhBKhf
+	QBXnkM92lW42dcnxxCzLu5LK8/T4HuZjCoKbB+/unxXFaUStpG0cGnRE5BsfDoDtl+1cEBbriom
+	Cg641hrYy6vB6dKAgz06jYtlDrWmPMBP3fJJYWTXr6h5y7sAyugJdFpuAqpkcutGVloy4BW3JBD
+	a+AoXhnyAuPnKiI3vy5IkzavF/m7+xhXQeE6VG+wJw6cwCXTxairpk2v3KxXKOzwTFlYGPdwH3V
+	scD3Br/zcoFFkNL+P0bSlq81K7ZKEVfl7k/2O7Ta015c66Q7sei+zg4kcbv7AK8Rrk3NbkEhF2b
+	RyhF6lYLjyH5VaSukNSWoaov1buzU4xRiJCFjX/NGzX+oAmgYKAoEHPxncOrPqWTBzD2NalgTbJ
+	zIHn5vl8CIzz6tEFioUt3OgTlKAemMelR5veHRxkbDIKg9pPaYei2txyOr5KCSJ8c0zETuuyLXd
+	L8UIoA/MyBmuG7QcEf844rFXUZWonxZSI81oXIJZw6P0o9pPmcfU0h6xeASNWdtQdaoeGZnc3zk
+	nq6yS4QIF5bgbPKajhQg7Fhda+raO2w==
+X-Received: by 2002:a05:690c:6612:b0:8b1:6c4d:6b83 with SMTP id
+ 00721157ae682-8b1c6762363mr64199007b3.24.1793476510987; Sat, 31 Oct 2026
+ 12:55:10 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,118 +107,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY0PR0101MB4264:EE_|KL1PR01MB5904:EE_
-X-MS-Office365-Filtering-Correlation-Id: 84a1e0a9-bd1d-41fe-1c4b-08df377851ba
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|786006|366016|1800799024|376014|52116014|38350700014|11063799006|56012099006|261009223027099003|261021121427099003|261022075727099003|10067099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	zCfxAapSNGHSX51I0ODVcp08lG/U6mwXamj0yOAc7dcvyWEJT5F6PbojHEJEo3AHU+crTPJhviIAHugpYutYiws4DiotGPLHRWH8z4dD54BFn6OOLKnfoHyg/4ns/MzE05hBcpIwweVcz4E/8uZd+woDEzRj8QeLHaaXSeR9LIpUUW9EOflCtQ1L1c2SeBJQ5iEdIfQonB7rplaXfjmGjU8fMoJo57nkJNQaevOrYhMHWwW3zVp/+XApLByWi9lfcxT5g/XdnrUthBnhyhL/bTjnGdaDORFCW3xLmDIK4uoJKpN1+PN/mhyqqFjrmkAx3ijHkpbmW6tDKhJWj9r3KVJ7UX8uwovRC1/K7RsaxBQ8pEr61SberWuMpTC+xMkl3m2Zfm9T4H3IkP/EEKyn26/v8eSYGTb6WjUD3qx71t4HFWUBzSgrWs48t8yP96G+xOmt1zN7i1sj0kVKN75y27zKnivv8VBr2YbIrsvdWWDoaztiMlL3fdllOquvHeGdl6QsNpm3s/tcCkxqGOgUy1g/JlowOCqBp4DvplTvHGoPH7YTPrf3bJSmxsvJID8ASjw7j6/CFMrDRYo2/3HJRwgKqIw/tYxGq2p/zd1NC9hIcOyAHko/MHWpJeODqcOLWUupc+O3YZQt454n5H8ove561Ftekc8kPdaQeL3vZnv3VFWGccE8PEFeqPTKZbWCOFbBfFfnat0MnlTKFApiBw==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY0PR0101MB4264.apcprd01.prod.exchangelabs.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(786006)(366016)(1800799024)(376014)(52116014)(38350700014)(11063799006)(56012099006)(261009223027099003)(261021121427099003)(261022075727099003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?UPH7SN3cN4rit0kUkInl1ghGam207SSF0qEZ2ZUqsIxLyioGclsFZoH+FxLw?=
- =?us-ascii?Q?ScUgJ8dEUVqJB0ycyChlaAiyKB230vvugRKg++Fq/jN4mdhsQwggSFQzotcm?=
- =?us-ascii?Q?ddXlW8fJQC2/Z6o1y7H50SEcwZAMuHO2s3PRjjlEjrIwb5M1MKP+o4L1wkxj?=
- =?us-ascii?Q?DGpNxbKizvn6/oqAsInstRjV8hke9y8PLTgL9ZQzep0oGfLq2aM341z6RzzR?=
- =?us-ascii?Q?0Qcw8xGoVWXFaYIMHutQJCVVO64TjUA1b8OeBuEHervMbjZBhEZVtgdzwO3v?=
- =?us-ascii?Q?MHY3WiACBAezxZXPwr/PE11aK7G32SWggq8A2qAUBFR+RldbsfF91hKZ+uc7?=
- =?us-ascii?Q?BgekEr7JlC80Vr1N7Sg/WgNaRQ+4tg9X4zbolouxXKgPY13Nmy2LCDkTBeTE?=
- =?us-ascii?Q?q2OMKOVcvOnx3dkUV7nLHyDwRLLXuc+ifvcskqP2L7ThatPFKvYVdTYmx5V5?=
- =?us-ascii?Q?m7nH4gMORiISGY6ozaRGVuI5uCaTITS3e/URuYrmqCJE0JFu0vqsZ2puqxDo?=
- =?us-ascii?Q?nrUrc9zyiSHjZ/T5MvijyqzF4l345qOluoCokFw084nJTpG/STNVi/OUpDjo?=
- =?us-ascii?Q?/6tulnE1wCt9wEEWwlpF+TAdLYoYqMJ+TmuqipTufV7tzHUHw6roULPLPtx3?=
- =?us-ascii?Q?zLPnmRCQfl8C/K8IOVZECJdqroUzc8GogWF++4iErdUrxCqebFqO7gile1ub?=
- =?us-ascii?Q?VNVM6MnMRfgcFt9XO7wMpqWYKKu7DC/oSQNu+KZ2Y1M/LRSONmy7JDfR0JP7?=
- =?us-ascii?Q?ZcqkB9R8EPS3rwl69k5F3cVSE6yxtHteFdezxJG6t/3DvwFL0E9Sc4eZfIB+?=
- =?us-ascii?Q?BTbxYvf12En/B32HmQUxVkivQ2dCxKbGa13/30ij7LnKTkDWXgGpkWWfj3vQ?=
- =?us-ascii?Q?StC4nXmr6jHvmgua2Guk+NpM1eGFIFZ8MyqVnll1oPumGdScDCjZ/iEHPM+p?=
- =?us-ascii?Q?I+Ydmt2yrK8V4OLwsXScY4Gd2tHebWfJCasfJ0i/Npz0yBF4y/08txhlbf/m?=
- =?us-ascii?Q?F/agKj6e9qBtTcuezVoTSI7E3Y6vjp+DF0bvT0wL4CAZUOed9PcQ1c4mRVRS?=
- =?us-ascii?Q?IWbraN+UvXaA4VJuPon/UlqTp7SfNiVX5B+H1grkJf7dPIxomIknLmz5Orlw?=
- =?us-ascii?Q?wRpaZaS5iHdPMAnTwOz+M4Fe4fGdLlhVvG7ut/EgEIn3jvPi71/iipz0E0bG?=
- =?us-ascii?Q?16FqzpM+YZjbeJHqiI3zE67vpwnwSVIm8Tn3JD4fS/ZROcC+/UeJ0MH2Z0It?=
- =?us-ascii?Q?2KlYYwY++HhD/QNnRc4/hoZ+8tw8gH0zqzjJYk65kP8gJVC/XB95Qtz8W8r4?=
- =?us-ascii?Q?tXkg1O3EG8IPXrmGNowfNNOqQ+YCYIPLnD8WAysUhUqN6cbfWlMVLcUfJr9U?=
- =?us-ascii?Q?eFJrDOelveHBElNwFjY8etZGxGxiVRjG4fUC0xe9/zw7PllqIQwUayAjNQ3k?=
- =?us-ascii?Q?NHVdLrM5ePBs/FzsFMauPZ9ImvK7fbiR6usV2LqsHVLBCMoW4xnAACFwAbqR?=
- =?us-ascii?Q?TUH+kjQqdprpkEZiF8EJzdRd9ZbCl4SQWWHOhON2Jmh0fIRsRyvkvBXGRLVk?=
- =?us-ascii?Q?Q5dXco+cPrwxsJvT1l9apK9WksjAl4RVqztGu687dqwwHKyAuvrxdatF1t/G?=
- =?us-ascii?Q?ovdO7NfW2S5ysLAmoQ+JCINOqwn7xQoezZUVYhwGu8xh1osWOMQv39cZKPWK?=
- =?us-ascii?Q?J2QNBDGKVN9gWv5q533DKDZHuYW86ERYpsEH+2jGO2TRIOJI/Z5JNPj/DYPU?=
- =?us-ascii?Q?84OwE7DIbA=3D=3D?=
-X-OriginatorOrg: smu.edu.sg
-X-MS-Exchange-CrossTenant-Network-Message-Id: 84a1e0a9-bd1d-41fe-1c4b-08df377851ba
-X-MS-Exchange-CrossTenant-AuthSource: TY0PR0101MB4264.apcprd01.prod.exchangelabs.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Oct 2026 17:56:41.7333
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: c98a79ca-5a9a-4791-a243-f06afd67464d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wZoIrjTHH4JovPz1LZtz+DIq7uIHfu+e/TSKxPP6jPJjJxLBhxvqm8etgymORgFPKDtKx9MY4Ik9+RrQsV4yLw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR01MB5904
+References: <20261027075544.19144-1-julius@bairaktaris.de> <20261027075544.19144-4-julius@bairaktaris.de>
+ <7ecbb748-85fd-4a5b-b673-3f29b683e8af@oss.qualcomm.com>
+In-Reply-To: <7ecbb748-85fd-4a5b-b673-3f29b683e8af@oss.qualcomm.com>
+From: Julius Bairaktaris <julius@bairaktaris.de>
+Date: Sat, 31 Oct 2026 19:54:35 +0000
+X-Gm-Features: AclHuK-y6ZcuKV4f5uzsmB8CJRCLAxncnpWnV8eG7gDPJlWCxU7zg7ukuzbMPBc
+Message-ID: <CAC1t37K+SCBFbt03xWrdgreaWctwx5G7uEYfyjRHghztKaWR5w@mail.gmail.com>
+Subject: Re: [PATCH ath-next 3/3] wifi: ath11k: add a module parameter to
+ select the hardware mode
+To: jeff.johnson@oss.qualcomm.com
+Cc: jjohnson@kernel.org, ath11k@lists.infradead.org, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	baochen.qiang@oss.qualcomm.com, strst.gs@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-rtw_fw_c2h_cmd_rx_irqsafe() and rtw_fw_c2h_cmd_handle() compute the C2H
-payload length as
+On 10/28/2026 12:03 PM, Jeff Johnson wrote:
+> Is there a different way?
+> Adding new module params is frowned upon.
+> https://www.google.com/url?q=https://msgid.link/6d553cffcb0ae84e141006ae1430f6f37909ad2b.camel@sipsolutions.net&source=gmail&ust=1793562736182000&sa=E
 
-	len = skb->len - pkt_offset - 2;
+Yes. Which mode the NBG7815 should run is a property of the board: Zyxel
+specifies it with one 8x8 5 GHz radio and 160 MHz [1], and its board
+data makes the firmware advertise DBS for that. ath11k can then pick the
+mode from the machine compatible, the way
+ath11k_core_usecase_firmware_table[] picks the firmware for WCN6855
+boards since commit c386a2b10689 ("wifi: ath11k: add usecase firmware
+handling based on device compatible").
 
-where len is a u8, without checking that the skb holds the 2-byte C2H
-header (id and seq).
+For v2 I would replace 3/3 with a table of hw_rev, compatible and hw
+mode, with one entry:
 
-If the header is incomplete, the C2H payload length underflows: zero
-bytes after pkt_offset produce len = 254, and one byte produces
-len = 255. With zero bytes, reading c2h->id also accesses data beyond
-skb->len. The wrapped len defeats the minimum-length checks in
-rtw_fw_ra_report_handle() and rtw_coex_wl_fwdbginfo_notify(), which then
-read their fixed-size reports beyond the valid packet data.
+{ ATH11K_HW_IPQ8074, "zyxel,nbg7815", WMI_HOST_HW_MODE_DBS },
 
-skb->len is pkt_offset plus pkt_len from the RX descriptor, and
-rtw_rx_query_rx_desc() returns for C2H packets before its
-"pkt_len <= FCS_LEN" check, so a short C2H packet is not rejected there.
+ath11k_wmi_tlv_hw_mode_caps() takes that mode if the firmware advertises
+it and otherwise keeps today's choice. No parameter and no new binding.
+1/3 and 2/3 stay as they are.
 
-Drop C2H packets that are too short to hold the C2H header. Since
-rtw_fw_c2h_cmd_handle() only sees skbs queued by
-rtw_fw_c2h_cmd_rx_irqsafe(), this covers both computations.
+A property on the wifi node would describe configuration rather than
+hardware, and the series above deprecated firmware-name in favour of
+the table. A runtime switch does not fit either: the mode goes to the
+firmware in WMI_INIT_CMDID and fixes the number of radios ath11k
+registers, one ieee80211_hw each, so changing it means a firmware
+restart and a new set of wiphys.
 
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Huihui Huang <hhhuang@smu.edu.sg>
----
- drivers/net/wireless/realtek/rtw88/fw.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Does that work for you?
 
-v2: print skb->len - pkt_offset in the debug message (Luka).
-
-Tested on rtw-next with the temporary KUnit test from v1, with the same
-results: before this change, C2H packets cut before or inside the
-header update scan_density from bytes beyond skb->len; after it they
-are dropped, and a valid C2H is still handled. Not tested on real
-hardware.
-
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 945fedcd375b..0a909bf79cf5 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -353,6 +353,13 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtwdev, u32 pkt_offset,
- 	struct rtw_c2h_cmd *c2h;
- 	u8 len;
- 
-+	if (unlikely(skb->len < pkt_offset + sizeof(*c2h))) {
-+		rtw_dbg(rtwdev, RTW_DBG_FW, "C2H too short: %u\n",
-+			skb->len - pkt_offset);
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
-+
- 	c2h = (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
- 	len = skb->len - pkt_offset - 2;
- 	*((u32 *)skb->cb) = pkt_offset;
--- 
-2.43.0
-
+[1] https://download.zyxel.com/Armor_G5_(NBG7815)/datasheet/Armor%20G5%20(NBG7815)_4.pdf
