@@ -1,89 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793465508;
-	b=hQTvsxo3Jnh3pL/G4CZNOU2Qyvgpt/RtyqXlFfTdVojQVE9AQCnk8hUDL7McVZBsT07O
-	 Ly1jcCyXN+fTn4Be3EtdIZ+Ao3cWX4S0cj1dwXG6FflI8Y8HIgfjrRSnMiqnuO2mW7hj9
-	 xUGEWJZAmPeQ8Ce9R8rCotNIO3PLrAyFvFLQUyt23UHb2Km9PeW8qtr6XJ0aVDG2ttQIY
-	 6joOsoZ5l5hhNsoTlk9KWiwOjLDJ9vD8GJoBrUBxk88LPVpWe6nsf006GTyAvuFbM2oUo
-	 wGeX27NGHvfUg3aBb/H1P/1cSfOqozwnHUVmzff49UuUTyTU9nKvzL4wmoMt9D+pE2A==
+	t=1793465511;
+	b=CQXMxq2DOGcts0VreXOqK4OOeEDBrxqNGbE6b+bqYMG3zDaJCXrAUNL1n/3Ux4RqzsD6
+	 D7Ui6PHZhFa5yxFBwOhlEoloyNuOOgv8WGTujOHEhT1TSR83ql5AhijhxoaLfIwyuJBQM
+	 nPAj9RPxd7Tj7RuoL8xYmxQ4afQmbAUOag1Na99ELu6WF3QIf6lTDNauwRh+KAcATklcF
+	 hnM1u/mUub2aV97pn2OGyQfOKV27yfBRW4YhMVxK3R6dILv/xKEjsfNzLnRoCOel3FVOf
+	 J9Be0ElBQxpklct9Ue8SqRVXfbzeljQYHqy3lYr0EVedD4GBYiYf3mnfU6ZFSDfrlrg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793465508;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793465511;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=wamDxm+VP+lDZGpMWBybMLeu3hwcWm7V1hzcMRK5N7o=;
-	b=kxTssE7jyjv3j5Za0VUh2HZ/JKRhaSk77uM0lDdfb+rntyqL9ZeJKfMqHqtKMeQUJRPC
-	 OamIRKh62TiGqDqiiaSynhXZ0Y4XmhX8RHNvOot9hFVAIwheU+Hm0aC9fWw0GckQYsFt/
-	 ZL6O9K5U8dKI68gRNWTCyLDkw94bYvdzPdJc3NprZK/tzalmRLDSq9gAHQRuLLeSVt8AY
-	 9rLrervHDFth/CqtoWyWWEUVhNvstmik1WuZKVhbqbdLTPUtc4Llpf75GVPEbb+0H2Q3H
-	 WfPs13URGQeEREXn+3aAOVB4szO7LnNpwP43pvMi2WwZJHR39IlyocflXPA9EeeZFmQ==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=Kv0RucCyFAkpDmpeAGSkWs1TRKT3+D/gZMXOjxlwJhE=;
+	b=htGN20wTXYMGBSPBCoCECoAMrCcq4dx1KMC0BHC5S1Yv++5UHUVnr9WW5ncs74Pnlag4
+	 uOp60oOnYvcsssvkk6VI1Zzkf45tyXdgCXnLb2e/ozjPWyeqBWeo30AgESoCGlmy0BveO
+	 amTOfzGoWdDXAlFcTafm3dQlIo+A3P2HY6+SnKvm2r7YDDXh3I6A/a+NK57CrQ13LImu2
+	 O1Rur3g4iiAzZ4Znosj+5nuN3zpwDrB+qHe2A/+YavInPnnciXrjOEHvGeHF7vH1Vq7Mp
+	 csGMsjvvzve92M0U8/ByfY5twyjHJb8cx34gPvSqr2Y6r9gk7W7M8HBteJziu1sLdYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Bwn2Lao3;
-	arc=none smtp.remote-ip=74.125.82.170
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0xQJBjRf;
+	arc=none smtp.remote-ip=74.125.82.54
+Received: from mail-dl1-f54.google.com (mail-dl1-f54.google.com [74.125.82.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B54606A31A
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 16:51:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41B54606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59BEB606A325
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 16:51:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59BEB606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Bwn2Lao3
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-33bf40b0c8bso2098622eec.0
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 09:51:48 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0xQJBjRf
+Received: by mail-dl1-f54.google.com with SMTP id a92af1059eb24-1ae18eb9b69so1028785c88.0
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 09:51:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793465507; x=1794070307; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=wamDxm+VP+lDZGpMWBybMLeu3hwcWm7V1hzcMRK5N7o=;
-        b=Bwn2Lao3kjB5WCX9xnwFU20qzEX3xCL2d6zJts5j5VBSh4d0UgIiLKoL7P7234AEGy
-         eeoISXrjlbx4dNrleC/aLpLQlCrEPZWTfG5yyNFRhiXITJg3lc8NagDeAyzyURM9VhrT
-         WbRKjIO3Jn5DbT1wEGrinndptMtX5CEFNOeEGXzRYpPfckOn5FUs+xbMnUW9Vw6TZcKI
-         BmwNifIni2HqEWsTa2sCRH83Z5wJzjT6kTjIlUVTgbVCBSBxK5jZ/53/bAcCCBAHhzxG
-         nGsmV81DwxEX7nXvQl9bRk8FkhHAB8UUuTv7kb7S37s7bQFVGeGBPsZ138+qIquawB3Y
-         ktrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793465507; x=1794070307;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793465510; x=1794070310; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=wamDxm+VP+lDZGpMWBybMLeu3hwcWm7V1hzcMRK5N7o=;
-        b=hQNSb43EvsXocO5ie+hA/mRPz2otG+m2J/OF05w+bWnrjkQHnVxlj1x+2SDT3rFOkJ
-         SaEB1UFkcFVlAhg6nNw3crW3H/tFKwXyo267uQaJyYTzdi07xl9FY2WU7HaQZdlx7WK3
-         70QYy3A5xUMVyb+3BhdkPjQfVDmEzrkWHm+tYMxjaUOTUh1zS87jpskttOThEUHXg1SE
-         pRg1ef5W4hrw8OVPDlFzfgAn8tjwEWIJ7FeEUKu64v7w7xgUVjo6BMdQwanJpati9/AH
-         NiwF7y74Ucu5oy4LalxTOvp4B/iL5pQjMe4/nZySN1XSIE3j8InvTga1vGtqSENrbcC0
-         HqdA==
-X-Gm-Message-State: AFq9FYLe4OmXiCfIaMEU7g1uDEYtAOiqN1MrW6Bk2qA/ZOVt735mrOmh
-	6C9cZzHb8czb5uPQg2Z5/Lze4YIEKdaAkcvIT1+x7y+8JDjeiYxGXkZrQZKFD1xo
-X-Gm-Gg: AYBFou3aqCAS+yVjcWL2Pe+qkRBayy7RlZWtCj13TVl6qDfIElAb7Ah1SQWSoSN3b0N
-	3enzfvRc9PFg9t3Lyxc/xqRtQeXlF67Jgyn4sArXkjIsEkg6h54m3OeYHl7+fMvMSVero0tlzf1
-	ZbY6Cp+hvR1sFp69mXWW4X6sZGQVgzxMB+tJ3Cf9BBkHl6TJE1sqCY6mpa9oY+0VfJNRyjKxDe3
-	NZpWZ7KIsjzPyE2uXPm52kkArYom+0qbaufbY8zs6xnAG2abLGFGggtgCZC6hvoWjLJC8MPNFYT
-	f2CdxyyWgfZdXL/1wuHzFHn8/2gf3phTxWhRSOezOAyabkEseHl+NlwdGRAANMn76cBJZrkCWIm
-	QVtuF0ZIyXkpVH3Zfu+zW9teSYsAiOoCAJ41zniCgtz83/Qnon33FvmOHf17i+rQ9pJ0Pxs1fPv
-	i3HW9WwKkp3lUrMfuBUVe8epmRYiUS0DOmcuhUI0m/J0HknGC26YQzhJZdjiO9kg4g5oFUEWhKf
-	9vxj01oOn0q/D15ozjFzQz3Ee8pW+fn+p5BC1k0OB47pgAYwBemnOz++1J+ICo7pVfqb1oXWjTM
-	eKqMXMQGoAZA5aLNZ0/hjX68uN/41TZI1Yhnzd7M8TLO7iG8iecibDyNkIEuDhrPITvYEmD0zSN
-	+ENbe2R6s
-X-Received: by 2002:a05:701b:4182:20b0:1a5:52f6:db9a with SMTP id a92af1059eb24-1ac5ca23c29mr8395084c88.22.1793465506993;
-        Sat, 31 Oct 2026 09:51:46 -0700 (PDT)
+        bh=Kv0RucCyFAkpDmpeAGSkWs1TRKT3+D/gZMXOjxlwJhE=;
+        b=0xQJBjRfUjlpKnn7b8ngASTIN38B1bDGuEnjyjf6Mg2ofPA9JiopEXu1mel9XWgH7F
+         fSRVV9qNy8H6IdINcFBFY/+tvq4dotNZtv1uEEbt5NEGW14QrRZ1kwm0z0QIidBtfBYt
+         dQBlEfQt1ZgQW8CJhTq2WJvycyYxqNDJNMTCv5PEmfZzJU41QeKvQ7lj0rvYN1VZQP3K
+         JXWQpXMDXSQQMKdlbqSBgRXcoWXUUN7WKMLyZSazjCgPUQVMklnOA7jx3a4WdE73+WRE
+         JKvDdReoOKrl2dYM6VXo3aYSJWZWzIDFwKA1FhPpu+D3NVczPPiAHj5zqlGJMLNSrrBC
+         R07Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793465510; x=1794070310;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Kv0RucCyFAkpDmpeAGSkWs1TRKT3+D/gZMXOjxlwJhE=;
+        b=EfLfbKkKVOVFJsPryjkNhC9FQgN50yklcw1ho7PirNFFSIF/sSFmmWiuolVOtRrUDz
+         0+4nOS6W6Ys8IShBdPZGzMKGfKfxpZR5bpwUPR9dp763f0pPOCQ43jwbpKxqTbnQzcip
+         YDlyOBpzQBtYIaxwuMrs3CcI4ItB6Kbcj5fzDBYU5hdn+Ac6TWpv2G5KzXAs51ywQU4x
+         4Jva/evSc3wlJYFg/TuuyqWq7JjvlVNeo5VLNDSiU0rPHikEFMQEiAZ4I1ZodASlbOcx
+         OiFzWDdWh4pMnOQdVrGvlt5KM4QibKiKAU4vB2s8t0FxtJ7nfU2nOb1jpMrH8mWtTj90
+         NBow==
+X-Gm-Message-State: AFq9FYKbG4CAMMrgABExCQS222x76uWMukTrD76NbGN9Yc3JEqfrcOA2
+	FuxYohnxZUMKiI0PTGDwPMkGZ0n42sueTlfJE4FbUJ1S+hXd/5HS8HkW4Sy5KYXL
+X-Gm-Gg: AYBFou3GZQXi7MzkAgEnUeVm394QRx/AOETLwcOUVJi3bAD0o/AiCL7JYVAouo4/ym9
+	AlLKdeKwB28JZJlmM7RiuCnomqUKvf0FbbMHQY2RjQpJ+uLOrQ44DV2Mny/MjLwOcUm/OMbkFaM
+	akd9bch0hMbmhzmUMU6zFvNwy++WIIB1vjfEV7Tm/F+Df0UzAmn+JHAew61puTa+CA0oCLkWhhW
+	+XNmf2r/2jc0OpcVgUcq+TpClZRrVTQfKIPzN8KtVeaQX0bHSgjfsQhhgdc1eMsmiIZGvsHlWAM
+	TBnWWHFXtKihl5OI22UVnqNskjrEGb15McuauvAPibJepxgPwvNOwQbFx11mtLee0EpTclNFvJT
+	3kKs9Th3o9W1lOhlenYdbyjX124eUey1IhQGj+2/anr+Myr5KMvWoYOOqD+B84wBtkEGnRmqBTw
+	enBO10ekA57AOen/qMGdZtN7bP3CatXrHrWQG/u6p1+5uyURQh9ql3hF2hE1L7lMosrp8DCpIoS
+	03AZ9vDAI73FyCuwQJYFUUklfR3YIONQ+ruv5YqkUI0qBum5V0/88dGw5fg7F979Oq/NxeERx2Y
+	3zIdRZxmUdbqMED9Dlql49uFjPanMWNlj+bcHNueWFz/Q+I1YBnFrYaI47XKoLbz1UEfeZjK7pp
+	ExU7C1nI=
+X-Received: by 2002:a05:7022:7f17:b0:168:3243:c937 with SMTP id a92af1059eb24-1ac5cb1c8b3mr9164747c88.16.1793465510304;
+        Sat, 31 Oct 2026 09:51:50 -0700 (PDT)
 Received: from acemagic-m1.tail4fb79.ts.net ([2401:7400:c804:b668:bba7:148:3987:1383])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1abcf67csm17421611c88.21.2026.10.31.09.51.45
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1abcf67csm17421611c88.21.2026.10.31.09.51.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 31 Oct 2026 09:51:46 -0700 (PDT)
+        Sat, 31 Oct 2026 09:51:49 -0700 (PDT)
 From: Ho Jie Feng <hjf3108@gmail.com>
 To: linux-wireless@vger.kernel.org,
 	Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: Ho Jie Feng <hjf3108@gmail.com>
-Subject: [PATCH wireless-next v2 0/7] wifi: rt2x00: improve the throughput of rt2800usb
-Date: Sun,  1 Nov 2026 00:51:07 +0800
-Message-ID: <20261031165117.2868671-1-hjf3108@gmail.com>
+Subject: [PATCH wireless-next v2 1/7] wifi: rt2x00: start the link tuner when an interface is added
+Date: Sun,  1 Nov 2026 00:51:08 +0800
+Message-ID: <20261031165117.2868671-2-hjf3108@gmail.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261031165117.2868671-1-hjf3108@gmail.com>
+References: <20261031165117.2868671-1-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -95,51 +99,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series improves the throughput of rt2800usb.
+rt2x00lib_start() enables the radio before mac80211 adds the first
+interface, so rt2x00link_start_tuner(), called from
+rt2x00lib_enable_radio(), finds no station or AP interface and returns.
 
-Implements
-- Frequency offset calibration
-- Better fallback rates
-- Aggregation
-- GRO
+Start the link tuner again when the first interface is added, and stop
+it when the last interface is removed.
 
-Tested on WNDA4100 RT3593, 5 GHz with iperf3
+Fixes: d96324703ffa ("rt2x00: merge agc and vco works with link tuner")
+Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-  patch                          before        after
-                                 TX    RX      TX    RX
-  2 crystal calibration          27.7  31.6    28.5  69.7
-  3 MCS16 to MCS8 TX status      27.0  70.0    29.4  70.0
-  6 RX bulk aggregation          30.5  67.8    30.5  80.9
-  7 threaded NAPI with GRO       30.5  80.9    30.5  161.7
-
-RT3070 did not have any visible change for both TX and RX.
-
-Ho Jie Feng (7):
-  wifi: rt2x00: start the link tuner when an interface is added
-  wifi: rt2800: calibrate the crystal of RT3593 with the beacons
-  wifi: rt2800: make MCS 16 fall back to MCS 8 on devices with 3 TX
-    chains
-  wifi: rt2800: don't report an A-MPDU length to minstrel_ht
-  wifi: rt2800: support A-MSDU in A-MPDU
-  wifi: rt2800usb: enable RX bulk aggregation
-  wifi: rt2x00usb: use a threaded NAPI with GRO for RX
-
- drivers/net/wireless/ralink/rt2x00/rt2800.h   |   1 +
- .../net/wireless/ralink/rt2x00/rt2800lib.c    | 113 +++++++++++++++++-
- .../net/wireless/ralink/rt2x00/rt2800lib.h    |   4 +
- .../net/wireless/ralink/rt2x00/rt2800usb.c    |  33 ++++-
- .../net/wireless/ralink/rt2x00/rt2800usb.h    |   6 +
- drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  21 +++-
- .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 106 +++++++++++-----
- .../net/wireless/ralink/rt2x00/rt2x00lib.h    |   2 +
- .../net/wireless/ralink/rt2x00/rt2x00link.c   |   9 ++
- .../net/wireless/ralink/rt2x00/rt2x00mac.c    |  13 ++
- .../net/wireless/ralink/rt2x00/rt2x00mmio.c   |   2 +-
- .../net/wireless/ralink/rt2x00/rt2x00usb.c    |  52 ++++++--
- 12 files changed, 318 insertions(+), 44 deletions(-)
-
-
-base-commit: 2c50cd5d10e8723797f28c7978f1f61688e0c0d2
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+index 3bc0c1c906c91..86547ce81cd2e 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -264,6 +264,13 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 	 */
+ 	rt2x00dev->packet_filter = 0;
+ 
++	/*
++	 * Start the link tuner again if the radio is enabled before the
++	 * first interface is added.
++	 */
++	if (rt2x00dev->intf_ap_count + rt2x00dev->intf_sta_count == 1)
++		rt2x00link_start_tuner(rt2x00dev);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_add_interface);
+@@ -289,6 +296,12 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+ 	else
+ 		rt2x00dev->intf_sta_count--;
+ 
++	/*
++	 * Stop the link tuner when the last interface is removed.
++	 */
++	if (!rt2x00dev->intf_ap_count && !rt2x00dev->intf_sta_count)
++		rt2x00link_stop_tuner(rt2x00dev);
++
+ 	/*
+ 	 * Release beacon entry so it is available for
+ 	 * new interfaces again.
 -- 
 2.53.0
 
