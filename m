@@ -1,61 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.243.164.118
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793465493;
-	b=QZJoF+1F5w4aSwALLL8Rf9Rb7Ka798YnuJT8YRJ9LDrIrhj9WCOrq81yIbmrZIgI/MWg
-	 87DdhZTWqMyuBTLbmstS6npkr12pIkSu+96sqJLMZ8bWTa+VTnZADY9N68UrU8pjAYOAh
-	 rNh85zSs92VkhPQyRp0Oegu+PQ8MMnCYOLkHZly+umR1VSULWftlZo6I5s5OOEKJvxrGX
-	 pCGC9C1D8yTBIMIKHYyg7oo4i79eBNXjVcE83F6EZfnlttSckKwWCiPOR+fT50uSbtTq1
-	 8QIYQ7Zs7tyXPr0vu1NKpFcSfNBT65siuGnEN78ACxujzsDdP6cVJwkMyFV03RH5jgQ==
+	t=1793465508;
+	b=hQTvsxo3Jnh3pL/G4CZNOU2Qyvgpt/RtyqXlFfTdVojQVE9AQCnk8hUDL7McVZBsT07O
+	 Ly1jcCyXN+fTn4Be3EtdIZ+Ao3cWX4S0cj1dwXG6FflI8Y8HIgfjrRSnMiqnuO2mW7hj9
+	 xUGEWJZAmPeQ8Ce9R8rCotNIO3PLrAyFvFLQUyt23UHb2Km9PeW8qtr6XJ0aVDG2ttQIY
+	 6joOsoZ5l5hhNsoTlk9KWiwOjLDJ9vD8GJoBrUBxk88LPVpWe6nsf006GTyAvuFbM2oUo
+	 wGeX27NGHvfUg3aBb/H1P/1cSfOqozwnHUVmzff49UuUTyTU9nKvzL4wmoMt9D+pE2A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793465493;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=KCQU5UBdUKOKPuYMs15blstZHhzt4p2pk9uyUc66r64=;
-	b=zHlFNFSWIHcm53JLyYeNM8pDOeaNOtqE43YrvHajXzF2PhfUCVwtI0o70npysf6pwBse
-	 b2hHEwpPvf/9gEksvj9lU0i5Ss618Zqx8kFORq6zJLwxU5zG/P6e4Bd8+5bfM0H0zc713
-	 AI+e5gYXQrNeXXVqPiLgGA5yuicygbkvhHvHksJir0OKWBWJK/EM548dLBovZeQlobLVm
-	 Iyhz1LgBSSUPC+EfAd0NCNopQ4saWHuVavWzbDOdPNGxDt5t8DLzSoTIPcS8ISCN/Hbir
-	 aOHfwq/VpVUK/S4K8hQ5S7aigb7aRX2WQvFODrfztB+fBX4D7c0XuHH3omyN7+mvNcA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793465508;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=wamDxm+VP+lDZGpMWBybMLeu3hwcWm7V1hzcMRK5N7o=;
+	b=kxTssE7jyjv3j5Za0VUh2HZ/JKRhaSk77uM0lDdfb+rntyqL9ZeJKfMqHqtKMeQUJRPC
+	 OamIRKh62TiGqDqiiaSynhXZ0Y4XmhX8RHNvOot9hFVAIwheU+Hm0aC9fWw0GckQYsFt/
+	 ZL6O9K5U8dKI68gRNWTCyLDkw94bYvdzPdJc3NprZK/tzalmRLDSq9gAHQRuLLeSVt8AY
+	 9rLrervHDFth/CqtoWyWWEUVhNvstmik1WuZKVhbqbdLTPUtc4Llpf75GVPEbb+0H2Q3H
+	 WfPs13URGQeEREXn+3aAOVB4szO7LnNpwP43pvMi2WwZJHR39IlyocflXPA9EeeZFmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=stu.xidian.edu.cn;
-	spf=pass smtp.mailfrom=stu.xidian.edu.cn;
-	arc=none smtp.remote-ip=162.243.164.118
-Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DFC37606A326;
-	Sat, 31 Oct 2026 16:51:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DFC37606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=stu.xidian.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.xidian.edu.cn
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Bwn2Lao3;
+	arc=none smtp.remote-ip=74.125.82.170
+Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B54606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 16:51:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41B54606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Bwn2Lao3
+Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-33bf40b0c8bso2098622eec.0
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 09:51:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=stu.xidian.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-Id:In-Reply-To:References:MIME-Version:
-	Content-Transfer-Encoding; bh=KCQU5UBdUKOKPuYMs15blstZHhzt4p2pk9
-	uyUc66r64=; b=dECWU22N21uPmMesS4YkdjH7dcvTyBsGdqwSTWWYoQpgg1EkZS
-	x9nCJsy8Ra7Pt8gNFmqBhIKlIkLil7V1uyn8CYbvMjIqSCpsZr8lXQJtZhAVVkLs
-	402Qz9mvrIGMb1LflbMHpmrbIhWfGN77JBCg9LavZQ3LH8WvdoAvUttiQ=
-Received: from user-virtual-machine.localdomain (unknown [113.200.174.19])
-	by hzbj-edu-front-4.icoremail.net (Coremail) with UTF8SMTPA id BrQMCkCGrAJ2HOZqZFASAQ--.38901S2;
-	Sun, 01 Nov 2026 00:51:03 +0800 (CST)
-From: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Bin Yu <byu@xidian.edu.cn>,
-	Cheng Wen <wencheng@xidian.edu.cn>
-Subject: [PATCH v2] wifi: mt76: usb: re-enable the rx worker when resuming fails
-Date: Sun,  1 Nov 2026 00:51:03 +0800
-Message-Id: <20261031165103.2594-1-25031212351@stu.xidian.edu.cn>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261030021247.8032-1-25031212351@stu.xidian.edu.cn>
-References: <20261030021247.8032-1-25031212351@stu.xidian.edu.cn>
+        d=gmail.com; s=20260707; t=1793465507; x=1794070307; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=wamDxm+VP+lDZGpMWBybMLeu3hwcWm7V1hzcMRK5N7o=;
+        b=Bwn2Lao3kjB5WCX9xnwFU20qzEX3xCL2d6zJts5j5VBSh4d0UgIiLKoL7P7234AEGy
+         eeoISXrjlbx4dNrleC/aLpLQlCrEPZWTfG5yyNFRhiXITJg3lc8NagDeAyzyURM9VhrT
+         WbRKjIO3Jn5DbT1wEGrinndptMtX5CEFNOeEGXzRYpPfckOn5FUs+xbMnUW9Vw6TZcKI
+         BmwNifIni2HqEWsTa2sCRH83Z5wJzjT6kTjIlUVTgbVCBSBxK5jZ/53/bAcCCBAHhzxG
+         nGsmV81DwxEX7nXvQl9bRk8FkhHAB8UUuTv7kb7S37s7bQFVGeGBPsZ138+qIquawB3Y
+         ktrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793465507; x=1794070307;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wamDxm+VP+lDZGpMWBybMLeu3hwcWm7V1hzcMRK5N7o=;
+        b=hQNSb43EvsXocO5ie+hA/mRPz2otG+m2J/OF05w+bWnrjkQHnVxlj1x+2SDT3rFOkJ
+         SaEB1UFkcFVlAhg6nNw3crW3H/tFKwXyo267uQaJyYTzdi07xl9FY2WU7HaQZdlx7WK3
+         70QYy3A5xUMVyb+3BhdkPjQfVDmEzrkWHm+tYMxjaUOTUh1zS87jpskttOThEUHXg1SE
+         pRg1ef5W4hrw8OVPDlFzfgAn8tjwEWIJ7FeEUKu64v7w7xgUVjo6BMdQwanJpati9/AH
+         NiwF7y74Ucu5oy4LalxTOvp4B/iL5pQjMe4/nZySN1XSIE3j8InvTga1vGtqSENrbcC0
+         HqdA==
+X-Gm-Message-State: AFq9FYLe4OmXiCfIaMEU7g1uDEYtAOiqN1MrW6Bk2qA/ZOVt735mrOmh
+	6C9cZzHb8czb5uPQg2Z5/Lze4YIEKdaAkcvIT1+x7y+8JDjeiYxGXkZrQZKFD1xo
+X-Gm-Gg: AYBFou3aqCAS+yVjcWL2Pe+qkRBayy7RlZWtCj13TVl6qDfIElAb7Ah1SQWSoSN3b0N
+	3enzfvRc9PFg9t3Lyxc/xqRtQeXlF67Jgyn4sArXkjIsEkg6h54m3OeYHl7+fMvMSVero0tlzf1
+	ZbY6Cp+hvR1sFp69mXWW4X6sZGQVgzxMB+tJ3Cf9BBkHl6TJE1sqCY6mpa9oY+0VfJNRyjKxDe3
+	NZpWZ7KIsjzPyE2uXPm52kkArYom+0qbaufbY8zs6xnAG2abLGFGggtgCZC6hvoWjLJC8MPNFYT
+	f2CdxyyWgfZdXL/1wuHzFHn8/2gf3phTxWhRSOezOAyabkEseHl+NlwdGRAANMn76cBJZrkCWIm
+	QVtuF0ZIyXkpVH3Zfu+zW9teSYsAiOoCAJ41zniCgtz83/Qnon33FvmOHf17i+rQ9pJ0Pxs1fPv
+	i3HW9WwKkp3lUrMfuBUVe8epmRYiUS0DOmcuhUI0m/J0HknGC26YQzhJZdjiO9kg4g5oFUEWhKf
+	9vxj01oOn0q/D15ozjFzQz3Ee8pW+fn+p5BC1k0OB47pgAYwBemnOz++1J+ICo7pVfqb1oXWjTM
+	eKqMXMQGoAZA5aLNZ0/hjX68uN/41TZI1Yhnzd7M8TLO7iG8iecibDyNkIEuDhrPITvYEmD0zSN
+	+ENbe2R6s
+X-Received: by 2002:a05:701b:4182:20b0:1a5:52f6:db9a with SMTP id a92af1059eb24-1ac5ca23c29mr8395084c88.22.1793465506993;
+        Sat, 31 Oct 2026 09:51:46 -0700 (PDT)
+Received: from acemagic-m1.tail4fb79.ts.net ([2401:7400:c804:b668:bba7:148:3987:1383])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1abcf67csm17421611c88.21.2026.10.31.09.51.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 31 Oct 2026 09:51:46 -0700 (PDT)
+From: Ho Jie Feng <hjf3108@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Ho Jie Feng <hjf3108@gmail.com>
+Subject: [PATCH wireless-next v2 0/7] wifi: rt2x00: improve the throughput of rt2800usb
+Date: Sun,  1 Nov 2026 00:51:07 +0800
+Message-ID: <20261031165117.2868671-1-hjf3108@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,125 +94,52 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:BrQMCkCGrAJ2HOZqZFASAQ--.38901S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxWF15KrW7AF4UZr1ftr1DJrb_yoWrZr1xpF
-	Z8tayayrWDGrWUK3yxAr18AayfAan3GrW7WFykW34rZws5Ar1rC340q3WjqryUCr4vka43
-	JF4v93sxGrWvvFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBmb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
-	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xII
-	jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4
-	A2jsIEc7CjxVAFwI0_Gr0_Gr1UM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x2
-	0xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15Mc
-	Ij6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41l
-	FIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFylc2xSY4AK67AK6r1l42
-	xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWU
-	GwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI4
-	8JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4U
-	MIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I
-	8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUyXo2DUUUU
-X-CM-SenderInfo: ysvqjiysrsjkur6v33wo0lvxldqovvfxof0/1tbiAQUDD2rmBFQNYAAAs5
 
-mt76u_resume_rx() returns as soon as submitting the RX buffers fails, so
-the mt76_worker_enable() at the end of the function is never reached and
-the RX worker stays parked.  The mt792x USB reset path relies on
-mt76u_stop_rx() and mt76u_resume_rx() being a balanced park/unpark pair:
-if firmware download fails, mt7925_init_hardware() retries up to ten
-times and calls mt792xu_init_reset() again, which parks the already
-parked RX worker.  kthread_park() then hits its WARN_ON_ONCE() and
-returns -EBUSY:
+This series improves the throughput of rt2800usb.
 
-  WARNING: kernel/kthread.c:710 at kthread_park+0x17b/0x1b0
-  Workqueue: events mt7925_init_work
-  Call Trace:
-   mt76_worker_disable     drivers/net/wireless/mediatek/mt76/util.h:93 [inline]
-   mt76u_stop_rx+0x5b/0x2f0 drivers/net/wireless/mediatek/mt76/usb.c:757
-   mt792xu_init_reset+0x52/0x80 drivers/net/wireless/mediatek/mt76/mt792x_usb.c:477
-   mt7925_init_hardware     drivers/net/wireless/mediatek/mt76/mt7925/init.c:152 [inline]
-   mt7925_init_work+0x49b/0x7e0 drivers/net/wireless/mediatek/mt76/mt7925/init.c:196
+Implements
+- Frequency offset calibration
+- Better fallback rates
+- Aggregation
+- GRO
 
-The early return is unbalanced with the URBs as well: mt76u_stop_rx()
-poisons every URB of every RX queue, while mt76u_resume_rx() would only
-unpoison the queues it reached.  If MT_RXQ_MAIN fails to submit, the URBs
-of MT_RXQ_MCU keep urb->reject raised, the next stop/resume pair moves it
-further away from zero instead of back to zero, and every later
-submission on that queue fails with -EPERM.
+Tested on WNDA4100 RT3593, 5 GHz with iperf3
 
-A stalled RX endpoint makes usb_submit_urb() return -EPIPE, which is the
-failure that leaves the MCU unresponsive and triggers the retry loop.
-Unpoison and resubmit every RX queue, keep the first error, and always
-re-enable the worker so that both pairs stay balanced.
+  patch                          before        after
+                                 TX    RX      TX    RX
+  2 crystal calibration          27.7  31.6    28.5  69.7
+  3 MCS16 to MCS8 TX status      27.0  70.0    29.4  70.0
+  6 RX bulk aggregation          30.5  67.8    30.5  80.9
+  7 threaded NAPI with GRO       30.5  80.9    30.5  161.7
 
-Fixes: 0d2afe09fad5 ("mt76: mt7921: add mt7921u driver")
-Cc: stable@vger.kernel.org
-Co-developed-by: Bin Yu <byu@xidian.edu.cn>
-Signed-off-by: Bin Yu <byu@xidian.edu.cn>
-Co-developed-by: Cheng Wen <wencheng@xidian.edu.cn>
-Signed-off-by: Cheng Wen <wencheng@xidian.edu.cn>
-Signed-off-by: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
----
-v2:
- - Unpoison and resubmit every RX queue instead of breaking out of the
-   loop at the first failure, so that a failing MT_RXQ_MAIN no longer
-   leaves the MT_RXQ_MCU URBs poisoned across reset retries, and the queue
-   indices are reset for every queue before the worker runs again.
+RT3070 did not have any visible change for both TX and RX.
 
-Yes on both counts, thank you for the review.
+Ho Jie Feng (7):
+  wifi: rt2x00: start the link tuner when an interface is added
+  wifi: rt2800: calibrate the crystal of RT3593 with the beacons
+  wifi: rt2800: make MCS 16 fall back to MCS 8 on devices with 3 TX
+    chains
+  wifi: rt2800: don't report an A-MPDU length to minstrel_ht
+  wifi: rt2800: support A-MSDU in A-MPDU
+  wifi: rt2800usb: enable RX bulk aggregation
+  wifi: rt2x00usb: use a threaded NAPI with GRO for RX
 
-mt76u_stop_rx() poisons the URBs of every RX queue unconditionally, so
-mt76u_resume_rx() has to unpoison that same set of URBs for urb->reject to
-return to zero.  The previous version only fixed the park/unpark pair:
-MT_RXQ_MAIN is queue 0 and MT_RXQ_MCU is queue 1, so a submission failure
-on the main queue left all MCU URBs poisoned.  The next
-mt792xu_init_reset() then raised reject to 2 and the following resume
-lowered it back to 1, and usb_hcd_link_urb_to_ep() keeps rejecting every
-submission on that queue with -EPERM because reject is non-zero.
+ drivers/net/wireless/ralink/rt2x00/rt2800.h   |   1 +
+ .../net/wireless/ralink/rt2x00/rt2800lib.c    | 113 +++++++++++++++++-
+ .../net/wireless/ralink/rt2x00/rt2800lib.h    |   4 +
+ .../net/wireless/ralink/rt2x00/rt2800usb.c    |  33 ++++-
+ .../net/wireless/ralink/rt2x00/rt2800usb.h    |   6 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  21 +++-
+ .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 106 +++++++++++-----
+ .../net/wireless/ralink/rt2x00/rt2x00lib.h    |   2 +
+ .../net/wireless/ralink/rt2x00/rt2x00link.c   |   9 ++
+ .../net/wireless/ralink/rt2x00/rt2x00mac.c    |  13 ++
+ .../net/wireless/ralink/rt2x00/rt2x00mmio.c   |   2 +-
+ .../net/wireless/ralink/rt2x00/rt2x00usb.c    |  52 ++++++--
+ 12 files changed, 318 insertions(+), 44 deletions(-)
 
-The skipped queue also kept its old q->head, q->tail and q->queued, since
-mt76u_submit_rx_buffers() is what clears them, while the worker had
-already been re-enabled.
 
-v2 walks all RX queues, unpoisons and resubmits each of them, keeps the
-first error and still always re-enables the worker.  The error is still
-returned to the caller, so the firmware retry loop behaves as before.
----
- drivers/net/wireless/mediatek/mt76/usb.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index a9af3aa6b80a..252a18dc3cb2 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -775,23 +775,23 @@ EXPORT_SYMBOL_GPL(mt76u_stop_rx);
- 
- int mt76u_resume_rx(struct mt76_dev *dev)
- {
--	int i;
-+	int i, err = 0;
- 
- 	mt76_for_each_q_rx(dev, i) {
- 		struct mt76_queue *q = &dev->q_rx[i];
--		int err, j;
-+		int ret, j;
- 
- 		for (j = 0; j < q->ndesc; j++)
- 			usb_unpoison_urb(q->entry[j].urb);
- 
--		err = mt76u_submit_rx_buffers(dev, i);
--		if (err < 0)
--			return err;
-+		ret = mt76u_submit_rx_buffers(dev, i);
-+		if (ret < 0 && !err)
-+			err = ret;
- 	}
- 
- 	mt76_worker_enable(&dev->usb.rx_worker);
- 
--	return 0;
-+	return err;
- }
- EXPORT_SYMBOL_GPL(mt76u_resume_rx);
- 
+base-commit: 2c50cd5d10e8723797f28c7978f1f61688e0c0d2
 -- 
-2.34.1
+2.53.0
 
