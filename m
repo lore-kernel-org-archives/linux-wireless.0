@@ -1,94 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.26
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793430648;
-	b=KMI0ZDSOdKet7CAbeHxysN2bADjzYO45fbk+KUVMciMZuTNUHEhntRW7LjGHbkj4iekv
-	 9AawvV2iC5/+mwCOTYfqYkRI/Y7srFzIp3ae3TZr8cy0B5lk154IhcsryeL3KS9wb3SWd
-	 BkF1LyNaqlBR5OpXxE5PE/greES4iDa5O9iYJCDYsH2Z6OVddLMEqOwriIFxbMOW46MqF
-	 Oglk1l43OBiXCoot6afBUzPQvDvemcYJKO7oXue413lBNecSXOfpWjy0xgT8eKBclATlF
-	 yy6+4P+q1cZlyA2GXnRvV8YaLhNYrNqkl8fRPFbjyyVwXzePntWchal5nepJudmOQKg==
+	t=1793432549;
+	b=lIP6s+nVZaStm+/8xUh8CX5Wbhyn7qh3r+PwUHgwA7PEbLvuDpqU7DUE8zHQWcgSFAgh
+	 /hY+MEg63G6W7nhsWiYm1UhDDViwSyeY5O0x4WGNu08basb6FEBvqp9e3R8BffnXlZpOl
+	 xOqeXj1M9MehIx0f+quMDW0AJefiuFQssHm4Lh7qbA0pa3qSwO4E7BZJ8aAUHCe97ekJB
+	 975kv4PnPOxNpoHgD3KvOsakrFZ5nMdSotG85PDfA4gsRtkJ/lIZdaZAVpMfBpFnoRab+
+	 TxQmB5OPJxHoJhScie+patWxi0WpPecG5b7VmvUkHZ+ttj9lyRdwDDuRCNS0MRKA6XQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793430648;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=hIbCKUk+U6FsLHVkr6pPqtyC0W3f5NodOwSHEwiGNpQ=;
-	b=Ss1QrWJ7t8Q567Ru92/czj/cdMsQMtdWTAER3/0dwBvlXGcG5tOl4/5uO+5yhsgepBP6
-	 emzJ0CU/gjqeV9z95HIq6Vte/J7ADR6x7UdCHrTMMumfwSO8yYgDmHrw4qVPwCd2mNDYK
-	 n62tupEQ8ECdlfxUUoI6QvqY63rqo8ia3FQXAXPhaLHBvXg/ydIqooQshb6/qIroVQ9wX
-	 OZAZuX47KhhNx3iUg9sOZGUo6DKpCKq822aoSE6ynFRqAuHWkGRLl9dyUuSV6aKFETdi8
-	 eDPtNWBpWvHlK8SgK5z4mzj5zxUySe+oRZ2GQepSgrctokyGAls/fdMwGD4OSCK3+gg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793432549;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:
+	 In-Reply-To:References;
+	bh=/QVAsfPujlGmbTkAITj1n+iU5k8n50SbH9VUDWGmFCs=;
+	b=xESvKf/R79uHvAQNmbKVcQaw5Ca12nWr15MLQOV9XhbWJJEriEjCfGgJDgucOu70IhmJ
+	 Eu80akRDBKLoxpc/ZfByKRmz5sTJxfhRhQK2K9lbvsXtodX3DGgJC8yvzXTCXeYLcZk5X
+	 0jlhxCdOkLO+IYRYv4Sgdlx8uSa1yOqRMa2UfPE7+PUnJFfqGphzj90u776hfFH/LO/6P
+	 E9FtCiyvZ19qPsHNybrx1hZZnAnc4/ZvLzKQer2OFGCxEZMhvp6V828ucnzbyU4E2FyOK
+	 Ew2kMbOLTM3UeCz8gY6FrIciiq+Zelc8G3ok29k8OTb1czBOISKa254I/zV4Fc21HJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Q5uEKOIB;
-	arc=none smtp.remote-ip=209.85.216.41
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fvy8Bi4S;
+	arc=none smtp.remote-ip=91.218.175.26
+Received: from mta0.migadu.com (out-26.mta0.migadu.com [91.218.175.26])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DF45606A337
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 07:10:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5DF45606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29F53606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 07:42:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29F53606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Q5uEKOIB
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ab98332238so843812a91.3
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 00:10:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793430629; x=1794035429; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=hIbCKUk+U6FsLHVkr6pPqtyC0W3f5NodOwSHEwiGNpQ=;
-        b=Q5uEKOIBTV9QGM03Zaz+qCvMKmlNEqR+kn+WGYekyYkAJ2kgD3ViDc6ifJpdLuhB03
-         bHUyNPA2bkfGpUuqCwYdGrWgpSkucsZlDX3GcDdA/mUR6wXqP5TDzunspQsAuuUYmyiI
-         JHKHGjJjTTtx6do4oH3SJhlTd1ownBxGV4brwuWfu+iTV1hE57RhHmXZIVqn6J2TYaXY
-         PpmPPqZLu+lof6oJtiXm6thSgph0zqWgYPcNF8ZumgEKWVdH85i51RuBiog7He2yvirV
-         9VenchdnzJboxKB8xODTK/1qhxlf/+biyuQwQbFLFKtqDctZ1w3NbejZNx0KSuGjHZRm
-         jE2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793430629; x=1794035429;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=hIbCKUk+U6FsLHVkr6pPqtyC0W3f5NodOwSHEwiGNpQ=;
-        b=SCn9Dn/LBS48tqWJ8NfhzOOH7qouWqQ++waRnnoyCaSX1r2EgZjDcl/3kXxZxjINNx
-         joJPi7EpL5tJqGTG7nKWLS/K1BwrxoYUlIzyzyeUHTg2ZL/JJjXziS2502i8PdeLCgi3
-         5+iSqUzwVDO+3XEyRjQv4+xDEuNetTePFH8bvL9taI4PiWSHQiOvgZnUAdAmKwz7gNLP
-         jS+GJs3PMQaCxJahldtLppFeuMva3GwqmgQFYM1mdJWgV+oC0n1QSLKz1EMYPaFirAj3
-         gja545XGjIkTknuEnhgyqt5zEcMXuNUKu6y4Z8TGNUCBN3Q5t6PIdm+1BQ4eWtU1BidZ
-         216Q==
-X-Gm-Message-State: AFq9FYLt36x01g+vdF2NUpjS2vuGOXKwHRTty/IrwC1zjSBu7kPq5tIy
-	vr6QWTO9bhSGUkynGfHZ2kREdyPIyxzWdzi4L8SSR9DkSXNKfpSlPDMNqPZxCBOc
-X-Gm-Gg: AYBFou1ZKcZDmW/O9VXFI8/Swob1mmpQhMbybT9I0OT9t1QekQDPv/HynMfNOmJI974
-	fXsJV+KSKAUT3fWPWu2p50Gc84qGXfHP0Fpxl4egmnjQwX48aLhIf/hpvRDgeziph2wbj6ftzlO
-	vjUgTKO1HDAx2nU4Ncc7x1N29jXB9JRNbamaHmDGJAIAqUrRnQFy1mwa3YdEhHUiC12xm85VlR3
-	l5n9h79tP1oXyv+9cz+wh1XeegJ/+ng2Bc8qS6C4UKJyS3qCZt2NKqVoK7q3D/W3sT3s7OflXrU
-	Agf1Z1cwSyd7dFSqTwKkA0WRunN5FC3oYwh/Z9hA70XNMKDR60AokFVovIxI02xN+jr7tc6VvCh
-	oLpw4nVxQ/GgX4he8clDS5IFK9U3nbSqIv6HJVYNsP2nIZM2Rv/5ZT1h3H0l8vC1WZI+hMFY6jw
-	IkiHsV36B5dt4wc1bcNEvFjwQ+BYG4sgOF3FUCJWeRK/Gnk+OPsPVyA+z0zgKt21h/H5ZDldVFU
-	etNe/9g4vdN0Lt/KunQAI9jlUpOxJYz1ajUVy500p+j/eD6ByfZGbRdedJLTm/zQwLqXkHH8Qy9
-	lK+G4HEvWftQ6ZHJaiG4Nb7tRvNT12xVqPBSQ76CjqOo7qOn7ogp/I4Xzi3UrkpuwQisxrZhzPS
-	+LcaO
-X-Received: by 2002:a17:90b:3b51:b0:3a0:cbe2:9e0c with SMTP id 98e67ed59e1d1-3ae897c8800mr4019346a91.63.1793430628615;
-        Sat, 31 Oct 2026 00:10:28 -0700 (PDT)
-Received: from hostname.tail4fb79.ts.net ([2401:7400:c804:b668:65cc:625f:9c43:1e88])
-        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3ae845432e4sm6670459a91.3.2026.10.31.00.10.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 31 Oct 2026 00:10:28 -0700 (PDT)
-From: Ho Jie Feng <hjf3108@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ho Jie Feng <hjf3108@gmail.com>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH rtw-next v2 4/7] wifi: rtw88: prepare frequency-offset correction for more chips
-Date: Sat, 31 Oct 2026 15:09:44 +0800
-Message-ID: <20261031070950.425176-5-hjf3108@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261031070950.425176-1-hjf3108@gmail.com>
-References: <20261031070950.425176-1-hjf3108@gmail.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fvy8Bi4S
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=labi6s1KQ3qqVu7L43Ussy5Viaxu51kBZ0O+U0Hl23M=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793432545; v=1; x=1794037345;
+ b=fvy8Bi4Sq1GoiZ1hiEfbM2IVCqMWjURGsYNbwRW/5/4p7Xh9EShlt3DJ7s5LznnQAdbwPala
+ uxBckMn04ZRJphoYBmf8KrNzyyoRKlL8QvO8FGbv13ZTsZm5GJScoTPumP5UyjDHbEk+jKEMyOP
+ YO/RBMmmF84VOS9lQ/UyX9uE=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 7e5e5d8a03e46bf0;
+	Sat, 31 Oct 2026 07:42:25 +0000
+X-Mizu-Trace-ID: 7e5e5d8a03e46bf0
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,284 +56,106 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Date: Sat, 31 Oct 2026 07:42:21 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <88568fb7cf038782c67e858210b843d79afc0e25@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next 0/5] wifi: rtw88: pci: Support an older design,
+ like RTL8821AE/RTL8812AE
+To: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>, "Ping-Ke Shih"
+ <pkshih@realtek.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <716e083d-93c1-4236-bfa2-ec88d0c84ca4@gmail.com>
+References: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
+ <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
+ <152bc5bf-4e5e-443e-b191-198205ad81bc@gmail.com>
+ <f5ec572f354f4c67a2a65b2b1676eae0@realtek.com>
+ <ca4921aa-c8aa-4f88-880a-bc717aa103d4@gmail.com>
+ <08b040fc2f7e4311aa7721cf4969896f@realtek.com>
+ <716e083d-93c1-4236-bfa2-ec88d0c84ca4@gmail.com>
 
-Promote chip specific functions into the common core for cfo tracking.
-These become helpers which can be used by the other drivers.
+Hi Bitterblue,
 
-Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/phy.c      | 106 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/phy.h      |   2 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 100 +----------------
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |   3 -
- 4 files changed, 113 insertions(+), 98 deletions(-)
+I had taken a look at the RX slowdown on the RTL8821AE and I don't think
+it is the PCIe link that causes it.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index e2515a662bb30be88920236e8b7d42791b8880c2..d0c1fb65be9563c5fc29a7d18a1c9e8589730b10 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -720,6 +720,112 @@ void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
- }
- EXPORT_SYMBOL(rtw_phy_parsing_cfo);
- 
-+#define CFO_TRK_ENABLE_TH	20
-+#define CFO_TRK_STOP_TH		10
-+#define CFO_TRK_ADJ_TH		10
-+
-+static u8 rtw_phy_cfo_tracking_reset(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
-+
-+	cfo->is_adjust = true;
-+
-+	if (cfo->crystal_cap > rtwdev->efuse.crystal_cap)
-+		return cfo->crystal_cap - 1;
-+	else if (cfo->crystal_cap < rtwdev->efuse.crystal_cap)
-+		return cfo->crystal_cap + 1;
-+
-+	return cfo->crystal_cap;
-+}
-+
-+void rtw_phy_cfo_xcap_init(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
-+
-+	cfo->crystal_cap = rtwdev->efuse.crystal_cap;
-+	cfo->is_adjust = true;
-+}
-+EXPORT_SYMBOL(rtw_phy_cfo_xcap_init);
-+
-+#define REPORT_TO_KHZ(val) ({typeof(val) _v = (val); (_v << 1) + (_v >> 1); })
-+static s32 rtw_phy_cfo_calc_avg(struct rtw_dev *rtwdev, u8 path_num)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
-+	s32 cfo_avg, cfo_path_sum = 0, cfo_rpt_sum;
-+	u8 i;
-+
-+	for (i = 0; i < path_num; i++) {
-+		cfo_rpt_sum = REPORT_TO_KHZ(cfo->cfo_tail[i]);
-+
-+		if (cfo->cfo_cnt[i])
-+			cfo_avg = cfo_rpt_sum / cfo->cfo_cnt[i];
-+		else
-+			cfo_avg = 0;
-+
-+		cfo_path_sum += cfo_avg;
-+	}
-+
-+	for (i = 0; i < path_num; i++) {
-+		cfo->cfo_tail[i] = 0;
-+		cfo->cfo_cnt[i] = 0;
-+	}
-+
-+	return cfo_path_sum / path_num;
-+}
-+
-+static void rtw_phy_cfo_need_adjust(struct rtw_dev *rtwdev, s32 cfo_avg)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
-+
-+	if (!cfo->is_adjust) {
-+		if (abs(cfo_avg) > CFO_TRK_ENABLE_TH)
-+			cfo->is_adjust = true;
-+	} else {
-+		if (abs(cfo_avg) <= CFO_TRK_STOP_TH)
-+			cfo->is_adjust = false;
-+	}
-+}
-+
-+u8 rtw_phy_cfo_xcap_track(struct rtw_dev *rtwdev, u8 xcap_max, bool bt_hold)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
-+	u8 path_num = rtwdev->hal.rf_path_num;
-+	s8 crystal_cap = cfo->crystal_cap;
-+	s32 cfo_avg = 0;
-+
-+	if (rtwdev->sta_cnt != 1)
-+		return rtw_phy_cfo_tracking_reset(rtwdev);
-+
-+	if (cfo->packet_count == cfo->packet_count_pre)
-+		return cfo->crystal_cap;
-+
-+	cfo->packet_count_pre = cfo->packet_count;
-+	cfo_avg = rtw_phy_cfo_calc_avg(rtwdev, path_num);
-+	rtw_phy_cfo_need_adjust(rtwdev, cfo_avg);
-+
-+	if (bt_hold) {
-+		cfo->is_adjust = false;
-+		return rtwdev->efuse.crystal_cap;
-+	}
-+
-+	if (cfo->is_adjust) {
-+		if (cfo_avg > CFO_TRK_ADJ_TH)
-+			crystal_cap++;
-+		else if (cfo_avg < -CFO_TRK_ADJ_TH)
-+			crystal_cap--;
-+
-+		crystal_cap = clamp_t(s8, crystal_cap, 0, xcap_max);
-+	}
-+
-+	return (u8)crystal_cap;
-+}
-+EXPORT_SYMBOL(rtw_phy_cfo_xcap_track);
-+
- static void rtw_phy_cfo_track(struct rtw_dev *rtwdev)
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
-index 8a843aac7350ad07aa64388ee712f2617120289c..b551cb860d6255ff149c76d437a7c5af1ef68b56 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.h
-+++ b/drivers/net/wireless/realtek/rtw88/phy.h
-@@ -68,6 +68,8 @@ void rtw_phy_adaptivity_set_mode(struct rtw_dev *rtwdev);
- void rtw_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl);
- void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
- 			 struct rtw_rx_pkt_stat *pkt_stat);
-+void rtw_phy_cfo_xcap_init(struct rtw_dev *rtwdev);
-+u8 rtw_phy_cfo_xcap_track(struct rtw_dev *rtwdev, u8 xcap_max, bool bt_hold);
- void rtw_phy_tx_path_diversity(struct rtw_dev *rtwdev);
- 
- struct rtw_txpwr_lmt_cfg_pair {
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 32d9709f2c2431a2df2f363e548f2c510fe41c34..54f012a2383912142a45cce88c3a11101f7d6464 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -4243,103 +4243,13 @@ static void rtw8822c_set_crystal_cap(struct rtw_dev *rtwdev, u8 crystal_cap)
- 	rtw8822c_set_crystal_cap_reg(rtwdev, crystal_cap);
- }
- 
--static void rtw8822c_cfo_tracking_reset(struct rtw_dev *rtwdev)
--{
--	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
--	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
--
--	cfo->is_adjust = true;
--
--	if (cfo->crystal_cap > rtwdev->efuse.crystal_cap)
--		rtw8822c_set_crystal_cap(rtwdev, cfo->crystal_cap - 1);
--	else if (cfo->crystal_cap < rtwdev->efuse.crystal_cap)
--		rtw8822c_set_crystal_cap(rtwdev, cfo->crystal_cap + 1);
--}
--
--static void rtw8822c_cfo_init(struct rtw_dev *rtwdev)
--{
--	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
--	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
--
--	cfo->crystal_cap = rtwdev->efuse.crystal_cap;
--	cfo->is_adjust = true;
--}
--
--#define REPORT_TO_KHZ(val) ({typeof(val) _v = (val); (_v << 1) + (_v >> 1); })
--static s32 rtw8822c_cfo_calc_avg(struct rtw_dev *rtwdev, u8 path_num)
--{
--	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
--	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
--	s32 cfo_avg, cfo_path_sum = 0, cfo_rpt_sum;
--	u8 i;
--
--	for (i = 0; i < path_num; i++) {
--		cfo_rpt_sum = REPORT_TO_KHZ(cfo->cfo_tail[i]);
--
--		if (cfo->cfo_cnt[i])
--			cfo_avg = cfo_rpt_sum / cfo->cfo_cnt[i];
--		else
--			cfo_avg = 0;
--
--		cfo_path_sum += cfo_avg;
--	}
--
--	for (i = 0; i < path_num; i++) {
--		cfo->cfo_tail[i] = 0;
--		cfo->cfo_cnt[i] = 0;
--	}
--
--	return cfo_path_sum / path_num;
--}
--
--static void rtw8822c_cfo_need_adjust(struct rtw_dev *rtwdev, s32 cfo_avg)
--{
--	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
--	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
--
--	if (!cfo->is_adjust) {
--		if (abs(cfo_avg) > CFO_TRK_ENABLE_TH)
--			cfo->is_adjust = true;
--	} else {
--		if (abs(cfo_avg) <= CFO_TRK_STOP_TH)
--			cfo->is_adjust = false;
--	}
--
--	if (!rtw_coex_disabled(rtwdev)) {
--		cfo->is_adjust = false;
--		rtw8822c_set_crystal_cap(rtwdev, rtwdev->efuse.crystal_cap);
--	}
--}
--
- static void rtw8822c_cfo_track(struct rtw_dev *rtwdev)
- {
--	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
--	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
--	u8 path_num = rtwdev->hal.rf_path_num;
--	s8 crystal_cap = cfo->crystal_cap;
--	s32 cfo_avg = 0;
--
--	if (rtwdev->sta_cnt != 1) {
--		rtw8822c_cfo_tracking_reset(rtwdev);
--		return;
--	}
--
--	if (cfo->packet_count == cfo->packet_count_pre)
--		return;
--
--	cfo->packet_count_pre = cfo->packet_count;
--	cfo_avg = rtw8822c_cfo_calc_avg(rtwdev, path_num);
--	rtw8822c_cfo_need_adjust(rtwdev, cfo_avg);
--
--	if (cfo->is_adjust) {
--		if (cfo_avg > CFO_TRK_ADJ_TH)
--			crystal_cap++;
--		else if (cfo_avg < -CFO_TRK_ADJ_TH)
--			crystal_cap--;
-+	u8 crystal_cap;
- 
--		crystal_cap = clamp_t(s8, crystal_cap, 0, XCAP_MASK);
--		rtw8822c_set_crystal_cap(rtwdev, (u8)crystal_cap);
--	}
-+	crystal_cap = rtw_phy_cfo_xcap_track(rtwdev, XCAP_MASK,
-+					     !rtw_coex_disabled(rtwdev));
-+	rtw8822c_set_crystal_cap(rtwdev, crystal_cap);
- }
- 
- static const struct rtw_phy_cck_pd_reg
-@@ -4985,7 +4895,7 @@ static const struct rtw_chip_ops rtw8822c_ops = {
- 	.cfg_csi_rate		= rtw_bf_cfg_csi_rate,
- 	.adaptivity_init	= rtw8822c_adaptivity_init,
- 	.adaptivity		= rtw8822c_adaptivity,
--	.cfo_init		= rtw8822c_cfo_init,
-+	.cfo_init		= rtw_phy_cfo_xcap_init,
- 	.cfo_track		= rtw8822c_cfo_track,
- 	.config_tx_path		= rtw8822c_config_tx_path,
- 	.config_txrx_mode	= rtw8822c_config_trx_mode,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-index fc62b67a15f216496bfb572a55366f900a2d6734..c27e4c394a435cb11fc755bb8806ee1b51a30e47 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -181,9 +181,6 @@ const struct rtw_table name ## _tbl = {			\
- #define REG_ANAPARLDO_POW_MAC	0x0029
- #define BIT_LDOE25_PON		BIT(0)
- #define XCAP_MASK		GENMASK(6, 0)
--#define CFO_TRK_ENABLE_TH	20
--#define CFO_TRK_STOP_TH		10
--#define CFO_TRK_ADJ_TH		10
- 
- #define REG_TXDFIR0		0x808
- #define REG_DFIRBW		0x810
--- 
-2.55.0
+October 30, 2026 at 7:47 PM, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>=
+ wrote:
 
+>=20
+>=20On 30/10/2026 02:43, Ping-Ke Shih wrote:
+>=20
+>>=20
+>> Have you dug the cause RX speed is low? The PHY rate becomes low at th=
+at time?
+>> Or can air capture see any weird packets? Or did you think PCIE get st=
+uck
+>> somehow?
+>
+> I think it's a PCIE problem. Before the first IMR_RDU the RX speed is n=
+ormal.
+> After, it's low. I will test the RTL8821AE again probably next week.
+
+As far as I can see, the RX descriptors are never given back to the
+hardware on power on. The RX ring is set up only once in probe, and on
+every power on this runs:
+
+        rtw_hci_setup()
+          rtw_pci_setup()
+            rtw_pci_old_reset()
+              rtw_pci_old_reset_buf_desc()
+
+which only resets the indexes and the base address:
+
+        rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.rp =3D 0;
+        rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.wp =3D 0;
+        rtw_write32(rtwdev, REG_RX_DESA,
+                    rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma);
+
+On the way down, rtw_pci_stop() turns off the interrupt and NAPI, but RX
+keeps running until rtw88xxa_power_off() clears REG_CR. A frame that land=
+s
+in the ring after the last NAPI poll stays in its descriptor with OWN
+cleared.
+
+So if I read it right, after the next power on the driver and the
+hardware both start at descriptor 0, while some descriptors are still
+owned by the host. If descriptor 0 is one of them:
+
+        hardware fills 511, finds 0 owned by the host, raises IMR_RDU
+        driver handles 511, then 0 (an old frame), then waits at 1
+        hardware gets 0 back, fills it with a new frame, then 1, 2...
+
+The new frame in descriptor 0 is now behind the driver, so it is only
+picked up after the next wrap, and the same thing happens again. So the
+hardware seems to be right about IMR_RDU, the descriptor it wants really
+belongs to the host, even with 510 or 511 others free.
+
+This doesn't go away by itself. I put the ring logic in a small
+simulation, and with one stale descriptor at 0 it shows your exact order
+(511, 0, wait at 1) and an IMR_RDU on almost every lap. The frame from
+descriptor 0 is about 511 frames old by then. That is far behind the
+reorder window, so I think mac80211 drops it as out of date, and TCP sees
+a loss on every lap. That could well cap it at 70 to 100 Mbps.
+
+It would also fit the rest of what you saw. The idle interface powers off
+and on a lot, so there are many chances to leave a frame behind. A power
+cycle doesn't help because the stale descriptors are still there after
+it, and reloading the driver helps because rtw_pci_init_rx_ring() sets up
+a fresh ring. Maybe the Bluetooth headphones matter because the
+C2H_BT_INFO reports come in through the same RX ring.
+
+rtlwifi doesn't run into this because rtl_pci_reset_trx_ring() clears
+every RX descriptor and sets the buffer address, PKT_LEN and OWN again,
+with EOR on the last one. It is called from rtl_pci_start() and from
+rtl_ps_enable_nic(). Would it make sense to do the same in
+rtw_pci_old_reset_buf_desc()? Maybe the descriptor part of
+rtw_pci_old_reset_rx_desc() could be split out and reused there.
+
+Sending rtw_pci_reset_trx_ring() through pci_gen for the stop path, as
+you planned for patch 4, would fix the registers, but I think it would
+still leave the descriptors as they are.
+
+Best regards,
+Luka Gejak
