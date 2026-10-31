@@ -1,92 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=119.15.109.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.200
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793436114;
-	b=4zW9/mmBdZHN4Aej8dPQi9Yggmwr8NjOZ1n26DGalnDe854HLdgAnr/zLKaf1kIHPCnT
-	 h9oQxY+a6GnfSK8Odr3QS5oTAbOZHo7GJ9NxU/xm1EE4m8wOZg8mdDcvgU0yqlVTN202+
-	 dHdgw5UX8fXCfbnuFstdaD76xwK9xZ6j2lve3hBMTaFzKGlIw+qJEQ0gX4IWuFITjWvQ2
-	 Rn1m1kXy0dYBy4Fwe+8uBYDyEsr6w0xQvuaedxWQQKug/TdrS/7h8SVgyvEz0ZzFVG6N+
-	 XQ9eyDW4FZx1nlpxQACNobANbM5vJDtaNFc42OloP8r2yuWxvT7QCMWPUjR5hXpK9Zg==
+	t=1793436760;
+	b=o/IjiMXzimbTz0ydiKgNFsdEzY0CwY5JpQBQ3M9X4MxHTu6Z5PV1983PGNbZ4dqymfZZ
+	 KlAfX8BLTCnvl2io1YATROA6V/io41o9Sec1hSPUWXyBmcFQ4qxFWToJocIYiFl21ezrQ
+	 EWm3fcgZfd0UN8yJtRAFwn98TBrc8v+WqbkMJOzhAm2XJaSADzBf5LjcsVlpcOXemk6fL
+	 yNgeOMr/lQLBv7CRNnBLEK5cq6kKtmBt2E0+BVdQ2oZZ4ZwCdd/vFZllgOOXExlTM4BE5
+	 mk02O29ahljl+Um6F+M4/VoJKUyrCuPmQjrDzCESZJXJTUYnONq0LrQJWmPMpFomQOw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793436114;
-	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Subject:From:To:Cc:
-	 Date:In-Reply-To:References:Autocrypt:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=78bE4Ellr1i3XQW6TTPvGswuyz5drWs9Sc9H0dy0gGo=;
-	b=4WMh+0NNAZ/KYH0wOITSP83KNwfEvf8e/RysSvujPBpd/n0gjtlcKoZDG7WLyrhAJyh+
-	 rxE3L4K/FhgKPgO2icd4KFv4R7mVWiRXgilbypO1zmIBC0nOs3VeGVMz3lKe8/CuzY1NA
-	 eS5zKBqReD9kGdLvPWWW4lAqiAEjCmOCxsJJS9krl4aNknHXb37FLt9FT4rpKIDyTPGYd
-	 CA9bB3kKGrlhPVL6TRn0wevGHoXhye2L079kIYlurjpr0hmG2yjgH7qyPjfaUCA2FLZRE
-	 Iv0KdiruvYzdPYZtC6izZHL4nA1MA/+6psBg0ed3VXXRrx88e/VGhvIXhOap9UfG9sQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793436760;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:MIME-Version:X-Received:Date:
+	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
+	 Subject:From:To:Content-Type:Content-Transfer-Encoding;
+	bh=T54JHojtNznOOiHI0falihSPn5TxrG175B8BVl0MzMs=;
+	b=tOeqjXJYgX9BWMTTGHvJkuLufekPJFMM4MSXXhq5Q0rEPi+69/iEclvaCvAjQSdiM10C
+	 DwGeGtGUT9OdmIW9V0bZYJfomAPnOizwsJfC2zzrVnGCBO4MmRebFPVPa6EtV1JmxgVyQ
+	 PLkvaUPjN6JalnoAqd+FDEvwLiiuUjoMMj01DNMODIdQ0YkEMXBlRbdmVZeFRzU6t4Aq2
+	 JuxawuoohVilM413lT+2KgQWmmLy0UfJ40+FBhjCA4gSHLjRaWUUJXtKPtrVXS4vbZJKm
+	 jpgNxBe9zj/hXytBfPh2m2dSh8s+ErkVIdXIvquOLfWQMJYAbIL5XQr4g3W8J58M/gQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=d-silva.org;
-	spf=pass smtp.mailfrom=d-silva.org;
-	dkim=pass header.d=d-silva.org header.i=@d-silva.org header.a=rsa-sha256 header.s=2025a header.b=EsOQ0YMM;
-	arc=none smtp.remote-ip=119.15.109.137
-Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=fail header.from=syzkaller.appspotmail.com;
+	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
+	arc=none smtp.remote-ip=209.85.167.200
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DBAD606A31A;
-	Sat, 31 Oct 2026 08:41:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DBAD606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=d-silva.org header.i=@d-silva.org header.a=rsa-sha256 header.s=2025a header.b=EsOQ0YMM
-Received: from hawking.lan (ntp.lan [10.0.1.1])
-	by www.nmnhosting.com (Postfix) with ESMTPSA id 0F2C2401D6;
-	Sat, 31 Oct 2026 19:41:47 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
-	t=1793436107;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=78bE4Ellr1i3XQW6TTPvGswuyz5drWs9Sc9H0dy0gGo=;
-	b=EsOQ0YMMa9j8jRi/VEaKb9RgsXY82OYrC9R2f1Lrb5L3UY6QKuUf2WDoUbPAopD4nG1tOD
-	ssh3M+a3F7HIPIZeMSUXJ3Ugu6/+FCAaJnlRCkXdXHiK5HV1cM4V8FQ02Qx20gTXczp1On
-	1sCBWmKBYpHPkK6nWsPVW61Fduc4/z5XrhLeX2agSbuelIjcLdNPomhjLtDo+Zp6zEqn/h
-	ig+8Gakyc3ZG/32N+DLqYH/rtFyGchei92kuHBngU9splW3rNV2uideDG5KH9pFh5ZbPqn
-	o6BT14Ionej6I/rrIcAPfBSFBK9S+naDdsV/CEVVbLAsFCV4Dk4blHyzZDrLXA==
-Message-ID: <7c8bd6660a0bf47c169ae6a803b57e459ad41bbb.camel@d-silva.org>
-Subject: Re: [PATCH rtw-next v7 2/4] wifi: rtw88: sdio: Track running state
- and cancel TX worker on stop
-From: Alastair D'Silva <alastair@d-silva.org>
-To: Luka Gejak <luka.gejak@linux.dev>, linux-wireless@vger.kernel.org, 
- Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Jernej Skrabec
-	 <jernej.skrabec@gmail.com>, Ulf Hansson <ulfh@kernel.org>, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Date: Sat, 31 Oct 2026 19:41:46 +1100
-In-Reply-To: <aa2500ed53d315edb7d6622dac3350fdd92b879b@linux.dev>
-References: <20261031033526.474710-1-alastair@d-silva.org>
-	 <20261031033526.474710-3-alastair@d-silva.org>
-	 <aa2500ed53d315edb7d6622dac3350fdd92b879b@linux.dev>
-Autocrypt: addr=alastair@d-silva.org; prefer-encrypt=mutual;
- keydata=mQINBGactvoBEADBFM2HqfQUUM4j40ZQPyYzmnM8S6zrycO0ipDDPMs7nZMzyzGzOdqfS
- VB/tuYvZOOKVWzJuWJ5aT/YyHx54r3L+D5hTkEG0sXPVJky3yTS9sbHEMSLBHb8TVVuhPVPuieV4g
- Nkqg5POMTidk8xAw50WpV++tUlewXVSciehnuCQPXhXMP7FcCh4uO8LdN7E8m7ir1LafKTFfoWPah
- KVT8NGG9r+ucrFcN5F+VnHxTDaI68yRPkNdtUWmp22wIX1KwDCtKFrndYO4p5Hv2hlDKomsuIIHHn
- muQGRwuh0xpf0nVJNF8ETZHMzxQLfo3e/HvxBFOTkwY9w7CuuQFZchbhS0I3PfmGT0+jiNcdfqjDC
- fPPB5uhy+DkR6wO72vuwFYUrpU2mdliDSdKEtWBHulnXMJjpBOXetfIwhI8G2dTVg59lN5i9DvJZc
- 7y1Sp+qfZQ4P9qpYZyQEKR4GNDOdnm6F2LW2cZkcyAU/Ii765zdDMTQMIzZNSxT/FcDd0K1voTNRl
- QHbQw+kmIMhzSv2JefcC9oNbE0XYzcBDNP5T3O/4itOQ90GCKQEPAbIPeBjlQif7kkyvo/H6yv4s9
- duuK7zbJD9AID/+KGLkpU3p68VDB/C2ZSb9rQz3p1CJNSfsX/CPk7sPqA7RKZ4a2B0hSJ2pJCncNZ
- KXtMlkkm/FmewARAQABtCdBbGFzdGFpciBEJ1NpbHZhIDxhbGFzdGFpckBkLXNpbHZhLm9yZz6JAl
- EEEwEKADsWIQTQGemDFwqYyU/dBWv75AdnjVo60gUCZpy2+gIbAwULCQgHAgIiAgYVCgkICwIEFgI
- DAQIeBwIXgAAKCRD75AdnjVo60qHZEACJnLfpS71Hk8bX0CLCNJ5wgqdZD3pBHEdbv9Ux9kRlZp4a
- ZFwlg9ltwBjl2dZP3PLtD9xQdsdYKVippKd5a7ZZC2y81oDaHjeC9LnPYn8+ce3mGE/+gRyoNfToY
- N06DeUNJKSlZ9t11UIqZCgfp12u16/Yrigy8C4ihEeHXlLhNX6JkeJR5gsHXJnC7vSuMZY+Qz2R72
- ZidWg+cd2WDMGop5sbTvc+55q94A7vTMlWzaix5HdbEUA3sd2U0dMBju5QodRGGhDQMcCu64TydRD
- MtMzzOk9ThJ036ze3HASWGOppyQmaw58k+XNzbHlr9Sc1LsFUNF7zpWXac2rzlywbyRAdFIT/TC76
- hy9zOkwIo2nwA/tdIwLx1j0UZPpAMQmcDUvJqZh6sE+fv6HN0yMPr+sSYJmriMt8Z6leCEHQXOHVI
- SI5z5FvV3coMmHYRq6aXpfs/8SLiYgkV3B0HE/E18Y3j1OkeLYoqIH1VfzQZeCSL/S77NYvk60/MV
- 1HFSyqLdUR3uWZI4uZzoEcMoB0GX33uCTp2Ntc00+wSntwekCUQLCMLUb7dZrbpVuobHoWWtkiD2I
- uE5kAiaVwwwzM0BUwiM6VzVoKbeECz93rdsNtwoDqM0NtzoISC46H/BKVQ9mRNXDO4ThEBpJ4H2Tn
- mPNRYYcR0u2mNy1EJII04w==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-9 
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EAA6606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 08:52:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6EAA6606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-547ae874949so2266943b6e.2
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 01:52:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793436759; x=1794041559;
+        h=content-transfer-encoding:content-type:to:from:subject:message-id
+         :date:mime-version:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=T54JHojtNznOOiHI0falihSPn5TxrG175B8BVl0MzMs=;
+        b=T0h86FkNWpvq/EOntn8lmRBJL98Qdx2Z8Q/gNBctsvtLEzFnVjVLCNgejzNJj+B561
+         bAR5X35Ic+5aigRIp3Dp+Rgv7vQzqIfOTpgPCC8e1CGSt9c49ePgR0/uWPwcsHjvp+xF
+         6OteNj2fGf92TCf3e5dtUFC/N/afddmDoFON2iAss76gvZfqDr8dgj/71SL1FvaeWrku
+         9Ru5d/14n1Im0m68Ts4Gjxnl11cAMzDj1TiovQ3TzhaNv/mf24Ot5v5RtNg1cDzQo8Ih
+         kpTFJ3HG46xPgwzQvYB+sfIJHQoBtlcDR+GJBvGoIFUBMfQFuyqLn/NA8WOhaSpScC68
+         FY7g==
+X-Forwarded-Encrypted: i=1; AKwUvBwPqyrUea9cKelrzn9nUe55EodVYDEfunhc8uE/efB/Rt8TJUs9jyTYXAk8XUD/VRkboLCsdPfC+Rk+IQu0Ng==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIYN6DMplDBKV4fyNEUqjfK8gtj7wNcqkODkFgE9iBhtuiWQIxx
+	HSkR9JDo8qNe3+jiNyRQDkFW7107IFC8mRJo0RzO4i426yiHQlRd/hnuK5xUDIzmxGhsonXuHrb
+	BiRVYV6Rl1c88LPFoAQ2f8X3BGwDuTdQdKyxCTSVIsi9Aq45JKDSeQeOdd60=
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -96,111 +58,178 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+X-Received: by 2002:a05:6808:c2c7:b0:531:7f68:842e with SMTP id
+ 5614622812f47-5640dbd6258mr3317562b6e.8.1793436759449; Sat, 31 Oct 2026
+ 01:52:39 -0700 (PDT)
+Date: Sat, 31 Oct 2026 01:52:39 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ae5ac57.88e51036.1515fd.0003.GAE@google.com>
+Subject: [syzbot] [wireless?] WARNING in rfkill_dev_uevent
+From: syzbot <syzbot+56f5119a6b206041a6b7@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hello,
 
-On Sat, 2026-10-31 at 07:10 +0000, Luka Gejak wrote:
-> Hi Alastair,
->=20
-> Thanks for the new version. One comment below.
->=20
-> October 31, 2026 at 4:35 AM, "Alastair D'Silva" <alastair@d-silva.org> wr=
-ote:
->=20
-> > diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c
-> > b/drivers/net/wireless/realtek/rtw88/sdio.c
-> > index e39284b71837..253467250ee6 100644
-> > --- a/drivers/net/wireless/realtek/rtw88/sdio.c
-> > +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
->=20
-> [ ... ]
->=20
-> > @@ -1069,20 +1072,38 @@ static int rtw_sdio_start(struct rtw_dev *rtwde=
-v)
->=20
-> [ ... ]
->=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0 sdio_release_host(rtwsdio->sdio_func);
-> > +
-> > +=C2=A0=C2=A0=C2=A0=C2=A0 queue_delayed_work(rtwsdio->txwq, &rtwsdio->t=
-x_handler_data->work, 0);
-> >=20
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
-> > =C2=A0}
->=20
-> I brought up this rearm on v6, but looking at the callers again I think i=
+syzbot found the following issue on:
+
+HEAD commit:    dda51b737216 tcp: check congestion control restriction firs=
 t
-> may run a bit too early. rtw_sdio_start() is called from rtw_power_on(),
-> so the worker can start on whatever is parked before rtw_core_start() is
-> done with the device:
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw_core_start()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw_power_on()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw_hc=
-i_start()=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 <- worker queued here
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw_fw=
-_send_general_info()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw_co=
-ex_init_hw_config()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw_sec_enable_sec=
-_engine()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_bit(RTW_FLAG_R=
-UNNING, rtwdev->flags)
->=20
-> The parked frames got their TX descriptor in rtw_sdio_tx_write() before
-> the stop, with the macid and sec type of that session. So if I read it
-> right, after an interface down/up or an idle IPS cycle they can go out fo=
-r
-> a station that is gone, and maybe even before rtw_sec_enable_sec_engine()
-> has run. Resume from WoWLAN looks similar, rtw_wow_stop() starts the
-> HCI while the WoWLAN firmware is still loaded and rtw_wow_swap_fw()
-> follows right after.
->=20
-> PCI drops what is left in its rings in rtw_pci_stop(), through
-> rtw_pci_dma_release(). Maybe doing the same here would be safer, purging
-> rtwsdio->tx_queue[] with ieee80211_purge_tx_queue() and clearing
-> tx_queue_stopped[] with a wake of those queues, instead of the rearm.
-> What do you think?
+git tree:       net
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=3D12607259580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3Dd0f4f48df8e34eb=
+3
+dashboard link: https://syzkaller.appspot.com/bug?extid=3D56f5119a6b206041a=
+6b7
+compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D10e3188d58000=
+0
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=3D169b9135580000
 
-Agreed, your trace of the callers makes it clear that re-arming in
-rtw_sdio_start() is too early and risks transmitting frames with stale
-TX descriptors from the previous session (or while WoWLAN firmware is
-still loaded).
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/69fc30a54172/disk-=
+dda51b73.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/6fd8743be1c2/vmlinux-=
+dda51b73.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/1aa0f93cd3c4/bzI=
+mage-dda51b73.xz
 
-Purging rtwsdio->tx_queue[] and waking any stopped AC queues in
-rtw_sdio_stop() after cancel_delayed_work_sync() is much cleaner and
-matches rtw_pci_stop(). Since rtwsdio->tx_queue_stopped[] is indexed by
-enum rtw_tx_queue_type while ieee80211_wake_queue() takes the mac80211
-AC index, I propose doing the following in rtw_sdio_stop() (and
-dropping the re-arm from rtw_sdio_start()):
+AI-generated root cause summary:
+In mac80211_hwsim and cfg80211, the netlink attribute HWSIM_ATTR_RADIO_NAME=
+ is
+accepted without a length limit, and cfg80211 does not bound requested_name=
+ when
+setting the device and rfkill names. When a user creates a virtual radio wi=
+th an
+excessively long name via netlink, rfkill registration triggers a uevent wh=
+ere
+RFKILL_NAME exceeds the fixed 2048-byte UEVENT_BUFFER_SIZE in add_uevent_va=
+r(),
+triggering a WARN. In production kernels, add_uevent_var() safely returns
+-ENOMEM and drops the uevent without memory corruption or system crashes.
 
-	cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
-	for (i =3D 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
-		ieee80211_purge_tx_queue(rtwdev->hw, &rtwsdio->tx_queue[i]);
-	for (i =3D 0; i < IEEE80211_NUM_ACS; i++) {
-		queue =3D rtw_tx_ac_to_hwq(i);
-		if (rtwsdio->tx_queue_stopped[queue]) {
-			rtwsdio->tx_queue_stopped[queue] =3D false;
-			ieee80211_wake_queue(rtwdev->hw, i);
-		}
-	}
+full analysis:  https://syzkaller.appspot.com/x/ai_root_cause?x=3D56f5119a6=
+b206041a6b7
 
->=20
-> The stop/start cycling in the cover letter was also run on 7.2.10, where
-> tx_handler_data->work is still a work_struct and the 8723BS HISR mask is
-> not there yet, so I guess the board ran a backport. Was this version run
-> on the board as posted?
->=20
+IMPORTANT: if you fix the issue, please add the following tag to the commit=
+:
+Reported-by: syzbot+56f5119a6b206041a6b7@syzkaller.appspotmail.com
 
-The test board's base kernel is an Armbian sunxi64 build (versioned
-7.2.10-edge-sunxi64 by Armbian). For the test run, rtw88_sdio.ko was
-built directly from the rtw-next sdio.c/sdio.h (including delayed_work
-and RTW_SDIO_HISR_CLEAR_MASK) with our patches applied, and only
-rtw_is_8723bs() stubbed to false so rtw88_sdio.ko matched the struct
-rtw_dev layout of the board's existing rtw88_core.ko. For v8 I will
-build and load the full rtw-next drivers/net/wireless/realtek/rtw88/
-module set on the board so it runs completely unmodified as posted.
+workqueue
+workqueue: name exceeds WQ_NAME_LEN. Truncating to: =14=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDe=EF=BF=BD45=EF=BF=BD8) r1 +=3D -8
+     15: .
+------------[ cut here ]------------
+add_uevent_var: buffer size too small
+WARNING: lib/kobject_uevent.c:688 at add_uevent_var+0x2db/0x460 lib/kobject=
+_uevent.c:688, CPU#0: syz-executor353/5646
+Modules linked in:
+CPU: 0 UID: 0 PID: 5646 Comm: syz-executor353 Not tainted syzkaller #0 PREE=
+MPT(full)=20
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Goo=
+gle 10/07/2026
+RIP: 0010:add_uevent_var+0x2db/0x460 lib/kobject_uevent.c:688
+Code: 48 8b 44 24 40 42 0f b6 04 38 84 c0 48 8b 5c 24 18 0f 85 73 01 00 00 =
+44 01 33 31 c0 eb 20 e8 0c 1c dd f5 48 8d 3d 35 df a3 05 <67> 48 0f b9 3a b=
+8 f4 ff ff ff 49 bf 00 00 00 00 00 fc ff df 66 43
+RSP: 0018:ffffc90003996a00 EFLAGS: 00010293
+RAX: ffffffff8beb4a14 RBX: 1ffff1100efa0443 RCX: ffff88807f68be80
+RDX: 0000000000000000 RSI: 0000000000001770 RDI: ffffffff918f2950
+RBP: ffffc90003996b38 R08: ffff88807f68be80 R09: 0000000000000008
+R10: 0000000000000007 R11: 0000000000000000 R12: 0000000000001770
+R13: 1ffff92000732d50 R14: 000000000000079e R15: 0000000000000062
+FS:  000055556e425400(0000) GS:ffff888123a6b000(0000) knlGS:000000000000000=
+0
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000000069e000 CR3: 00000000713cc000 CR4: 00000000003526f0
+Call Trace:
+ <TASK>
+ rfkill_dev_uevent+0x2f/0x1f0 net/rfkill/core.c:875
+ dev_uevent+0x4ab/0x870 drivers/base/core.c:2774
+ kobject_uevent_env+0x475/0x9e0 lib/kobject_uevent.c:576
+ device_add+0x544/0xb80 drivers/base/core.c:3742
+ rfkill_register+0x170/0x9b0 net/rfkill/core.c:1100
+ wiphy_register+0x2a5f/0x3290 net/wireless/core.c:1310
+ ieee80211_register_hw+0x3d72/0x4b30 net/mac80211/main.c:1634
+ mac80211_hwsim_new_radio+0x32f1/0x5990 drivers/net/wireless/virtual/mac802=
+11_hwsim_main.c:6186
+ hwsim_new_radio_nl+0xd8b/0xf90 drivers/net/wireless/virtual/mac80211_hwsim=
+_main.c:7062
+ genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
+ genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
+ genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
+ netlink_rcv_skb+0x226/0x4a0 net/netlink/af_netlink.c:2580
+ genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
+ netlink_unicast_kernel net/netlink/af_netlink.c:1335 [inline]
+ netlink_unicast+0x8ef/0xa80 net/netlink/af_netlink.c:1361
+ netlink_sendmsg+0x7f0/0xb20 net/netlink/af_netlink.c:1920
+ sock_sendmsg_nosec+0x14e/0x190 net/socket.c:800
+ __sock_sendmsg net/socket.c:818 [inline]
+ ____sys_sendmsg+0x54e/0x850 net/socket.c:2715
+ ___sys_sendmsg+0x2a5/0x360 net/socket.c:2769
+ __sys_sendmsg net/socket.c:2801 [inline]
+ __do_sys_sendmsg net/socket.c:2806 [inline]
+ __se_sys_sendmsg net/socket.c:2804 [inline]
+ __x64_sys_sendmsg+0x1b1/0x290 net/socket.c:2804
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fbc181e2649
+Code: c0 79 93 eb d5 48 8d 7c 1d 00 eb 99 0f 1f 44 00 00 48 89 f8 48 89 f7 =
+48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff f=
+f 73 01 c3 48 c7 c1 d8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffc9f9d5c88 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fbc181e2649
+RDX: 0000000000000084 RSI: 0000200000000a00 RDI: 0000000000000004
+RBP: 0000000000000000 R08: 0000000000000006 R09: 0000000000000006
+R10: 0000000000000006 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 00007fbc18275c40 R15: 0000000000000002
+ </TASK>
+----------------
+Code disassembly (best guess):
+   0:	48 8b 44 24 40       	mov    0x40(%rsp),%rax
+   5:	42 0f b6 04 38       	movzbl (%rax,%r15,1),%eax
+   a:	84 c0                	test   %al,%al
+   c:	48 8b 5c 24 18       	mov    0x18(%rsp),%rbx
+  11:	0f 85 73 01 00 00    	jne    0x18a
+  17:	44 01 33             	add    %r14d,(%rbx)
+  1a:	31 c0                	xor    %eax,%eax
+  1c:	eb 20                	jmp    0x3e
+  1e:	e8 0c 1c dd f5       	call   0xf5dd1c2f
+  23:	48 8d 3d 35 df a3 05 	lea    0x5a3df35(%rip),%rdi        # 0x5a3df5f
+* 2a:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
+  2f:	b8 f4 ff ff ff       	mov    $0xfffffff4,%eax
+  34:	49 bf 00 00 00 00 00 	movabs $0xdffffc0000000000,%r15
+  3b:	fc ff df
+  3e:	66                   	data16
+  3f:	43                   	rex.XB
 
---=20
-Alastair D'Silva
-0493 18 5566
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
