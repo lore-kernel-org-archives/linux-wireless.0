@@ -1,61 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.9
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.12
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793444085;
-	b=KaVRK9i6dC+QsmUHGnDg4xjXXC5J1dgNdlaLJCguydpAxPDkBxVxKdB1olTpJL1B8qOZ
-	 RMl2I2X9B5hJstDHDLORVoUq1o6qjRLgD4A4Rt0adMoTM5YXIJu1OWgA0Ou5L8Y4QaVLT
-	 Ul+SL8HcVfou/ikJdxpnhQsW8F9fJJ70eDceudwGY/x4I8bamAwaA+Cez6oYHABLgPwm/
-	 KR10xkhpA28yeX+Helq0AYaLpPeOYw+0vmXwilXxbGZQI5ObF8iCehn7G5hfwsZgDkrAH
-	 qnaWjdB45Q9WYr/v4el2HbezWqshYsm/GIAJ/tT4kKz2WmnJUeLIpXwiR1YBcEEy7Ig==
+	t=1793444773;
+	b=p8NVA9T5iXx62V3CLos8W1vudiJGjg8rB5WlfYPWnj0wwOCD2PWXNOOL3nTs4Z2wNahH
+	 G8TWY28aapy8LgwOvKIIDyiumIiUqUQpTHcRnRD0HF0G6WtW2fslHaR91jkvLntBH/HFp
+	 op1+dv5WVDzq3y1QicYedguGScxmrGd+IgMoFfhAD/MBOdOTo0dk+rkoND1V50b/3K98W
+	 CaFFpgjj4BeNovJnwMrC0QUttrMmPDJLRekThbVQuYBIV8ov78mVoNEM3Yj+MaorEM7xN
+	 2i3hkrEMkx8AdZ/QhKDyO5NOI+02ky4HXXKszqh1IEwkW3sgfxhu4lv2sgEgN2KGg3g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793444085;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793444773;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
-	bh=/V86iMFP1vJ/V4kzs5t71VbJUoSDcgmsIQzUVHvfOMI=;
-	b=wiFT5TiSwks5W5pm/YhGRSqHM/o7VdLxPWgxFfRue7hveJ9ykiNmTGWFkNf5lbcmCJa2
-	 KVUwveIiVciUanl3yx38fjQdoGsiA8hHpSZNf1EkYF0WPaXIFdMy3Rqkn/FTeqtAQtUfi
-	 JEQrPFlGdT0DfI+SpkV5vVC8FDaNwnkEEXhpXLl8TKdc5a+IBWZaHBz01k+WQ5mxpz8EI
-	 HwKv1TMn49nrlBXzXfiz1ubMB6ij7KoiZt3znN9stRROVC5YLBBrO1wZDeGUfiK0qx76J
-	 KUiPTsQxrTM2K9vtlo40fcJAN8SS5XNnwWKSonkfhJXUsyiTNTYT08H1jwGkX64+LNQ==
+	bh=YYYiZeIarG26HWVQV4zePGaIw+qvE8QRJcOljSaV4/I=;
+	b=mjjevWi2Q4/Ms9j1Yt0oR6kfqQY8q68X8rtvTL3+t0vq2dkAJdr5nP0iEumLPfggAdh5
+	 d1b0hbpriF9ao9nk0vX/6uM2ePjBa12Y1J8D6cnspRqzvQkBbf84rcmf9RWduODwbKfOc
+	 Drn8tVbZ4cH3TfiZuHOtTD5cMmRs5opL+OYaFXAYJ5l4fFQCuLQrmXPU3nxerXXfP3xxM
+	 JHxxoZVS4n1LZ6OYzTvDDMFKTrOhCLmDrHpns0RDGN72XkVdLhPNU612WAoQbo8mLY69m
+	 va0KZN/N6LtTszhX3dBo4Ca8oeYVIibfKFAeTDNU6fSnL/Tay3ABYbthITYTUB5F+EQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=wp.pl;
 	spf=pass smtp.mailfrom=wp.pl;
-	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=e11ULkk3;
-	arc=none smtp.remote-ip=212.77.101.9
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=ivqmU6Ia;
+	arc=none smtp.remote-ip=212.77.101.12
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4B7606A31A
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 10:54:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC4B7606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23010606A31C
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 11:06:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23010606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=e11ULkk3
-Received: (wp-smtpd smtp.wp.pl 23110 invoked from network); 31 Oct 2026 11:54:42 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=ivqmU6Ia
+Received: (wp-smtpd smtp.wp.pl 21341 invoked from network); 31 Oct 2026 12:06:09 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
-          t=1793444082; bh=/V86iMFP1vJ/V4kzs5t71VbJUoSDcgmsIQzUVHvfOMI=;
+          t=1793444769; bh=YYYiZeIarG26HWVQV4zePGaIw+qvE8QRJcOljSaV4/I=;
           h=From:To:Cc:Subject;
-          b=e11ULkk3pWCGiV2PCC29hhbDKI9Qc05LIOHgp7qUv+tfIPZ/zZGzNNeArBlzFIBF9
-           GB2CxTp7Z6W4xjhEIAppPOIGb8u7bYPBzeyUtqZpNw96Y4As021vrJ00e4/iPpG0Aj
-           UvCy0Cnr4QRHz2aBhlKoUIPv8AonE86xe/XY3cO6EyQH6+VbDwaOh2UjYNVUee2Dzk
-           pOlj1tNR36qwhJwPm3l1Mw5zenUhs9H8Z+cNth+Zsgd6dqee3u91uvSYDQPoeVgPJp
-           hSVSDqgm4bqgD5MJhw1K8lH2kliXyx25vXMOP6LwrlwuLxo6pH6a+fLhvUQNSKkwhP
-           Ilt2xnhDURJlg==
+          b=ivqmU6IaMbGCXikTf1UbD9GQ79SBcXQ1+hKLAMKhXPZRMuZsDbmL0/jrUXmWCFKQV
+           EDhhXrSfDSDwtSbCTQrndUFWBTYjnddU2+hhzEvXp23+Rfsjc5b4QexyyoFIXmc31J
+           y766Qhpezbw3Jnc3FstR87giVAC+wG2eH9EJGlYeUKndyaY5xd58vupzGuuUq4UqLW
+           7GPkroGj3iEB+ZUkqTo0lWmnyqKd+rYkBcno/Kevtlmhyy+zL9IjBCsV5NrReVmTyx
+           DNFjBNO5NZ2egN5RaZl3BTh04B0RLo7RxEsRYb9HTqGYob6HLpiEt5qPKdE6TsCKG5
+           FfpzI5Dj77iIQ==
 Received: from localhost (77-236-11-144.static.play.pl [77.236.11.144])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <hjf3108@gmail.com>; 31 Oct 2026 11:54:42 +0100
-Date: Sat, 31 Oct 2026 11:54:41 +0100
+          for <hjf3108@gmail.com>; 31 Oct 2026 12:06:09 +0100
+Date: Sat, 31 Oct 2026 12:06:08 +0100
 From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Ho Jie Feng <hjf3108@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless-next 4/8] wifi: rt2800: report the MCS16 to MCS8
- fallback of RT3593 in TX status
-Message-ID: <20261031105441.GC31143@wp.pl>
+To: Jie Feng <hjf3108@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 6/8] wifi: rt2800: set the mac80211
+ fast-xmit and aggregation flags
+Message-ID: <20261031110608.GD31143@wp.pl>
 References: <20261029134752.1299130-1-hjf3108@gmail.com>
- <20261029134752.1299130-5-hjf3108@gmail.com>
+ <20261029134752.1299130-7-hjf3108@gmail.com>
+ <20261030091743.GB27096@wp.pl>
+ <CABOQOSX6mBCtTTg9eJX665t7tj65jo=9hVTgr7pmFRB6csG2Yg@mail.gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -67,87 +70,65 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261029134752.1299130-5-hjf3108@gmail.com>
-X-WP-MailID: 65d240ddf3a61c8536ea342b3dea758a
+In-Reply-To: <CABOQOSX6mBCtTTg9eJX665t7tj65jo=9hVTgr7pmFRB6csG2Yg@mail.gmail.com>
+X-WP-MailID: 8ae6e56a1c67c4863d898adb9f9c23ef
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000001 [4YIB]                               
+X-WP-SPAM: NO 0000001 [MbKR]                               
 
-On Thu, Oct 29, 2026 at 09:47:45PM +0800, Ho Jie Feng wrote:
-> The RT3593 retry chain is now MCS 16 to MCS 8, skipping 7 MCS
-> rates in between. Reflect that in the retry calculation code.
-> 
-> Test results:
->    before after
-> TX 27.0   29.4
-> RX 70.0   70.0
+On Fri, Oct 30, 2026 at 07:33:44PM +0800, Jie Feng wrote:
+> On Fri, 30 Oct 2026 at 17:17, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+> >
+> > On Thu, Oct 29, 2026 at 09:47:47PM +0800, Ho Jie Feng wrote:
+> > > Enable AMSDU TX/RX support for this driver, which can increase
+> > > throughput.
+> > >
+> > > Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
+> > > ---
+> > >  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
+> > >  1 file changed, 3 insertions(+)
+> > >
+> > > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > > index 032cd6ac345f0..8b4458a74d33d 100644
+> > > --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > > @@ -11861,6 +11861,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+> > >       ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
+> > >       ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
+> > >       ieee80211_hw_set(rt2x00dev->hw, TX_STATUS_NO_AMPDU_LEN);
+> > > +     ieee80211_hw_set(rt2x00dev->hw, SUPPORT_FAST_XMIT);
+> >
+> > IFICT this flag will not take the effect since we have SUPPORTS_PS.
+> > Also for WAP3 (802.11w) we fallback to software encryption -
+> > that will prevent fast xmit as well. To truly enable
+> Yeah, that is true. I also have a patch that enables hwcrypto in that case.
 
-I think this patch should be merged with patch 3, and also 
-similar handling should be done for RT3883 since it has
-the same fallback pattern.
+So let's wait until all needed parts will be in tree or posted in the
+same patchset before advertising the support.
+
+> > fast xmit, I think we would need add hardware encryption support for
+> > WPA3 and also compromise by remove Power Save support (which is disabled by
+> > default, so that's possibly fine).
+> I think maybe a more general patch to mac80211 to enable fast-xmit when PS
+> is disabled and not only checking the feature flag will be better?
+
+Sounds like good idea to me, but let check with Johannes (cc-ed).
+
+> > > +     ieee80211_hw_set(rt2x00dev->hw, TX_AMSDU);
+> > > +     ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_AMSDU_IN_AMPDU);
+> Although I think this flag will still be useful for this patch.
+
+AFICT TX_AMSDU require FAST_XMIT. I think we could potentially enable
+RX SUPPORTS_AMSDU_IN_AMPDU as long all buffer sizes setup by the driver
+and configured in registers allow handling big enough frames. Though
+I don't know how much beneficial that would be since we most likely 
+can not configure very large (A)MPDU buffers. Need to check.
 
 Regards
 Stanislaw
-> 
-> Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  8 ++++++++
->  drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 13 +++++++++++--
->  2 files changed, 19 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> index 9d88ee698b854..de234bcc7a065 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> @@ -1116,6 +1116,14 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
->  		 */
->  		__set_bit(TXDONE_SUCCESS, &txdesc.flags);
->  		txdesc.retry = ((mcs > real_mcs) ? mcs - real_mcs : 0);
-> +
-> +		/*
-> +		 * On RT3593 MCS16 falls back to MCS8, so a frame that was
-> +		 * sent below MCS16 after a three stream rate skipped MCS9
-> +		 * to MCS15.
-> +		 */
-> +		if (rt2x00_rt(rt2x00dev, RT3593) && mcs >= 16 && real_mcs < 16)
-> +			txdesc.retry -= 7;
->  	} else {
->  		/*
->  		 * Transmission failed. The number of retries is
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-> index 4d94b7062f440..823785088a308 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-> @@ -329,10 +329,10 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
->  	 * lowest rate was used.
->  	 */
->  	for (i = 0; i < retry_rates && i < IEEE80211_TX_MAX_RATES; i++) {
-> -		tx_info->status.rates[i].idx = rate_idx - i;
-> +		tx_info->status.rates[i].idx = rate_idx;
->  		tx_info->status.rates[i].flags = rate_flags;
->  
-> -		if (rate_idx - i == 0) {
-> +		if (rate_idx == 0) {
->  			/*
->  			 * The lowest rate (index 0) was used until the
->  			 * number of max retries was reached.
-> @@ -340,8 +340,17 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
->  			tx_info->status.rates[i].count = retry_rates - i;
->  			i++;
->  			break;
-> +		} else if (rate_idx == 16) {
-> +			/*
-> +			 * TX_FBK_CFG_3S_0 makes MCS16 fall back to MCS8 on
-> +			 * RT3593, the decrement below shifts it back to 8.
-> +			 */
-> +			if (rt2x00_rt(rt2x00dev, RT3593) &&
-> +			    (rate_flags & IEEE80211_TX_RC_MCS))
-> +				rate_idx = 9;
->  		}
->  		tx_info->status.rates[i].count = 1;
-> +		rate_idx--;
->  	}
->  	if (i < (IEEE80211_TX_MAX_RATES - 1))
->  		tx_info->status.rates[i].idx = -1; /* terminate */
-> -- 
-> 2.53.0
-> 
+
+> > >
+> > >       /*
+> > >        * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
+> > > --
+> > > 2.53.0
+> > >
