@@ -1,90 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793465521;
-	b=wE1tf8KYOC1v6zcgUomtuYy36ctRI0jmLDgM6pI0rsnGXqCphTkuXlKzF3b8w9OqvAI1
-	 YD1xFR8L89jEvCQs/7PhHhxu/PiPjM4aeb+QyxVwMwz/huhWb925rMUM2lqqlJxl55JZy
-	 Zc+QBUQBAnHl8BKY+1MlOmWKbZmlKEJCsiPZVLjHkVDMUWrCxhVLR/5OovYL5h9AXTBxG
-	 /wMf2stq/ycrCAx1H2OeZjxZwWhb+I3z3L0feYjVWxau/oCR3aKrRoNk3cye1N6oXv3CA
-	 5mgcLcGsT8ClGWH99q2EtBpzznlBzBdKUMIxaiFSbNEtW8x0DRjrKeI0iwQxuKXoVBQ==
+	t=1793465524;
+	b=PbLW1RsMPWjpXnbXEXeqRkMRmUpB1lCVnG4GR1Cz/CRT+0qcToHR/1o9jECwuWQ4QSO+
+	 mSxjHBIxyzg5ZKZiFVgYe06KnIX2k0ZX9i3b2TQz3IIgylqsoq/t6nkTfmrjMzhoL7ymR
+	 lNeZhtdAF47VUW/UwZ+9hav55LgGG4L++jSWMvoHZtOvXb4Ye1Sn+0GOfi01kEutt50NJ
+	 R2wdCFL/dl0opS535FvUIyoJq81h1W2C3RIslJFWjRIqGNfuwpWnHj+Nz0o+4V7fts0CW
+	 3Mo/F1vBSRzfw2AA3TXAxkPjFI8wkk2RRT/9nDps8R3dO+I7ewDh52SZugU+dJEnEtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793465521;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793465524;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=E+21lEgufVUNREtB+EaLC1ZgvxJvGOOcCZeFt8RdM30=;
-	b=SW7eDPnjHRJ6gXTThBazlYeLlX5VSvUW5eHj6T1MfzPQQ+4SuM1YtEg4TYhpRDdcbZ2T
-	 CPspc87q/t6u4jwBTvSN34qojVRojAsEEQeDH7DQHvVMSkCXQlpyo3cVt7tIXrwdekRaF
-	 tElRjQJyMFpkJPYIxy2Hr0ihlbneobJSg8tfBjfHGuQ57EhdJaC1ATU/BH6iUAmiDfESG
-	 Jv09E98Wq75xiU+S+T0VtTTp0mtK4BSOi4QbjnUD7kCIbwbUIe7tXvyBf/c2H7x3hvfWf
-	 QWECZxkqLMg8au9cqp7uiFK2vpOqro2cW1VX0pY8QrJDI2lPvkbJ/tPPG2eJbjPul2g==
+	bh=Z5pGZmkUzca5HrAe85oVZ7WdW/1IxHjKz2s1m/8934k=;
+	b=VIIfw0/+MdWvgMEzFweUPcHnU/QKMXldflG1NgZa2dDsZsLh8habSMJmS4tRfm8CKMFW
+	 pcQf6MJroQ1HglwgXrlM1hwyd6VHdrQWYpKS/dWnAuBBqmWbQsaDkmzOIuGACwmKagdh+
+	 +9I6GT8qG90IhdjlaycnGaWShYERc7jcPLNXdPBtXqCjm1g6Q3xBhRECSSWzY6zazDcy0
+	 +d8HEA3s/a0RTbLPcSIRmRsZDF/rAZzLZ7Q/xb+MK2SSy/3qjRqkOyjTyiD8YQB57piqa
+	 C6N2yz4G55RJXNjIx2iOhjKMUnWlMDU0IgTf+6Tpv6lP2R/PPZn2UFzm9DD2f/UpQsg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=v4FvYtPT;
-	arc=none smtp.remote-ip=74.125.82.170
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eq3S+H2D;
+	arc=none smtp.remote-ip=74.125.82.42
+Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E5CB606A31A
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 16:52:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E5CB606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5176E606A31A
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 16:52:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5176E606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=v4FvYtPT
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-36a0f27c9f4so3003496eec.1
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 09:52:01 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eq3S+H2D
+Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-1adbf62dd31so1638081c88.0
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2026 09:52:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793465520; x=1794070320; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793465523; x=1794070323; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=E+21lEgufVUNREtB+EaLC1ZgvxJvGOOcCZeFt8RdM30=;
-        b=v4FvYtPT87orSU2M/N6cpEGYdhhW1LKpcYhnritDMFQOtLEta/9bBRWw2LRibrLE51
-         wyLm8WK5XzXjwPtPufBDPovzgOBRVKbAwqhyocXE348RsO7X4cBfxVcv3PI+pMS7Ik/3
-         CVmJE7/ItDCRANAfeBp2SCj5p8M3mJ0WNbqclJKHXbn2a9deXWXWRgefar6CNw0ugwYy
-         mlAz/Shpv0nC/CpGfV1w+sD/vCQb7LexumsgDB1v2CN7dSg5dYktS2nB0YBqXyQHFapu
-         AvN92po/pidS/0NjgtXFc3+eJ4Gy2WmThU9lfhbwntA6gUINDUcnY8Ep5A6Khs92uGzr
-         REWg==
+        bh=Z5pGZmkUzca5HrAe85oVZ7WdW/1IxHjKz2s1m/8934k=;
+        b=eq3S+H2Dy+T/f8LyXR3gf92KX0ZmJ6mKOanIS5LC4QUC8zcbXinM8Y+bziNqcMQOsZ
+         oVl8vEM0kWXseM9fA1iCOem3jXpL6ovsvv9YLhiL8/a2Idhmnvr9hYptc0eR5VMaGlmD
+         H1fmBUo0gmCvod+rw0u8z+eueKGwkXuLGlu2prKFyN09YGyiWK75mZGhEYyUn4Ozwfmq
+         dcVUC9NbUqpbBAjGnhXUGHg03g1AhylVcwKxK6QN36ZnVzTWQ4NFSv47BGd1MOLiAuuD
+         CNLgnDiJly7aZBDP6sB+hQkRsLx6xSgx0FUW2QaDOCWhDA1LbeWArBJLwZTRO93FKk4Q
+         CvlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793465520; x=1794070320;
+        d=1e100.net; s=20260707; t=1793465523; x=1794070323;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=E+21lEgufVUNREtB+EaLC1ZgvxJvGOOcCZeFt8RdM30=;
-        b=qfHj9PgPltWBc2/77eSvPCBEjr833S81QDhq4BdLHg2TTu5mSGXzoQ7YVg2Tv4n8fj
-         Dg479nTlkTMzMo3L2eKM81k8Mz4mwgbk8QYFX4rCV4emum6Z7P8UXsafrLYKnudD361t
-         tRCmXcmi/PskJY7PWJIxSF29ldKGJpDfsE8iYYII5/Ub5mxdiZHcAg7yT1pR82/2qX1Z
-         kVgDNtJb19cwa50bj9yAM8nSjZ2n1z7N14XTWCuDZS4BswwjqH1DBOEiWxihhmsWTJ07
-         LRQcVxodj0QPqjkJPaQ2bdYooP95WQLFXgNYr5K6llwgNZOsr2Qv9swEQ0OQ1P6s7uNX
-         o9Ow==
-X-Gm-Message-State: AFq9FYLYMUrsG2hqOnQCDPfOrvDkU58GoCDrzEXzQC1UDKIjKGbX/wFR
-	Jsk7wbgE7f+6wT3ztjcUxFWJfcpyZkV4vUvf+Gp5wMOqPc4oezUTOiuSXZeKOi2X
-X-Gm-Gg: AYBFou0Q5RbR/Kv+Yzgugz+iV8TXz1ZjE9fWpQwChdnQ0DCjUBeLlu4uwXxzdyE9+xg
-	DO04q2e89N2HFOht8QwUq0g31uytuxP8xtvr7DtxroNctIB2jf9WjqqNG4pBd8Ej98QZSIHcXup
-	zv7/m3+00u90fdrxsbGS9F06v3+0C5gTysjpRr3qG0dG0526e2jk70BTkVmaBoj9C6N+W4KT0IC
-	W2ej3jnYVZ2siojKpi+YUkio/IjnR1IHQYK/i7fLeSofc+3JmHLfUucvv6ylTtTgVwAYGEEerNF
-	UL8KIXe64FD2P0L9dMx81wDWbl/VQ5Nx8lL7i11a8uZof9F6PQeFi4rjAmJpM80zJFWfDOISqqb
-	LoS5nrWfZ+NWVpxK3KOBgVtnCBD0xLVAVrxTXkFL/VNmtKCoJzFEXmp3B2Qc46R6lZoWHdfSyOd
-	YMPaOASKd5J2m3BX0SC6ltndlF1p+l5IVhu+cjyLPL3gNBXY4TSVNjBmKhRJTEF+KaHC6068FFs
-	4TLZUZsRxRi4fgKyxPlKZRfaw8/j/LJ/9sZFfNQRV2NKh3f71U8NwZ6FLoYJ3sC6Hd2xEnWMCUL
-	ABHkLwunXOeUTs5eM+XaCvyLufRav7Ne0Jetj4NzEtEB6xTPZIH2fyqpabvDgbhjYNClr74aacX
-	vlrFBCPw=
-X-Received: by 2002:a05:7022:f908:b0:144:c123:4036 with SMTP id a92af1059eb24-1ac5d2c5c0amr7212209c88.35.1793465520303;
-        Sat, 31 Oct 2026 09:52:00 -0700 (PDT)
+        bh=Z5pGZmkUzca5HrAe85oVZ7WdW/1IxHjKz2s1m/8934k=;
+        b=hgujzMEpA9DvHE1qenKFGOqfbRO7zQku5+8zou276qT7QKnYwANGIU1Yikg5TPObzz
+         0boK2gRHR8+jdJNiVI+LWWAWry9kEkFR/b9FtpnqIotmXv5/1NKXCkOqoDQG8dKTbbN3
+         9vSsIlMVyGVl13jDsSvXQNDs7EFllcEv/V0lCwNb1jOhkz9EeaHXgczPwg76+/JCA0++
+         sWS8MlfJZNmneUWu1SOXXXrK1cw5ojirInUOlzABH0IiWGXkXqHnSY0FLF6lI00aCjkP
+         tgBTWpId4wd4PjB83jScX6pE8p8CG0QZ38mP0QON5mPSy6KpU6JyyB8HxahAre9I5d3c
+         ne8Q==
+X-Gm-Message-State: AFq9FYKdS4uj9D946AWWnyMrYUmQ5QCnqZZLUXMexggGe19jeAS+ASvj
+	EnAFQI3xIyUWU4poGFOlcSkusxEFLzZ8TD6CtP3w2RvWi4AjYGy2LM3iNWbD8dbL
+X-Gm-Gg: AYBFou1mfcpR5YSrXDqLzmHZeLxQw0rIh4sHoE+eNOIUNXh7WXr9vGrHG0uI4Kw0OM6
+	AzpRMGHt0KFO6DUro3HxTc2VYYUt4BM6iVZWZ/BCn/ohjJp0HG3FFK+KTwTorCiaVwngWc7kf41
+	8N5w7z0V/phxM42LGF7DBfdUQtHhYGkoaGWw2i+Jgm+6eZC6/ScWUymj9Y3ROoVQHPKN0DdYQjt
+	S3nA1GseckU4A5XuaDx5YXcGiamvZ8NvAks9Gl9bWiNxKWEOcvocVZKBHfKzUH7FWXk71ljAfNQ
+	PYeXqhwFjpRFf3JMnG8GgJvIde3sPy79vULo25OhLJcxMnpWAxSysoFHi/km+DXNavKmqL5qsHZ
+	S/RhAu0srIJ/6iJd80cOW4wpUQWrWRoz7ZzAGIbMTi0385FBR+VgBnB4LtP8fYvH4WbvQfhkybl
+	x6CYmwAmA1HcGHZL063nLw0lmH9Kaa1WIRayveHHn9V3/t5fNrKa9uRs4FzMKRgJ8u9wQLPYx0Q
+	tyIUWNUW+QLOcDP24BwKijs6wng9w71AxzNbHAnKFBF8LWPl2zuwNU47Q88geOyv3o1IOgUCZdi
+	C1bbM2vq+7ZP13LrbXRuiRlbe4Vphp+PbwbE7B+cQkW8cDuFRSWPPK2+BxABT47xojaXefPJtic
+	MTlQiJZM=
+X-Received: by 2002:a05:701b:4193:10b0:15a:4155:3d9d with SMTP id a92af1059eb24-1ac5da76f61mr8087384c88.31.1793465523047;
+        Sat, 31 Oct 2026 09:52:03 -0700 (PDT)
 Received: from acemagic-m1.tail4fb79.ts.net ([2401:7400:c804:b668:bba7:148:3987:1383])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1abcf67csm17421611c88.21.2026.10.31.09.51.59
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1abcf67csm17421611c88.21.2026.10.31.09.52.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 31 Oct 2026 09:52:00 -0700 (PDT)
+        Sat, 31 Oct 2026 09:52:02 -0700 (PDT)
 From: Ho Jie Feng <hjf3108@gmail.com>
 To: linux-wireless@vger.kernel.org,
 	Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: Ho Jie Feng <hjf3108@gmail.com>
-Subject: [PATCH wireless-next v2 5/7] wifi: rt2800: support A-MSDU in A-MPDU
-Date: Sun,  1 Nov 2026 00:51:12 +0800
-Message-ID: <20261031165117.2868671-6-hjf3108@gmail.com>
+Subject: [PATCH wireless-next v2 6/7] wifi: rt2800usb: enable RX bulk aggregation
+Date: Sun,  1 Nov 2026 00:51:13 +0800
+Message-ID: <20261031165117.2868671-7-hjf3108@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261031165117.2868671-1-hjf3108@gmail.com>
 References: <20261031165117.2868671-1-hjf3108@gmail.com>
@@ -99,25 +99,290 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Set SUPPORTS_AMSDU_IN_AMPDU, which can increase throughput.
+Enable RX bulk aggregation on high speed USB, to receive more
+frames per URB.
+
+RX buffers are now 24KB, so reduce it to 16 buffers instead of 128,
+so that they take 512 KB in total instead of 4 MB.
+
+Test results:
+   before after
+TX 30.5   30.5
+RX 67.8   80.9
+
+This code references the mt7601u driver.
 
 Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 1 +
- 1 file changed, 1 insertion(+)
+ .../net/wireless/ralink/rt2x00/rt2800usb.c    | 32 +++++--
+ .../net/wireless/ralink/rt2x00/rt2800usb.h    |  6 ++
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  3 +-
+ .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 84 +++++++++++++------
+ .../net/wireless/ralink/rt2x00/rt2x00mmio.c   |  2 +-
+ .../net/wireless/ralink/rt2x00/rt2x00usb.c    |  5 +-
+ 6 files changed, 100 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 1301bc24d9413..83d349a238428 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -11861,6 +11861,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
- 	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
- 	ieee80211_hw_set(rt2x00dev->hw, TX_STATUS_NO_AMPDU_LEN);
-+	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_AMSDU_IN_AMPDU);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 387c07e2251b7..2e4277b1e5d1b 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -301,15 +301,15 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 		return -EIO;
+ 
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_PHY_CLEAR, 0);
+-	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN, 0);
++	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN,
++			   rt2x00dev->rx->usb_maxpacket == 512);
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_TIMEOUT, 128);
+ 	/*
+ 	 * Total room for RX frames in kilobytes, PBF might still exceed
+ 	 * this limit so reduce the number to prevent errors.
+ 	 */
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_LIMIT,
+-			   ((rt2x00dev->rx->limit * DATA_FRAME_SIZE)
+-			    / 1024) - 3);
++			   (rt2x00dev->rx->data_size / 1024) - 4);
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_EN, 1);
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_TX_BULK_EN, 1);
+ 	rt2x00usb_register_write(rt2x00dev, USB_DMA_CFG, reg);
+@@ -478,6 +478,27 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+ /*
+  * RX control handlers
+  */
++static unsigned int rt2800usb_get_rx_seg_len(void *data, unsigned int len)
++{
++	unsigned int min_seg_len = RXINFO_DESC_SIZE + RXWI_DESC_SIZE_4WORDS +
++				   RXD_DESC_SIZE;
++	unsigned int rx_pkt_len;
++	u32 word;
++
++	if (len < min_seg_len)
++		return 0;
++
++	word = rt2x00_desc_read(data, 0);
++	rx_pkt_len = rt2x00_get_field32(word, RXINFO_W0_USB_DMA_RX_PKT_LEN);
++
++	if (!rx_pkt_len ||
++	    RXINFO_DESC_SIZE + rx_pkt_len + RXD_DESC_SIZE > len ||
++	    rx_pkt_len & 0x3)
++		return 0;
++
++	return RXINFO_DESC_SIZE + rx_pkt_len + RXD_DESC_SIZE;
++}
++
+ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 				  struct rxdone_entry_desc *rxdesc)
+ {
+@@ -706,6 +727,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
+ 	.clear_beacon		= rt2800_clear_beacon,
+ 	.get_tx_data_len	= rt2800usb_get_tx_data_len,
+ 	.fill_rxdone		= rt2800usb_fill_rxdone,
++	.get_rx_seg_len		= rt2800usb_get_rx_seg_len,
+ 	.config_shared_key	= rt2800_config_shared_key,
+ 	.config_pairwise_key	= rt2800_config_pairwise_key,
+ 	.config_filter		= rt2800_config_filter,
+@@ -725,8 +747,8 @@ static void rt2800usb_queue_init(struct data_queue *queue)
+ 
+ 	switch (queue->qid) {
+ 	case QID_RX:
+-		queue->limit = 128;
+-		queue->data_size = AGGREGATION_SIZE;
++		queue->limit = 16;
++		queue->data_size = MAX_RXBULK_SIZE;
+ 		queue->desc_size = RXINFO_DESC_SIZE;
+ 		queue->winfo_size = rxwi_size;
+ 		queue->priv_size = sizeof(struct queue_entry_priv_usb);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.h b/drivers/net/wireless/ralink/rt2x00/rt2800usb.h
+index 9e180e9e41d92..2fae79072fd58 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.h
+@@ -29,6 +29,12 @@
+  */
+ #define TXINFO_DESC_SIZE		(1 * sizeof(__le32))
+ #define RXINFO_DESC_SIZE		(1 * sizeof(__le32))
++#define RXD_DESC_SIZE			(1 * sizeof(__le32))
++
++/*
++ * RX buffer size
++ */
++#define MAX_RXBULK_SIZE			24576
+ 
+ /*
+  * TX Info structure
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index f82dda0266f9b..4c83168e9c169 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -593,6 +593,7 @@ struct rt2x00lib_ops {
+ 	 */
+ 	void (*fill_rxdone) (struct queue_entry *entry,
+ 			     struct rxdone_entry_desc *rxdesc);
++	unsigned int (*get_rx_seg_len) (void *data, unsigned int len);
  
  	/*
- 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
+ 	 * Configuration handlers.
+@@ -1453,7 +1454,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ void rt2x00lib_txdone_nomatch(struct queue_entry *entry,
+ 			      struct txdone_entry_desc *txdesc);
+ void rt2x00lib_txdone_noinfo(struct queue_entry *entry, u32 status);
+-void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp);
++void rt2x00lib_rxdone(struct queue_entry *entry, unsigned int len, gfp_t gfp);
+ 
+ /*
+  * mac80211 handlers.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 350e6bf24f7aa..8f02b62cecdf6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -746,35 +746,14 @@ static int rt2x00lib_rxdone_read_signal(struct rt2x00_dev *rt2x00dev,
+ 	return 0;
+ }
+ 
+-void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
++static void rt2x00lib_rxdone_skb(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct rxdone_entry_desc rxdesc;
+-	struct sk_buff *skb;
+ 	struct ieee80211_rx_status *rx_status;
+ 	unsigned int header_length;
+ 	int rate_idx;
+ 
+-	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
+-	    !test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+-		goto submit_entry;
+-
+-	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
+-		goto submit_entry;
+-
+-	/*
+-	 * Allocate a new sk_buffer. If no new buffer available, drop the
+-	 * received frame and reuse the existing buffer.
+-	 */
+-	skb = rt2x00queue_alloc_rxskb(entry, gfp);
+-	if (!skb)
+-		goto submit_entry;
+-
+-	/*
+-	 * Unmap the skb.
+-	 */
+-	rt2x00queue_unmap_skb(entry);
+-
+ 	/*
+ 	 * Extract the RXD details.
+ 	 */
+@@ -790,7 +769,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
+ 		rt2x00_err(rt2x00dev, "Wrong frame size %d max %d\n",
+ 			   rxdesc.size, entry->queue->data_size);
+ 		dev_kfree_skb(entry->skb);
+-		goto renew_skb;
++		return;
+ 	}
+ 
+ 	/*
+@@ -869,8 +848,65 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
+ 	rx_status->antenna = rt2x00dev->link.ant.active.rx;
+ 
+ 	ieee80211_rx_ni(rt2x00dev->hw, entry->skb);
++}
++
++void rt2x00lib_rxdone(struct queue_entry *entry, unsigned int len, gfp_t gfp)
++{
++	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct skb_frame_desc *skbdesc, *frame_skbdesc;
++	struct sk_buff *skb;
++	unsigned int seg_len;
++	u8 *data;
++
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
++	    !test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
++		goto submit_entry;
++
++	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
++		goto submit_entry;
++
++	if (rt2x00dev->ops->lib->get_rx_seg_len) {
++		skb = entry->skb;
++		skbdesc = get_skb_frame_desc(skb);
++		data = skb->data;
++
++		while ((seg_len = rt2x00dev->ops->lib->get_rx_seg_len(data, len))) {
++			entry->skb = __dev_alloc_skb(seg_len, gfp);
++			if (!entry->skb)
++				break;
++
++			skb_put_data(entry->skb, data, seg_len);
++
++			frame_skbdesc = get_skb_frame_desc(entry->skb);
++			memset(frame_skbdesc, 0, sizeof(*frame_skbdesc));
++			frame_skbdesc->desc = skbdesc->desc;
++			frame_skbdesc->desc_len = skbdesc->desc_len;
++
++			rt2x00lib_rxdone_skb(entry);
++
++			data += seg_len;
++			len -= seg_len;
++		}
++
++		entry->skb = skb;
++		goto submit_entry;
++	}
++
++	/*
++	 * Allocate a new sk_buffer. If no new buffer available, drop the
++	 * received frame and reuse the existing buffer.
++	 */
++	skb = rt2x00queue_alloc_rxskb(entry, gfp);
++	if (!skb)
++		goto submit_entry;
++
++	/*
++	 * Unmap the skb.
++	 */
++	rt2x00queue_unmap_skb(entry);
++
++	rt2x00lib_rxdone_skb(entry);
+ 
+-renew_skb:
+ 	/*
+ 	 * Replace the skb with the freshly allocated one.
+ 	 */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
+index 93f76acf3dc7d..a1d8b8d13daca 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
+@@ -78,7 +78,7 @@ bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev)
+ 		/*
+ 		 * Send the frame to rt2x00lib for further processing.
+ 		 */
+-		rt2x00lib_rxdone(entry, GFP_ATOMIC);
++		rt2x00lib_rxdone(entry, entry->skb->len, GFP_ATOMIC);
+ 	}
+ 
+ 	return !max_rx;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index c9fbc3710fd8d..4519a20a7f4bc 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -345,6 +345,7 @@ static void rt2x00usb_work_rxdone(struct work_struct *work)
+ {
+ 	struct rt2x00_dev *rt2x00dev =
+ 	    container_of(work, struct rt2x00_dev, rxdone_work);
++	struct queue_entry_priv_usb *entry_priv;
+ 	struct queue_entry *entry;
+ 	struct skb_frame_desc *skbdesc;
+ 	u8 rxd[32];
+@@ -365,7 +366,9 @@ static void rt2x00usb_work_rxdone(struct work_struct *work)
+ 		/*
+ 		 * Send the frame to rt2x00lib for further processing.
+ 		 */
+-		rt2x00lib_rxdone(entry, GFP_KERNEL);
++		entry_priv = entry->priv_data;
++		rt2x00lib_rxdone(entry, entry_priv->urb->actual_length,
++				 GFP_KERNEL);
+ 	}
+ }
+ 
 -- 
 2.53.0
 
