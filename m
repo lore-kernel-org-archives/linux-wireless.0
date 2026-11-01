@@ -1,90 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793566688;
-	b=2D0MG/zcS6QhfCXmuIdoF+vUAV47smWczUdjHyhTDmq49TlhipeInxIFBDWHcJCMpU/w
-	 3L0IFYkx5c8D7cz6GSDYlpVnrWrmG0JCIVcqixO3tDW8mxDJES0VOvNY1V3Aa1ph+YEho
-	 jy5mae0FkoA7IisNq2sbrC7matewZz/diHiRnvOUw++AxG3aVLvuHa/rrJhPAxCPHV4G2
-	 AKz7W+STuXJal5vGG3fKSN6O4SzsjLSXW9wsLc2GC9m97rrYU2GCUj5xJbIBwQdUKCMyy
-	 z1FpSkGNXLC7utkFhykGRuEe1j0vPd4GbSOr4H+yS8Ek+4y7GP0PZW2cHWN2l5iuOcg==
+	t=1793566696;
+	b=3fyU7vxOzExxI23ugufWPAFraapRl5x8FnE8T84pdfHuBq26YvDegdCFlztjEzODpcXR
+	 Vns5XAmdNq39rL2eK8ERSyzGUGZSRnpnNY7/BOu7ijddI/jiCZvl0ufOCwceWUARyr7xr
+	 QT8TdLw8IgSGeVLG+j4tLgr30yaxsMJPI0V/0BF/g6TGDx6JDAEsQxGSzQqemz7oFtB92
+	 ynH4UuN2VIOztwwPA8442M8NBQnrYfQvs1XLHRa90PkDNaOWd0GBsso1ZUdHf+vjCRYUc
+	 TUDiQLbmqT0lgiewYr54RdMi4KpXhtvROcaBh4pKBKAbTeEP4DhlYDw8FrtxRzzAFCA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793566688;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793566696;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=rLQnSUGCT9AoEeSMPunujD66mYyzWc6DQOYtm8J5kh8=;
-	b=VoZ/lbS1pepLMS/JUvLUOiZB3hMecNxEyzPzvo9c08FVTJBpBo/jNRUccDgDl+TtHvsU
-	 XvtMkSr8rJIlY1G1rukUzALLyZTNACVeJWARvd/z7iL0uJu1BnlJK5IgGYiR3ajig2b3M
-	 RmRdB8n04DGeM56OSakclmAzpQ9FDt5XGXML6TNofQSFtxsx1k/eLWXS52cSGTBfy45py
-	 HV1naM0xs3qbPcPnLbvRqF+2n/7EuQNB4c1ba6MboRLEnqctntr3nGayJDTMZwGi9XK5g
-	 GEwmvx3X5tl/MjgJLWN15k+CqfwllCN6U3hSHAbgnPP1ZfuZz4EAPu6Q/pzPvhbUqYA==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=5YZdVqt9El4/LjkqbBF/qbEkQUH1givqEV/QNHg9rPQ=;
+	b=P4A6b4vmWbeZoLnzUXY2ht1UNT4pcCXGo9C2mtvnGi98JWemAkJIvd81x4A+xBc2qnKq
+	 kibcPWeQEzzThinVznruFoRHgDvGHe88L1VaEAnj52He+YDm+aXTE8EvGTM6lfqiB8pF5
+	 uy/vzmcG29TP+n8UzztjO01BOaXs2MYRey0jL3X8Wn35RzlrZhWz10zfdpJJJ+E83gDK1
+	 wniBe6BDp5S5JDexY/yyN7hBN5Huu0ZsNFPTDfYn3M7MTdwLpdDknwK0j3VDLS803TmU2
+	 4ITZbodloaqDorgg59Zn0ABSlOtOie6/oZlb5qX3lcqxeBTbOtIyrFKlGFOfkSJhUQA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=e2qI6CUn;
-	arc=none smtp.remote-ip=209.85.128.47
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=li1hA54t;
+	arc=none smtp.remote-ip=209.85.128.44
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26599606A326
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:58:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 26599606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E549606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:58:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E549606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=e2qI6CUn
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4a207b02a2cso15301885e9.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 12:58:07 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=li1hA54t
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4a214c5c4c0so19634035e9.3
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 12:58:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793566686; x=1794171486; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=rLQnSUGCT9AoEeSMPunujD66mYyzWc6DQOYtm8J5kh8=;
-        b=e2qI6CUnZ3aotOnqIvC8QILPds9SrwHY00NEUcbxzP6NsvYFSURfUJ3iTKg1w3ALfb
-         zDXd8gfvXOAWe3WPeKwqxzm+ceirz/PUTkjSXKwMdaUJItt9j8c9c2ynQ1vn69Q9g7I0
-         GWRl//DupX/Zs0xz9rT5nmggGpqelOdj/iDV+swzYv5VsmXy0Q9wAXI8m3CKzWoxvbBD
-         g6dFJH7olniFyoKhBApFiBRbh5+HKAj5DOAV9k/agS5moqqylnrB6dzNmR47C7JkEH70
-         zDjkHNZAEB6dnqUj93bQVflyvpn+nmhBSZwoWWA4IjuhtVYD6IvUNP46usgvWH6SM0Cy
-         Pyjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793566686; x=1794171486;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793566694; x=1794171494; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=rLQnSUGCT9AoEeSMPunujD66mYyzWc6DQOYtm8J5kh8=;
-        b=GqdDCMckRUACGwCEdp9ymBGGNdm0/GhgDbVJGtLYId5XWt0XvDrVlGZxCygPaJzLj3
-         90T0SKN7JAdzXPgloSVAwMlW3RF7P0B4IfOsXJQSTZQvlrAVnEFHw4PIUybIj/OtLKLc
-         ltoy5NnLWWU5jjH/eaQzcfGrwPp1lh/vLvfta/qp1gZ6Osj3DHrOSi1Z4otaaS9uzEOR
-         koyGKtAYxYZZZ6/Es9OkR7HGUK1uyffG6+dMmCunuiVshNwnjsuVTLfaEj8TooWjAT3k
-         rpsC8LO02+/k15UIOm3/2kH4SV+ZZNP8AzDD0pO45AoPSjL9lHFsOO4lVPiKlQFh09rC
-         BPNQ==
-X-Gm-Message-State: AFq9FYKmNvgniaB9g47O6NycmQrc1qWtC1oJ9zSXt9EkoL7HOm+nTDcy
-	2TkGcnWF90eaxS8iKhUbnZCrSjxsdaweIPm8GvWBGEOBxEED0RTUQwXD6lnW
-X-Gm-Gg: AYBFou2+HMgv8VtX4Ty2unWaXWq1evbZ9dT36Gixr+WArAcYLs+ET/fvkcU5YeDvmxs
-	voy4xNWnKp3WLblEUin6NbMjrLclVgkD3AlLmlAaW1LsgQUnUb5vj+3MkmzzwY1lWoQzniXRWRc
-	yCDlkJ4g0h8zEmDzK6UurARCA26WDwCKdxYq1/fkC2DHxLl08xBEfywl6HsrUrW/PV9CJQFXBjV
-	jKXdC5aeSKnBMMxCRyViOYTsl1oAyNUuLwfvWaJCDvWrW4hAkdDj5isNZSl2sGD6Bl+3gYTAA7p
-	7dDZpbWl4yi2TDWu+VYOq59cgGJEw+uhzktlitX8a4MXqzZwOEmXFxVHfjcgU4T0LD59xnWv70T
-	JMgX5857W6YNzYjtg66MZ8tWhFDuBco5d6oDA3FSkOOHapjGss4IuNRjG4V4rH7lp4CS6H7h9jx
-	cxAmPq6wMUNxURblwkF5rCBUf8dct3IfMu3nP9bgTodqPZbk1ipf7ogKrnFjioypv+WPjHL6wJE
-	MWJdZeEDKIb2/vqD7ENLBxUBV/ATyjS4jw6QFC3Pas+a+UBjBPM0rxiXg/8wyrhUL7lnB8DnlDQ
-	8SGm8YI73J88BETAmyQ=
-X-Received: by 2002:a05:600c:6212:b0:4a4:de70:2ad4 with SMTP id 5b1f17b1804b1-4ac17ffa395mr177259785e9.22.1793566686402;
-        Sun, 01 Nov 2026 12:58:06 -0800 (PST)
+        bh=5YZdVqt9El4/LjkqbBF/qbEkQUH1givqEV/QNHg9rPQ=;
+        b=li1hA54t772AfCwaUmbOU/09wYLHdi0laF1xPX2Cf+pZ6owDoSWL8fXAyK7GSzCfIS
+         KM1Kx/xGGMOjw1tpJZVO7BkMSOtAECuuP9YzZHfUJEnR4lCVkD07wcL8FCMLYWByZhHe
+         DS6l7C5ooZdFgSSOXMeP5dNuRXa0tmK+TDm6t2oWpr2JXdvDlJhMkUWN/AZZ6V2Rq2HU
+         CzYgKxtIzAElmQoUCTk3wH24qRxVUzv6BVv37tPOfXmkKTeJnKPYN68aeyxQMePlFc9y
+         FwbkVpH7Y8s7FWy6zCQVfczWn3RpQHYPktACx0XzD9NNfYCU+rnd2o23XAMokkQAzyeI
+         5Vrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793566694; x=1794171494;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5YZdVqt9El4/LjkqbBF/qbEkQUH1givqEV/QNHg9rPQ=;
+        b=gjWwJJwiaHG+oEqsEC6g7QhiLEUlX+nTfcVKt/XNkb0Blai/9EcEUdv/e2Jh116tKx
+         92Lbb4mvPB6CETdHYWD5589ok3iFE4Pke/jBUccp/xyJtOLMhcxcn+8r6+WZI4xjD3xa
+         AxvHnrQxbC5G6NfElHTzrIBO1ZRnyD7J/v/3W1lPW3mNpoJfZlNlQZsiWC5yC30utg4N
+         4+QxsqjkjmYALxmnOhH5v9GorOwXkwLZfaZOWCrnceTKg7TafL2Cr/LbgcKkYm7S5IDS
+         nCZ4ef/qIqQr259TB8G1Ust+gJlKdg7euZu/DfncqU2sEt7pD7U2HSiTldhLzrfWfiWB
+         sUag==
+X-Gm-Message-State: AFq9FYLkZk2eMywvQZDFO/e8lqdrSH1DFn8fgSYjzk2kApbUogZgiTw5
+	w6/CnDjIdwK2yDFg7rxbhamVRe0+GnJBx2IvX33bAMP5Co2kVM8b2tw=
+X-Gm-Gg: AYBFou3vErHsFTtcUfU9hekMHe+hG93E8kQNtMPl2PDneahwo1WMsV4sdN/XmEi9WQm
+	siPTJeWvL4rZbyoRqvbSjT5wvV370tIddup6vX8tvZVl/3yoIOn/H79tTmektpvAtclp85TfMLh
+	YE0anb39zOSThc2ibRUgHWcNgDTRGwTxD2W+MUruH9SPCQGR68V6reXxs80lMkuM2SQzILFSIFG
+	ht/mgapuMYijrzf9U+zpNzQNhOf8hICsf+O1H61j1vbGqbELwyy5k3t925UHJUqpqAEO7ddKRHw
+	VavHkVnjfUDw6rSikdwM/zHsSlH0QWFGtL7xCJ/grlqqvHHroQsEFJhFJ5AfNdMt3wzjvYfHge2
+	gGPNLPYvr76XBgku1TkmyMmXeZQLBMBOzDI0CyjJkfDjJXG1g06L/WDwmcrLZWe0ErynoCmpCjp
+	qAqkMTEMV7uu3lFZaOc6ExeKabZhbiP2zMF/BmZFy4RUNJJRbQYhkXJsk1BChkLTYs7D3qo7Ld8
+	zTfd2ntj13SG/7eOBAKMUSpDeBz2SlSoWms1amtUtafOKerIW/rQS856Dz9L9ll9gzdMlP0ww==
+X-Received: by 2002:a05:600c:a107:b0:4af:e04f:cbaa with SMTP id 5b1f17b1804b1-4afe04fcd89mr44737415e9.29.1793566693776;
+        Sun, 01 Nov 2026 12:58:13 -0800 (PST)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b9eaeesm16002280f8f.49.2026.11.01.12.58.02
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b9eaeesm16002280f8f.49.2026.11.01.12.58.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 12:58:04 -0800 (PST)
+        Sun, 01 Nov 2026 12:58:11 -0800 (PST)
 From: Tristan Madani <tristmd@gmail.com>
 To: Brian Norris <briannorris@chromium.org>,
 	Francesco Dolcini <francesco@dolcini.it>
 Cc: linux-wireless@vger.kernel.org,
 	stable@vger.kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH wireless 0/3] wifi: mwifiex: firmware response validation fixes
-Date: Sun,  1 Nov 2026 20:57:59 +0000
-Message-ID: <20261101205802.2909524-1-tristmd@gmail.com>
+Subject: [PATCH wireless 2/3] wifi: mwifiex: validate intf_num in multichannel event handler
+Date: Sun,  1 Nov 2026 20:58:01 +0000
+Message-ID: <20261101205802.2909524-3-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261101205802.2909524-1-tristmd@gmail.com>
+References: <20261101205802.2909524-1-tristmd@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,28 +101,36 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-Three input validation fixes for the mwifiex driver:
+The intf_num field from the multichannel group info TLV indexes the
+flexible array bss_type_numlist[] without checking whether it fits
+the TLV data. An intf_num larger than the available data causes reads
+past the TLV boundary.
 
-  1/3: The ADDBA response handler uses a 4-bit TID value (0-15) to
-       index an 8-entry array. Values >= 8 result in out-of-bounds
-       array access.
+Add a check that intf_num does not exceed the number of entries that
+fit in the TLV data.
 
-  2/3: The multichannel event handler uses intf_num from a TLV to
-       iterate a flexible array without checking it fits the TLV
-       data.
+Fixes: 8d6b538a5eac ("mwifiex: handle multichannel event")
+Cc: stable@vger.kernel.org
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-  3/3: The IBSS connected event handler replaces a buffer-bounded
-       length with the TLV header length, which may exceed the
-       event buffer.
-
-Tristan Madani (3):
-  wifi: mwifiex: validate TID in ADDBA response handler
-  wifi: mwifiex: validate intf_num in multichannel event handler
-  wifi: mwifiex: cap TLV length in IBSS connected event handler
-
- drivers/net/wireless/marvell/mwifiex/11n.c       | 6 ++++++
- drivers/net/wireless/marvell/mwifiex/sta_event.c  | 6 ++++++
- 2 files changed, 12 insertions(+)
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index fecd88967ceb84..1f746e8f6b3e18 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -450,6 +450,10 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
+ 
+ 		grp_info = (struct mwifiex_ie_types_mc_group_info *)tlv;
+ 		intf_num = grp_info->intf_num;
++		if (tlv_len < sizeof(*grp_info) - sizeof(grp_info->header) ||
++		    intf_num > tlv_len - (sizeof(*grp_info) - sizeof(grp_info->header)))
++			break;
++
+ 		for (i = 0; i < intf_num; i++) {
+ 			bss_type = grp_info->bss_type_numlist[i] >> 4;
+ 			bss_num = grp_info->bss_type_numlist[i] & BSS_NUM_MASK;
 -- 
 2.47.3
+
