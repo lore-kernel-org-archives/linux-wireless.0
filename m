@@ -1,76 +1,75 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793504684;
-	b=XIk0YinmQo9ThYhrkQA53qSpbPpmXNjDjhdC+bjWqiW3UkDoSLZbQ1x/KHCjthrCzjof
-	 EaCkXy8jpffLAKWFtKS7iiYbCVLXaUZoHu3naQflo+ZNhWVsbG6DqGsDMXAw5MBzOZe58
-	 h2l/RG+x3xL+Fs42aHi+Rn8c9XjQRzatXy85dbFN+lANAeWAWsw3CyHq9yfDuHS1lroh4
-	 orDuD85Mb7IieYVk3IzqN5vvozeHTPoYO4jnEXHMlWkkS0UjwW4PQfIdswJFuKgGGDnug
-	 md5/Aw9+fP5k/64+s0/eHT17Zpk6Q5qXDtmBqpCfW6OT997Xi0fPdBk3HhHTmrW/ldw==
+	t=1793506244;
+	b=NPIl9p6rEgLLbAun/sd6UQbqDhubSfxJfYKbAwIPg/kyeIIlNgUwILSmLXNhX6sGmo5J
+	 3s98Kj6Eh+93mRJDsu39MuGTEwHzSPJIRsAnx6rTuKGBU8FL1f2/Qjia1/nyxrJkNA5UD
+	 19qukBWhryiNcZH8tMl0q6SvedJgke/Knj9BEP59+S+X9ufVX0Oyik/vd/CrsDwj1d4rz
+	 gZnCYdxrwjGPZl8Q/GQZV4ULQvMBgJcu7uqvR70rBkQnktRn+v/t6dbiVt/1hi9afE5BK
+	 HTHbsSbdyXObVLzITWmEpOAhI/vB0NmAVnDqaYvEUMCeV4d+OGM81aHdLshhIC+eXFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793504684;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793506244;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
+	 Received:Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:
+	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
 	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=3NX0nEmrDMRcK2qb2zALY4YGB6wA9H4jDy5kL7Ko/AI=;
-	b=e8Z45N8bFodeLytWF4HD8q7VjaSpFFAxPDU+SDZ3ijxIcNPPAN1sshDdpIcfenFP6veT
-	 fc56QX7AfqxjS+gczf6Y6PYLuhYm9jdgqdFgxd5ZBYLLrSZW9V+OmOlrSsOOzTYU/Iz4d
-	 BqbQxvOk5AWmVcY6f5lGJeZPlRFGBdXg7Dpi0s5UTpkBXKSzvCh/RkbBH7t3WMoVwsp5S
-	 zjK10dl5HSUcYs2asLNxs2OBh3FQLFh3pdisVLK3zVcQClKNkLjcMNDMrmRsy5N9zPbKR
-	 CteM/nXCggx+3qDnRI5mmIWNyO1jNj+g2tmy+K/i7PAO/fvTUXMOiTFYAzdvAYiYW5A==
+	bh=ajv74E5wtth3Pw8MLINuzItuOII5QRVD8ZuJ0OYqSmU=;
+	b=xebC4tZlOMCGNhLMt9nKl1MVjUT/XQoVBdln8TXKiKYwsgDeBw66lh/F3+nx3yLBGi90
+	 JdQuHx9teeZdYVhyMoXqFwbyQImU8x/A5EUnmA6lJsCWrMY8d6o/GHC88VGzqCzXeIWAE
+	 RTNENG6yTDmpIWIBIVri7UyrLGHn45gqwiRxCNJa5ABO/NWWMp86uKSLge1ptFVpewzB1
+	 E5LYxZIKO/NeSjmP5ubCnPxDzrdilgrSUevunjQiymHeXrr4qVSMq/sywBKRD6zOp6yu0
+	 fNomK7GjlDWUXKA2KruczcPioUrciV2aBxnj2ad8Lug3PAbyBncepv8Rz1ODABX3q6Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=VxHqxSNA;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=waYcafKc;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D58606A324;
-	Sun,  1 Nov 2026 03:44:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6D58606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A76B6606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 04:10:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A76B6606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=VxHqxSNA
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A13iDiM51007663, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=waYcafKc
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A14AOA401036247, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793504653; bh=3NX0nEmrDMRcK2qb2zALY4YGB6wA9H4jDy5kL7Ko/AI=;
+	t=1793506224; bh=ajv74E5wtth3Pw8MLINuzItuOII5QRVD8ZuJ0OYqSmU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=VxHqxSNAppv6MRhiJStSxpK+ZjDKRQgNW0I3nrWmExg31gs0Q0KJ0zfsOt6Oky+CY
-	 yNgB2NYliPx0RK8G+01qt/S1i/znBkNx/DMKacFoOX4ey9DYrgLh/3Xmya/Px5Mz4E
-	 ZMJzO02hEsYgSP27HFCkYSlq6p/oQv+xwVOM7TK3yVaZVNksMaVw9bapwAAVHhxvrF
-	 SvQILInGL3T09pr4DHhq6IQYyN8XPPjZb1apEqsIQqjwBrwWVJAn+we54CanPAjYjB
-	 a+2k3AtgwWjvxaPqrY9eVL/J4Jm9Kb0FDaMyk6Dy34yCOO7eF7wuoZKgy4Yldvy1Z4
-	 38c7mu9LAhAAw==
+	b=waYcafKcNLhr5C+v9lycLaRR5mVbHA99h1Ymn8Db0Owk0ob08ywN46GM3FfoMbQ35
+	 Hg6kUxCFM6eRuANdRp31smzJFsku9pj7f1xsHqhIbcF4UKYFZh7SFS0LTPEcqocs4l
+	 sP0j0Asa3A/adcIKtTC+2Yau4z6xAAQIppWRDZ9Vt5Bv64mzt5+PUeKYtHfILMbJdC
+	 E29VzfG8bJ+BFuQcNuxf+UDNkwFDFIVh3XO7s2gnayzcLA3yQZqUsO48S3BAPPmyFY
+	 nnyRsFwnk71orzX1zpP3LlD0Tf8pA8K5RcYDQTcqIumsd/6CdqFcsTf5DnbjScqfDJ
+	 PQ6qNr3fAuUyA==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A13iDiM51007663
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A14AOA401036247
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 1 Nov 2026 11:44:13 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+	Sun, 1 Nov 2026 12:10:24 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Sun, 1 Nov 2026 11:44:13 +0800
+ 15.2.2562.56; Sun, 1 Nov 2026 12:10:24 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Sun, 1 Nov 2026 12:10:24 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
- 15.02.2562.056; Sun, 1 Nov 2026 11:44:13 +0800
+ 15.02.2562.056; Sun, 1 Nov 2026 12:10:24 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ho Jie Feng <hjf3108@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "Kalle
- Valo" <kvalo@kernel.org>, neo_jou <neo_jou@realtek.com>, Hans Ulli Kroll
-	<linux@ulli-kroll.de>, Sascha Hauer <s.hauer@pengutronix.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v3] wifi: rtw88: usb: don't report the
- aggregation buffer as a frame
-Thread-Topic: [PATCH rtw-next v3] wifi: rtw88: usb: don't report the
- aggregation buffer as a frame
-Thread-Index: AQHdaI9vizk2vXuz70+nFp0lnrRycrcYkErA
-Date: Sun, 1 Nov 2026 03:44:13 +0000
-Message-ID: <2d53d5420be945fc9bdfbea5542b61db@realtek.com>
-References: <20261030165451.365591-1-hjf3108@gmail.com>
-In-Reply-To: <20261030165451.365591-1-hjf3108@gmail.com>
+To: "hi@shreyan.sh" <hi@shreyan.sh>, Jes Sorensen <Jes.Sorensen@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtl8xxxu: Enable AP mode for RTL8188EU
+Thread-Topic: [PATCH] wifi: rtl8xxxu: Enable AP mode for RTL8188EU
+Thread-Index: AQHdaEhpWqRVzw+aqkmzkIP8D0CnC7cYm7VA
+Date: Sun, 1 Nov 2026 04:10:23 +0000
+Message-ID: <81c3d0056a0849078715e0f0be074d1e@realtek.com>
+References: <1381CC32-E73C-483E-8F64-27EDE6AE8E6E@shreyan.sh>
+In-Reply-To: <1381CC32-E73C-483E-8F64-27EDE6AE8E6E@shreyan.sh>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -85,33 +84,37 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 
-Ho Jie Feng <hjf3108@gmail.com> wrote:
-> When rtw_usb_tx_agg_skb() has more than one frame queued, it copies them
-> into a new buffer. That buffer was also handed to mac80211, as one
-> additional TX completion.
+hi@shreyan.sh <hi@shreyan.sh> wrote:
+> From 0a3cdd4c6cc416804e49c935516a22e854a87483 Mon Sep 17 00:00:00 2001
+> From: Shreyansh Khajanchi <hi@shreyan.sh>
+> Date: Fri, 30 Oct 2026 12:34:44 +0530
+> Subject: [PATCH] wifi: rtl8xxxu: Enable AP mode for RTL8188EU
 >=20
-> Report TX status only for the original frames, and free the aggregate
-> buffer without passing it to mac80211.
-
-The rtw_usb_write_port() might be failed and call ieee80211_purge_tx_queue(=
-)
-to purge txcb->tx_ack_queue list. Should we check if the tail skb of
-txcb->tx_ack_queue (or just check skb_head) is drv_frame=3Dtrue?
-
-> @@ -431,6 +436,9 @@ static bool rtw_usb_tx_agg_skb(struct rtw_usb *rtwusb=
-, struct sk_buff_head *list
->                 goto queue;
->         }
+> The RTL8188EU shares the AP mode implementation in core.c with the
+> other chips supported by this driver, so advertising
+> NL80211_IFTYPE_AP is enough to make it usable as an access point.
 >=20
-> +       /* report TX status only for the original frames */
-> +       rtw_usb_get_tx_data(skb_head)->drv_frame =3D true;
+> Set max_macid_num to 32 as well, so that max_ap_assoc_sta is
+> initialised. The vendor driver defines NUM_STA as 32, and starts
+> station MAC IDs at 2 because 0 and 1 are reserved for
+> broadcast/multicast. This matches RTL8192CU, which also sets
+> max_macid_num to 32.
 
-If we can just check drv_frame by skb_head, just declare a local
-   struct rtw_usb_tx_data *skb_head_tx_data.
+Do you have a sniffer to have air capture to check beacon?
 
-> +
->         while (skb_iter) {
->                 unsigned long flags;
->
+If so, please check TIM for unicast packets if station goes
+sleepy, and TIM for broadcast/multicast packets (for example,
+send a broadcast ARP by ping a non-existing IP).
+
+>=20
+> Tested with an RTL8188EUS (0bda:8179) on a Raspberry Pi Zero running
+> 6.12 (armv6): hostapd serves a 2.4 GHz WPA2 network, clients associate
+> and pass traffic.
+>=20
+> Signed-off-by: Shreyansh Khajanchi <hi@shreyan.sh>
+
+I give my reviewed-by, but still want test results of TIM.
+
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 
 
