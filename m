@@ -1,61 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.243.164.118
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793518276;
-	b=h6As4DRZwWnnlVk5oryxgLJEQw0IhftJcNkDzXbgnFyhWEq3MGGYDfx+aGClNiOKOddg
-	 nmoWSnnzbgLUUSFF+RNzc2S/G5ZPUOwLU8hMMLwi+oex1C60CBd4mmT+H8+i3EtOgtV5x
-	 tIpaWNOlp0z3hNBWUmdRRx7ZFrRsVm26AO8NdASQOe/o8XJwl+6+e5AlkjavSPY2Efd92
-	 BURljoWar4JMyCTl5ulU/ZBCrVkoQKj1tAc3zqaE3QdGsATFctLEas8h+hGoQYFEKzfeX
-	 RlCLfsglskThx8iJJHywTOD+NiouM09nVI6TJnx1vJLJnyiwGVgWj1+IjhDdx0DgqBg==
+	t=1793525655;
+	b=FdLjZ7zzGSM90SAioSI99fdx8FO1ztdXVdpkyNgVUqNxP1tDpEF6y9C4jDDiRlHOrMvM
+	 xPTq2o8Hv1besFG3HmUiv/k4tx4d17oZyFyyWio6ZU0I8D95dh1XztSoVbgxmNi8h/ZDU
+	 gUBpxySi2irdvrC2+Gb5WIVKRzWo3r3H+byFxqS4O/0qNmMIXDa+3HSoqScqbYb0h5oAL
+	 QnNInrAx9KCFWsGL4ZbxWFunGxWiXom09Aaz2N8E797BWc+tx7kCHZ83pSSNvfgIwlpjD
+	 TGLSsMRnqIJRkE9iehOXqNLF3V20bg2jjcp6DGBH8xBbyt3AQeQ87zViFX2qz6Izv4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793518276;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793525655;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=qQT7JBE5+Rrkn8T6JJ1MYI7wx1Y5+AlUnuXG+mJ68Jo=;
-	b=VRVTyBmJln38do3LgtGam/PaCjQLJD0xR0hRapyLU+FsHtikKRig7FwWCtt/AwQjYfmD
-	 +swCux9UedV04Jrwbhz0l5XMTqeJEx4jDOlADQ/QkC7km7oTgoPXnA6FNBIgPEBblRpZ0
-	 Ph2SKr8nuHivCzqEKfnInZROylSJKucYW8fbxfPw7VbPCvl13yy17pHRDNp6NGJXy6DeV
-	 f9oVYSnsdiNZk+bC0EFOh90F1yIuCh/qPbdqPxu2Mp2pivXoAGXLKdnvYeA7kyB7a1sYx
-	 uu/EV1LSz+ptL1HDJtAjLB6avcIIgltSFIh4vsDC2OWEBxv07O5oiaSmFn+86KxehyA==
+	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=IE/ei9ydvblkzeHHIKH9hvEsVow8o9vYsVhMASi+c3M=;
+	b=k0wdEwJBjVOQWz40kDtUo+hD2Did3541uKdFUm1o1HxERA44GdYhCQixAM0cLq3n9v6O
+	 ZP2simAf98VhYmUUQnBMdjF4CTQvSc+FlYhwTW3/JitjRtq0LbO/Tnj1zljE8E1eafJbw
+	 HecuQRb5rOckI47Jv9C5Dt2njG7d7MM+y43osIxwjNi4F8jRGjnQaUK7ErRpNe2IL3xoy
+	 odt+y0IZtdjbed2gRuqVoyO8wVmMw6KiCAKJyntEhYIF5OP5GYBCnRZ/rJ+W2pIteF9Qz
+	 zwDe7z8s/sn7hqhDKwpIhggP8xFDDX2WZimDFwujcatBNw/qpNXuSe+2cuwooU4z1JQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="RDIveEV/";
-	arc=none smtp.remote-ip=220.197.31.5
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8C51606A324;
-	Sun,  1 Nov 2026 07:31:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B8C51606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=RDIveEV/
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=qQ
-	T7JBE5+Rrkn8T6JJ1MYI7wx1Y5+AlUnuXG+mJ68Jo=; b=RDIveEV/gx9QCMeRow
-	A55kCa71SaILfxx7KeWaLJVDSmc/QDU8pSHAwEGp82H+Do0Ic2p/MomeVEzuGbzC
-	PGpR6ZJUwx9+6h5mvskFlkc7Owh1cxHdgU/u1R56UKMHf7BIh6FrO/f9wwgmtPIP
-	rN1rfJ1vffuM0tYTizF7X4ELc=
-Received: from LAPTOP-BJS5C4G0 (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wBXX5ih6uZqsXx5Dw--.8007S2;
-	Sun, 01 Nov 2026 15:30:44 +0800 (CST)
-From: Heyang Tan <thy15333007817@163.com>
-To: linux-wireless@vger.kernel.org,
-	jeff.chen_1@oss.nxp.com
-Cc: jeff.chen_1@nxp.com,
-	francesco@dolcini.it,
-	johannes@sipsolutions.net,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] wifi: nxpwifi: validate monitor RX extra-header length
-Date: Sun,  1 Nov 2026 15:30:38 +0800
-Message-ID: <20261101073039.589-1-thy15333007817@163.com>
-X-Mailer: git-send-email 2.51.0.windows.1
-In-Reply-To: <20261030113042.3895883-1-jeff.chen_1@oss.nxp.com>
-References: <20261030113042.3895883-1-jeff.chen_1@oss.nxp.com>
+	dmarc=pass header.from=stu.xidian.edu.cn;
+	spf=pass smtp.mailfrom=stu.xidian.edu.cn;
+	arc=none smtp.remote-ip=162.243.164.118
+Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3B5B7606A324;
+	Sun,  1 Nov 2026 09:34:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B5B7606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=stu.xidian.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.xidian.edu.cn
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=stu.xidian.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
+	Message-Id:MIME-Version:Content-Transfer-Encoding; bh=IE/ei9ydvb
+	lkzeHHIKH9hvEsVow8o9vYsVhMASi+c3M=; b=fBmdmYlLbD20gKWnoE7e1Acj9H
+	gpLz/xEjp2aAkByt3gn+1PXbEmI9TQMDSwx8oJNZTuA5Y/fHLLenZQXXTtzYaEeA
+	pjzbqvFg9L2O411uTDoEnqQAwUwIlZTAttydMf9WEFA7M/25/YlkDLzDOINWhJNR
+	oz68mESfIm3Pb8Y4c=
+Received: from user-virtual-machine.localdomain (unknown [113.200.174.43])
+	by hzbj-edu-front-3.icoremail.net (Coremail) with UTF8SMTPA id BbQMCkAGCv2BB+dqSbwUAQ--.19624S2;
+	Sun, 01 Nov 2026 17:33:55 +0800 (CST)
+From: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@kernel.org>,
+	Matthias Brugger <mbrugger@suse.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Bin Yu <byu@xidian.edu.cn>,
+	Cheng Wen <wencheng@xidian.edu.cn>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt7925: fix out-of-bounds read in mt7925_mac_add_txs
+Date: Sun,  1 Nov 2026 17:33:52 +0800
+Message-Id: <20261101093352.3070-1-25031212351@stu.xidian.edu.cn>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,85 +66,62 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXX5ih6uZqsXx5Dw--.8007S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxXF1fGFy7Xr1DuF1DKF48JFb_yoW5ur1DpF
-	Z7Ga4jqwsxJw4qqF4kGa18ZrW5JanayF1UZr95ua45JFZ0gFy8tFWIyFyF9a4DCw4fAFnI
-	yr4YvF9rJFZ8W3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UQXoxUUUUU=
-X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC4gU44Wrm6qULoAAA3W
+X-CM-TRANSID:BbQMCkAGCv2BB+dqSbwUAQ--.19624S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4kJw4fXw1furykGrW7Jwb_yoW8Cr1Dpr
+	WjkFyjkrWUJr4DGw18Aa1avan8A3Z5GrW3Gr4Fvw1rZ3s8Grn5AFy5ZF1j9F1YyFWjkF18
+	JF4Utry3WrZ8uw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUB0b7Iv0xC_Cr1lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
+	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
+	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xII
+	jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwV
+	C2z280aVCY1x0267AKxVW8Jr0_Cr1UM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq
+	07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r
+	18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vI
+	r41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64
+	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
+	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I
+	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU2jXdUUUUU
+X-CM-SenderInfo: ysvqjiysrsjkur6v33wo0lvxldqovvfxof0/1tbiAQUED2rmBFRXBAACsC
 
-nxpwifi_recv_packet_to_monif() assumes that rxpd_extra_info fits
-between the rxpd header and the start of the 802.11 frame.  It ensures
-that rx_pkt_offset is at least sizeof(*rxpd), but the following check
-only proves that sizeof(struct ieee80211_hdr) bytes starting at
-rx_pkt_offset are present.
+mt7925_queue_rx_skb() walks the TXS entries up to skb->len, but that
+length only describes the whole packet. For RX skbs that are not fully
+linear, such as the ones built from the fragmented USB RX path,
+skb->data only covers skb_headlen(skb) bytes, so the loop advances past
+the skb head buffer and mt7925_mac_add_txs() reads outside of the
+allocated slab object:
 
-If a malformed descriptor sets RXPD_FLAG_EXTRA_HEADER with a
-rx_pkt_offset below sizeof(*rxpd) + sizeof(ext), the 32-byte copy from
-rxpd + 1 can extend past the descriptor-reported end of the frame.  For
-example, when rx_pkt_offset is sizeof(*rxpd), skb->len can be only
-sizeof(*rxpd) + sizeof(struct ieee80211_hdr), while the extra-header
-copy reads through offset sizeof(*rxpd) + sizeof(ext) - 1.
+  BUG: KASAN: slab-out-of-bounds in mt7925_mac_add_txs+0xe79/0x1290
+  Read of size 4 at addr ffff88800ebea648 by task napi/mt76u-rx-0/209
 
-Reject such descriptors before copying rxpd_extra_info.  A single check
-next to the existing flag extraction also covers the HE copy site.
+Bound the iteration by skb_headlen(skb) instead. Fully linear skbs keep
+the previous behaviour, since both lengths are equal there.
 
-The normal skb allocation has enough slack that the over-read stays
-within the allocation, so this is a defensive bounds fix.
-
-Signed-off-by: Heyang Tan <thy15333007817@163.com>
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Cc: stable@vger.kernel.org
+Co-developed-by: Bin Yu <byu@xidian.edu.cn>
+Signed-off-by: Bin Yu <byu@xidian.edu.cn>
+Co-developed-by: Cheng Wen <wencheng@xidian.edu.cn>
+Signed-off-by: Cheng Wen <wencheng@xidian.edu.cn>
+Signed-off-by: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
 ---
- drivers/net/wireless/nxp/nxpwifi/util.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes in v2:
-- Use sizeof(*rxpd) + sizeof(ext) for the extra-header bound.
-- Clarify the descriptor consistency requirement and the conditional over-read.
-
-Hi Jeff,
-
-Thanks for the review. My original wording was incomplete.
-
-The new condition enforces the descriptor layout implied by
-RXPD_FLAG_EXTRA_HEADER: rxpd_extra_info is immediately after rxpd, so
-rx_pkt_offset must cover both structures. The existing validation only
-proves that rx_pkt_offset is at least sizeof(*rxpd) and that the
-802.11 header fits after rx_pkt_offset; it does not prove that the
-32-byte region copied by memcpy() fits before rx_pkt_offset.
-
-For a malformed descriptor with the extra-header flag set and
-rx_pkt_offset smaller than sizeof(*rxpd) + sizeof(ext), the allowed
-802.11 header length can therefore end before the copied structure. In
-particular, when rx_pkt_offset equals sizeof(*rxpd), skb->len may end
-at sizeof(*rxpd) + sizeof(struct ieee80211_hdr), while the copy reads
-through offset sizeof(*rxpd) + sizeof(ext) - 1. For the 30-byte
-ieee80211 header in this tree, the maximum logical over-read is two
-bytes. The normal skb allocation has enough slack to mask this, which
-is why I described it as a defensive consistency check.
-
-A compliant device already satisfies the new condition, so valid
-firmware behavior is unchanged.
-
-I updated the check to use sizeof(*rxpd) + sizeof(ext), as suggested,
-and reworded the commit message to describe the descriptor consistency
-requirement and the conditional over-read explicitly.
-
-Thanks,
-Heyang
-
-diff --git a/drivers/net/wireless/nxp/nxpwifi/util.c b/drivers/net/wireless/nxp/nxpwifi/util.c
-index ae8444a14..a343df0c6 100644
---- a/drivers/net/wireless/nxp/nxpwifi/util.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/util.c
-@@ -616,6 +616,10 @@ int nxpwifi_recv_packet_to_monif(struct nxpwifi_private *priv,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+index 3b82c9de26c5..adea216578f5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+@@ -1422,7 +1422,7 @@ void mt7925_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ {
+ 	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
+ 	__le32 *rxd = (__le32 *)skb->data;
+-	__le32 *end = (__le32 *)&skb->data[skb->len];
++	__le32 *end = (__le32 *)&skb->data[skb_headlen(skb)];
+ 	enum rx_pkt_type type;
+ 	u16 flag;
  
- 	has_ext = rxpd->flags & RXPD_FLAG_EXTRA_HEADER;
- 
-+	if (has_ext &&
-+	    rx_pkt_offset < sizeof(*rxpd) + sizeof(ext))
-+		return -EINVAL;
-+
- 	if (has_ext)
- 		memcpy((void *)&ext, (void *)(rxpd + 1), sizeof(ext));
- 
+-- 
+2.34.1
 
