@@ -1,60 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.156.117
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793544242;
-	b=GpsUXlqi1Sf6fFjrFjYUVu5mM5H8q9eUQINQl3qIw5dkINit1XWzK4rhZAVwhC/eBuHQ
-	 0fIkRE4CNh3fn3KrSqKYmcVFA1YqQ7ejHDZSj5q7apo8NHl0lQoHgtjbsmR4iB2JpQF2n
-	 97Ph/z4h1u3joy0z5m0hIHeZxj61jHwHT8BQKn+1If3KdUyFvacWxVTEQpcDLyHRlgqpJ
-	 hJAxMQQeF+FQEJyrC6lvDvOxlM+KFNgYABGOCApFVhoeEXw9fmDu3hCRytSKxf0BkgIBu
-	 2cgCzcyEzvWDrijjfgGARWeImfOmI7ZwvZk2vI9sTVzZmdC9F2trdR4WsH/mM0Xs2pQ==
+	t=1793544517;
+	b=Fsloy7v9bnxetVDAeB30Z8o7SlmnwgHOehN4dX78d1v6cc/Rgk6lesiEa2yNy7nYUCta
+	 3hO8IGB4eH77/hmDv25n3kIybBGe9PRml1RoclN5sWklMhFJe+jIiv8/o30jM6anL9aRs
+	 9ZTLB6roY70jiWnteGa1DV5I/GnBqIzD5FYkrB0vRiYUPbdgYo7TboC1UZqYbc2y9gmdz
+	 8T5pOkl+rl1EmzGHD2CW4hd9FETzVEA4O93cfhsLsDn8PHN3wrLUMt4SyiyCz5iDmt/65
+	 cUAR5bMQ4uUeMX9shDXH+GQihDLHBSld317X/tkg3Tl9IcPa/P0E3VLEIIEMP5iwniw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793544242;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=hPExGPBJj7j8zAaDKOhmfGheqxsfH7qwRcaI8tQJEoo=;
-	b=05XpWBTHwAbieqtDmoWpnBq1Sf5QShYVupcB6zuwAD/+4aywh6CeSHF62FHfm/k0yGUT
-	 tOibG9yeOC05Y4IX78O4mGhpnT99jxML8HWuarlIoqPAs+OWbUA8qCb0QWh+17joGxjKc
-	 6dCzCUBIhdfJXTBStFo+44MAT1xpclYCGqfsvYNBMo1LrW7cjeNu5M1k0zknyNTP8XfQU
-	 ICz6x1Q6R3NgBIbj5BsIxfSdVwe9JsvRCFdx2ZO+I92JAA1mBXeNJAlALpB+txua9yegg
-	 EsMyQTVCMZAaIqfQey6v09wQXy1kXTaV6qnFwaqg5C2VvIOOK3mtqoDxwIPxfTbMbcw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793544517;
+	h=DMARC-Filter:Received:DKIM-Signature:Date:From:To:Cc:Subject:
+	 Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-CMAE-Envelope;
+	bh=hvpAAvAdEd+9Q2TMUO/7py5NLKmlirpnfmmXcoKHwcY=;
+	b=gmjVxZPVnetQbOj5IC39klvCY5s36R4nRwtEjUQ8picgpiAX965BZEO4FsMYIQc4pV3V
+	 M5/hVR6F9aczgZEp4cX6jYAG7ObMaMZ8kDJ0A4g64I2mDdQWlJBIKtU9IMW8UFu+RvDQj
+	 c40/n0Yri+JD4Zg0bVKx7HhVxi+O8q+oDvhAeVvtdF0NpwF8297uMLa7jxBR97ZLFXjIE
+	 oSvyljQchNPIeix6O8ai6AG36qMP1qw8Ti8xgqHubQn094Hd/k+gVXDTx23+BC6dXKMCv
+	 SfJC0EpCS7ZYD1U9I2r5Nnaip1e9suEx8qcLhBTzu2sJelQVvZ7wvf7zjSC5lnuCe8g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i9zcrYCG;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=mythread.it;
+	spf=pass smtp.mailfrom=mythread.it;
+	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=QbOu2LQB;
+	arc=none smtp.remote-ip=62.149.156.117
+Received: from smtpcmd11117.aruba.it (smtpcmd11117.aruba.it [62.149.156.117])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91FBB606A334;
-	Sun,  1 Nov 2026 14:44:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ACA1606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 14:48:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5ACA1606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i9zcrYCG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BD931F0093A;
-	Sun,  1 Nov 2026 14:44:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793544242;
-	bh=hPExGPBJj7j8zAaDKOhmfGheqxsfH7qwRcaI8tQJEoo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=i9zcrYCGDA2NmrgP7GmSmPCgANGhMB92TNXjqXnRgoTVAGF9/psXv54eRc05ovJuz
-	 TRVhU9IvRCox3r/G/YZh33q8ui2MR8UZJ369reKamW/nnOwDcndTmoaq16ZxR+OGfI
-	 4Qg0zmmgaKxDhVTgN7l01jWgOIR2njTGopjPUVrOfXxo1cKabiMEwpo/TSiJDk5cY+
-	 La+EAacjVGgex2OXpJdw2UExtAixnXlynHeINx1dZbBR3ie4q1DC9KIexcX1eVa9RR
-	 KDRCdjsr0ChyLTql6y/Rp7r50fzXLEzcLxbI40OFZiVi7unr0fKfg3VF5jf1692all
-	 l5aik1Se8BegQ==
-From: Sasha Levin <sashal@kernel.org>
-To: gregkh@linuxfoundation.org,
-	kartikey406@gmail.com,
-	harshit.m.mogalapalli@oracle.com,
-	johannes@sipsolutions.net
-Cc: Sasha Levin <sashal@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Wentao Guan <guanwentao@uniontech.com>
-Subject: Re: [PATCH v2 6.1.y] wifi: cfg80211: release locks on error in cfg80211_wext_siwgenie()
-Date: Sun,  1 Nov 2026 09:43:56 -0500
-Message-ID: <2026-11-01-1-daily-reply-0002-cfg80211-siwgenie-6-1-5-15-5-10@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261013102041.2113948-2-guanwentao@uniontech.com>
-References: <20261013102041.2113948-2-guanwentao@uniontech.com>
+	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=QbOu2LQB
+Received: from localhost ([87.16.49.252])
+	by Aruba SMTP with ESMTPSA
+	id NWrCxTZPK1JUyNWrCx3rdb; Sun, 01 Nov 2026 15:48:26 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1793544506; bh=hvpAAvAdEd+9Q2TMUO/7py5NLKmlirpnfmmXcoKHwcY=;
+	h=Date:From:To:Subject:MIME-Version:Content-Type;
+	b=QbOu2LQBscf6m5wKaD4Ya2wOOSNiHz10vfPK4nF7+QrTvDVmh1b5f4Jh+puGVz+kH
+	 clazbVPzdf0tEGKg+085KnkiAktd2mdDcFOiyIzMLyLYqwx2Buwfv/yt9wkyBrRmOv
+	 0uLiKx27KhktY58xYr88SH7JWZ9ij6iuuFTlns8aOztqtBq7exYjKZfw30c5aNv5VJ
+	 C/AJX4Bi1eqEoonAdA+pAbpaybetvrwh9jx3EI8DqX4r8GKBO73xpvNZqCE7cOk+hI
+	 onmqsKNMFQbLSuw8PK6xDONLDug9KMKfAeUhxSZhT1DP4+rIg0ITy7SgXiXfAlDBRY
+	 QnOeWqHxAYO2g==
+Date: Sun, 1 Nov 2026 15:48:25 +0100
+From: Alessio Ferri <alessio.ferri@mythread.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Fork of b43-tools
+Message-ID: <20261101154825.000023e5@mythread.it>
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,14 +61,16 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+X-CMAE-Envelope: MS4xfHSLSo5mGrDI21PoVDEEw2I99kuVapNHLLbrPSXF5X4FogeI4GCn4oVjd/90j/tGBu8bvEgRS4TS7vozab296P61AOIxd5vQlEcTnaYhcEVN4/WH2CQc
+ xiR+AOg4cA25Fzi60JW5tTalc9hj5qcKJrmG9EFjqZQZZD4G+SO17tRgR0Hs9BTi7d0/B7fhAbbcmRA8nuhRnInKXGlFq26+kWe2g0R+lGjIy9JVCrK6Bu5P
+ 35SDx5rGMctP0Mia/J/P+KYuZ3KUUNIF+EE8wiGu9wkJCWi5upMhLbrVDu7JgvZ8
 
-> This error path returns while wdev_lock() is still held, so one
-> malformed IE request can permanently block later operations on this
-> wiphy. Route the error through out to release the lock.
+Following the archiving of Michael B=FCsh repo b43-tools, i have forked
+it, my fork https://github.com/aleferri/b43-tools.=20
+Current goal is to fix long time documentations issues and progress the
+development of a valid python interpreter for the psm to help validate
+b43 driver.
 
-Queued for 6.1, 5.15 and 5.10, thanks.
-
--- 
-Thanks,
-Sasha
+Alessio Ferri
