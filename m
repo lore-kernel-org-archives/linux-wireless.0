@@ -1,61 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.243.164.118
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793525655;
-	b=FdLjZ7zzGSM90SAioSI99fdx8FO1ztdXVdpkyNgVUqNxP1tDpEF6y9C4jDDiRlHOrMvM
-	 xPTq2o8Hv1besFG3HmUiv/k4tx4d17oZyFyyWio6ZU0I8D95dh1XztSoVbgxmNi8h/ZDU
-	 gUBpxySi2irdvrC2+Gb5WIVKRzWo3r3H+byFxqS4O/0qNmMIXDa+3HSoqScqbYb0h5oAL
-	 QnNInrAx9KCFWsGL4ZbxWFunGxWiXom09Aaz2N8E797BWc+tx7kCHZ83pSSNvfgIwlpjD
-	 TGLSsMRnqIJRkE9iehOXqNLF3V20bg2jjcp6DGBH8xBbyt3AQeQ87zViFX2qz6Izv4Q==
+	t=1793526583;
+	b=sMdwF1j5QhGsDf5vjEeTqtm5aCfYKJ4o7czRhXvDQcQ+1ammlmyMOFa7W3YB5LL8CoSR
+	 hUwJ+BqNBhl5hGKETgJHvd3yfU1qVS7Wi9p0q5ZLXt0qbQKwMbtNHaV8eQYUVZtyBUHeQ
+	 dSB48SC4yYvkCsE0M2X05vDEVqY0GbvKcTLkrCC1KKAARo12rAIMA+QfM9yMrNl6Yuf71
+	 rUNu+LxmUmRKLdjFPu0ojRKbpmHNFX6BLj2K7cN+mvAqUInQiFp4RcFMOkPXpoE68dcXJ
+	 DnBldoM2Zg5P2ByFllVOKZUikCwHEdLCcbN1YBgkBPnPQkfBh/pyIPQMaKDB6CKA38Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793525655;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=IE/ei9ydvblkzeHHIKH9hvEsVow8o9vYsVhMASi+c3M=;
-	b=k0wdEwJBjVOQWz40kDtUo+hD2Did3541uKdFUm1o1HxERA44GdYhCQixAM0cLq3n9v6O
-	 ZP2simAf98VhYmUUQnBMdjF4CTQvSc+FlYhwTW3/JitjRtq0LbO/Tnj1zljE8E1eafJbw
-	 HecuQRb5rOckI47Jv9C5Dt2njG7d7MM+y43osIxwjNi4F8jRGjnQaUK7ErRpNe2IL3xoy
-	 odt+y0IZtdjbed2gRuqVoyO8wVmMw6KiCAKJyntEhYIF5OP5GYBCnRZ/rJ+W2pIteF9Qz
-	 zwDe7z8s/sn7hqhDKwpIhggP8xFDDX2WZimDFwujcatBNw/qpNXuSe+2cuwooU4z1JQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793526583;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=iZ66pNG8GoqKxl3dX3y81a9lvY+mrvP5917Q/wYwODo=;
+	b=TGWUVHljwaoOUJCCbtiamRYEvFTM547EslX0jMCjiUhiHmpqplS2hbOvYN5BtZ6TWKGp
+	 6+pxRHVksuFwQlh+6w0N73Ti2qHbjA1xpxElnIH3Txb3U3hch02ThqCN8GGzizO49TuOh
+	 BsnQuN7A2ij7cBnWWzCj/J19hLNC/WzzJ/k5PWeSLG4WtCKTjkgAzXAzypQXlKuvSZc3P
+	 +54sReq0X2hIXG4Sw6B3aVuOiFcrQ+YxQpisrs/hzj71FNdqb2SJq8aoxuCteHWFXHq/e
+	 mCh3WfqSqvyloVSqHGSja2e14bNDg89QD+2svgLFS89PTB2ScB+3NzM60mUh902oqMQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=stu.xidian.edu.cn;
-	spf=pass smtp.mailfrom=stu.xidian.edu.cn;
-	arc=none smtp.remote-ip=162.243.164.118
-Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3B5B7606A324;
-	Sun,  1 Nov 2026 09:34:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B5B7606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=stu.xidian.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.xidian.edu.cn
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="u/8/bRD2";
+	arc=none smtp.remote-ip=74.125.82.48
+Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD880606A325
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 09:49:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD880606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=u/8/bRD2
+Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-15ea896ddc8so3589975c88.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 01:49:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=stu.xidian.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-Id:MIME-Version:Content-Transfer-Encoding; bh=IE/ei9ydvb
-	lkzeHHIKH9hvEsVow8o9vYsVhMASi+c3M=; b=fBmdmYlLbD20gKWnoE7e1Acj9H
-	gpLz/xEjp2aAkByt3gn+1PXbEmI9TQMDSwx8oJNZTuA5Y/fHLLenZQXXTtzYaEeA
-	pjzbqvFg9L2O411uTDoEnqQAwUwIlZTAttydMf9WEFA7M/25/YlkDLzDOINWhJNR
-	oz68mESfIm3Pb8Y4c=
-Received: from user-virtual-machine.localdomain (unknown [113.200.174.43])
-	by hzbj-edu-front-3.icoremail.net (Coremail) with UTF8SMTPA id BbQMCkAGCv2BB+dqSbwUAQ--.19624S2;
-	Sun, 01 Nov 2026 17:33:55 +0800 (CST)
-From: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@kernel.org>,
-	Matthias Brugger <mbrugger@suse.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Bin Yu <byu@xidian.edu.cn>,
-	Cheng Wen <wencheng@xidian.edu.cn>,
-	linux-wireless@vger.kernel.org,
+        d=gmail.com; s=20260707; t=1793526582; x=1794131382; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=iZ66pNG8GoqKxl3dX3y81a9lvY+mrvP5917Q/wYwODo=;
+        b=u/8/bRD2Dahmc0w+8YjW5sCXVv8pBLBhfsD7KwtcQcOwHHzPoh6cjpKX0Z6g5DE+gD
+         H+58U/JOUsoRluOzRy8yqgVG+wg9oQjifvZi0qkBbZsv4y4ekkOcJdBY5bQAcI4NGRO6
+         8TF3h7sUd+KOPV8YKEmwSwmoBewcbmkDYo0PNdEb92k7x9ATgR/W/u8LPZPDe8Cm+sNb
+         gXM5/GHMc/Rxa7wk/6he6aFUZCTNbWTUAcba+lhBL3KsnSix4zSf9hjGN6T9ywzZcKd3
+         z2NSLxulHjwTz7yAQGz7D0nWoamsmjdWk2SQUGhKs5WP9sBzu/GTeBwTA53KPy7BwWYA
+         64Gw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793526582; x=1794131382;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=iZ66pNG8GoqKxl3dX3y81a9lvY+mrvP5917Q/wYwODo=;
+        b=VWwNn2peoxAoP05FjBMZnbZ8V/eaJDyIo8vlVYeRxKIr+oKgNofHfvVXbsogDhXTv6
+         v9jDzu5CCuPDviBmG7SaZx2XNGre7caKELMInTrW1CNqU5uVWyjAYyLJ22GRl8wZKIZ+
+         Yvkz/eeRnH9MQ285ZvMsYvd7vxD1d0navO6tWzFvVWIbtAeRQK4QPxXs54NpHSVjNv/r
+         n9vYtCCqrFbQDWB332ILo4VDJT7QZ+jMaaOAqgxdgNaylo/nDf5jsrQWWpp3buRRmMaY
+         HVoqGk710hzh45t2mAYEaZl1z+oAk6dSvdZC3P04uPs59P59ZOgvSIhQj02S1jCn/StR
+         YWiQ==
+X-Gm-Message-State: AFq9FYKtjR5jIgxn/2juNWJnkD7Qq2zphbWTZxwXScy0oHlpHdYYm8BE
+	o+PviQDU7BH1wScsuNFl3hzRIauZQhf6M3cjRGRnkYvK7wKbbL0GB7PR
+X-Gm-Gg: AYBFou3rDMUJsJGGiqjsnj9sgl4g7M9oPnhbTAyK0rUqhOHYihNOsXIUb3PdYORCeOM
+	KeV5cRW/mNbd5QNoqqGflw/Itk+aYVqFkcCk8MCBK+BVUCu/M6Zc1NCvpHMCzcrOeToMadLktGt
+	h7TFPYiZMhRXDp6cQCNo7Vvn3Me3WnWy68+BgTLa8kiymK7GPdzzk9b3QuIZahxmT3IjTVVzfAT
+	HSoND+pLuspermEm8Vr8m8qFKrLee6Sfm+DGofi82XSWt98XAaZrtaSjkXn8xvFfUbn+4GlMxMz
+	0lYCuSsmvS1zLoOhzXW26kgfgpvk0CAcuMifW3/y2T85f5EmRPOCqMN3IW+c3vUnh0OQPHZyTBw
+	OwxcSvjjJZ1okaljt6DQYtq7QQnhz1fji3ybJWVVETd6S1yTzktEyE+TXL3DDIGKw2GGw3QPIzx
+	sbrV/Bs3IzbR9/mmW428Lw++WIyJ7h1HIOp+1Tz7lOqjU7D8IU4TfhRxAVQKq8ZHwT0x6S7Bnbz
+	xwWdsqJzvn4g8aAg+4XarAJmHFfoDjh1tgGNLWKp1uLlbRv33kheWfiJ6p34J5ztjVT1JftAna8
+	awk0gF0sfaStKgHdjmNeQygiF6mUQ/q6G2qYMnduKlfep9Jkfzi26jFC9A==
+X-Received: by 2002:a05:7022:eb42:20b0:190:3950:43e2 with SMTP id a92af1059eb24-1ac5a0b8867mr10726412c88.8.1793526581606;
+        Sun, 01 Nov 2026 01:49:41 -0800 (PST)
+Received: from xploitoverload ([2406:b400:f11:1bac:4040:640b:8a1:8629])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac192c27cdsm40740627c88.10.2026.11.01.01.49.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Nov 2026 01:49:41 -0800 (PST)
+From: Kalpesh Solanki <skalpesh942@gmail.com>
+To: pkshih@realtek.com,
+	kvalo@kernel.org
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: mt76: mt7925: fix out-of-bounds read in mt7925_mac_add_txs
-Date: Sun,  1 Nov 2026 17:33:52 +0800
-Message-Id: <20261101093352.3070-1-25031212351@stu.xidian.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	Kalpesh Solanki <skalpesh942@gmail.com>
+Subject: [PATCH 1/2] wifi: rtw88: pci: Add DMI quirk for HP Laptop 15s-fr5xxx
+Date: Sun,  1 Nov 2026 15:19:04 +0530
+Message-ID: <20261101094905.1299638-1-skalpesh942@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,62 +95,41 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:BbQMCkAGCv2BB+dqSbwUAQ--.19624S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4kJw4fXw1furykGrW7Jwb_yoW8Cr1Dpr
-	WjkFyjkrWUJr4DGw18Aa1avan8A3Z5GrW3Gr4Fvw1rZ3s8Grn5AFy5ZF1j9F1YyFWjkF18
-	JF4Utry3WrZ8uw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUB0b7Iv0xC_Cr1lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
-	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xII
-	jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwV
-	C2z280aVCY1x0267AKxVW8Jr0_Cr1UM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq
-	07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r
-	18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vI
-	r41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64
-	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
-	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I
-	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU2jXdUUUUU
-X-CM-SenderInfo: ysvqjiysrsjkur6v33wo0lvxldqovvfxof0/1tbiAQUED2rmBFRXBAACsC
 
-mt7925_queue_rx_skb() walks the TXS entries up to skb->len, but that
-length only describes the whole packet. For RX skbs that are not fully
-linear, such as the ones built from the fragmented USB RX path,
-skb->data only covers skb_headlen(skb) bytes, so the loop advances past
-the skb head buffer and mt7925_mac_add_txs() reads outside of the
-allocated slab object:
+On the HP Laptop 15s-fr5xxx with RTL8822CE, PCIe ASPM L1/L1.2 and deep LPS
+cause the card's firmware to fail to resume from low-power states,
+resulting in repeated 'firmware failed to leave lps state' and
+'failed to send h2c command' errors and stalled network traffic.
 
-  BUG: KASAN: slab-out-of-bounds in mt7925_mac_add_txs+0xe79/0x1290
-  Read of size 4 at addr ffff88800ebea648 by task napi/mt76u-rx-0/209
+Add a DMI quirk entry for 'HP Laptop 15s-fr5xxx' to disable PCIe ASPM
+and deep LPS, ensuring reliable Wi-Fi operation.
 
-Bound the iteration by skb_headlen(skb) instead. Fully linear skbs keep
-the previous behaviour, since both lengths are equal there.
-
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Cc: stable@vger.kernel.org
-Co-developed-by: Bin Yu <byu@xidian.edu.cn>
-Signed-off-by: Bin Yu <byu@xidian.edu.cn>
-Co-developed-by: Cheng Wen <wencheng@xidian.edu.cn>
-Signed-off-by: Cheng Wen <wencheng@xidian.edu.cn>
-Signed-off-by: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
+Signed-off-by: Kalpesh Solanki <skalpesh942@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 3b82c9de26c5..adea216578f5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -1422,7 +1422,7 @@ void mt7925_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- {
- 	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
- 	__le32 *rxd = (__le32 *)skb->data;
--	__le32 *end = (__le32 *)&skb->data[skb->len];
-+	__le32 *end = (__le32 *)&skb->data[skb_headlen(skb)];
- 	enum rx_pkt_type type;
- 	u16 flag;
- 
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index ca4e779..30b7904 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1813,6 +1813,16 @@ static const struct dmi_system_id rtw_pci_quirks[] = {
+ 		.driver_data = (void *)(BIT(QUIRK_DIS_CAP_PCI_ASPM) |
+ 					BIT(QUIRK_DIS_CAP_LPS_DEEP)),
+ 	},
++	{
++		.callback = rtw_pci_disable_caps,
++		.ident = "HP Laptop 15s-fr5xxx",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "HP"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "HP Laptop 15s-fr5xxx"),
++		},
++		.driver_data = (void *)(BIT(QUIRK_DIS_CAP_PCI_ASPM) |
++					BIT(QUIRK_DIS_CAP_LPS_DEEP)),
++	},
+ 	{
+ 		.callback = rtw_pci_disable_caps,
+ 		.ident = "ASUS TUF Gaming A15 FA506II",
 -- 
-2.34.1
+2.53.0
 
