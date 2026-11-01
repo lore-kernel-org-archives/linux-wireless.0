@@ -1,99 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.226
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793561247;
-	b=unov0NZaO+lqz5zPy6uspKxxFpI4nxQCoBHtRuy5YNsKz5fTj+hbIOhvLvedFZfd1Vzf
-	 bLsWwMRmghxypIbNiTT3Q8XK9jBwZtyTQAl42CBvab9XBP42ii2velBvZQ3vXjOO2/9F0
-	 6FN7SfjUSDLHnUXQU1S50GELZfdsvbdhN1A4ck2Kdhf0goo7BzbaOXqg5VWSACpZq2QkM
-	 ZrysxUc/hv7C3lnLY9ggfazFOm9q5Zu6Zq8LXgSdZBn2F9HG0S6qtzqmqnI+rPwgawJnA
-	 xXZjo8HOwOz4Nj3jRZFXzkSZ1nNZWdg2qfXRZs2flInF2ONJ75Y07lLNPmroofKkUkw==
+	t=1793564869;
+	b=y4o2dwq6W/gwBTfnvCQh8pcBGFwwtAvi+GT5VInp1tZRfJIokiJDTxd5kfU50qOczNKp
+	 d2N49lo+eIFW7FaTpN3Wt10iAkXp0ntFs5E/K6diDeO+9OkKmt9eWl81Vsk7urs3er41I
+	 sSJCAd4D2ebC0GvRaoQYYRAA/MWqR6xrckMN/d/3r+vmI/r1LKWEXpVKjm09pk41Vz6J3
+	 NZg+4p+Q4DGcfxhzn/Vkflq7IRgKDFI7fER9wxG9uzw4R7QM6NW//9qsGvQKnqB9R5SSw
+	 K63Gf1QdwhK6ow0MagrrFHzHnDKe3er8xROEeEw1bjD9Jtv85/ilHw5N8FuJLazgqlQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793561247;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
-	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
-	 DKIM-Signature:X-Received:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-DetectorID-Processed;
-	bh=FBzaqWRuYJDOcynWW1oUqzv1XeYY64zxgMqREXlXnBE=;
-	b=jK8EhtrkHtuZSlo2l5iC+NhHPJKyCx2QOh92PscfpyTXsYyTNLBBgEk/RP+G/G4zQyuA
-	 zqZws0UPddsVRvz+okq91aPoR/yJgLBQDsxK2MBXwWkJKfLsC4Xe+y6KwT74djYPKWwfx
-	 XktT/EK9Mqu7HCp78MX6wesRBPSh4QmMd9D8Bz5cTCu1I9Sgv2VTRNeqVHwSzNilcbAJ8
-	 7pbgTMtpvHXReilynxtUJKQ/8xnbHDWXbTTcvy7RamqsBHlmgBANKALHLLOe9IUCkuYO/
-	 t9O9brYgqSRXs3Lt4LI2hV2BIGPlc35kPTNt4A3c/60Sp+p7W/nWBfU3cUfYz/iUdOw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793564869;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=VzoqmSGTK2p7iNyBmDYghxEoApvenhg3wCg4KbKbjoQ=;
+	b=PTQZl5ZPbZRu3KHdZHySU2QJCcwfd7VNLgJzTm+edvOn6JCoM2VaM4oHpe4sol3fZGER
+	 y0vJZnHm/efvg+p1MN/deruEO3XkPalVd+HZJ83ZQ9LVM6IGbxWhJ34Bn1WfRJJzIsUbe
+	 n0jKdtTzI1KAHPybyPQxfpqhyl1ZPk9L0IsOUF4RNv3zRr1+vJ5dXO4yvMTfyjbob6h1j
+	 dh9yI3/GV2GFztRL5MLa7hMjJi8hVvyp9pSOAVKdobBAy9vQ8Nl2imqIZyHGBY/1cG3DO
+	 MxJSCRX5ecWGTk2l9B2gd+p6P/NuZjEf/Lp/uJ/T4nLUH18GTViIPwQPBA6fF+1nHtQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=broadcom.com;
-	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=DhrvIh21;
-	arc=none smtp.remote-ip=209.85.215.226
-Received: from mail-pg1-f226.google.com (mail-pg1-f226.google.com [209.85.215.226])
+	dmarc=pass header.from=mtu.edu;
+	spf=pass smtp.mailfrom=mtu.edu;
+	dkim=pass header.d=mtu.edu header.i=@mtu.edu header.a=rsa-sha256 header.s=google header.b=c4w417zC;
+	arc=none smtp.remote-ip=74.125.224.48
+Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44214606A324
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 19:27:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44214606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5F65606A325
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:27:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5F65606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mtu.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mtu.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=DhrvIh21
-Received: by mail-pg1-f226.google.com with SMTP id 41be03b00d2f7-cc7d154ec4fso989173a12.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 11:27:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793561246; x=1794166046;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=FBzaqWRuYJDOcynWW1oUqzv1XeYY64zxgMqREXlXnBE=;
-        b=P+Za0KTwhV3WPta17UMDrwnLt9fJRGFcSaMXK+ZawN5/p4S6HUA0QrWNiGnIlKej1h
-         NgHzLTyuuD/3CyKqy2aqy/l3+toR9ttktGarAPPlh8fp8RXsH7ChTWNh+nVG7A86+RPr
-         rZBWKeodOZg8yzpXjYpTaTr3jVvccxJS9SAp9hDeoVS14lAj2ovwN+2pp/H5P9GvPCn4
-         LUKtPIjK3hJ78q4Ka1/pD4MV5QXE3DfwJkMJ+6YSNQjv382p7m2zZbfVSaEmZ1BVQO9R
-         bPNydk2eB6PNAdc/NowMoStc92MQg0IVsuN7VUxT36YZTe6MhKBYUpBkLO8+PAL6/eLM
-         VScg==
-X-Gm-Message-State: APuU4Z+n8d1rrJS7uJ72OFt5K9wK4BgK9ee9ee8dPCBkDRk+5vDbuOyq
-	Th3dcZhs30IMhIiM7c93ySgVLc/gPMFXiWJwI2pKhVbrnVcCMO/mD7Vt5XcB3sklRVurYBbRs14
-	H5Y3hXA0bYlWOYH6FdXz55ap+2WGvzpBOWkJbOPI42np+o2YmN4TtpyLq3ibgM/vP5asfwX9aa2
-	2fKdcpZSLKAlBdg7HyK6TQEu4dyANQc3IgtM/U7nE/yE+P93HazQ6OT0hOfsXjTJr6JShKWmJD0
-	+v5Ie0Ahj5Dz5Xjw25yMwxrXRec
-X-Gm-Gg: AYBFou24JSAztK9LLX7wmSDmliYQ5LZ7lzsSMoqfBf50rnOZ3vrk7Z97FGXXWDBjGhc
-	0/vh3ri6qs99z9NHk0s2/W2FPXV2cEqo3YSgjGKv0RkCsAG9vBCOHJ1K3KkT0CMgqePb9OOmmxr
-	nieD/nlnt/0IKWO2Ve5fKg46+d9ucb6LfNeYDd12LGJdtobAQKM22nmdzJvl/vBUYN47Hr+GpZ1
-	NSvA56ffKUQN9pJIGN0hPkFnfo7Mbf9ckZ7YP4c6vDy7BVevVsoPNHnvGVoy6tpgyhZEWNyqQX1
-	vzgjd8cN3TnKZknBTuX3kLvCFtG28txfKha8hvX4TKdXYPSpgaz351Leiunq/u5CH3GOa2ELWGr
-	6Z3clQNbIAGdN60F4DLsC87Uv7ML+jvSBeSaGwQInaUKip6hcRcNDg+qU+tkAa4XEb6v0bTQ9Hi
-	FDY7chXloejvaKtT5eiP9EjQUyhEqsXu31ALTtrHE=
-X-Received: by 2002:a17:90b:48d0:b0:3ac:80de:44e8 with SMTP id 98e67ed59e1d1-3ae8983c697mr6298013a91.43.1793561246201;
-        Sun, 01 Nov 2026 11:27:26 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3ae8444ce5esm6536701a91.2.2026.11.01.11.27.25
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 01 Nov 2026 11:27:26 -0800 (PST)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c4322d31021so114726066b.3
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 11:27:25 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=mtu.edu header.i=@mtu.edu header.a=rsa-sha256 header.s=google header.b=c4w417zC
+Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-6790844c9b0so1570043d50.2
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 12:27:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793561244; x=1794166044; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FBzaqWRuYJDOcynWW1oUqzv1XeYY64zxgMqREXlXnBE=;
-        b=DhrvIh21w1XzU5LgWa9mrFLSjCH/FjS5+8gKwe4Xa4Diyaen3FJnosCbGfUO+p07SW
-         ijy1U2WlmTouxOa58w/1JLPLZaQi6XCay+WFJIpK3ADbMZZHVTP7o/aFW322QNLLsCut
-         PzU4LFIRWv4FO1Qsoa4/m6FSNeRi8OeOtvc/c=
-X-Received: by 2002:a17:907:86a4:b0:c46:9d7b:37d with SMTP id a640c23a62f3a-c4ca7a4b544mr641619366b.17.1793561244349;
-        Sun, 01 Nov 2026 11:27:24 -0800 (PST)
-X-Received: by 2002:a17:907:86a4:b0:c46:9d7b:37d with SMTP id a640c23a62f3a-c4ca7a4b544mr641618066b.17.1793561243910;
-        Sun, 01 Nov 2026 11:27:23 -0800 (PST)
-Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4cabc1920csm303460866b.5.2026.11.01.11.27.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 01 Nov 2026 11:27:22 -0800 (PST)
-Message-ID: <d78cbbd2-601a-4cf1-800f-3be57a2b7de2@broadcom.com>
-Date: Sun, 1 Nov 2026 20:27:22 +0100
+        d=mtu.edu; s=google; t=1793564867; x=1794169667; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VzoqmSGTK2p7iNyBmDYghxEoApvenhg3wCg4KbKbjoQ=;
+        b=c4w417zC4zAv2wWSq6YtWYQN0CSFIn4rw0NGe120+U3sV7WX/EzqNWT9Qgg/Z5IkcQ
+         d7QE0PSPPMXHY1zVpK/eJ6z2XNgDDTBruwnil17xGlpHLcBZCk6ra6wcuW/siKXmBwWl
+         3PmVGNPG05FNL8MjDOUk9YbQsblqpYFcaK7t+HWXV6o+sJi2Y4+VK7ly5wqeN28Vx2Je
+         KBBsY8W6w+57BMdbxeHzX2IlT0NC3vwA06MUMrJvTRe9khiEau6i7zJwbRCHeCJvG35a
+         j9DjOPf6nW2jQyoHyGmCYS0kLXoRPmzwW1N59v+tn//1LKhpMMYUvoOdJy34xDx+YEXa
+         4pmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793564867; x=1794169667;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VzoqmSGTK2p7iNyBmDYghxEoApvenhg3wCg4KbKbjoQ=;
+        b=2PkqiKuKLIbIDRTkWEFQq8XAiUZbbKdMmz9mM81gmCn7Mjo1Ax41TMMum3az+N0YJ4
+         T4Y/8le6syXXylWGDi46JqhF0570S+1Jl7Ot/P/hPEUPh5FJvlpr9LEOwT+bl3TjPdsK
+         HnLB40OFmSahl9xhqm0LoItn9t1XD84GMegbJfD/888PucdMjc24PHqiq0hUo3BRo8eT
+         Pz+haVMp5M7O7kr4QGXp2k7DALDRZYrXL9uso41Lc+tVZYlEXA0dMsIAYQAPS/ds2R4Q
+         NOyVAkDX0sjyTh6+kFbML2KYKanFGLB8VoQWdu3kVXLIkIWq67btJW8IcVXMHDnAjb2N
+         G46A==
+X-Forwarded-Encrypted: i=1; AKwUvBwdfQqN/RjFK41wjh0qDDCYgPxjbDyRtKFpwtetw2gUZhKVDyhBN9VQrpXs7RZ0tztFINUTS97D84HW+unH3g==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9C6EtRUqtlqLFvWwVI9t/sYa123ZyVnkOqUxz4LIHM/N/xQoxj
+	0Hm2Fpabf+Gp1wTyyRXYO7O5fVnkzGGDzdYM5IMReiKnkYKoau2YsqdvvzT4DQczIqfGa5g7T6f
+	9ghccYmB4
+X-Gm-Gg: AYBFou3WaPSEJpYQuFHb8xoyfZQM4yMC4+xMwlQu88xoUjhS10xzVN6ZvOUPmR1+PsY
+	A7tq52DzL6Zj7Mj9yoBxfBjpZVTl5RQBJFDUNhlHtjVDmr9soqbZaJ1NIqQFF46dIy8QkUwsNem
+	pPDr4xS7ExTpL3hsStKWsO5tG0UlHU0gdL71huVrfJI8Bm85cPMnglQHHAr+aw1srD3mPssdos5
+	dSg4w2MGQjnqf7eDIEsvctREB06rHMEDEiUxOXMP/xdLTdDT2JL2RnihVGSGswpFngJ0MhIjzE7
+	xcBz079seohzFf9rVA5qwZcs8v7XxhJ/35LqCrX1dqnyhczVJr/toXzekEMev37wlaZe1BwoeIQ
+	V/+amKrK8jHJfKHWNPHCtCIbDl4EimVXoCnztCz5x8h32MHoebDSPPdp1fAILx5OHnYOqCEZsKd
+	UFhembgEcO4wAdfGbVoews6Dh4NoyPSJPLY2TSDNOVccrRNuwQIofp2ujMHOkYO0qJ6IyXbOGBl
+	7EZWrZGyD2/3oWoZOOnf5jQslltc6aPyW0a/+jwOKxWmwQNlkSWd1EiqUzhlZDX4UbkRG23vwBf
+	Zdc8mZSndXkMgzeGwOAII2v1hhZM2rlvU61L
+X-Received: by 2002:a05:690e:4887:10b0:679:a190:cf25 with SMTP id 956f58d0204a3-67ba4f913c1mr3978327d50.53.1793564866791;
+        Sun, 01 Nov 2026 12:27:46 -0800 (PST)
+Received: from agent-virtualbox.mtu.edu ([47.6.6.53])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b2b714cb1csm41251707b3.18.2026.11.01.12.27.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Nov 2026 12:27:46 -0800 (PST)
+From: Aaron Beckendorf <albecken@mtu.edu>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	Aaron Beckendorf <albecken@mtu.edu>
+Subject: [PATCH] wifi: mt76: connac: honour injected HT/VHT rate and bandwidth
+Date: Sun,  1 Nov 2026 15:27:27 -0500
+Message-ID: <20261101202727.392683-1-albecken@mtu.edu>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -103,56 +100,71 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/13] wifi: brcmfmac: Add BCM4388 support
-To: michael.reeves077@gmail.com, Pieter-Paul Giesberts
- <pieterpg@broadcom.com>, "Franky Lin (Zhenhui)" <frankyl@broadcom.com>,
- Mathy Vanhoef <vanhoefm@gmail.com>, Kalle Valo <kvalo@kernel.org>,
- Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, asahi@lists.linux.dev,
- Hector Martin <marcan@marcan.st>, Daniel Berlin <dberlin@dberlin.org>,
- Janne Grunau <j@jannau.net>, linux-kernel@vger.kernel.org,
- Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org,
- Peter Robinson <pbrobinson@gmail.com>,
- Izabela Bakollari <ibakolla@redhat.com>
-References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
 
-+ Peter, Izabela
+On connac2 parts (mt7921u/mt7925u) the fixed-rate TXD path uses the
+basic rate from mt76_connac2_mac_tx_rate_val() and ignores the rate
+carried in an injected frame's radiotap header, so monitor-mode
+injection always goes out at a legacy 20 MHz rate and cannot choose the
+modulation or channel width.
 
-On 25/09/2026 15:43, Michael Reeves via B4 Relay wrote:
-> The Broadcom BCM4388 chipset requires new PCIe initialization and
-> firmware interfaces. Add support for these interfaces to brcmfmac to
-> enable basic station operation.
-> 
-> This series adds:
-> - Signed firmware loading and mailbox transport
-> - Fixes for chip identification and firmware capability matching
-> - Versioned scan and join requests, and extended PMK payloads
-> - Updated event mask handling
-> 
-> These changes include work by Hector Martin and Daniel Berlin from Asahi
-> Linux, refactored where needed for upstream inclusion.
-> 
-> The series provides basic station support only. 6 GHz support is planned
-> for a follow-up patchset after this lands. The driver retains legacy
-> interfaces for older firmware.
-> 
-> Tested on an Apple M3 MacBook Air (J613):
-> - Device boot and network scanning
-> - 5 GHz WPA2-PSK association and DHCP
-> - Bidirectional TCP traffic
+When info->control.rates[0] contains an HT or VHT MCS, set the TXD6 rate
+from it instead: mode (HT/VHT), MCS, NSS, and the 40/80 MHz bandwidth.
+Legacy injection and the normal (non-fixed-rate) data path are unchanged.
 
-Finally got some time to get this series tested on my setup. The patches 
-generally look good. So far no regressions observed. It would be good if 
-some more people could test this series on their equipment. I will do 
-some more testing and wait some days.
+This makes 20/40/80 MHz HT/VHT injection work on mt7921u/mt7925u.
 
-Regards,
-Arend
+Signed-off-by: Aaron Beckendorf <albecken@mtu.edu>
+---
+Tested on MT7921AU (MT7961, USB): HT and VHT80 monitor injection select the
+modulation and 20/40/80 MHz channel width, spectrum-verified.
+
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  | 32 +++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index 8481eac8d783..e593d1bb5623 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -602,6 +602,38 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 		u32 val = MT_TXD6_FIXED_BW;
+ 		u8 spe_idx = mt76_connac_spe_idx(mphy->antenna_mask);
+ 
++		/* Honour an injected HT/VHT rate and bandwidth from radiotap:
++		 * connac otherwise transmits at the basic rate picked by
++		 * mt76_connac2_mac_tx_rate_val(), so monitor injection cannot
++		 * select the modulation or channel width.
++		 */
++		if (info->control.rates[0].idx >= 0 &&
++		    (info->control.rates[0].flags &
++		     (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_VHT_MCS))) {
++			struct ieee80211_tx_rate *tr = &info->control.rates[0];
++			u8 mode, mcs, nss = 0, bw = 0;
++
++			if (tr->flags & IEEE80211_TX_RC_VHT_MCS) {
++				mode = MT_PHY_TYPE_VHT;
++				mcs = ieee80211_rate_get_vht_mcs(tr);
++				nss = ieee80211_rate_get_vht_nss(tr) - 1;
++			} else {
++				mode = MT_PHY_TYPE_HT;
++				mcs = tr->idx & 0x7;
++				nss = tr->idx >> 3;
++			}
++
++			if (tr->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
++				bw = 2;
++			else if (tr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++				bw = 1;
++
++			rate = FIELD_PREP(MT_TX_RATE_MODE, mode) |
++			       FIELD_PREP(MT_TX_RATE_IDX, mcs) |
++			       FIELD_PREP(MT_TX_RATE_NSS, nss);
++			val = MT_TXD6_FIXED_BW | FIELD_PREP(MT_TXD6_BW, bw);
++		}
++
+ 		/* hardware won't add HTC for mgmt/ctrl frame */
+ 		txwi[2] |= cpu_to_le32(MT_TXD2_HTC_VLD);
+ 
+-- 
+2.53.0
+
