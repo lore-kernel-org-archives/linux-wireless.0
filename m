@@ -1,96 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.226
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793555066;
-	b=OkKm9K4oymssWRNgPxAwK6uBM+iV9vSByWRCoFvqPUyCUX3asZzwrBxiXhw0PNbSdr6d
-	 AZYtBUF6akLUgYl/OPkJpxRd0bMBaPHs+8YbWFOxVMIZJy74/dr8+YZ391K0+XVjuaGA1
-	 IFdMIS0c35wyjmIt3Zj3wG3pfPizPvaiOfql823TUxO4euTRmNeM1wpHeFRiCAxNy/fgp
-	 sHJf7N0DjPg4HY4V/kHLJHm1M7Dvmp9Z2wIAcTJJRUuOFHBoDsybf+tNuVhHGZcsUDlly
-	 5e0+QednCRHTGCyHh1/a+1+whaLOD714Da7YW/4zvAnqPWAUYALMQVKlB+X/DFzF4qQ==
+	t=1793561247;
+	b=unov0NZaO+lqz5zPy6uspKxxFpI4nxQCoBHtRuy5YNsKz5fTj+hbIOhvLvedFZfd1Vzf
+	 bLsWwMRmghxypIbNiTT3Q8XK9jBwZtyTQAl42CBvab9XBP42ii2velBvZQ3vXjOO2/9F0
+	 6FN7SfjUSDLHnUXQU1S50GELZfdsvbdhN1A4ck2Kdhf0goo7BzbaOXqg5VWSACpZq2QkM
+	 ZrysxUc/hv7C3lnLY9ggfazFOm9q5Zu6Zq8LXgSdZBn2F9HG0S6qtzqmqnI+rPwgawJnA
+	 xXZjo8HOwOz4Nj3jRZFXzkSZ1nNZWdg2qfXRZs2flInF2ONJ75Y07lLNPmroofKkUkw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793555066;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=9O61ATkKp+DlIEXsj3DD0qBP/WN9VXV3+UsO1P4gT6Q=;
-	b=emZwH0wxGfyNECtWrx+ORx4SkxSjD6mQFVvqzGjelvDRbYpyszi8dfKVMGQY90P/7+IR
-	 GKj8d5Yy87sNjY2TrnJP51HZ/o3dWNSBp8Q6mpY1ktbgZr9/vfIiLIG8uEhJvIiFsNEc3
-	 WY4lnCZYLW3jGtf0khjzkzGka71jsGvJJbl5+6EvuKhu8BSRdGfB+p7V2/0JSeJd/CPEe
-	 gGGs7ghCMXwTdYhCEd0/vXtpBQtz+xLrt5XhYiwBU3memX3frGYfoX273ccF8QjH57nGN
-	 0d32vCtcOZNkvPpjsNnKSjZEqUO1u90U1FLM3clwp+K3RM0YV9yYgDzMVgBTr0tUx5g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793561247;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
+	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
+	 DKIM-Signature:X-Received:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-DetectorID-Processed;
+	bh=FBzaqWRuYJDOcynWW1oUqzv1XeYY64zxgMqREXlXnBE=;
+	b=jK8EhtrkHtuZSlo2l5iC+NhHPJKyCx2QOh92PscfpyTXsYyTNLBBgEk/RP+G/G4zQyuA
+	 zqZws0UPddsVRvz+okq91aPoR/yJgLBQDsxK2MBXwWkJKfLsC4Xe+y6KwT74djYPKWwfx
+	 XktT/EK9Mqu7HCp78MX6wesRBPSh4QmMd9D8Bz5cTCu1I9Sgv2VTRNeqVHwSzNilcbAJ8
+	 7pbgTMtpvHXReilynxtUJKQ/8xnbHDWXbTTcvy7RamqsBHlmgBANKALHLLOe9IUCkuYO/
+	 t9O9brYgqSRXs3Lt4LI2hV2BIGPlc35kPTNt4A3c/60Sp+p7W/nWBfU3cUfYz/iUdOw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bairaktaris.de;
-	spf=pass smtp.mailfrom=bairaktaris.de;
-	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b="Axr6b2C/";
-	arc=none smtp.remote-ip=209.85.208.53
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+	dmarc=pass header.from=broadcom.com;
+	spf=fail smtp.mailfrom=broadcom.com;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=DhrvIh21;
+	arc=none smtp.remote-ip=209.85.215.226
+Received: from mail-pg1-f226.google.com (mail-pg1-f226.google.com [209.85.215.226])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B530606A32D
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 17:44:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B530606A32D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44214606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 19:27:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44214606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=Axr6b2C/
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6b3dd83e779so3988482a12.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 09:44:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1793555064; x=1794159864; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=9O61ATkKp+DlIEXsj3DD0qBP/WN9VXV3+UsO1P4gT6Q=;
-        b=Axr6b2C/htBA5mpk/A7z04dUTzsIIuRRDwi1GBxebzzC2Wr8Mj+BOuS4O5dONN1yZ2
-         fFczSqudfLWZpQS4yaHhhl47jufjbZ8fOSmRGeFpwJRAtxXn1mgKHJaoap+PZ+OdrrXH
-         +Yzt71aga+okNJ4AK4sp85zltvrNWePW7mgBlscR+SoTIjkq3HGj0JigZytcBsRjbvqx
-         AEuM+XMtdwPKbx7s1FsLoW8NA9vOqey8NOgImB0T1spm4yeIzoXsBr81NrITfTjGd4jp
-         QmHObgnt4Rs8ZrcJvOxldrUdxupBDSvPe/dAiFWyAKsFWM7aTAXx0HjTZhypALvYtOSP
-         Lcig==
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=DhrvIh21
+Received: by mail-pg1-f226.google.com with SMTP id 41be03b00d2f7-cc7d154ec4fso989173a12.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 11:27:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793555064; x=1794159864;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9O61ATkKp+DlIEXsj3DD0qBP/WN9VXV3+UsO1P4gT6Q=;
-        b=aOnmgnVxAa46EBuKnbOOnxb6kCRhw+BexjQL2XdM95PbO3m/Zt9/QQCAusvwTsgSBE
-         hsmyWxwZNpg6/8Ft/Nn5DgC1mqZMuYAVl3+W9/78XXFAH049FMUus8MPIrVyV17vz6XK
-         tI4bWnekyfeeuvfTuecaACHI2izJ0w5+6OOH3xRIPLT6yZ4GqDn9fk0O5kmlXIjHmzmv
-         ak+YB0xdlmjHBBup+9Tp9aZ3I7RIFoS+HGPx4ujYZcc5NuxKc/LyiDta32HQ0eRF1tEi
-         Jxs9SerP15i3Z1H5Fk1QWfk+F5j7AMjrxmAcDEMFXJuzKIGpqV4zdA44VQMDgtP1N3L+
-         yJdg==
-X-Forwarded-Encrypted: i=1; AKwUvBzBiGWUC1bp93vI8jX+Y0+bC5R3eSA5wDj/3C0hIZbw2dXB9zDlVqD1UZit+7ze7uHNEs+3Dzz2fkuwIYUMxg==@vger.kernel.org
-X-Gm-Message-State: APuU4Z+NXINvH8WJeWc3pHbzMIMgVwqmzt1xbUxEgvx5lKd7LD8k/t/x
-	32dLdVAU9+kRpiSRnKyMHTBZJbnfSGgaWt9qJiqriHMuFdg/wI1RPoIopRH/KXt9CA==
-X-Gm-Gg: AYBFou1RwpFJsh4Y3sAj4evn2gmunxEJeccHJDpjJJzgJ1lSxxsehyUFkatR62bQi/W
-	0Z9lo3EMxmmnpZwmEw3lt/3jK37AGOenSxM/CQjwyyfU/Y6nFW0+rLziQ+pIhmiw9CHly1IyQX3
-	YFML20fn6n8QVmCgczkRN0xe8w2dwmY9mcDJ1jz31oaNb1v9pedo/osVVCQsOUpa3kS51RmjqWJ
-	PbfODirLZjWzBJdCYIm7gZ9c3RygR+89LM7dUTRmWhL16S/yLm4OSzeunMtQ+d7GIuJbAH55fG2
-	vvY1wzpEl8/P7np0ovgpp45nDniq72ZnWOmc0cR9QZSsyHy5Uo9sAXp3mpidPsqDOZWSQBnZjzb
-	uW2wM/TTKDEn7p/DgRTcFshwvKd60M2NMeEdW3tBHBGglzwa9jgMV3ul7F6NamZZHrHlG0Bb+jA
-	yJHmRNfHUKic33eCNikudNvh0mf0Mie83BUi2wcQPxEckQB3hBwCvkBM0hmmJoSNwT103o0JO4U
-	SdTtzxReg/+ZejyUwQwOHbg3ALrUI8XQfoqmkVLvkACCKnpM9N45Rfbv8DMLCvjlkJsOuhgrVAg
-	yUSCLyZ9QI9MdEYb6Xk2OSgK1w3xS4jY8gqnXYNa/3vMziNsIjMTldOrUsKqLI5hUQA9gg3EtDv
-	tmV+1niFbd/gMVZyKO8BmKbMJD+R3h3MKH+VouC7DP9fSlWWzaoaGs79DFmNNbZqZWeLIBcGyag
-	Rj2BhNWsWZ7gzkiqrsabt/cGoLlxAe2OxdiAetVjUf8nrXWIsE/H/XOtpWiKRDUTmmDzXwv4FFx
-	tc6HqE83ez4qGIhUznrFWziXPIVB3EXNn5N/U6vtS0cOAPmGakqdt+UN+iKk84VKisdkV21+Ied
-	LL1jtwfnGZoNWPP9sqk=
-X-Received: by 2002:a05:6402:1d51:b0:6ab:7700:9371 with SMTP id 4fb4d7f45d1cf-6b4d468b63cmr5289419a12.25.1793555063954;
-        Sun, 01 Nov 2026 09:44:23 -0800 (PST)
-Received: from Desktop (p54aff7cf.dip0.t-ipconnect.de. [84.175.247.207])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b4eca21356sm2369094a12.35.2026.11.01.09.44.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 09:44:23 -0800 (PST)
-From: Julius Bairaktaris <julius@bairaktaris.de>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: ath11k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Subject: [PATCH ath-next] wifi: ath11k: do not fail down transitions of the station state
-Date: Sun,  1 Nov 2026 18:44:22 +0100
-Message-ID: <20261101174422.1275413-1-julius@bairaktaris.de>
-X-Mailer: git-send-email 2.53.0
+        d=1e100.net; s=20260707; t=1793561246; x=1794166046;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=FBzaqWRuYJDOcynWW1oUqzv1XeYY64zxgMqREXlXnBE=;
+        b=P+Za0KTwhV3WPta17UMDrwnLt9fJRGFcSaMXK+ZawN5/p4S6HUA0QrWNiGnIlKej1h
+         NgHzLTyuuD/3CyKqy2aqy/l3+toR9ttktGarAPPlh8fp8RXsH7ChTWNh+nVG7A86+RPr
+         rZBWKeodOZg8yzpXjYpTaTr3jVvccxJS9SAp9hDeoVS14lAj2ovwN+2pp/H5P9GvPCn4
+         LUKtPIjK3hJ78q4Ka1/pD4MV5QXE3DfwJkMJ+6YSNQjv382p7m2zZbfVSaEmZ1BVQO9R
+         bPNydk2eB6PNAdc/NowMoStc92MQg0IVsuN7VUxT36YZTe6MhKBYUpBkLO8+PAL6/eLM
+         VScg==
+X-Gm-Message-State: APuU4Z+n8d1rrJS7uJ72OFt5K9wK4BgK9ee9ee8dPCBkDRk+5vDbuOyq
+	Th3dcZhs30IMhIiM7c93ySgVLc/gPMFXiWJwI2pKhVbrnVcCMO/mD7Vt5XcB3sklRVurYBbRs14
+	H5Y3hXA0bYlWOYH6FdXz55ap+2WGvzpBOWkJbOPI42np+o2YmN4TtpyLq3ibgM/vP5asfwX9aa2
+	2fKdcpZSLKAlBdg7HyK6TQEu4dyANQc3IgtM/U7nE/yE+P93HazQ6OT0hOfsXjTJr6JShKWmJD0
+	+v5Ie0Ahj5Dz5Xjw25yMwxrXRec
+X-Gm-Gg: AYBFou24JSAztK9LLX7wmSDmliYQ5LZ7lzsSMoqfBf50rnOZ3vrk7Z97FGXXWDBjGhc
+	0/vh3ri6qs99z9NHk0s2/W2FPXV2cEqo3YSgjGKv0RkCsAG9vBCOHJ1K3KkT0CMgqePb9OOmmxr
+	nieD/nlnt/0IKWO2Ve5fKg46+d9ucb6LfNeYDd12LGJdtobAQKM22nmdzJvl/vBUYN47Hr+GpZ1
+	NSvA56ffKUQN9pJIGN0hPkFnfo7Mbf9ckZ7YP4c6vDy7BVevVsoPNHnvGVoy6tpgyhZEWNyqQX1
+	vzgjd8cN3TnKZknBTuX3kLvCFtG28txfKha8hvX4TKdXYPSpgaz351Leiunq/u5CH3GOa2ELWGr
+	6Z3clQNbIAGdN60F4DLsC87Uv7ML+jvSBeSaGwQInaUKip6hcRcNDg+qU+tkAa4XEb6v0bTQ9Hi
+	FDY7chXloejvaKtT5eiP9EjQUyhEqsXu31ALTtrHE=
+X-Received: by 2002:a17:90b:48d0:b0:3ac:80de:44e8 with SMTP id 98e67ed59e1d1-3ae8983c697mr6298013a91.43.1793561246201;
+        Sun, 01 Nov 2026 11:27:26 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3ae8444ce5esm6536701a91.2.2026.11.01.11.27.25
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 01 Nov 2026 11:27:26 -0800 (PST)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c4322d31021so114726066b.3
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 11:27:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1793561244; x=1794166044; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=FBzaqWRuYJDOcynWW1oUqzv1XeYY64zxgMqREXlXnBE=;
+        b=DhrvIh21w1XzU5LgWa9mrFLSjCH/FjS5+8gKwe4Xa4Diyaen3FJnosCbGfUO+p07SW
+         ijy1U2WlmTouxOa58w/1JLPLZaQi6XCay+WFJIpK3ADbMZZHVTP7o/aFW322QNLLsCut
+         PzU4LFIRWv4FO1Qsoa4/m6FSNeRi8OeOtvc/c=
+X-Received: by 2002:a17:907:86a4:b0:c46:9d7b:37d with SMTP id a640c23a62f3a-c4ca7a4b544mr641619366b.17.1793561244349;
+        Sun, 01 Nov 2026 11:27:24 -0800 (PST)
+X-Received: by 2002:a17:907:86a4:b0:c46:9d7b:37d with SMTP id a640c23a62f3a-c4ca7a4b544mr641618066b.17.1793561243910;
+        Sun, 01 Nov 2026 11:27:23 -0800 (PST)
+Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4cabc1920csm303460866b.5.2026.11.01.11.27.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 01 Nov 2026 11:27:22 -0800 (PST)
+Message-ID: <d78cbbd2-601a-4cf1-800f-3be57a2b7de2@broadcom.com>
+Date: Sun, 1 Nov 2026 20:27:22 +0100
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -100,57 +103,56 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/13] wifi: brcmfmac: Add BCM4388 support
+To: michael.reeves077@gmail.com, Pieter-Paul Giesberts
+ <pieterpg@broadcom.com>, "Franky Lin (Zhenhui)" <frankyl@broadcom.com>,
+ Mathy Vanhoef <vanhoefm@gmail.com>, Kalle Valo <kvalo@kernel.org>,
+ Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, asahi@lists.linux.dev,
+ Hector Martin <marcan@marcan.st>, Daniel Berlin <dberlin@dberlin.org>,
+ Janne Grunau <j@jannau.net>, linux-kernel@vger.kernel.org,
+ Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org,
+ Peter Robinson <pbrobinson@gmail.com>,
+ Izabela Bakollari <ibakolla@redhat.com>
+References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
+Content-Language: en-US
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-mac80211 requires sta_state to succeed for down transitions and warns
-when the driver returns an error for one. ath11k returns the result of
-WMI commands for ASSOC -> AUTH and NONE -> NOTEXIST, and these fail
-with -ESHUTDOWN while the firmware is down. A station removed during a
-firmware crash then triggers, for the disassociation:
++ Peter, Izabela
 
-  Driver is not allowed to fail if the sta_state is transitioning down the list: -108
-  WARNING: CPU: 1 PID: 5952 at net/mac80211/sta_info.c:1561 ieee80211_sta_eosp+0x119c/0x1668 [mac80211]
+On 25/09/2026 15:43, Michael Reeves via B4 Relay wrote:
+> The Broadcom BCM4388 chipset requires new PCIe initialization and
+> firmware interfaces. Add support for these interfaces to brcmfmac to
+> enable basic station operation.
+> 
+> This series adds:
+> - Signed firmware loading and mailbox transport
+> - Fixes for chip identification and firmware capability matching
+> - Versioned scan and join requests, and extended PMK payloads
+> - Updated event mask handling
+> 
+> These changes include work by Hector Martin and Daniel Berlin from Asahi
+> Linux, refactored where needed for upstream inclusion.
+> 
+> The series provides basic station support only. 6 GHz support is planned
+> for a follow-up patchset after this lands. The driver retains legacy
+> interfaces for older firmware.
+> 
+> Tested on an Apple M3 MacBook Air (J613):
+> - Device boot and network scanning
+> - 5 GHz WPA2-PSK association and DHCP
+> - Bidirectional TCP traffic
 
-and for the removal:
+Finally got some time to get this series tested on my setup. The patches 
+generally look good. So far no regressions observed. It would be good if 
+some more people could test this series on their equipment. I will do 
+some more testing and wait some days.
 
-  WARNING: CPU: 2 PID: 2080 at net/mac80211/sta_info.c:1652 sta_set_sinfo+0x1118/0x1144 [mac80211]
-  Call trace:
-   sta_set_sinfo+0x1118/0x1144 [mac80211] (P)
-   sta_info_destroy_addr_bss+0x34/0x48 [mac80211]
-   ieee80211_del_station+0x1c/0x54 [mac80211]
-   nl80211_del_station+0xf4/0x174 [cfg80211]
-
-Both paths already warn about the failure, and the removal releases the
-host state of the station either way. Return success for every down
-transition.
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.12-01460-QCAHKSWPL_SILICONZ-1
-
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
----
-ath10k and ath12k return the same errors for these transitions.
-
-I used Claude (Anthropic) to help write this patch.
-
- drivers/net/wireless/ath/ath11k/mac.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 1a237adaa37d1..e5bab84a36bbd 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -10074,6 +10074,10 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
- 				    sta->addr);
- 	}
- 
-+	/* mac80211 does not let a down transition fail */
-+	if (new_state < old_state)
-+		ret = 0;
-+
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- }
--- 
-2.53.0
-
+Regards,
+Arend
