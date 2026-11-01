@@ -1,97 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793540620;
-	b=G6VBKp2qsq2CnMBoE4Tegx0tSgERYunY8oBxpj4a8+H08MUdnsTtVTJxL9PE+SHeRcrn
-	 zxULIesN3qzqak7nI5YqqSeTJQjCBbzEQ9wAitC6OSunGcxHhcpyu+1triPITUO+V4XDL
-	 TiftMrvuNEon2AmniJiV9TTvE+l0Bh1KVD3cQoz1O1uqwSUfriDcerUepz4rT8QytV8lB
-	 3Ya95n9mle2IETWIJpmzh4CO+uMULh25kmomJyTkRIaZSHmflMamMS+ubKQnTI72aZZFz
-	 +u3UYANI4pVMwlL5DTVhvxZAqsMYETi5uqEhgr8nxurCgrSSfOAHxXnj7OZtnVUhJMQ==
+	t=1793542266;
+	b=AXfVhpxrzLSO9G+BayhnW5vORufZwgyGFuG5lQ1EAsackFgwSiNSOuIiX1zLN9zA2A/i
+	 EehameczSyKrSxkC3xn4KT6eAs55g5qoODaC4idWomSrdfxMEe5LWG2tv/BhE8HYmy26S
+	 qksueVDEmWB17oBV89x2Y4tnm9zb54IkaoMFhrOvZz7YfpAOeKwwo/VXYWDVtFowN/pgh
+	 XbaXeZUSdroUjNlEpvp/pKAdVYB1f5RpZnaTpslR7CU9+Msb+aejHoIKHU6a7rwKJPqIs
+	 SAbwE5hCE3Xwor3r2SKY572CaPFs1vZl5/M1cuBizVR42uzsqcszKn5ZTGtt2EnYFYA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793540620;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=4661m1xYP/jYEqHVXb2ZQHfA5Qdo4lmezgeOZnGqpSk=;
-	b=A9wK2yPQkZYsrSbF/7lf44KZ8UDRj0MoOTZF072V7cEdbbvcmxG90Zf5gcK/vGRFXc1z
-	 mD7idf6XPIKvixKhQw3UVUGloNkaDXJKx5YUHYj97hkMbBaSel99iZewdXAWHKWhHvog4
-	 fR9iRJrSyB0mnoy9c9NYVAWLS96KLNhYowyFu/unTW3S93O4J8LbiMZRpV97t2FpFlwJ0
-	 bGnnqMbdj3Y5Q83EitrydrB97RErtlDbAZUnf1O50Wb6j1Er4ymeVrwGNyhy7cr+yAMkB
-	 fH580IYX/dLV3xTgJwsRQNaNl6o5sJpm0ueO4c30LU9AKQKbHnbC4ZMNmq6sA//FJrQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793542266;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=OpuSXTvUGb9inJ3VTguE55fRGrCNrDzuw/3a5E0Z6tQ=;
+	b=IkYtWNLr8jmJbrpkIHH/MQ/newiHw+n9+M3kKjbsB+ld1x3gSu/eSkMcHRrBm/Qxggc9
+	 RdymNyQGlRJXe7pZyyuwH5lceJX0g85LydKtSB8vOGIdma/Ciimq7RhdkE1Av6ELGBzrH
+	 1Go36mxIUEPxc/RSjdkbWH5dLWCu5cE5qUpa7GEYxV5/w+hA5K4YbjyMANN6rmDY1bVZe
+	 2pZtvibE/bKW4OyQJ+bzCraUnkhQNthtyyRCBg2hKBSEMcYqSNDSmJbvak49ocBRyg5S3
+	 ElK+J4O4lpS2ZNeEuFinmGfgHm8+RjtqlhtcnOLDwB4YGfiCv69kvBm/3V8gVokc1ow==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eisKOQnv;
-	arc=none smtp.remote-ip=74.125.82.169
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=a2oPrnZP;
+	arc=none smtp.remote-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46A66606A326
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 13:43:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46A66606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBF62606A324;
+	Sun,  1 Nov 2026 14:11:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DBF62606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eisKOQnv
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-35b2c599f43so2934611eec.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 05:43:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793540619; x=1794145419; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4661m1xYP/jYEqHVXb2ZQHfA5Qdo4lmezgeOZnGqpSk=;
-        b=eisKOQnvuhXLkFpTLtfmv29J4yIGP8l4y+CQnaDOTYY+ApcPlAkuI9OJbUqcBQazqM
-         NGKpVY58FJd5KtwXwV7vqzHGC7Uo4fowQnAu3w/XfTq+YOj43laEFWiU+x7+QQJrrUnk
-         ye8hz1U6Iku+8wJ1xBbiyyHtexPJdqQZOK879xmHeNb57yMpvfk3+HLNqqrN+EykPeoV
-         Wk2BJwPkiZLUgeSLbvOAzK/ACa0oMRLy9GyCam3o3wLPUcvAjt26bMx+3j1LiuzRcSL1
-         s6V1qqbVh//JrZi9xQb9lRm7UZFDEj2rMGSt3HNn321OUSHU4oTY51y0E4MAm5DjeN9k
-         YTVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793540619; x=1794145419;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=4661m1xYP/jYEqHVXb2ZQHfA5Qdo4lmezgeOZnGqpSk=;
-        b=PgHJij0VtYWY4giBQDpTc8eZyspGMfevpAjYwwyF0z8tJFkjWVbi78MM7DEhu1RVXB
-         cn2JtDNM/lOLWnL5kOAi9g6qEWNXPahL+pbUW5KcMdVFwhve0ZXmICqBKTvsU5oEcCCY
-         ec5CIShcL+62HPWpP/H2J6Aq5vzE0Sv4pUqjP5ubWpgcthJduuX+oXw1d2aWRJSaImfB
-         2ehBJZ7qYl5pQfSqynu87GlvJiZrC+QcD9Rypl8BWgQgIDFcE07Ldec9WlvAawbaS2rE
-         XGF4YuFfXVXeNBj9NhAnEl5ApYNZA6T9Lz74JIbd1O8FB9g9DH6BGxid9P7S2BTXvd6L
-         yr0Q==
-X-Forwarded-Encrypted: i=1; AKwUvBwrTXCsgEYgl4O3wFzofD1dUk0tFcYjV8fbh8EkaCeuDS59kcrIhGUv/mrcdCtcv/22b3CFWMANSlxZBFqWqA==@vger.kernel.org
-X-Gm-Message-State: APuU4Z+48XGSVLd3jjMXYpd3XZsj3aPtHg9Qe8BEWzBRfUXA0OwqHymi
-	Qg5ii45CjSyM9eie35MwAR/GXVD9O/dQfvVi0yJCR63KfXuDOWNAT3eY
-X-Gm-Gg: AYBFou0Vyn3V+mFHIPR9LRr34CTnRKdggJmVFT0rE0IHZMhwz9fku37YzMPkZcRNFUt
-	Vo2lmN3d/dDPQCCfuaY4lbdCvS4n6a530mXPjzI+2Ajs6fHRaOpCMEWjjUnetHWUFPw9AZACBXJ
-	YZLuSHy/IjUetdswrcpOe3mtEXWVAISAmJDwzSj2508cTY0+MPxhLd78cdqTgfRkP60dhVtf2Gg
-	1xkH3KakpMFktfyTTH2CB5zQalhKYvZiyAcCQKPr98hCq1EuyRD5gHUH+DqfFgCSB2piGGs/+ix
-	gjVuTaEY5WoHHtyF6agQk2xFzV3AfSbr561biL3t8qIEehaNYwM1kXFWDTDb0Ck1knG7JQDKu5S
-	Ncs6PBL5iFjii1oyvCJvBubpJZDxc2h8V5xk4OofLgbCbtkiIorLnVRxq1ZsnptzrrpKhOGGq1k
-	1cMgVt3c3g4cpTx0cPbl9KCHQe3nOSrSXPkq436gy+eaEWEeiktRBnHQdXpUZWlvJWuYUCXp4MF
-	h/rQ/YlvQr62hpvT+oVBhGCWovJWI6mLUDXw6eMAF6QClKC9gLiKDDJbTbJsRGQ+JEqJsTomvyt
-	HzSk+KX/lew1+glYxyEwtPQhXp7WXzCPF0LyM71aE0Ffjw==
-X-Received: by 2002:a05:7301:7306:b0:366:2893:7421 with SMTP id 5a478bee46e88-36a4235f6aemr11038645eec.10.1793540618755;
-        Sun, 01 Nov 2026 05:43:38 -0800 (PST)
-Received: from KRHW1CJW23 ([139.177.225.243])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a42a98f65sm26717779eec.28.2026.11.01.05.43.33
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 01 Nov 2026 05:43:38 -0800 (PST)
-From: Zhao Li <enderaoelyther@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Luka Gejak <luka.gejak@linux.dev>,
-	neo_jou <neo_jou@realtek.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Kalle Valo <kvalo@kernel.org>,
-	Hans Ulli Kroll <linux@ulli-kroll.de>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH v2] wifi: rtw88: usb: stop RX work before unregistering hardware
-Date: Sun,  1 Nov 2026 21:43:15 +0800
-Message-ID: <20261101134314.39340-2-enderaoelyther@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=a2oPrnZP
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Op
+	uSXTvUGb9inJ3VTguE55fRGrCNrDzuw/3a5E0Z6tQ=; b=a2oPrnZP6fkCRNHl6x
+	qefc9q1V0anl3a/FtI03S/D4VZoqip6TT82ZYizXIveZS/zXmk5qAV93JSPCEak6
+	7je92pxsvQMFNEHE6g/1MSLAHnsZg/xyfd37A4c43LZouEoemy8JXVsStbsRjNSB
+	Z2VFcKniSBf1yo5Si+meJBCWc=
+Received: from LAPTOP-BJS5C4G0 (unknown [])
+	by gzsmtp1 (Coremail) with SMTP id PCgvCgDHTuZVSOdqvnsDDA--.65244S2;
+	Sun, 01 Nov 2026 22:10:32 +0800 (CST)
+From: Heyang Tan <thy15333007817@163.com>
+To: linux-wireless@vger.kernel.org,
+	lachlan.hodges@morsemicro.com,
+	dan.callaghan@morsemicro.com,
+	arien.judge@morsemicro.com
+Cc: johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: mm81x: validate external host table TLV lengths
+Date: Sun,  1 Nov 2026 22:10:25 +0800
+Message-ID: <20261101141025.694-1-thy15333007817@163.com>
+X-Mailer: git-send-email 2.51.0.windows.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,56 +63,168 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PCgvCgDHTuZVSOdqvnsDDA--.65244S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3JFWkAr4DAFykZw4UKr1rJFb_yoW7Xry7pF
+	4Ygry29rs8WryUWr1SvF42yr1ftan7ArWUG34kJ34Ykw1ayry8Ga98WFyjgFn8Aa95Cr13
+	WFn8tFW7GFnrAFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jehFxUUUUU=
+X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC-h29Z2rnSF0LSQAA3j
 
-Disconnecting an rtw88 USB device while RX traffic is active can leave
-the RX worker running after mac80211 hardware is unregistered. A firmware
-event can then queue C2H work onto a destroyed workqueue.
+mm81x_fw_parse_ext_host_tbl() uses the length stored in the external host
+table payload as the TLV walk boundary.  The buffer is allocated using a
+different length read from a device register, and the two values are not
+cross-checked.  A device can report a small register length so that the
+driver allocates a small buffer, while the payload length field claims a
+larger size and makes the walk read beyond the allocation.
 
-rtw_usb_disconnect() kills the RX URBs but does not cancel rx_work,
-which their completions may already have queued. rxwq is destroyed only
-after rtw_unregister_hw().
+Each branch also dereferences a complete fixed-size structure while only
+the start of the TLV header has been bounds-checked.  A truncated trailing
+TLV can therefore make the capabilities, checksum, or YAPS parser read
+past the allocated buffer.
 
-Cancel rx_work synchronously after killing the RX URBs. Only a
-successful RX completion queues rx_work, and no RX URB can be
-resubmitted at this point: rtw88 does not set soft_unbind, so the USB
-core disables the endpoints before it calls rtw_usb_disconnect().
+Pass the allocation length out of mm81x_fw_read_ext_host_table() and clamp
+the payload length to it.  Require a complete TLV header before reading it
+and verify that the full structure is present before dispatching it.
 
-LLM assistance was used to find the bug and review.
+A KASAN reproducer mirroring the TLV walk reports a slab-out-of-bounds
+with a small allocation and an oversized payload length.  The same input
+does not report after these checks are applied.
 
-Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+Signed-off-by: Heyang Tan <thy15333007817@163.com>
 ---
-Changes in v2:
-- Drop disable_work_sync(&rtwusb->rx_urb_work): the endpoints are
-  already disabled, so rx_urb_work cannot restart a killed URB (Luka)
-- Correct the commit message accordingly
-- Drop the 3e3aa566dd18 Fixes tag and the stable backport note; the
-  patch now applies unchanged to 6.6.y and later
+ drivers/net/wireless/morsemicro/mm81x/fw.c | 84 +++++++++++++++++-----
+ 1 file changed, 65 insertions(+), 19 deletions(-)
 
-v1: https://lore.kernel.org/r/20261028141904.8707-1-enderaoelyther@gmail.com
-
-Validation: A W=1 build of usb.o passed. Not reproduced; rtw88 USB
-hardware was unavailable.
-Sparse C=2 and Smatch introduced no new diagnostics.
-
- drivers/net/wireless/realtek/rtw88/usb.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 64e1c3420e0a..56ca4496b2e6 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -1371,6 +1371,7 @@ void rtw_usb_disconnect(struct usb_interface *intf)
- 	rtwusb = rtw_get_usb_priv(rtwdev);
+diff --git a/drivers/net/wireless/morsemicro/mm81x/fw.c b/drivers/net/wireless/morsemicro/mm81x/fw.c
+index d6d2ad086..b5d6f87df 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/fw.c
++++ b/drivers/net/wireless/morsemicro/mm81x/fw.c
+@@ -445,7 +445,8 @@ static int mm81x_fw_get_host_table_ptr(struct mm81x *mors)
+ }
  
- 	rtw_usb_cancel_rx_bufs(rtwusb);
-+	cancel_work_sync(&rtwusb->rx_work);
+ static int mm81x_fw_read_ext_host_table(struct mm81x *mors,
+-					struct ext_host_tbl **ext_host_table)
++					struct ext_host_tbl **ext_host_table,
++					u32 *alloc_len)
+ {
+ 	int ret = 0;
+ 	u32 host_tbl_ptr = mors->host_table_ptr;
+@@ -494,6 +495,7 @@ static int mm81x_fw_read_ext_host_table(struct mm81x *mors,
  
- 	rtw_unregister_hw(rtwdev, hw);
- 	rtw_usb_deinit_tx(rtwdev);
-
-base-commit: af32da41b0327b9c6a37856ba82b6760d6c8d10e
--- 
-2.56.0
+ 	mm81x_release_bus(mors);
+ 	*ext_host_table = host_tbl;
++	*alloc_len = ext_host_tbl_len;
+ 	return ret;
+ 
+ exit:
+@@ -548,47 +550,91 @@ int mm81x_fw_parse_ext_host_tbl(struct mm81x *mors)
+ 	int ret;
+ 	u8 *head;
+ 	u8 *end;
++	u32 alloc_len = 0;
++	u32 tbl_len;
++	size_t tlv_offset = offsetof(struct ext_host_tbl,
++				       ext_host_table_data_tlvs);
+ 	struct ext_host_tbl *ext_host_table = NULL;
+ 
+-	ret = mm81x_fw_read_ext_host_table(mors, &ext_host_table);
++	ret = mm81x_fw_read_ext_host_table(mors, &ext_host_table, &alloc_len);
+ 	if (ret || !ext_host_table)
+ 		goto exit;
+ 
+-	/* Parse the TLVs */
++	if (alloc_len < tlv_offset) {
++		ret = -EINVAL;
++		goto exit_free;
++	}
++
+ 	head = ext_host_table->ext_host_table_data_tlvs;
+-	end = ((u8 *)ext_host_table) +
+-	      le32_to_cpu(ext_host_table->ext_host_tbl_length);
+ 
+-	while (head < end) {
++	/*
++	 * The length stored inside the table is device supplied and is not
++	 * guaranteed to match the size allocated from the length register.
++	 * Clamp it to the allocation so the walk stays inside the buffer.
++	 */
++	tbl_len = le32_to_cpu(ext_host_table->ext_host_tbl_length);
++	if (tbl_len < tlv_offset) {
++		ret = -EINVAL;
++		goto exit_free;
++	}
++	if (tbl_len > alloc_len)
++		tbl_len = alloc_len;
++	end = ((u8 *)ext_host_table) + tbl_len;
++
++	while (end - head >= sizeof(struct ext_host_tbl_tlv_hdr)) {
+ 		struct ext_host_tbl_tlv_hdr *hdr =
+ 			(struct ext_host_tbl_tlv_hdr *)head;
++		size_t left = end - head;
++		u16 tlv_len = le16_to_cpu(hdr->length);
+ 
+ 		switch (le16_to_cpu(hdr->tag)) {
+-		case MM81X_FW_HOST_TABLE_TAG_S1G_CAPABILITIES:
+-			mm81x_fw_update_capabilities(
+-				mors, (struct ext_host_tbl_s1g_caps *)hdr);
++		case MM81X_FW_HOST_TABLE_TAG_S1G_CAPABILITIES: {
++			struct ext_host_tbl_s1g_caps *caps;
++
++			if (left < sizeof(*caps) || tlv_len < sizeof(*caps)) {
++				ret = -EINVAL;
++				goto exit_free;
++			}
++			caps = (struct ext_host_tbl_s1g_caps *)hdr;
++			mm81x_fw_update_capabilities(mors, caps);
+ 			break;
++		}
++		case MM81X_FW_HOST_TABLE_TAG_INSERT_SKB_CHECKSUM: {
++			struct ext_host_tbl_insert_skb_checksum *cks;
+ 
+-		case MM81X_FW_HOST_TABLE_TAG_INSERT_SKB_CHECKSUM:
+-			mm81x_fw_update_validate_skb_checksum(
+-				mors,
+-				(struct ext_host_tbl_insert_skb_checksum *)hdr);
++			if (left < sizeof(*cks) || tlv_len < sizeof(*cks)) {
++				ret = -EINVAL;
++				goto exit_free;
++			}
++			cks = (struct ext_host_tbl_insert_skb_checksum *)hdr;
++			mm81x_fw_update_validate_skb_checksum(mors, cks);
+ 			break;
++		}
++		case MM81X_FW_HOST_TABLE_TAG_YAPS_TABLE: {
++			struct ext_host_tbl_yaps_table *yt;
+ 
+-		case MM81X_FW_HOST_TABLE_TAG_YAPS_TABLE:
+-			mm81x_yaps_hw_read_table(
+-				mors, &((struct ext_host_tbl_yaps_table *)hdr)
+-					       ->yaps_table);
++			if (left < sizeof(*yt) || tlv_len < sizeof(*yt)) {
++				ret = -EINVAL;
++				goto exit_free;
++			}
++			yt = (struct ext_host_tbl_yaps_table *)hdr;
++			mm81x_yaps_hw_read_table(mors, &yt->yaps_table);
+ 			break;
++		}
+ 		default:
+ 			break;
+ 		}
+ 
+-		head += le16_to_cpu(hdr->length);
+-		if (!hdr->length)
++		if (!tlv_len)
+ 			break;
++		if (tlv_len > left) {
++			ret = -EINVAL;
++			goto exit_free;
++		}
++		head += tlv_len;
+ 	}
+ 
++exit_free:
+ 	kfree(ext_host_table);
+ 	return ret;
+ exit:
 
