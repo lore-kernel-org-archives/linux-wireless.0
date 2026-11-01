@@ -1,96 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793564869;
-	b=y4o2dwq6W/gwBTfnvCQh8pcBGFwwtAvi+GT5VInp1tZRfJIokiJDTxd5kfU50qOczNKp
-	 d2N49lo+eIFW7FaTpN3Wt10iAkXp0ntFs5E/K6diDeO+9OkKmt9eWl81Vsk7urs3er41I
-	 sSJCAd4D2ebC0GvRaoQYYRAA/MWqR6xrckMN/d/3r+vmI/r1LKWEXpVKjm09pk41Vz6J3
-	 NZg+4p+Q4DGcfxhzn/Vkflq7IRgKDFI7fER9wxG9uzw4R7QM6NW//9qsGvQKnqB9R5SSw
-	 K63Gf1QdwhK6ow0MagrrFHzHnDKe3er8xROEeEw1bjD9Jtv85/ilHw5N8FuJLazgqlQ==
+	t=1793565449;
+	b=YVGDaZLtrgRaAQtvLxiNsaOLIzwO/slxuSr8FeMt9UXyugg36RgAjXhqu0T4nsRK8KTR
+	 U+F/48r+2J6ExoY5Okei98vZBgKdmNQ3QHatcwCl7Lrw4LJMXM3j7zoGN4LoCeuufrcK5
+	 Gztu6FG6u5IKxskGKBN9m9Orl7yrrqcRGnAVfTHLrz+0hRoJBdmDBdnDhDm/2dzkJL1LI
+	 n2CXKs2C+dwEYoos1rVpl9PLjpb5TGoOcqZSEIOjfwN/98eCj9yQWxI5stGpQ79QoTpep
+	 UazItGRSpcOQWhJXznnn0+qlJ5fAZl4YC1s/Zzbw+kUGvTe8SgEz6i5SKUTVB7nMKdg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793564869;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793565449;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=VzoqmSGTK2p7iNyBmDYghxEoApvenhg3wCg4KbKbjoQ=;
-	b=PTQZl5ZPbZRu3KHdZHySU2QJCcwfd7VNLgJzTm+edvOn6JCoM2VaM4oHpe4sol3fZGER
-	 y0vJZnHm/efvg+p1MN/deruEO3XkPalVd+HZJ83ZQ9LVM6IGbxWhJ34Bn1WfRJJzIsUbe
-	 n0jKdtTzI1KAHPybyPQxfpqhyl1ZPk9L0IsOUF4RNv3zRr1+vJ5dXO4yvMTfyjbob6h1j
-	 dh9yI3/GV2GFztRL5MLa7hMjJi8hVvyp9pSOAVKdobBAy9vQ8Nl2imqIZyHGBY/1cG3DO
-	 MxJSCRX5ecWGTk2l9B2gd+p6P/NuZjEf/Lp/uJ/T4nLUH18GTViIPwQPBA6fF+1nHtQ==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=CdvzC7jyi6EVZj3hz0ypTrm0LGiQW5rjVEzapNaDSYk=;
+	b=r55kmJEckX2TczcMG5iN/nEH5tGskc+OnuCteUQrwgES0ZVbn3YGfB5FT+yZ/mxMTn/q
+	 oYH7LTKgffgfEyHhbBzZ4AcDQTx4GYZ3ttJ42lOLb9Gs36PH/fvN6aeDksjvWXUChS2ts
+	 8pko3lqQ5X63hIFbVoQaYCgRPDhxkpEBdPjCnz2TvCM946fwybznW4MWShBmrLyTeJr/3
+	 LxUPZ0jBpnyqvXdoamPt8uHvCuTdli97Fc67+1B9azS45JKjWLlSAgUjkVbuQpL3hRHW5
+	 4dofQGGG4vobOO09mVidHUcFuvORqssmQchG9C2eNiPVASfBxa/jzaBs64nwzGTWo/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mtu.edu;
-	spf=pass smtp.mailfrom=mtu.edu;
-	dkim=pass header.d=mtu.edu header.i=@mtu.edu header.a=rsa-sha256 header.s=google header.b=c4w417zC;
-	arc=none smtp.remote-ip=74.125.224.48
-Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CnKwNn6j;
+	arc=none smtp.remote-ip=209.85.128.41
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5F65606A325
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:27:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5F65606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mtu.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mtu.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D213A606A32C
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:37:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D213A606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mtu.edu header.i=@mtu.edu header.a=rsa-sha256 header.s=google header.b=c4w417zC
-Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-6790844c9b0so1570043d50.2
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 12:27:47 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CnKwNn6j
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a207b02a2cso15250465e9.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 12:37:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mtu.edu; s=google; t=1793564867; x=1794169667; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793565447; x=1794170247; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VzoqmSGTK2p7iNyBmDYghxEoApvenhg3wCg4KbKbjoQ=;
-        b=c4w417zC4zAv2wWSq6YtWYQN0CSFIn4rw0NGe120+U3sV7WX/EzqNWT9Qgg/Z5IkcQ
-         d7QE0PSPPMXHY1zVpK/eJ6z2XNgDDTBruwnil17xGlpHLcBZCk6ra6wcuW/siKXmBwWl
-         3PmVGNPG05FNL8MjDOUk9YbQsblqpYFcaK7t+HWXV6o+sJi2Y4+VK7ly5wqeN28Vx2Je
-         KBBsY8W6w+57BMdbxeHzX2IlT0NC3vwA06MUMrJvTRe9khiEau6i7zJwbRCHeCJvG35a
-         j9DjOPf6nW2jQyoHyGmCYS0kLXoRPmzwW1N59v+tn//1LKhpMMYUvoOdJy34xDx+YEXa
-         4pmA==
+        bh=CdvzC7jyi6EVZj3hz0ypTrm0LGiQW5rjVEzapNaDSYk=;
+        b=CnKwNn6jN47bRDMTXDOdq7jK+0lagtIA8r7Zcd6MgWfi4mtSlB/5Hyq+vVshAwOIc+
+         79WrED3NipPQvN/bG3aiau5yPNnhHsC8l+81Vaj5F+UcNlmCJkh1OMx6gC5HvbiEij3R
+         se6YqJtOcLnNZO+psbBMsL7Wlz3KD/ugRW76ukirJzlLAFWRr33I7Q725Fy5J6aacsFV
+         yLx0jx170RCyWdeT7OVT+PB752DRpHPknl4cn8Nqa4jT23H0NTHWqqDrlqV7QjNwlUMd
+         pxaBrNyhb9Qm/nG5bfUuB14cIjTEzxUMKprSm4dFLCMhn5sCWIi7KrhRv+JC0dSehbBs
+         nnog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793564867; x=1794169667;
+        d=1e100.net; s=20260707; t=1793565447; x=1794170247;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=VzoqmSGTK2p7iNyBmDYghxEoApvenhg3wCg4KbKbjoQ=;
-        b=2PkqiKuKLIbIDRTkWEFQq8XAiUZbbKdMmz9mM81gmCn7Mjo1Ax41TMMum3az+N0YJ4
-         T4Y/8le6syXXylWGDi46JqhF0570S+1Jl7Ot/P/hPEUPh5FJvlpr9LEOwT+bl3TjPdsK
-         HnLB40OFmSahl9xhqm0LoItn9t1XD84GMegbJfD/888PucdMjc24PHqiq0hUo3BRo8eT
-         Pz+haVMp5M7O7kr4QGXp2k7DALDRZYrXL9uso41Lc+tVZYlEXA0dMsIAYQAPS/ds2R4Q
-         NOyVAkDX0sjyTh6+kFbML2KYKanFGLB8VoQWdu3kVXLIkIWq67btJW8IcVXMHDnAjb2N
-         G46A==
-X-Forwarded-Encrypted: i=1; AKwUvBwdfQqN/RjFK41wjh0qDDCYgPxjbDyRtKFpwtetw2gUZhKVDyhBN9VQrpXs7RZ0tztFINUTS97D84HW+unH3g==@vger.kernel.org
-X-Gm-Message-State: APuU4Z9C6EtRUqtlqLFvWwVI9t/sYa123ZyVnkOqUxz4LIHM/N/xQoxj
-	0Hm2Fpabf+Gp1wTyyRXYO7O5fVnkzGGDzdYM5IMReiKnkYKoau2YsqdvvzT4DQczIqfGa5g7T6f
-	9ghccYmB4
-X-Gm-Gg: AYBFou3WaPSEJpYQuFHb8xoyfZQM4yMC4+xMwlQu88xoUjhS10xzVN6ZvOUPmR1+PsY
-	A7tq52DzL6Zj7Mj9yoBxfBjpZVTl5RQBJFDUNhlHtjVDmr9soqbZaJ1NIqQFF46dIy8QkUwsNem
-	pPDr4xS7ExTpL3hsStKWsO5tG0UlHU0gdL71huVrfJI8Bm85cPMnglQHHAr+aw1srD3mPssdos5
-	dSg4w2MGQjnqf7eDIEsvctREB06rHMEDEiUxOXMP/xdLTdDT2JL2RnihVGSGswpFngJ0MhIjzE7
-	xcBz079seohzFf9rVA5qwZcs8v7XxhJ/35LqCrX1dqnyhczVJr/toXzekEMev37wlaZe1BwoeIQ
-	V/+amKrK8jHJfKHWNPHCtCIbDl4EimVXoCnztCz5x8h32MHoebDSPPdp1fAILx5OHnYOqCEZsKd
-	UFhembgEcO4wAdfGbVoews6Dh4NoyPSJPLY2TSDNOVccrRNuwQIofp2ujMHOkYO0qJ6IyXbOGBl
-	7EZWrZGyD2/3oWoZOOnf5jQslltc6aPyW0a/+jwOKxWmwQNlkSWd1EiqUzhlZDX4UbkRG23vwBf
-	Zdc8mZSndXkMgzeGwOAII2v1hhZM2rlvU61L
-X-Received: by 2002:a05:690e:4887:10b0:679:a190:cf25 with SMTP id 956f58d0204a3-67ba4f913c1mr3978327d50.53.1793564866791;
-        Sun, 01 Nov 2026 12:27:46 -0800 (PST)
-Received: from agent-virtualbox.mtu.edu ([47.6.6.53])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b2b714cb1csm41251707b3.18.2026.11.01.12.27.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 12:27:46 -0800 (PST)
-From: Aaron Beckendorf <albecken@mtu.edu>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Aaron Beckendorf <albecken@mtu.edu>
-Subject: [PATCH] wifi: mt76: connac: honour injected HT/VHT rate and bandwidth
-Date: Sun,  1 Nov 2026 15:27:27 -0500
-Message-ID: <20261101202727.392683-1-albecken@mtu.edu>
-X-Mailer: git-send-email 2.53.0
+        bh=CdvzC7jyi6EVZj3hz0ypTrm0LGiQW5rjVEzapNaDSYk=;
+        b=rbOZZmsTv682FpTDw8ak7WAfN0FviBr04vvICkk2z0Fv/Nb+mFx5ekfAkCKX+W243X
+         7MqEVBf4rYHrB3A2v3F4W14PIVy05/KVp/VV0LJraSsnppbvbQ5k/4qvByMoK8s4AnQR
+         ooFbspbxjM0XGmau4Jifspfeo4UKjvrFr6jSBVPnN++DE4dbBS8k7z0v6d3FYs8Qwvq5
+         ZUEo7VOmS0QBcin7nJ/wfi1zM20V+nSrlzis2sXwivI9O85IQY9WPSY7WEH8mtEuVoDe
+         RducNlM22MwD+e6+mPaQ566dYYv9z9ZLsq4bDqbZidzLcZGPjxSgEw3PCo7rKjqcv1xJ
+         waeA==
+X-Gm-Message-State: AFq9FYJyn597EFKFZPoTLGTaQ5faAWToE7ZBOX0AQZLzXxcGibAyXcW5
+	vdoHqxYsi/ytlvr8D/23q5WkFNOyLsssf8B/uuOoGurifSfeOZ2GjEQ2mC2NStvmpBhOTw==
+X-Gm-Gg: AYBFou0o+xg02pzSgLTeum40mPXUXT9dz/p5+Er+coy2dN2zXKuSRFjv3uJa5D+zkW1
+	+GZLI219rrws/dfTWHV1bDJvd3MhcyFKBgOzro7l9Qt90K2WzY2En6Znmc1OoeeW4wRYYIAJ58i
+	408lX36EVkZYH7dxEgg5WGr/s15KIZY290iHUl9yZiFy0RniZZMPAbglKDN77IWPWUmbYVY3FUf
+	LHX5PHKemQRa5m84eBlUJAIKihE0jLpkLFkUAweK5SbFn8m2RZOYFDAjXWJMUhFDC1Y/i90CwjF
+	ocqX8/FOqU36fzskHOjCfL3JZKQEGjRyqdcVGDDvsu6bx5h5lc8qF8rLDaTGh8IIpkRvCpE5xtn
+	1iOKqKpyjDIzV+hAKditmzQgeaHI3ndEj2KzdUdL3lfrl2szgtLteMyztfpa4uAx2z23hhAcVyg
+	mGgOdHgErlKh/2dF4/sk9YQCs5muIqun4hSKllwJMG/B+na2qnNo817sLTUbh5xFGagi9cj9SlC
+	YdpcZQT3HidhE+zPbxllgTh/zgOBaR5Lwb0AnUfS3700BwuNHFyCcl6idbhGxEm7wYBaist7Zgk
+	lIN3gMQuGUCpsD+bKXgY3wfmrQcIs6S7bwugtq/8beWykSbPl74bRMZICOstRNBOwu37Y50TZiN
+	j8KwK2FWi1bTY9JcuaNNWWx9nqtVATGRYrpWOYbEqzBQugy7fcGHf+yGOHcuZEv+e8jEANRz2HJ
+	KyyULcg18P/MM=
+X-Received: by 2002:a05:600c:4e90:b0:4a2:526b:d410 with SMTP id 5b1f17b1804b1-4ac17565fafmr196316085e9.13.1793565446973;
+        Sun, 01 Nov 2026 12:37:26 -0800 (PST)
+Received: from ADM-D9YH122JTV.home.lan (158-199.dsl.iskon.hr. [89.164.158.199])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71ba53d7sm20369990f8f.53.2026.11.01.12.37.25
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 01 Nov 2026 12:37:25 -0800 (PST)
+From: Goran Sustek <gsustek@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Subject: [PATCH ath-next] wifi: ath12k: accept num_users equal to HTT_PPDU_STATS_MAX_USERS
+Date: Sun,  1 Nov 2026 21:37:18 +0100
+Message-ID: <20261101203718.60679-1-gsustek@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,69 +98,79 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On connac2 parts (mt7921u/mt7925u) the fixed-rate TXD path uses the
-basic rate from mt76_connac2_mac_tx_rate_val() and ignores the rate
-carried in an injected frame's radiotap header, so monitor-mode
-injection always goes out at a legacy 20 MHz rate and cannot choose the
-modulation or channel width.
+ath12k_htt_pull_ppdu_stats() rejects a PPDU stats message when the
+common TLV reports num_users >= HTT_PPDU_STATS_MAX_USERS. The check
+guards a loop that iterates i < num_users over user_stats[], which has
+HTT_PPDU_STATS_MAX_USERS entries, so num_users equal to
+HTT_PPDU_STATS_MAX_USERS stays in bounds. Commit 1bc44a505a22 ("wifi:
+ath12k: fix possible out-of-bound read in ath12k_htt_pull_ppdu_stats()")
+rejects that value, which is off by one.
 
-When info->control.rates[0] contains an HT or VHT MCS, set the TXD6 rate
-from it instead: mode (HT/VHT), MCS, NSS, and the 40/80 MHz bandwidth.
-Legacy injection and the normal (non-fixed-rate) data path are unchanged.
+QCN9274 firmware WLAN.WBE.1.6-01243 sends num_users 8 in messages that
+otherwise parse cleanly. One AP logged the resulting warning 468 times
+between 2026-08-17 and 2026-11-01, always with the value 8, and never
+logged "Failed to parse tlv":
 
-This makes 20/40/80 MHz HT/VHT injection work on mt7921u/mt7925u.
+  HTT PPDU STATS event has unexpected num_users 8, should be smaller than 8
 
-Signed-off-by: Aaron Beckendorf <albecken@mtu.edu>
+Accept num_users == HTT_PPDU_STATS_MAX_USERS.
+
+Rejecting a message has no functional effect: the PPDU entry stays on
+the list, its per-user statistics are applied when it is evicted, and
+the only caller ignores the return value. A larger value is therefore
+not worth a warning either, so report it at debug level, as done in
+"wifi: ath12k: downgrade log level for CE buffer enqueue failure".
+
+Fixes: 1bc44a505a22 ("wifi: ath12k: fix possible out-of-bound read in ath12k_htt_pull_ppdu_stats()")
+Signed-off-by: Goran Sustek <gsustek@gmail.com>
 ---
-Tested on MT7921AU (MT7961, USB): HT and VHT80 monitor injection select the
-modulation and 20/40/80 MHz channel width, spectrum-verified.
+Notes for reviewers:
 
- .../wireless/mediatek/mt76/mt76_connac_mac.c  | 32 +++++++++++++++++++
- 1 file changed, 32 insertions(+)
+The check guards two loops that can never run. Both are gated on
+ppdu_info->tlv_bitmap, frame_type, delay_ba and bar_num_users, and the
+first also on the per-user delay_ba; none of these is written anywhere
+in ath12k, not since the initial driver (2022). The parser that would
+fill them (per-user common TLV, MU-BAR user count) was never ported, so
+ath12k_copy_to_delay_stats(), ath12k_copy_to_bar() and the peer's
+ppdu_stats_delayba/delayba_flag are unreachable as well.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index 8481eac8d783..e593d1bb5623 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -602,6 +602,38 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
- 		u32 val = MT_TXD6_FIXED_BW;
- 		u8 spe_idx = mt76_connac_spe_idx(mphy->antenna_mask);
+If you prefer, I have a patch ready that removes the loops, the helpers,
+the fields and this check instead (about 90 lines, no functional
+change). Keeping them only makes sense if delayed block ack accounting
+is going to be implemented. In that case the BAR restore loop also
+needs a bound (it iterates bar_num_users over user_stats[] unchecked),
+and note that the per-user slot finder only uses
+HTT_PPDU_STATS_MAX_USERS - 1 slots.
+
+Compile tested only (W=1).
+
+ drivers/net/wireless/ath/ath12k/dp_htt.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/dp_htt.c b/drivers/net/wireless/ath/ath12k/dp_htt.c
+index 72069640bd38..9a409dd44d98 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_htt.c
++++ b/drivers/net/wireless/ath/ath12k/dp_htt.c
+@@ -487,12 +487,12 @@ static int ath12k_htt_pull_ppdu_stats(struct ath12k_base *ab,
+ 		goto exit;
+ 	}
  
-+		/* Honour an injected HT/VHT rate and bandwidth from radiotap:
-+		 * connac otherwise transmits at the basic rate picked by
-+		 * mt76_connac2_mac_tx_rate_val(), so monitor injection cannot
-+		 * select the modulation or channel width.
-+		 */
-+		if (info->control.rates[0].idx >= 0 &&
-+		    (info->control.rates[0].flags &
-+		     (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_VHT_MCS))) {
-+			struct ieee80211_tx_rate *tr = &info->control.rates[0];
-+			u8 mode, mcs, nss = 0, bw = 0;
-+
-+			if (tr->flags & IEEE80211_TX_RC_VHT_MCS) {
-+				mode = MT_PHY_TYPE_VHT;
-+				mcs = ieee80211_rate_get_vht_mcs(tr);
-+				nss = ieee80211_rate_get_vht_nss(tr) - 1;
-+			} else {
-+				mode = MT_PHY_TYPE_HT;
-+				mcs = tr->idx & 0x7;
-+				nss = tr->idx >> 3;
-+			}
-+
-+			if (tr->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+				bw = 2;
-+			else if (tr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+				bw = 1;
-+
-+			rate = FIELD_PREP(MT_TX_RATE_MODE, mode) |
-+			       FIELD_PREP(MT_TX_RATE_IDX, mcs) |
-+			       FIELD_PREP(MT_TX_RATE_NSS, nss);
-+			val = MT_TXD6_FIXED_BW | FIELD_PREP(MT_TXD6_BW, bw);
-+		}
-+
- 		/* hardware won't add HTC for mgmt/ctrl frame */
- 		txwi[2] |= cpu_to_le32(MT_TXD2_HTC_VLD);
- 
+-	if (ppdu_info->ppdu_stats.common.num_users >= HTT_PPDU_STATS_MAX_USERS) {
++	if (ppdu_info->ppdu_stats.common.num_users > HTT_PPDU_STATS_MAX_USERS) {
+ 		spin_unlock_bh(&dp_pdev->ppdu_list_lock);
+-		ath12k_warn(ab,
+-			    "HTT PPDU STATS event has unexpected num_users %u, should be smaller than %u\n",
+-			    ppdu_info->ppdu_stats.common.num_users,
+-			    HTT_PPDU_STATS_MAX_USERS);
++		ath12k_dbg(ab, ATH12K_DBG_DP_HTT,
++			   "HTT PPDU STATS event has unexpected num_users %u, should not exceed %u\n",
++			   ppdu_info->ppdu_stats.common.num_users,
++			   HTT_PPDU_STATS_MAX_USERS);
+ 		ret = -EINVAL;
+ 		goto exit;
+ 	}
+
+base-commit: a3ddbb45768717b5c9f923489387cf55c838d1ad
 -- 
-2.53.0
+2.56.0
 
