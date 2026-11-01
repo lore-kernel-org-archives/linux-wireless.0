@@ -1,69 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=178.21.23.139
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793537952;
-	b=qAgpe0kcAD55MbaZhD1NcDuYKyAWErkuvzA9gPc7GTnwWGuBs48EOUS6Tdn+Qh3wNDjZ
-	 5aQgC6kG59XW1xlx06kWO+KjNKCjdKLaaFkc0BXrB6UiXcfRYVV3p7zFKo/NMF4uVS9i5
-	 JFViCu0FRQ52YxKV+h2Ro93JZ3AosX7yBCaU2n22xFK9JoIKfLWVqOz9tXgCNHtfpK2eC
-	 RxnqH9TBKrTyAE6RF1ZkLOQR8/89GjDL2iyOTxEYfrxD6BT8G7QonwNusJW4wjgjW392U
-	 DaDudGi5xGFR7akzNwheKynfIUi3uPy4Lmb1Q0Q1YNobboe7XTU3NssQlo1oJIwn0Dw==
+	t=1793538482;
+	b=CNrqrd6E2XXOKnj6wViNtViVp0R1DDDbdiL1ptGADUeaz4NhTCDduOXsaGAzZvjU/KWf
+	 +TIGnA5boGPyNXOIFrgGAwDpVKP1T1v4FNjKOkM+4ZeSFSCdbj/XUoftP2RZqfMy46OT8
+	 L2LAG1/MhAagJPfhuIcNs7OG/VsGEcIRCocHpiwsaZT8p/cbfbSwOji/krvg7q3i0vgrf
+	 bOFP1Z637i0tFtW5zCV5ePvq7oErhpjVAFBhAUNQASEbBnAl3p19lZlbAs7TEkRFyiHjD
+	 JQRrrDjqd8usbP3YTSygrFKyNaQFaOaWKGBXzs6fklcn4F/OLb6XQd7Rv75RUF2XP3g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793537952;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793538482;
 	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:From:
-	 To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=oezvX4wVlPBCtdLJnzOOZGh58INnyDHTs19NjagDrWQ=;
-	b=37bfzMnD6rWndQL9pFg05SNp4QGx+5LzMlx8mldtvJAItvVxWnXfVJ9F0RMLB2/lUcfH
-	 OUMuLDtO1Se/hKyld8Ric2FJZzB5BIKPO3q6GzPMg4WYsOhEo8atkd7axHi0yH4ZkGsBM
-	 iBVqfG/nTYpvmblf974P4RKJrq3aePfU0NsfELtqmZDsdaVMYBhAULTaY34DhwzMLsjyS
-	 Z4clAkSlTZIBmGE3SDogyQIR8fxnfzE8BenL7sWw+L7CV+Ko4J1hYU/WtZbVCBuq7d5RY
-	 5uS2NRn822lDDBKKIKGsawH9YIfT7n0zm7EWzmWydi+8v8xey8qhSqp3zARAc0HuFUA==
+	 To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Transfer-Encoding;
+	bh=LOQrackOzvulQI55Fofmx0K19518DzUS4ZJZrJER7nw=;
+	b=CQ7JP0O8BqNfR+at50PH1KB9MZyPxgC+BT8S6rf3wMATEqG6JTzTbOvUYzjgPGsWLF0k
+	 RK2SNGcszlQn2aLVuoX6zbhQ0zq4kt+ocS6+kjbnjqrtZkSzFfq6Ri3sFtWn8odO/i1eO
+	 vmBwdvq9FeMwX2CtsGs35RwbkObaYwF80xEuDMiu4+DkBNCGcNwh9xxop/32GgFyc0Wll
+	 EMJmXntEdURySbVAvRFUvwvdFQ0CTu6LZwJ4VJ/4QeQDGtLec9SbzYyJXvfMw/zLP5uP6
+	 +Lr+zza7Unq5VgeE0gr7DwiZlwKJZADVp2nWcqU25P+snCwWWTjGoJlcq/bXgDDHxOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=disroot.org;
 	spf=pass smtp.mailfrom=disroot.org;
-	dkim=pass header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=glYxgGNt;
+	dkim=pass header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=jIuWhcRY;
 	arc=none smtp.remote-ip=178.21.23.139
 Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9901606A327;
-	Sun,  1 Nov 2026 12:59:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C9901606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62EBD606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 13:08:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 62EBD606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=glYxgGNt
+	dkim=pass (2048-bit key, unprotected) header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=jIuWhcRY
 Received: from mail01.layka.lan (localhost [127.0.0.1])
-	by disroot.org (Postfix) with ESMTP id 63A02808FD;
-	Sun, 01 Nov 2026 13:59:10 +0100 (CET)
+	by disroot.org (Postfix) with ESMTP id 8CF58808FD;
+	Sun, 01 Nov 2026 14:07:59 +0100 (CET)
 X-Virus-Scanned: SPAM Filter at disroot.org
 Received: from layka.disroot.org ([127.0.0.1])
  by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
- id Eia_lZS8kHqw; Sun,  1 Nov 2026 13:59:09 +0100 (CET)
+ id 5ktr9ptBA5tb; Sun,  1 Nov 2026 14:07:58 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
-	t=1793537949; bh=t7EiQOFtNu0anEmbJYBpt9lRDtKGRLmScEKJ2mHier0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=glYxgGNt0kT2RYDcwmZOa8cNQF/V7b4iGsYpIaufSfL3ZkeEqYarT8ybS2SB8djHq
-	 1HeN91g408rTgh7iT7iZpjVaAld36L9hWO4oKfe8nDcZ04BPzgBZZE8SI1+rAJ4ooo
-	 pGUMD4XKOF0kjM8sS0gzGRTRniXMSZHTsNdpb+FUNSaY7kIel6r5llHZCcchMQ6796
-	 ZZRrQA2s6pti/uVBWQd9rl50PuFIL/ivFsKYYzTRa90sfczR+hSgnmm/VosDQP4aR8
-	 vsPSfeyeXEvuS/mJgEqqxrqIF3gqBO9w66FyohzjW8WJrbWdTTyz/nCb7T5QzzZbH/
-	 ERDye7dwkbj9A==
+	t=1793538478; bh=M4EvY79seuh0PY4SqDq/uHtRoc9q07ywIr0wat10wvk=;
+	h=From:To:Cc:Subject:Date;
+	b=jIuWhcRYwPfJ+8uX6D59stGo0x9vXdgUF0o8nRcfniGtbX+4dNO8lKB4ecIAz2wJB
+	 2UwmxQzePP5wE/22W3E0mPtA1a8dhF0wOSFSUWgfA8TaKrF7sahNN3Cy9RFF6+kURX
+	 hUfATHZWU3Y+wBqdRSIu41hnRH1NhdBp2gDKIqz1vd59JyTaZVu+uDjbMEbj4i8A59
+	 cfIUKqbOMLlc0tbQoxk5Bq8/HC23WYjJ07fMhZGwqplBIbq94YTpomsAwVX6cvz5Jb
+	 zetFNhWNXFO9H6Goz6l7y94WRkmPuWmwVLAe6k8hEPm6Tkvs3ezhIK6dF82H2nJB6a
+	 KtrAgWhoQtY9Q==
 From: Florian Maurer <fmaurer@disroot.org>
-To: Jeff Johnson <jjohnson@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: Florian Maurer <fmaurer@disroot.org>,
-	ath11k@lists.infradead.org,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Julius Bairaktaris <julius@bairaktaris.de>,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Subject: [PATCH ath-next 3/3] wifi: ath11k: ahb: stop TX before WCSS is reset on a firmware crash
-Date: Sun,  1 Nov 2026 12:58:03 +0000
-Message-ID: <1ae20599a69bfb6fac30bcc03e519bad26c78b1d.1793531790.git.fmaurer@disroot.org>
-In-Reply-To: <cover.1793531790.git.fmaurer@disroot.org>
-References: <cover.1793531790.git.fmaurer@disroot.org>
+	Simon Schippers <simon.schippers@tu-dortmund.de>
+Subject: [PATCH wireless-next] wifi: mac80211: mesh: notify driver of peer capability changes
+Date: Sun,  1 Nov 2026 13:06:36 +0000
+Message-ID: <20261101130636.1867958-1-fmaurer@disroot.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -75,243 +67,145 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On IPQ8074 a firmware crash is handled by remoteproc, which stops the
-remote processor and thereby resets WCSS. ath11k sets
-ATH11K_FLAG_CRASH_FLUSH, which stops the TX paths, only when it handles
-the QMI server exit event. That event results from the glink teardown
-in rproc_stop() and is handled asynchronously, so it can be processed
-after WCSS is already in reset. A TX in that window writes a ring head
-pointer to the reset block, which ends in an asynchronous SError:
+mesh_sta_info_init() updates the supported rates and HT/VHT/HE/EHT
+capabilities of a mesh peer whenever it (re)joins, e.g. after it left
+and joined again with a different channel width or HT mode while its
+station entry was kept. The changes are only propagated through
+rate_control_rate_update() if WLAN_STA_RATE_CONTROL is set.
 
-  remoteproc remoteproc0: stopped remote processor cd00000.q6v5_wcss
-  SError Interrupt on CPU3, code 0x00000000bf000002 -- SError
-  pc : ath11k_dp_tx+0x45c/0x878 [ath11k]
-  Kernel panic - not syncing: Asynchronous SError Interrupt
+That flag is set by rate_control_rate_init() only when a software rate
+control algorithm is in use. With hardware rate control
+(IEEE80211_HW_HAS_RATE_CONTROL, e.g. ath10k, ath11k) it is never set,
+so every call ends up in rate_control_rate_init(), which returns early
+without software rate control, and the driver is never told about the
+new capabilities. The firmware then keeps using the rates from the
+initial peer setup, e.g. legacy rates when the peer was first seen
+without HT, until the station is removed.
 
-remoteproc sends a QCOM_SSR_BEFORE_SHUTDOWN notification with crashed
-set before it stops the processor. Register for it, like ath10k does on
-SNOC, set ATH11K_FLAG_CRASH_FLUSH there and wait with synchronize_rcu()
-for TX paths which have not seen the flag yet. ath11k_dp_tx() is called
-by mac80211 within RCU read-side critical sections or with BHs
-disabled. Check the flag in ath11k_ce_send() again under ce_lock, so
-that this also covers WMI and HTC.
+With hardware rate control, tell the driver about changes of a station
+that is already uploaded via drv_link_sta_rc_update(), the same way
+IBSS does in ieee80211_update_sta_info(): report them as
+IEEE80211_RC_SUPP_RATES_CHANGED, plus IEEE80211_RC_NSS_CHANGED if
+rx_nss changed, so that the driver sets up the rates of the peer
+again. Also detect changed VHT/HE/EHT capabilities and rx_nss, which
+were not reported at all so far. The callback must be atomic, so
+calling it under plink_lock is fine. A pure bandwidth change on a
+rejoin, e.g. HT20 -> HT40+, is then also reported to the driver, as
+IEEE80211_RC_BW_CHANGED | IEEE80211_RC_SUPP_RATES_CHANGED.
 
-This stops new TX descriptors, for data and for everything sent through
-CE. Ring pointer updates from the RX and TX completion paths (NAPI, CE
-tasklets) are not stopped by this.
-
-A crash during the restart work of an earlier crash, after the QMI
-firmware start and before ath11k_core_qmi_firmware_ready() clears
-ATH11K_FLAG_CRASH_FLUSH after ath11k_dp_alloc(), is not covered yet:
-the flag set by the notifier is cleared again, and CE/HTC sends from
-the restart work can still reach the reset WCSS. mac80211 data queues
-are still stopped at that point. That window is a few milliseconds and
-will be addressed separately.
-
-The SSR subsystem name depends on the remoteproc driver, so add it to
-hw_params. Only IPQ8074 sets it for now. qcom_register_ssr_notifier()
-must be reachable from ath11k_ahb, so add the same Kconfig dependency
-on QCOM_RPROC_COMMON as ath10k SNOC has.
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+Keep the existing behaviour for software rate control, apart from now
+also getting IEEE80211_RC_SUPP_RATES_CHANGED for VHT/HE/EHT changes and
+IEEE80211_RC_NSS_CHANGED for rx_nss changes.
 
 Signed-off-by: Florian Maurer <fmaurer@disroot.org>
 ---
-Depends on 4/5 of [1], which moved clearing ATH11K_FLAG_CRASH_FLUSH
-into ath11k_core_qmi_firmware_ready(), and on patch 2 of this series for
-the Kconfig dependency. For that reason there is no Fixes tag: without
-patch 2 the Kconfig dependency added here is a recursive dependency
-error, so this must not be backported on its own.
+This touches the same FIXME as Simon's RFC [1], but addresses a
+different case: a peer whose capabilities change between peerings.
+It does not change anything for an established peer, so it does not
+help when a peer comes back with the same capabilities.
 
-Hardware-tested on IPQ8074 with [1] backported to backports-6.18.55
-(OpenWrt 25.12). The tested version also had a give-up path for a
-crash during the restart work, which was never triggered in the tests
-and is left out here; the remaining code is the same apart from a
-shorter comment. Build-tested on ath-next with [1], including
-ATH11K_AHB=y with QCOM_RPROC_COMMON=y.
+Tested on IPQ8074 (ath11k, WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1)
+with an equivalent change (rx_nss is derived elsewhere on 6.18)
+backported to backports-6.18.55 (OpenWrt 25.12), build-tested (W=1) and
+tested with mac80211_hwsim on wireless-next. In an open mesh (kernel
+MPM) with a peering first set up without HT, then the peer rejoining
+with HT20 while its station entry was kept, the tx rate to the peer went
+from 54 Mbit/s to 229.4 Mbit/s (HE-MCS 9, NSS 2), like a fresh HT20
+peering (206.5 Mbit/s, HE-MCS 8, NSS 2), and back to 54 Mbit/s for
+HT20 -> NOHT. Without this change it stays at 54 Mbit/s after
+NOHT -> HT20.
 
-[1] https://lore.kernel.org/linux-wireless/20261018210153.1925962-1-julius@bairaktaris.de/
+The software rate control part was only tested with mac80211_hwsim
+(minstrel_ht, open mesh with kernel MPM, one peer leaving and rejoining
+with NOHT/HT20/HT40+ for 12 cycles). The changed flags passed to
+rate_control_rate_update() go from IEEE80211_RC_BW_CHANGED to
+BW|SUPP_RATES|NSS on NOHT <-> HT20, the minstrel rate table follows
+each rejoin as before. With hwsim mlo=1 (IEEE80211_HW_HAS_RATE_CONTROL)
+the driver's link_sta_rc_update is now called on each rejoin; without
+the patch it never is. In the mlo=1 pass both runs, with and without
+the patch, hit the same pre-existing WARNs (rx.c:5640, rx.c:5711,
+mac80211_hwsim_main.c:2270, mac80211.h:3428), some of them more often
+with the patch. There were no new WARN sites and no lockdep or KASAN
+reports.
 
- drivers/net/wireless/ath/ath11k/Kconfig |  1 +
- drivers/net/wireless/ath/ath11k/ahb.c   | 59 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/ahb.h   |  2 +
- drivers/net/wireless/ath/ath11k/ce.c    |  7 +++
- drivers/net/wireless/ath/ath11k/core.c  |  1 +
- drivers/net/wireless/ath/ath11k/hw.h    |  1 +
- 6 files changed, 71 insertions(+)
+Known limitation: if the peer rejoins while the local plink is still
+ESTAB (e.g. a fast reboot), the early exit at the top of
+mesh_sta_info_init() still skips parsing the new capabilities. I left
+that alone, since it needs a separate change of when capabilities are
+re-read.
 
-diff --git a/drivers/net/wireless/ath/ath11k/Kconfig b/drivers/net/wireless/ath/ath11k/Kconfig
-index 84b7eb5df253..a425da76934b 100644
---- a/drivers/net/wireless/ath/ath11k/Kconfig
-+++ b/drivers/net/wireless/ath/ath11k/Kconfig
-@@ -14,6 +14,7 @@ config ATH11K_AHB
- 	tristate "Atheros ath11k AHB support"
- 	depends on ATH11K
- 	depends on REMOTEPROC
-+	depends on QCOM_RPROC_COMMON || QCOM_RPROC_COMMON=n
- 	depends on RPMSG
- 	select QRTR
- 	select QRTR_SMD
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 3ff7d5f27f5e..893a3270394e 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -20,6 +20,7 @@
- #include "pcic.h"
- #include <linux/soc/qcom/smem.h>
- #include <linux/soc/qcom/smem_state.h>
-+#include <linux/remoteproc/qcom_rproc.h>
+[1] https://lore.kernel.org/linux-wireless/20260202133532.814017-1-simon.schippers@tu-dortmund.de/
+
+ net/mac80211/mesh_plink.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 6ce3ae3fb39b..1412be92e8ba 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -430,6 +430,10 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_supported_band *sband;
+ 	u32 rates, changed = 0;
+ 	enum ieee80211_sta_rx_bandwidth bw = sta->sta.deflink.bandwidth;
++	struct ieee80211_sta_vht_cap vht_cap;
++	struct ieee80211_sta_he_cap he_cap;
++	struct ieee80211_sta_eht_cap eht_cap;
++	u8 rx_nss;
  
- static const struct of_device_id ath11k_ahb_of_match[] = {
- 	/* TODO: Should we change the compatible string to something similar
-@@ -832,6 +833,60 @@ static const struct ath11k_hif_ops ath11k_ahb_hif_ops_wcn6750 = {
- 	.ce_irq_disable = ath11k_pci_disable_ce_irqs_except_wake_irq,
- };
+ 	sband = ieee80211_get_sband(sdata);
+ 	if (!sband)
+@@ -450,6 +454,11 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
+ 	sta->sta.deflink.supp_rates[sband->band] = rates;
  
-+static int ath11k_ahb_ssr_notifier(struct notifier_block *nb,
-+				   unsigned long action, void *data)
-+{
-+	struct ath11k_ahb *ab_ahb = container_of(nb, struct ath11k_ahb, ssr_nb);
-+	struct ath11k_base *ab = container_of((void *)ab_ahb, struct ath11k_base,
-+					      drv_priv);
-+	struct qcom_ssr_notify_data *notify = data;
++	memcpy(&vht_cap, &sta->sta.deflink.vht_cap, sizeof(vht_cap));
++	memcpy(&he_cap, &sta->sta.deflink.he_cap, sizeof(he_cap));
++	memcpy(&eht_cap, &sta->sta.deflink.eht_cap, sizeof(eht_cap));
++	rx_nss = sta->sta.deflink.rx_nss;
 +
-+	if (action != QCOM_SSR_BEFORE_SHUTDOWN || !notify->crashed)
-+		return NOTIFY_DONE;
+ 	if (ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, &sband->ht_cap,
+ 					      elems->ht_cap_elem,
+ 					      &sta->deflink))
+@@ -473,6 +482,14 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_sta_init_nss_bw_capa(&sta->deflink,
+ 				       &sdata->deflink.conf->chanreq.oper);
+ 
++	if (memcmp(&vht_cap, &sta->sta.deflink.vht_cap, sizeof(vht_cap)) ||
++	    memcmp(&he_cap, &sta->sta.deflink.he_cap, sizeof(he_cap)) ||
++	    memcmp(&eht_cap, &sta->sta.deflink.eht_cap, sizeof(eht_cap)))
++		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
 +
-+	/* WCSS can be reset before the QMI server exit event sets the flag.
-+	 * ath11k_dp_tx() runs in RCU read-side sections or with BHs disabled
-+	 * and ath11k_ce_send() checks the flag under ce_lock, so after
-+	 * synchronize_rcu() no new TX descriptors are queued.
++	if (sta->sta.deflink.rx_nss != rx_nss)
++		changed |= IEEE80211_RC_NSS_CHANGED;
++
+ 	if (bw != sta->sta.deflink.bandwidth)
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+ 
+@@ -485,11 +502,20 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 		sta->sta.deflink.bandwidth = IEEE80211_STA_RX_BW_20;
+ 	}
+ 
+-	/* FIXME: this check is wrong without SW rate control */
+-	if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+-		rate_control_rate_init(&sta->deflink);
+-	else
++	if (test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
+ 		rate_control_rate_update(local, sband, &sta->deflink, changed);
++		goto out;
++	}
++
++	/* WLAN_STA_RATE_CONTROL is never set with hardware rate control, so
++	 * tell the driver about changed capabilities of an uploaded station,
++	 * e.g. of a peer that rejoined. As in IBSS, report them as changed
++	 * supported rates.
 +	 */
-+	ath11k_dbg(ab, ATH11K_DBG_AHB, "firmware crashed, stopping tx\n");
-+	set_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags);
-+	synchronize_rcu();
-+
-+	return NOTIFY_OK;
-+}
-+
-+static void ath11k_ahb_register_ssr_notifier(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+	void *handle;
-+
-+	if (!ab->hw_params.ssr_name)
-+		return;
-+
-+	ab_ahb->ssr_nb.notifier_call = ath11k_ahb_ssr_notifier;
-+	handle = qcom_register_ssr_notifier(ab->hw_params.ssr_name,
-+					    &ab_ahb->ssr_nb);
-+	if (IS_ERR(handle)) {
-+		ath11k_warn(ab, "failed to register ssr notifier: %ld\n",
-+			    PTR_ERR(handle));
-+		return;
-+	}
-+
-+	ab_ahb->ssr_handle = handle;
-+}
-+
-+static void ath11k_ahb_unregister_ssr_notifier(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+
-+	if (!ab_ahb->ssr_handle)
-+		return;
-+
-+	qcom_unregister_ssr_notifier(ab_ahb->ssr_handle, &ab_ahb->ssr_nb);
-+	ab_ahb->ssr_handle = NULL;
-+}
-+
- static int ath11k_core_get_rproc(struct ath11k_base *ab)
- {
- 	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-@@ -1230,6 +1285,8 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto err_ce_free;
- 
-+	ath11k_ahb_register_ssr_notifier(ab);
-+
- 	ret = ath11k_core_init(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to init core: %d\n", ret);
-@@ -1247,6 +1304,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	return 0;
- 
- err_ce_free:
-+	ath11k_ahb_unregister_ssr_notifier(ab);
- 	ath11k_ce_free_pipes(ab);
- 
- err_hal_srng_deinit:
-@@ -1288,6 +1346,7 @@ static void ath11k_ahb_free_resources(struct ath11k_base *ab)
- {
- 	struct platform_device *pdev = ab->pdev;
- 
-+	ath11k_ahb_unregister_ssr_notifier(ab);
- 	ath11k_ahb_free_irq(ab);
- 	ath11k_hal_srng_deinit(ab);
- 	ath11k_ahb_release_smp2p_handle(ab);
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.h b/drivers/net/wireless/ath/ath11k/ahb.h
-index 8c1eb1e8e6b1..d7ea47f42edf 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.h
-+++ b/drivers/net/wireless/ath/ath11k/ahb.h
-@@ -23,6 +23,8 @@ struct ath11k_base;
- 
- struct ath11k_ahb {
- 	struct rproc *tgt_rproc;
-+	struct notifier_block ssr_nb;
-+	void *ssr_handle;
- 	struct {
- 		struct device *dev;
- 		struct iommu_domain *iommu_domain;
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index 1e08b0970b14..895648687d99 100644
---- a/drivers/net/wireless/ath/ath11k/ce.c
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -745,6 +745,12 @@ int ath11k_ce_send(struct ath11k_base *ab, struct sk_buff *skb, u8 pipe_id,
- 
- 	spin_lock_bh(&ab->ce.ce_lock);
- 
-+	/* Check again with BHs disabled, see ath11k_ahb_ssr_notifier() */
-+	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags)) {
-+		ret = -ESHUTDOWN;
-+		goto err_ce_unlock;
-+	}
-+
- 	write_index = pipe->src_ring->write_index;
- 	nentries_mask = pipe->src_ring->nentries_mask;
- 
-@@ -791,6 +797,7 @@ int ath11k_ce_send(struct ath11k_base *ab, struct sk_buff *skb, u8 pipe_id,
- err_unlock:
- 	spin_unlock_bh(&srng->lock);
- 
-+err_ce_unlock:
- 	spin_unlock_bh(&ab->ce.ce_lock);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 4666245aee36..7ba05c63ede6 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -91,6 +91,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.coldboot_cal_mm = true,
- 		.coldboot_cal_ftm = true,
- 		.cbcal_restart_fw = true,
-+		.ssr_name = "q6wcss",
- 		.fw_mem_mode = 0,
- 		.num_vdevs = 16 + 1,
- 		.num_peers = 512,
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index 4996536fbd14..ce52c61d661d 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -191,6 +191,7 @@ struct ath11k_hw_params {
- 	bool coldboot_cal_mm;
- 	bool coldboot_cal_ftm;
- 	bool cbcal_restart_fw;
-+	const char *ssr_name;
- 	int fw_mem_mode;
- 	u32 num_vdevs;
- 	u32 num_peers;
++	rate_control_rate_init(&sta->deflink);
++	if (changed && sta->uploaded)
++		drv_link_sta_rc_update(local, sdata, &sta->sta.deflink,
++				       changed | IEEE80211_RC_SUPP_RATES_CHANGED);
+ out:
+ 	spin_unlock_bh(&sta->mesh->plink_lock);
+ }
 -- 
 2.47.3
 
