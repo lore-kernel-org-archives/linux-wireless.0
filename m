@@ -1,65 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=178.21.23.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793539721;
-	b=hQm1qyTSI61JIEDjLghc9zWESZ6jFvAloZKhSGSPWlvXhjm/RR1ZIwGuKSG5souerTPn
-	 54zGi2XFxBkCN2Di0GrTl9eLE2mrObrogf8c6ROmaCItYLhyID1Li0/d8awrjwfAJttyc
-	 ge71DM+Zad0ngM9pfumSVn7elPETCI3yYQ60Y4D+OU1V/fYlrTK+xrJ+rCRgCmqwm1E7X
-	 D/N9xPiFEcloWPHt3TfBJvoFT92QhzUC5FvRItVm7UERNZvbHIqwYSwWEArIR0pzum4pv
-	 RebUVUeSQbsr70C9mT7bZowu9mQLgESN5aPCQGH4D/2fGqeK0klMukc1jyGajXF1h+w==
+	t=1793540503;
+	b=TpqOJSFY7yk3NvZUGXYhpvusZX19i9qYZTGPNHwhUNeezOdlSUPMv5t5jjDdwfe4XK46
+	 KQC7mNkE/RM0kM7xeE/nFI7hrJLnGZ75NpiXB1/86Mx4ei+jTE4NVgnKIoltiDtfBb17a
+	 imen5VR/UmuLHGc0VF0cClRXjAciL6C+NqzJnKnpj7bPorMkDBD0gAtBHkoZnSQlXB1T+
+	 JsyeiUfoFHyezu1R+4wxQ9LQoVsfR2sK+n7c/dIKxIt/vjjjzZHGt5uRR4enjgR3N0ZRD
+	 /1lBdpbTbWWxOOdhONe4VrQsSiMwODGgabJh/1W8vI3oQRmYNGoNmxdYDwWwiL3fWew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793539721;
-	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:From:
-	 To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=BUt2Z09wK4LSp7ylKwrL85powLevpTqnbmj/kdSRxtE=;
-	b=aZ7aCH2LTYCvglcI0Uuwd/cZcD1jzSaZRx/LYscuv2enlHs1K/o220mMwen2tNcWoaDT
-	 KzL/6zC3Hy0s7vlWLv90MNYLDj/h6ZBoDfmt0BD8XLVwnbq7zTaK9Igw3XpPdjqXDdH1T
-	 N/D0QF/lglsTprbypRe04CWtTsEqGbyqPmNtlDykH0hxGKSz0d0Rb33EAqvyq7oQ42REs
-	 rQKIyNDk6H2pw3Pbkt24IRM248lKxHCxUWoXo7V6Nco+G2r67cyMtG8jI8HGLuRroOuF7
-	 f9YZQSyNIjcx/YoCgeodLenwZ9qEOf4032OkYcLS3k9rEO+JGz1ij2x5nAy29csjLjA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793540503;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=D9SuAAhicfGEowYvG8qAtgOKnV2KMOsPr8uS/Jwlz2M=;
+	b=A6V8+6ekJQNZQo/WPL1oX8sWBAJK5Q7Dj5yu7KrUf89ID0HZDcHYkpmXFaEdreYLmEYZ
+	 yPHmeCNWwliiPXRYx2xcSArtolob5QZVWHxeCgRynE3CwaMQ4K6r0KSOzdu8IQ+ctXxkY
+	 8fs4thbUcKKEFmf5hxCFTcjQ9TdMN2iCXXyuqVVLF2Hmu+TqqOjlk0lRuKQqaZ/SApCBx
+	 P1agW+SyMLt3dH/pigihyQtyapULXUN2O8vpiOvbL0MpfLBIzqirNfMFQg+nHxXOG+Kb/
+	 P2cFHSO31rpiGzaGv8caSl1FaDJ4KIXbF1076b2FBjvcXqXC8//FCNOsL5VxqnyeiqQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=disroot.org;
-	spf=pass smtp.mailfrom=disroot.org;
-	dkim=pass header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b="HxF4hgh/";
-	arc=none smtp.remote-ip=178.21.23.139
-Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=TnBwHmkB;
+	arc=none smtp.remote-ip=209.85.214.180
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE70606A324
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 13:28:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ADE70606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C2B1606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 13:41:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C2B1606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=HxF4hgh/
-Received: from mail01.layka.lan (localhost [127.0.0.1])
-	by disroot.org (Postfix) with ESMTP id 27AB3805EC;
-	Sun, 01 Nov 2026 14:28:39 +0100 (CET)
-X-Virus-Scanned: SPAM Filter at disroot.org
-Received: from layka.disroot.org ([127.0.0.1])
- by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
- id 93v_HZUPztKi; Sun,  1 Nov 2026 14:28:38 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
-	t=1793539718; bh=L8f3j7ouq04gW7/lLDtNrjgW6rikViytGiRXmBLKk4o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HxF4hgh/+xlcmz7GAbseou5s8xkEXGuLhHDEKIqKQyKhtzSscH+qebkXn935cW2bd
-	 kx2i7Iewy8P1Llwxyg9q/AW06WXUqWPacNPziMDMZYh5DowMJW5uIXbrv1bNn45hgT
-	 QqtgBNCpitbc7txgao0BdbWtusSAihY7rdOQjAN/bP/e7bI576/wZ5HMen/mXh+4lU
-	 kz/2OAxSf/+matvlctNXGA9uCDAvOtkBrakap5Qkn2E5qepbNpWvpNPJLN9qetvTWA
-	 WlAsIAZufuW1uxoP0T6rPCyK+XxewiTi3ZOz9Q8aocbbOZdGpvEk1ZIJMT0Of7A7mT
-	 aagupa0Nbjpgg==
-From: Florian Maurer <fmaurer@disroot.org>
-To: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-Cc: Florian Maurer <fmaurer@disroot.org>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	ath11k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] ath11k: add ath11k_mac_op_flush_sta to properly flush pending packets
-Date: Sun,  1 Nov 2026 13:28:21 +0000
-Message-ID: <20261101132821.1920036-1-fmaurer@disroot.org>
-In-Reply-To: <88fbbb46-0f2a-459e-8dff-2a7679e1ffd4@oss.qualcomm.com>
-References: <88fbbb46-0f2a-459e-8dff-2a7679e1ffd4@oss.qualcomm.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=TnBwHmkB
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2e98798cbddso9659115ad.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 05:41:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793540502; x=1794145302; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=D9SuAAhicfGEowYvG8qAtgOKnV2KMOsPr8uS/Jwlz2M=;
+        b=TnBwHmkBJcfx2omypk51rDF8gsLIEFeSM7osdJ6QXAjKOddxtvEBYLseofQY5eATis
+         yg2y3pAPEQ8hQp/4LLvFJKAqvwAnTCI5LzPZwvejPMGUaMGdSfTIriwzWvnoDRtezCR8
+         +J9WV987bbhGwE6BSqE3Vv8mZfLl2ntWStNv83mYE2PpeulC3ptKKEd2JUdO5ed31qYL
+         TbFwlf6foIj5OCRjFpXLG9CTimh+UnKqttveSHFYqvO2XZ1nkxddXXj0wemtWVdYT7S3
+         1m8DI0lZd0ZjILlbOvxxa6QrLTzmfiaZrCNtK+F3YSGCncmbw4kkGjQ8Cb3atT3dwCO+
+         w0UQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793540502; x=1794145302;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=D9SuAAhicfGEowYvG8qAtgOKnV2KMOsPr8uS/Jwlz2M=;
+        b=tqJGFo5D1rxRhMc62XANnn7WUDKOz6DFi8nj2BqriNHVmVsKw0kEusme+sl+19c+Mm
+         D4sGRILwJuudx8MVjSfosOtjkoraNw8edbidSDCNEid6Gkd6R3W+QhHsy/5uelKJ3xTP
+         x9hZWfONk//cL8NrzliF6mNIWSL0OAnOScCet0X8lTZc3cyud1Nr/NM9N1s0QGxKrDW3
+         RHDjk08f3Qx6/2NXlDYH3r3oggIkJDc4sOS8tqquv2UTlakBKynBeqV6HQMk93aYbiQh
+         bpdHizBYgWsrPiXkXYOAhkjwcm9ri75tinkxxL0FHUkfQhN4qZaSlor4S5FUbIM+XsXM
+         iXPg==
+X-Forwarded-Encrypted: i=1; AKwUvBwf+w/KI0EvLhm9med9n15u8MS21Unj4QmgZLXFRo4Dt6BwUgOYslvynxdMQ+JpeEZ6NCtRfKGXtdd3YDlNvQ==@vger.kernel.org
+X-Gm-Message-State: APuU4Z+WbGsfVktoekbedXPdDgeisAfZmSirjTM+juSvEzBwdqM+PgjB
+	ZlWfEfzbokXJ1EjTfpYQbaNeQs+BRnMbHjvJKWVL4BwGfc+T+qMA4mzv
+X-Gm-Gg: AYBFou2M+fkU6yJsp7nzGG9hYcPwVLpuzhWVV8v57ih+XVxg4n4hKZdUv3QnyiGIPva
+	0WUP3aPkgYN7niTZExsx8h6B+u7OcDxs5AEcqSr7/P7H4AMveU6XfAfQi4MPKRHxem7ggUNLQtm
+	o4ybke1WVqjBiM9bxX+Oehs2tlidCy6RD4BdwWoaLVDy+eRShTKDz5KqVpaKT+ahZ3ZcMs4m/MI
+	f/BHXbS5dGSBXw1OTH9CPMgNGgifYkj5KpmEzzz8CP7IdOKvaIANUN9ETfY0EdUJHOPwZ9QDmgw
+	JlBKPKFZvgLqMDasjr2ndBy3DZVx2wJuMdI+uzcXG9zHZt92xIXV3rqvOphaTOobcEsZtOnsvo6
+	ljO5cQ8Ylgmfp9Zia28iYHJHHAKJRnfi1iu0w+i+WSm3g6p01ESRc5NVw9vFzq5oy5SU5dvlcx1
+	ydyQ5mp2cDjT2znRjNSFXc09kcQgtJ2vOtlcx03nusAPzkbWvywHBkBXWvws7Ok0qcxa6qEiw6u
+	FVRyELcC0oOF0bVdwb2PKyr1vvpmTLbSz+cOuDySV2cuDDdg/kzRdX5pl/6GisZTHLfJdO4sRMC
+	t8UDLtWYpAV/hcgZT0d+2piGqeONzo13pEFC4I+bq2YXeToOS8UdP9U/1DYjgvrRqbA=
+X-Received: by 2002:a17:903:1b05:b0:2db:733c:fd1f with SMTP id d9443c01a7336-2eb364005f0mr64610475ad.8.1793540501905;
+        Sun, 01 Nov 2026 05:41:41 -0800 (PST)
+Received: from KRHW1CJW23 ([139.177.225.243])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eb3927ff6bsm18769675ad.52.2026.11.01.05.41.34
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 01 Nov 2026 05:41:41 -0800 (PST)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: Luka Gejak <luka.gejak@linux.dev>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	neo_jou <neo_jou@realtek.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Kalle Valo <kvalo@kernel.org>,
+	Hans Ulli Kroll <linux@ulli-kroll.de>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: rtw88: usb: stop RX work before unregistering hardware
+Date: Sun,  1 Nov 2026 21:41:17 +0800
+Message-ID: <20261101134116.30404-2-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <4a555879477e2c5b8eb2f2cd430157adef580461@linux.dev>
+References: <20261028141904.8707-1-enderaoelyther@gmail.com> <4a555879477e2c5b8eb2f2cd430157adef580461@linux.dev>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -71,102 +106,42 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Vasanth,
+Hi Luka,
 
-On 2/10/2026 Vasanthakumar Thiagarajan wrote:
-> The recommendation from the firmware developers is that all 32-bit has
-> to be sent in WMI_PEER_FLUSH_TIDS_CMDID for both AP and STA mode,
-> otherwise some of the tid queues may still have pending packets.
-> Firmware does the intersection and gracefully ignores the inactive tid
-> queues when all the bits are set. We may need to check the firmware
-> crash dump to understand the issue with 0xffffffff bitmap.
+On Fri, Oct 30, 2026 at 02:51:43PM +0000, Luka Gejak wrote:
+> As far as I can see, rx_urb_work can't bring an URB back at this point.
+> rtw88 doesn't set soft_unbind, so the USB core disables the endpoints
+> before it calls the driver:
+>
+>         usb_unbind_interface()
+>           usb_disable_interface()
+>             usb_disable_endpoint()
+>               ep->enabled = 0;
+>           driver->disconnect()
+>             rtw_usb_disconnect()
+>
+> After that usb_submit_urb() on the RX pipe fails for the rest of the RX
+> teardown, and a failed submit only queues the work again on -ENOMEM. So I
+> think cancel_work_sync() on rx_work alone already closes the race, and
+> the same change would then work for the older stable trees too.
+>
+> Keeping disable_work_sync() doesn't hurt, but then the commit message
+> shouldn't say the work can restart a killed URB. Or did I miss a path
+> where we get here with the endpoints still enabled?
 
-thanks for checking with the firmware team, and sorry for the late
-reply. I tested this on IPQ8074 (Xiaomi AX3600, AHB, OpenWrt 25.12 with
-backports 6.18), firmware WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
-(8074.wlanfw.eval_v2Q), with peer_tid_bitmap made tunable via a
-test-only module parameter.
+You didn't miss one. usb_unbind_interface() is the only caller of an
+interface driver's ->disconnect(), and none of the rtw88 USB drivers
+sets soft_unbind. Before rtw_usb_disconnect() returns, only its own
+usb_reset_device() enables the endpoints again, and that runs after
+rtw_usb_deinit_rx() has destroyed rxwq.
 
-With 0xffffffff the firmware asserts 0.2-2.3 s after
-WMI_PEER_FLUSH_TIDS_CMDID, but only if the peer still has queued
-downlink traffic:
+rx_urb_work can still run until then after an allocation failure, but
+its submit fails on the disabled endpoint. The commit message was wrong
+about that.
 
-  wal_peer_control.c:11907 Assertion !CHK_TID_FLG(ptid, WAL_TID_IN_SCHEDQ) failed
-  Thread name: WLAN RT0 / WLAN RT1, PC 0x4b107f58, LR 0x4b1076f4
+I'll send a v2 that only adds cancel_work_sync(&rtwusb->rx_work) after
+rtw_usb_cancel_rx_bufs(), with a corrected message and without the
+3e3aa566dd18 Fixes tag. It applies unchanged to 6.6.y and later.
 
-Peers without queued traffic survived every bitmap I tried, including
-0xffffffff.
-
-AP vif (2.4 GHz, HE20), 2x2 HE client, best-effort downlink load (many
-parallel large pings), flush triggered by the client disconnecting:
-
-  0x000000ff     ok      (many runs)
-  0x0000ff00     ok      2/2
-  0x00ff0000     ok      2/2
-  bit 24         ok      3/3
-  bit 25         ok      3/3
-  bit 26         assert  3/3
-  bit 27         ok      3/3
-  bit 28         assert  3/3
-  bit 29/30/31   ok      2/2 each
-  0x1e0000ff     assert  3/3
-  0xebffffff     ok      3/3   (all bits except 26 and 28)
-  0xffffffff     assert  every run
-
-Mesh vif (2.4 GHz, mesh peer with downlink UDP/ping load, flush
-triggered by deleting the station):
-
-  0xffffffff     assert  every run
-  0x1e0000ff     assert
-  bit 26         ok      3/3
-  bit 28         assert  3/3
-  0xebffffff     ok      3/3
-
-STA vif (AX3600 as client of another AP, downlink load including a
-UDP flood above link rate, flush on own disconnect and on deauth by the
-AP): 0xffffffff, 0x1e0000ff, bit 26, bit 28 and 0xebffffff were all ok
-3/3. So the 0x1e000000 that v3 [1] ORs in for STA vifs did not cause
-asserts in my tests, but bit 26 does on AP vifs and bit 28 on AP and
-mesh vifs.
-
-So on this firmware, bits 26 and 28 are not ignored for a peer with
-pending frames: bit 26 alone triggers the assert on AP vifs, bit 28
-alone on AP and mesh vifs. This also means my earlier statements that
-anything beyond 0xFF, or bit 17 alone, crashes in AP mode were too
-broad; with this setup those bits did not assert.
-
-With 0xFF on AP and mesh vifs I see no "failed to flush transmit queue"
-warnings and no asserts, also when peers disconnect under load. It is
-the value I have tested most. The test router has since run for a week
-with 0xFF in a live mesh network (about 1450 station flushes, mostly
-AP clients) without a single firmware crash.
-
-Is the assert with bits 26/28 fixed in a newer HK firmware, and if so,
-which version? If not, which bitmap would you recommend for these
-firmware versions? I have not captured a full firmware crash dump yet;
-if that would help, I can try to get one.
-
-Separately, these asserts were also a good test for the AHB recovery
-path. With the 6.18 backport in OpenWrt 25.12, without the ath-next
-IRQ fixes, every firmware assert, real or simulated, ended
-in a kernel panic during recovery. With the three IRQ fixes from
-ath-next (a7ab5c835e42, f7a74e131d3f, e56c9d429ba0) backported, it
-still failed in other ways: WMI commands from userspace (survey,
-station stats) reaching the firmware while it restarts, TX into the
-rings before CE/DP are set up again, the registered hw being freed on a
-failed recovery, and TX writing to WCSS after remoteproc has already
-reset it (asynchronous SError). With fixes for these, 20 of 20 firmware
-crashes recovered without a reboot (10 real asserts on AP and mesh
-vifs under load, 10 simulated while survey and station stats are
-polled). Julius Bairaktaris has meanwhile posted fixes for the first
-three of these, on the same hardware and firmware [2]. I have posted
-the last one (stopping TX before remoteproc resets WCSS), and a fix for
-the ext IRQs staying masked when a recovery follows a failed one, on
-top of his series [3].
-
-[1] https://lore.kernel.org/linux-wireless/GV1P250MB1433E723AF90A69AEBB696DAE8CBA@GV1P250MB1433.EURP250.PROD.OUTLOOK.COM/
-[2] https://lore.kernel.org/linux-wireless/20261018210153.1925962-1-julius@bairaktaris.de/
-[3] https://lore.kernel.org/linux-wireless/cover.1793531790.git.fmaurer@disroot.org/
-
-Regards
-Florian
+Thanks,
+Zhao
