@@ -1,91 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793569878;
-	b=aS67XuVmzgmcdnYAvgXA+uNil0jAxaHEYlEygkw5ccLBjY18LHpawadxVDwA+4ZUvKfJ
-	 nlYxaxeLa4Pg5eyG0s+nEhkdXzov/5Rwy+MjFVZG7ymLV8CA4zwy4cXW8wJF2wncijTVZ
-	 5aqoVay8oXJ/6U5WMOK4kCYeo2kISSbL8xChCf9iZg8CkOjZIuME7rT8Ap0w2LHGgx1/t
-	 9ywmQ6N2e76Z5/ZbaAnhJ+u/gPl6Tnp7VksHTaz+E4xjOWZ6OpFdjI6Mq0HP2Dtx+O4ys
-	 96Qv+j6S/h9QwjoRAJz1LBPoOrCdQp+QQ3Cjcl1SdSJFBYmAEOkajzWnuucUGtzfAMg==
+	t=1793569882;
+	b=I7rBYfe6Lwn/3B2FALNGZ4AG6VLSVieTuVmPIuUY3Gp1rmEx827OWMn81jPUTc8pXaLe
+	 S+OU0KzAzvVfM7k/IkLgLuMapSd7qSvAnk8YmsOo7yMvSxFwvEos7c7Z1cj9mpIZ3LeCR
+	 Z5WDHpi3d6FBv/V8ZYPSHAObhmsSqv66bnYwiVofPjTvJbktihjEaoKpIFBwPIs00lYvM
+	 UIcObyOCPzFPz70a6cGOXatyU0eN3Lpj8UVRA5YivBZATVqAeUyN+QLY1H1mKCnM1MSch
+	 LFSpboaOfG5stj3a9Y/SlDBqtP7e12ehCB0NtCR+UENcHy/kP+eQRU//NhwoEHfXcYw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793569878;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793569882;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=+fFwfLqRK9JmViO+Rr59prjwvHp0VxvmW/Io5rw0BcM=;
-	b=Rsq+VESAdIFyQg3s/9JmdAJSDl2MOG94TPwvSjALoWf+qWsbUSQUAskgHRjZgGgNP8yS
-	 reEyGfOETBLydTHo6MZNscTatf0j7N8MEcRYuS9W8QzDoOU7cT629NuibSnlCq68qtIA9
-	 0OXlMoN59t4Oz/omamWps7+sR+hVftUQashE63USKFk5NnK/ZoE36ItQTmgCEMOW59ze2
-	 oZQhhc3sMHS15mld+oLjOm5SM4w9Inl03oXeBrDUboT1bovamd8am0+0q5h0BwzxF7xQw
-	 l6YalomNLnULnNfcvRs+jP4TUnkkgWPGNfIuPCILacP4+L/qeI47k/HDNdVq+WsZofg==
+	bh=gXbCJ+Z4Wlm8GkoiAeg5stJ+hb5LXK7yuiODoWXbq4E=;
+	b=3gEI0CbIyl564XNGRElpXG4KTZIAdI1bMkDm0ISdtx+rblTbtDbQktZV9KI75+CkQePE
+	 Cf+3YsVouKmSFX5kquxcYgBr8jE4UwmOkVyFQzq70jbabeXPkxxJ+Uopqefa+o0T+lqtZ
+	 DRVDCHl36b0JHFRVLvo+IGNrMLFgTD64CXzcW4e8F3l/MEspMuy/8yvEigj7jDSyyGEUG
+	 wW7yE+12N20weKr0tus8iicdObBLMwc763iFq2GS/q2P04c9XDXbaAzG9y+DGATJRcDla
+	 +ALpgIBi3D7U3GJpPSMFZknVO0oNmjLL43WiGvFw+1+HAIfY4d3L+zheKFtT4uwOKkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=arA3dOZ8;
-	arc=none smtp.remote-ip=209.85.221.49
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0UlB7U4z;
+	arc=none smtp.remote-ip=209.85.128.42
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12CCB606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ECA5606A32E
 	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 21:51:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12CCB606A32C
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3ECA5606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=arA3dOZ8
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48b060ec084so1307865f8f.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 13:51:17 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0UlB7U4z
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a35d5d4a20so27176485e9.2
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 13:51:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793569876; x=1794174676; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793569875; x=1794174675; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=+fFwfLqRK9JmViO+Rr59prjwvHp0VxvmW/Io5rw0BcM=;
-        b=arA3dOZ8Qw5VaeKLI9WB4WkUoRVxRsRcmtnwspOBQgut4M22YR8KAmSIgd2cy+jpqy
-         nwAVawvJFXB/kMP/qyNmfF2akNs2OZlAS3y6ohNQyqmWgSZPkC76adbAOOLFpGVJSaMb
-         cMa865WRNln0vyvb9mu1VtPQd7m6AJWlpnpCV4GqxkcxQkY+WsJI3ufPtgRsJeDGbYPq
-         Z2QgXVCdAg/LYfIrWvDjiBNvcxFuIMFYyU0yaOdhJs+uNGxvwyiB1hEUfLNkJIJwn5lw
-         qe/mw3qptH76Z36WdpUH9XA377yLNbK/+piYbdM74y3HfU+IeAAvI0ndDsTy8j4VDQGp
-         iXQQ==
+        bh=gXbCJ+Z4Wlm8GkoiAeg5stJ+hb5LXK7yuiODoWXbq4E=;
+        b=0UlB7U4z8EPZoo87aj+uGyErmzAju9AXIJqWYcxdkHWWDjaj7u+VJqzpFrh0Qa4yrH
+         ExXB/uYXubhbjIYdDON5wDB78kL//bgXTF7c5MFqTlfWHSqRmBrTrTwzn6X2tdjfjoUG
+         mrOxgCM89gw172sFDIn5v8ewHvNbFUTkredsUAizHBskDxdw4t8c2WWvV7gN3PMwVW9T
+         6snABxlqEchBwhfFgPtVyAnmta8GObGNOwyRPC9l1guNv9DwVttc93IarxTK4bG1DENm
+         9zDmyEVbELYdVGcebvtK5RMve8g3clLLx/nCbfNgXUY5mUsTKDgklVRqHPGNUKXS9AYF
+         WknA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793569876; x=1794174676;
+        d=1e100.net; s=20260707; t=1793569875; x=1794174675;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+fFwfLqRK9JmViO+Rr59prjwvHp0VxvmW/Io5rw0BcM=;
-        b=P0s9Y/bn6x2Et+27lC3arSXz/f+y30nfuL4EImVgYgHcilWsZExFW/JMMrkjBIqipL
-         mgp9zEw9GbrQ6llC1xS4eQYRGUE6DTO70egqsC/uUUUCXCNBLGzF8RcRCJebgQiV0WSt
-         RzM/IkdWIub/7Tk4NQNypr6GOM2idVoCGTb9buNZ/xjmrf1VHoxaRf/uGQOz1OnouLEW
-         DBdxTnj5SVh4X7DALlU0qJt6zDgKsiQ+ni8qqEJPSRofLVoHQwSRo9ZqpBTkxiKYEEqR
-         14Fwy0EE5Gfx6otNSotYIG4NV7B9eBdXVkVpI9CcwcFy2WlzXSu5ENggsFoFcFvlcIlr
-         HzPA==
-X-Gm-Message-State: AFq9FYJHoxWPlrV2IyNkrffBR6ldCpGzN6JwMSosTqtBB2dBSCdCFUMe
-	6Fd2G0URj/FFx1s1kw14UIZpWzfFgEot4gfKwqpuqz799JcFKGJPyeE=
-X-Gm-Gg: AYBFou3ijRPx+WMPi1vok9AEIKm8fddVgWSj+8U1h4w3TxL0In9XnLirCmf2Fvl+zlE
-	M44P/+NRaPjzrbag/9SJePVKWCsW2n/kepfko9LBWYxk24KhPfqdOxCRjaJRw9emCwsIwrwnyff
-	yd4Z58Kn1t21CmdPEY6PJnamVJ3sWrm3Jk+le8vfhngIBVNiPVEAE4n2XPN638G+j3YU0zcmPgn
-	pDkYaage8bVmKxeduDvaf8vk6IZngbTqXtxM3nDHs/vw/fGBjOF1kCUUpX64JH/iPhE414hoaQa
-	hIjpw10RJBgKl2L5r8mnHk9GpbqOMrCV+tdG+5sSpowXrg7j0UitT3rAv8nie8ObKDuNThMjJo5
-	x82n7M0OZ1jvE+neWlEiitIUgwun1MEKThVMCsCDZhyp/cSGQDj6srcoRi/KFXJl0w8U/fLo4/T
-	ZTkWtj0rbVuHequ6qvwl5v++3ozECoPsk8gac0NYRyf/OFx5Oy7VkmrM2osNT0WSu54WPiwc8OJ
-	l5rD1nwQobLfqeq0/60GN2+xjdI+AbG0go6BR0hGvl8614CyQeeA0G1KxZcRfFfYuzcp7x8SAUg
-	hneyX///KdksxPhvLbs=
-X-Received: by 2002:a05:600c:6095:b0:49e:7c8c:361d with SMTP id 5b1f17b1804b1-4ac182dc30fmr173291325e9.22.1793569876416;
-        Sun, 01 Nov 2026 13:51:16 -0800 (PST)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ac09ad5ff8sm157249425e9.4.2026.11.01.13.51.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=gXbCJ+Z4Wlm8GkoiAeg5stJ+hb5LXK7yuiODoWXbq4E=;
+        b=oR4MkCGztmoT34zsPql2KQzOZtJ7QP5VjOa3398uR3L1VXzVuzbr5EPUY0qKXwC8+7
+         43YsIpU55peUzSWf4d8w3jQCsuMUn3AhLNG4DXeInQ6HiRkj1U8cOl2M/OtLFzWlcj86
+         /7lHqNP4yl9NKRBBhYzeZ1gaP5fvas8k4PVWPgDpsrjJAK8q3MdWyZ5f83EbqhDrp8tF
+         ZyAqeeOOdzgRwS37lFeblQZov5E+Nc8tpJRjC8iI37p3KT4Aihq5hlDf3sAzRpaAoW8W
+         fsqiV4etnncGK+iuaehbmTHFiqgWwZn5oJTrBQ9tabGTBSIlQysnXTugpk/LJh21AYsG
+         2O+A==
+X-Gm-Message-State: AFq9FYKqYyNZxncryKRi+AvlZkZ/S/GPCA01+fxniIZYa8FHVJXJN89S
+	qo29NcmnUaPPMT5EOrSiRjaYbxuBtMoyvHj5e9cGcUdQfFrOeOxK93M=
+X-Gm-Gg: AYBFou0Kk73iG/yTQSoCT9bgOBt+uEn5qDJ4qAMqZw45EkuZbEnIgSBYSkB2/Vgv6GS
+	VyEHdMxmt/g+bkhIJQuOZXmBBLwyyU0yQ3mw97WGjpTGVo8JDkJ+OdTTu0fgiLT4VA1Xe1Hg+J8
+	ooA5nV6GyQyMYpYvvM4n2acAzGU7OGf2obO3aAcy2ffV+xS8b7YyuiewbG4gr/5A0wTRw2TkySI
+	isu7Qxurg9ca/xD2JsiuFsqUTO+91lWlndhE1jgrehgoFkIRIN2HaUn8+7QKY9iD8LQ0Mgn6CEc
+	d4DPGVHd355zQcompQggi+Wxc4JhyRuVtUWTbFQASox1ZPBDzhQoYrkjYloao/ZapX2XulMzNxx
+	7+EhSTkuTkgXj32XbdHj912jpMvwumEm0svHUC2HMkEe+pG2AX8Tc6m9EDJEjXC4ofXVlwrAnTH
+	3YkcHMFUb2SM4cyX1zqV/gEqyusRmkmD2VeFsGqF55a2tN0VG7/QK3M/IFPhuoTIjAQzJNdtE3w
+	pLJuqbIXFtrXYnIgd/jDjC5mCK66rqJfhcQBBrQopxaurFWkUcO5hqlTHi+8m14HvNmivp7ZQ==
+X-Received: by 2002:a05:600c:4e48:b0:4a2:150f:1610 with SMTP id 5b1f17b1804b1-4ac183d16eemr180666545e9.23.1793569875535;
         Sun, 01 Nov 2026 13:51:15 -0800 (PST)
+Received: from debian.. ([2001:41d0:303:db6b::])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ac09ad5ff8sm157249425e9.4.2026.11.01.13.51.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Nov 2026 13:51:14 -0800 (PST)
 From: Tristan Madani <tristmd@gmail.com>
 To: Brian Norris <briannorris@chromium.org>,
 	Francesco Dolcini <francesco@dolcini.it>
 Cc: linux-wireless@vger.kernel.org,
 	stable@vger.kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH wireless 2/2] wifi: mwifiex: validate sta_count in AP sta_list response
-Date: Sun,  1 Nov 2026 21:51:12 +0000
-Message-ID: <20261101215112.3199197-3-tristmd@gmail.com>
+Subject: [PATCH wireless 1/2] wifi: mwifiex: validate WMM queue_index in firmware response
+Date: Sun,  1 Nov 2026 21:51:11 +0000
+Message-ID: <20261101215112.3199197-2-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261101215112.3199197-1-tristmd@gmail.com>
 References: <20261101215112.3199197-1-tristmd@gmail.com>
@@ -102,47 +101,34 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-mwifiex_ret_uap_sta_list() iterates over sta_info entries using the
-firmware-provided sta_count without verifying the response buffer is
-large enough to hold that many entries.
+mwifiex_ret_wmm_get_status() uses the firmware-provided queue_index to
+index into priv->wmm.ac_status[] without checking it is within bounds.
+A firmware response with queue_index >= IEEE80211_NUM_ACS causes an
+access past the end of the array.
 
-Add a size check that validates the response contains enough data for
-the declared number of station entries before iterating.
+Add a bounds check before using queue_index as an array index.
 
-Fixes: 8baca1a34d4c ("mwifiex: dump station support in uap mode")
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
 Cc: stable@vger.kernel.org
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/wmm.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 85512f526c5f2a..4d8493f9a6697e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -973,11 +973,19 @@ static int mwifiex_ret_uap_sta_list(struct mwifiex_private *priv,
- {
- 	struct host_cmd_ds_sta_list *sta_list =
- 		&resp->params.sta_list;
--	struct mwifiex_ie_types_sta_info *sta_info = (void *)&sta_list->tlv;
--	int i;
-+	struct mwifiex_ie_types_sta_info *sta_info;
-+	u16 sta_count = le16_to_cpu(sta_list->sta_count);
-+	u16 resp_size = le16_to_cpu(resp->size);
- 	struct mwifiex_sta_node *sta_node;
-+	int i;
-+
-+	if (resp_size < sizeof(*resp) - sizeof(resp->params) +
-+	    sizeof(*sta_list) + sta_count * sizeof(*sta_info))
-+		return -EINVAL;
-+
-+	sta_info = (void *)&sta_list->tlv;
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index 841505e83c7fd8..158e4a2ec0dd69 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -943,6 +943,9 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+ 				    tlv_wmm_qstatus->flow_required,
+ 				    tlv_wmm_qstatus->disabled);
  
--	for (i = 0; i < (le16_to_cpu(sta_list->sta_count)); i++) {
-+	for (i = 0; i < sta_count; i++) {
- 		sta_node = mwifiex_get_sta_entry(priv, sta_info->mac);
- 		if (unlikely(!sta_node))
- 			continue;
++			if (tlv_wmm_qstatus->queue_index >= IEEE80211_NUM_ACS)
++				break;
++
+ 			ac_status = &priv->wmm.ac_status[tlv_wmm_qstatus->
+ 							 queue_index];
+ 			ac_status->disabled = tlv_wmm_qstatus->disabled;
 -- 
 2.47.3
 
