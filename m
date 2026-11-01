@@ -1,95 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=152.67.88.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793565539;
-	b=GKWaF/3vQiGRTIN6ze2iUWNVXESRbUX4Rm9ct/aSXWARHkpMCkImcNfjbe9e+Z7/kQm7
-	 cvn/pmC1u0BvatqGxQRgLUhXh5P5LtPyhHBYHa1bZ5OtDVeWW5vJyZ9hbSdCiBzmFaLqA
-	 kqQ8f4Ypmm7rtWvTuaIs7orlxG0aVtUEI5lKIw586IxC2uQU93qXuJo+7c1KRrUn5Dc45
-	 6/VJDk0emeB9M5gGxDWDgqvW2/w7lIencdMXG86sSBGerkzgUqw1RwHHnRk5Fa2wmc8Hy
-	 saIIc8LqNsImThSOPexUx3gPE4i4DLcFzXji09ojgiGnoz/w/+PKHghFaABXuDyhf2w==
+	t=1793565963;
+	b=hqAVrB9BuRMYLIpA/HATHywKSbuVT0CAnWIMXOQ+yK+5F1jv+cUzHkysYX9LJ70vuyrI
+	 o8wTHKaMaLzLHJQV+SqsCTwGgoTRoj0OKH2nVvwPnsV6eK5w9NEtHA/qRzjvXKFyH8nCN
+	 RFNoULNnk5yvmCuCwKRso09VIAMv6ZakUaCim1daDyciGGVPdSvvFuBirbWOblmIdkShc
+	 BryUGIRUGw8kURpXExnlOJB8j7Fcq5IvGzGnO3dRjeiOevn+f66stMG90eor+K5ff0ij1
+	 Dqdauv+g6G/Njdg8SiGvhgPZ/5HMgdzctkDqgE2PaedzZ3jmZYfy7ZpLjhuXat4K6sg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793565539;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:
-	 X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=6hl0fNtq+sxlcvosR7FGpeyB7ZdHbe6gYUJth++4euU=;
-	b=nnsQvy/shcqo9597UUSc2PqURSwL02qi+4bFj7lEoFeX09qdCETuasP5xb832gS3QyGC
-	 baOMB80btKlr2C7B/XR9+vxHwjVYM5HL31AgztFDOgaed+RMvU85uJeEzRF7m++tUBqYv
-	 PxtfeqUzJpWjtWZGDx2XJI/nPF+v+jL8blqLgD9SovCk+3U87gqDbXIiyrJ0wSsJxiNGv
-	 eteCGoE6sn1IfwdY9aEAcREe4v0cnCKff5IvpgiuaIb5ISX4LuWDd3OKPx0XO3ZXRGZ2f
-	 d2XcaGZ7aXlQ4iHmiJC3HziaP50cF2weWTxP2IiV6hbZVGffvST3x4M0ZpJTOJ5oFZQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793565963;
+	h=DMARC-Filter:DKIM-Signature:DKIM-Signature:Message-Instance:
+	 DKIM2-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=+72Hg4hfGZPD1UziWjFY001haEaujPWb5AzUvnnLFYA=;
+	b=f7+9YWTpf62uvjS1tEtOx3r11pKo+HIqpdyst+07q8atHSyBYlLEsPNfctobFJt5qy3C
+	 6TTjgnG9dxkizUioUTrRnZGl4CroxuYWbe3Jt/3gdIgaJdM7BlPPSzMCPhAFtesrjJQZQ
+	 8sIe+cpdXISBpDhCLfErdraWw4OnAo8zizv087gscT+YmeJOj0dt3r/e3d8kKhUO68Zee
+	 4/CuEKya1SdKLqdPUVZv/VauHCtJ6oJsmJ1ZM6vdnXwNJ4Y+xvUA2346DJsbQeVdw9XU5
+	 ORUdyPThUKBQ4rit+DEvxJwYrWV9ls1EUiXw7Ni3j4RNxYd0APnq9YTyNNvyQ4NyQhA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Zawl8bA8;
-	arc=none smtp.remote-ip=209.85.128.41
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=cubiculum.net;
+	spf=pass smtp.mailfrom=cubiculum.net;
+	dkim=pass header.d=cubiculum.net header.i=@cubiculum.net header.a=ed25519-sha256 header.s=202501e header.b=wpjbpPtT;
+	dkim=pass header.d=cubiculum.net header.i=@cubiculum.net header.a=rsa-sha256 header.s=202501r header.b=I4pBtsS9;
+	arc=none smtp.remote-ip=152.67.88.11
+Received: from mail.cubiculum.net (mail.cubiculum.net [152.67.88.11])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0664606A333
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:38:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E0664606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6594606A324
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 20:46:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A6594606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cubiculum.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cubiculum.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Zawl8bA8
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49d05d51553so14196975e9.2
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 12:38:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793565537; x=1794170337; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6hl0fNtq+sxlcvosR7FGpeyB7ZdHbe6gYUJth++4euU=;
-        b=Zawl8bA8mEBCo25eMwIaKTA+je7HDjOAzL4rLuozmQDn8Onl3+pP0iI+PKyo+L6UY4
-         f9JKAZgkeCmGajXPgFb35LQEC6FIgqhuTXQqGtOv2rGco3noPz6qPIQziFIMNcv1Co2z
-         f9nQm3l6ZjMl8wMDBDJaTEEbWy9CnWE1wmTlhgxfAfnnvsYCNB/7X4lyZ/8AMipSZbEI
-         L+uuU7WgbrhTzqWfC6xKDPyn3UnhzWOHPNGtyKCZqh12C3QUU8kh2uMWwMsrgr15JVyf
-         FBvFdq13Wwol/V6EqBSb6OloGVsfpBF0oIWA+DEPXZMq5D3lWEwa0zDnHmOYsMe4X5Tj
-         sV1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793565537; x=1794170337;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=6hl0fNtq+sxlcvosR7FGpeyB7ZdHbe6gYUJth++4euU=;
-        b=2iEl/P/ZxRPCEURA+oledaQK6iO3yxtVlHGF9MayC+fcbUxoS5U2cese7TmSh+sfAd
-         BihEpDebSelrEhZ04cz3a+rCONiraFY2+YpVwI0eD5mqxZxl1PxOoB6xKsF3ZObSY7E5
-         RQmhAEf0gdoCCJ5hGTbYb8y6awqSjEIPvIZ0wU1VNTEog1tb8HhfCSSSNPIQWO0qUebf
-         iqmpQmi0cqQC+9owTXV4a5xjxVtFHt5G0VXt5vVdnZ9DxiYn/LNq7QaN6cLtBgxvohx8
-         U+gVVcWfP8RuJCXSgf8uL+PL+jDKsU0DuDyJluSaY8DJ7Dcnm/eJ9EviuUKHyyzf4o4U
-         YbYA==
-X-Gm-Message-State: AFq9FYJRj19hk/KAJUVs8JFUTmO5/obLLKJpfDgVPy71thNT0awc+KJQ
-	v0z2ZmSYJfusqAk9pPRnRsKVFB9RCctYqCCWhQA78jd6OgHFQKjRn0g=
-X-Gm-Gg: AYBFou1uMkezwlZQNR86V9WcerIg/Rtw8QFzpqiZFq2dY8Z/AFGPPLr3tftmRMb66AL
-	E7t+KSNgjMHk5xrembdcsWqTKvU2+J7OorIznb34rvhH0f3Mqa7XtwNWnDx478xn83AI+s4D5xH
-	rkyKZjZSHDW/uVnh9oe4OHkHFGj3keiVu9ZsM9qUlCrwnyr0qfMvp9i3N2vz7tvIP89Kz9DdKPV
-	L5rfqpNYjTXekI8t5ZNTt0mUKf5SlKiEMKmT//1lRj+BVKX7+/Q9BwA0fr608WJh9G0GkQOBiXZ
-	R8VthXIckRxg7cKEcsFt+NfBRXEoO015GwotaQ6PRthiLWDzknqV47FOuo+nWuDgx3lmq9fzjPC
-	e9Jp8vehdfEOPiBJ5VOkfmI/doPAE/xkkOH42C1b1r0+JR+EtEz8DAMGnabcmEIqyvJaPmYLibK
-	XdOX0WAVNJvEgEm3m8/Nvw+n3gPxMw0lwBwh3XVsK/FJaZFWAp9CnPJk7C2kys9H5maUxyFMqe/
-	BTZIqCImXmc9YzR0kg8GPIrc574lvdRiPNs1dACDuaLEu9faedTWBDSC1/fSa9wcLls2wI0C6Iw
-	fAGzj69sgLpl
-X-Received: by 2002:a05:600c:c16a:b0:4a1:fbd2:f689 with SMTP id 5b1f17b1804b1-4ac16fa352emr197300015e9.7.1793565537319;
-        Sun, 01 Nov 2026 12:38:57 -0800 (PST)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b72715sm15502295f8f.18.2026.11.01.12.38.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 12:38:56 -0800 (PST)
-From: Tristan Madani <tristmd@gmail.com>
-X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
-To: Ajay Singh <ajay.kathat@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>
+	dkim=pass header.d=cubiculum.net header.i=@cubiculum.net header.a=ed25519-sha256 header.s=202501e header.b=wpjbpPtT;
+	dkim=pass (2048-bit key, unprotected) header.d=cubiculum.net header.i=@cubiculum.net header.a=rsa-sha256 header.s=202501r header.b=I4pBtsS9
+DKIM-Signature: v=1; a=ed25519-sha256; s=202501e; d=cubiculum.net; c=relaxed/relaxed; r=y;
+	h=Message-ID:Date:Subject:To:From; t=1793563979; bh=+72Hg4hfGZPD1UziWjFY001
+	haEaujPWb5AzUvnnLFYA=; b=wpjbpPtT1iYcb3kNgaQk14GMg2CcXDdY6XM/qC5VdtdnrFKEEo
+	bYk80VWXgKN2Gy+IgxybNHSpV05yeB2s/LAQ==;
+DKIM-Signature: v=1; a=rsa-sha256; s=202501r; d=cubiculum.net; c=relaxed/relaxed; r=y;
+	h=Message-ID:Date:Subject:To:From; t=1793563979; bh=+72Hg4hfGZPD1UziWjFY001
+	haEaujPWb5AzUvnnLFYA=; b=I4pBtsS9KPGs9im7qkFOUWHkgv8D3HOyot5ma1Xjo+Y6NHsS/P
+	PWf0o7vbOk70TnC3y5YKzIWAlyy6X6Q+KA6xXStoplUKv6/t4PBgT/ESx20EyFgQHqf4AaKIYqQ
+	RrDqZO6+bveaZdLgJsqEBPevwu13oIcsMtWzUhu4JMy2TXj1ZfqY2cxrMy0VdSMCOHf1fvbHqJ+
+	gcRYwfY+FOwjKLzK/F2W2HLLP+E6H37qvF8B730Ge7CGSZ5KoIGEff7x9Mupahi9aCbgxLoxEPX
+	fqUgeMNPV0V2WzvkIPSYVVagXavHsbeD1e8Ec09Wcx04YBxLKqWtt8VjNUm5Ju0ypHg==;
+Message-Instance: m=1; h=sha256:JNOAWn+xMGQUjxEEWr0NTIxZSqclnvEr5UXc8dOT
+	0pQ=:jUD1Ty3Pun5D+mFuxbvgkhOc2e/Q+db3JfMnz0J3Huo=;
+DKIM2-Signature: i=1; m=1; t=1793563979; d=cubiculum.net; mf=PGtlcm5lbEBj
+	dWJpY3VsdW0ubmV0Pg==; rt=PHBrc2hpaEByZWFsdGVrLmNvbT4=,PGpvaGFubmVzQHNpcHNv
+	bHV0aW9ucy5uZXQ+,PGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4=; s=
+	v2-ed25519-20260926:ed25519-sha256:hiy880lUIwpvQeid1LK1JI88GMhNLyv4b0AvYZGC
+	Pj7uP74Q1FSubWCOKCzs0ZpIHa0RYiJiC6XkMfGvm7ZWCw==,v2-rsa-20260926:rsa-sha256
+	:jlYEe5MNUhfEsmT7SB37deGfaEwJeSxNl6H1WZGd0VNS0il8AbOq6BMt30N14d10fceF92oT
+	VJZAGeiLjvzML84JIAFPKoin+WQuX/ck9o6JGrbtyiJV5Nz300ALFBl2yOLoeY3Qnmu3edvQ
+	kSjwSieYwm5vxapCxhxaNGZ23Wxpnq0cqGJNJeP9g5zfSQCQ9gGJxCRFmCS57TLgfLNtFsrd
+	y0kfSq5GQveNkmJzfBsFtsGEeHrfoCUqZFLijX46ns8KhCa1GoCGHyXO+kdG29hQUFUs0o9C
+	OZV1U3HFYvZQ7CjAxPasGpHhSlj1HBHAAahfBjFoyn9upq+jYHIflg==;
+From: rcfa <kernel@cubiculum.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	stable@vger.kernel.org,
-	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH wireless 2/2] wifi: wilc1000: validate header fields in wilc_wlan_handle_rx_buff()
-Date: Sun,  1 Nov 2026 20:38:49 +0000
-Message-ID: <20261101203849.2807553-3-tristan@talencesecurity.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261101203849.2807553-1-tristan@talencesecurity.com>
-References: <20261101203849.2807553-1-tristan@talencesecurity.com>
+	Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH wireless] wifi: mac80211: deauthenticate on stop if an association just completed
+Date: Sun,  1 Nov 2026 20:12:51 +0000
+Message-ID: <20261101201251.1106968-1-kernel@cubiculum.net>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -101,37 +77,118 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The pkt_len, tp_len, and pkt_offset fields are extracted from
-firmware-supplied headers but only checked for zero. A firmware
-frame with tp_len exceeding the remaining buffer causes an
-out-of-bounds read from the 96 KB receive buffer, and pkt_len
-larger than tp_len leads to processing data beyond the current
-packet boundary.
+When an interface goes down, cfg80211_leave() runs on NETDEV_GOING_DOWN
+and disconnects if the interface is connected. An association that
+userspace started (NL80211_CMD_ASSOCIATE) and that is still in progress
+is left to mac80211, and ieee80211_mgd_stop() abandons it later, from
+ndo_stop. In between, the wiphy lock is not held and SDATA_STATE_RUNNING
+is still set, so the association response can still be processed and
+the association succeeds. ieee80211_do_stop() then goes on with an
+associated interface: sta_info_flush() removes the AP station and the
+WARN_ON_ONCE() on its result fires, an MLD also warns "destroying
+interface with valid links", and the interface is removed from the
+driver while its links still have channel contexts, which are never
+unassigned.
 
-Add bounds validation to ensure tp_len does not exceed the
-remaining buffer size and pkt_len does not exceed tp_len.
+ieee80211_mgd_quiesce() has worked around the same race for suspend
+since commit be72afe0a438 ("mac80211: fix another suspend vs.
+association race"), by deauthenticating if the interface is associated
+by then. Do the same in ieee80211_mgd_stop(). When it runs,
+SDATA_STATE_RUNNING is clear and the wiphy lock is held, so no further
+association response can be processed.
 
-Fixes: c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11 driver")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+The window opened when cfg80211 stopped tracking authentication state:
+until then, cfg80211_mlme_down() also deauthenticated from BSSes that
+were authenticated but not yet associated, which aborted an association
+in progress.
+
+This was seen with an RTL8922AU (rtw89, USB) on Linux 7.1.5 and
+wpa_supplicant 2.11 associating by MLO to an AP MLD, when NetworkManager
+took the interface down to change its MAC address for a scan in the
+same second as the association completed:
+
+  wlan0: associated
+  WARNING: net/mac80211/iface.c:536 at ieee80211_do_stop+0x8e9/0xb50 [mac80211]
+  Call Trace:
+   ieee80211_stop
+   __dev_close_many
+   __dev_change_flags
+   netif_change_flags
+   do_setlink
+   rtnl_newlink
+  destroying interface with valid links 0x0002
+  WARNING: net/mac80211/iface.c:563 at ieee80211_do_stop+0x9d8/0xb50 [mac80211]
+
+rtw89 then kept the interface on its channel manager's active list, and
+its next scan looped forever with the wiphy lock held, which hung RTNL.
+That is being fixed in rtw89 separately.
+
+Timing alone did not reproduce the race (0 of 29 attempts), so its end
+state was reproduced with a test-only hook in ieee80211_deauth() that
+ignores the next WLAN_REASON_DEAUTH_LEAVING request, which leaves the
+interface associated when ndo_stop runs (rtw89 had its own fix in both
+runs). Without this change, the
+second round warned as above, then in ieee80211_prep_connection(),
+ieee80211_set_disassoc() and cfg80211_process_disassoc(), and ended in
+a NULL pointer dereference in ieee80211_rx_mgmt_beacon(). With it, both
+of 2 rounds deauthenticated on stop ("deauthenticating from ... by local
+choice (Reason: 3=DEAUTH_LEAVING)"), with no warning or oops, and the
+interface reconnected.
+
+The problem was found with Claude Code (Claude Opus 5.5) while analysing
+that hang, and this change and changelog were written in the same
+session.
+
+Fixes: 95de817b9034 ("cfg80211: stop tracking authenticated state")
+Signed-off-by: rcfa <kernel@cubiculum.net>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 55a77a2e32887b..e7e1e5a7960eca 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -1123,6 +1123,9 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
- 		if (pkt_len == 0 || tp_len == 0)
- 			break;
+Notes:
+    Testing: the results above are from Linux 7.1.5 (Kali 7.1.5-1kali1)
+    with this change applied to its mac80211. This port to wireless/main
+    differs only in context and has been compile-tested only: x86_64
+    allmodconfig with gcc 16.2 (CONFIG_WERROR=y), net/mac80211/ with and
+    without W=1, and sparse on mlme.c, with no new warnings. The test-only
+    hook and the script that drives it are available on request.
+    
+    The rtw89 side is posted separately, for rtw-next:
+    "wifi: rtw89: take the interface off the active list when removing it"
+
+ net/mac80211/mlme.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3c31c16860ab..5791d5b5fe86 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -10838,6 +10838,25 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 	wiphy_hrtimer_work_cancel(sdata->local->hw.wiphy,
+ 				  &ifmgd->uhr_omp.status_work);
  
-+		if (offset + tp_len > size || pkt_len > tp_len)
-+			break;
++	/*
++	 * As in ieee80211_mgd_quiesce(): cfg80211 cannot abort an ongoing
++	 * association when it disconnects on NETDEV_GOING_DOWN, so the
++	 * association response may still have been processed before we got
++	 * here. Deauthenticate if the association succeeded, rather than
++	 * remove the interface from the driver with the AP station, links
++	 * and channel contexts still in place.
++	 */
++	if (ifmgd->associated) {
++		u8 bssid[ETH_ALEN];
++		struct cfg80211_deauth_request req = {
++			.reason_code = WLAN_REASON_DEAUTH_LEAVING,
++			.bssid = bssid,
++		};
 +
- 		if (pkt_offset & IS_MANAGMEMENT) {
- 			buff_ptr += HOST_HDR_OFFSET;
- 			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len,
++		memcpy(bssid, sdata->vif.cfg.ap_addr, ETH_ALEN);
++		ieee80211_mgd_deauth(sdata, &req);
++	}
++
+ 	if (ifmgd->assoc_data)
+ 		ieee80211_destroy_assoc_data(sdata, ASSOC_TIMEOUT, NULL);
+ 	if (ifmgd->auth_data)
+
+base-commit: 25e73f1d6868c759c8eb56cad4e411692c5341b4
 -- 
-2.47.3
+2.53.0
 
