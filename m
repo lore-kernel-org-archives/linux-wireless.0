@@ -1,98 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793622202;
-	b=esq6yd6K2vTAHox/I0PJJJFSBcHZQ332iTX4WSbW09UazbHgtIv0mtJ0CL9rMl5fnvj0
-	 JHqK0rG9wyGdxIwXL5rV8FB7y/6HuPNjYtKWEYIMywztdJPIdSghk1PMYIYByGo7dYyjn
-	 5BMLZaTDufo2fV2MvSTJNcbaW6bTdQ6OR2wsimtn04ARV41C58oL+gMNAT2XE7JU8lPQL
-	 JmnVU0DW2ht+jCcU6NE44zLzrgBz2ZTOOE+f7NiFOO4161CZyjQwSTwphn2+aq+vYa6F5
-	 70oycFzDFTH5CMYW12wT2vUIMTHoUtvo+SRs5S7qJ165D07KILiRnaVvE+f0QwUNU0g==
+	t=1793622875;
+	b=yU8Gv20ZNv2aFoFngn2O2FimbaoKAAAEiXMJYo98qwTXgacOOQ5CbBDWKm0pxNgvESf2
+	 1EHggRYEswCR4WSE2dDJLnOX7FZ/zjcsKyerM+oLdJSDKVamSUmWSFmwMPk1o8NLwBCkE
+	 y4WjUbvn7R5RdI2h6t66/yqhtp8RRvE2B0fWyi1D4m+/BqC5ywDSlnrJ9p2/EEEF6HdZc
+	 +TZiHoWb6VcYeWha0dWJegrcPR7rgFYU9tde9VMR5x1igiX/WOoaY8h0Es2I0/+a7BNo5
+	 kceFg38VluGltPeD8reAW3Q80JbZLoJfC8k3XtoUzD1jnajl3hGuH55RvcRqvfKyBYQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793622202;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793622875;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=GO0eQoXsdHBDsAY8r5qLcEfQWImjpXMenyB3OyA2xhU=;
-	b=NDfPTw+UQFOe1scFJab59ZxIYEd2xWYU4QMEGOu964KQIKb6lG4nh9d6SlmhWdies1Ru
-	 7rsWnbcFhm0a2QU4MHd2AvhhiQ1Nlr5oVvJ8ga2bwGms/0kU4dx3YJsDQf0J0FHaHAFkv
-	 sPTfxgegJkcQswnNZ0O70jIHh0R+Fp8hXhNxoh+o/aeoQX3s01VSTNrcTQTMsNcCPC57K
-	 zruKMLoVDYaqsh0/ziFlfdjN4vAszmOdIOumG/OdKQZNMw/hALlUaZlipPRANr8zuUcBQ
-	 YaNaRwUQ+b3h34qVLQfV1Sc1rF9do7RjQTOXPcMDp1n7pKXeKv/I3k8QJU3iIQ1wzUw==
+	bh=Swv5UcPabS6E/hCnFYMyFqMC2vY1/PiK8X3IqFBNP6s=;
+	b=HwPbDrQeYVpB15kgsdkzCUARWKXsOFPS3CUYPEj00k3pZdpaH6c/A0jOlhy4Rcq5Ec3f
+	 MNPlpipfhAK2U68pquXnpEA+11f+45eBjv7fA3qr6UJZkqz9Xw/a4WekLhutrbMmBh0/0
+	 Qxdbj8yANMCq/ZTgi0nIKTL5UftuIShnudLJVcLULAnJO809Uz+Cx2nMWNK+uy2k8nnjH
+	 bEmqBGIAyjyOwqECy4zbMRxyP68V9xjNJ97izdzLmTKpoPvPxGJXefxZaD6b2xEt8enqJ
+	 72JUyC1Y4ytwvKFZi5ru+OmqqDsadd6w+cSosvWjsSlNMcMkfM8bXG2LqNGERckqXfw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=oeIIAX4p;
-	arc=none smtp.remote-ip=209.85.128.54
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hgJFK76F;
+	arc=none smtp.remote-ip=209.85.128.49
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B1E60A6F4C
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 12:23:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A2B1E60A6F4C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204E6606A331
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 12:34:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 204E6606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=oeIIAX4p
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a3517554f7so22368525e9.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 04:23:21 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hgJFK76F
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4a5720b0a57so20917075e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 04:34:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793622200; x=1794227000; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GO0eQoXsdHBDsAY8r5qLcEfQWImjpXMenyB3OyA2xhU=;
-        b=oeIIAX4pm2Ytu8HtJCliysszXx2L+ft1QWG6iYQQAJNhrx9G4v6CElDYaCW92uxUgQ
-         PbcDRqjrGRfgtFHy03UVVHpCY4ePzARb20txTsium7zzi9mAPT/4uPGtFJGEbr7q4TWs
-         Nj52mspXoZ80PZVZyWvoqFbT6bPBBGoJgHHhI/HPY2mnO2Ueqyf9YqQMitNYWXaAso4y
-         7X72JBKP2aqjgJ2foNDEdhTgFLRx6hUS1sOCDrzayACksxscB+qleHmjUkfkcY1YogoQ
-         YbKLFJfnRcBnUa9f/oZjQNwWoIGtLKrna9SAz6t39+meWa/qfXAgOGPakFgSVqVw4ach
-         h7nw==
+        d=gmail.com; s=20260707; t=1793622872; x=1794227672; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Swv5UcPabS6E/hCnFYMyFqMC2vY1/PiK8X3IqFBNP6s=;
+        b=hgJFK76Fhm36xxhyzeI19UjhN/oZQigsRWrV+LXDfh8ZK4oS9UheRcAzrtHTeSkRza
+         U0Byj7jhlD6yQRkDuepZBjfML+SEELFp5EGYGQ/4L+xj6j4W4PhuFFaaZCpONxYYOPus
+         jnq2gMFzf0sCVXsf96NDXuKI92p9xaF75mwClvJGsa9lAFFs4GRoZ+Y+i/JZegxxE3rb
+         z1mf+SntcEZGrtgVjxsW6A5HZ3xRBH1EkhwWn00cA23KnjsaslzJmESbnz+RTFaUJIz9
+         UsQt6tUH0LZJxUdQBHjGjBGCrCL3UyAHMrdSVFqyGLddAADBnt4Gi7Yz9lu7mEgaGfY7
+         xH5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793622200; x=1794227000;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GO0eQoXsdHBDsAY8r5qLcEfQWImjpXMenyB3OyA2xhU=;
-        b=WI8YVCLZGlpwIzTVwmywtXXbB7ho6H686j+aWJXdn6esVcWWqlHoqndmJGIUShFIDV
-         lop1HRyz6d1nyR627k16wWzReIALgs0GQedyBNia6l/ID2RjElI8kc7Y8yQLMxu9efe2
-         yr8hCgoLi2iW7T7uR37GXgjmw+WT8TPdhzi0VxNcSlOI4mrSwChUTf8S3kYTjxeMpzti
-         viVD8ZIFbyPELlVvzC54jCYVLVPuTR4DsIcWLE4z9bWWcNfg9Qt9tv4V/D/mlO1AwJLN
-         A+kIdZY4lGktVMZQM/39ONW9o7ZvwXQFIT+qle4rE0u8mMTuqCoQ/RJuhAgyrAV+TSoZ
-         zapg==
-X-Gm-Message-State: AFq9FYLoL92UpNJjuVXPJwaDy1YDxHBQcnvdeMfSl27GrmfQcueRMuPL
-	86S4In5KaHvxCd0vXyi6JI5soHx+DmOhIzgez4N4qaZCnRTwDSCN2XCWBcKX
-X-Gm-Gg: AYBFou0pcEk1Ph95ERwGDHdTz5eYO7JFzHilinKeW8eDOfZZ2rgnRXFsu2BXf8ZRLQd
-	An+E7+xGGCvaqUIucGewJdibUbb9b1R/qnN4MV5XtW1M4QSZb6eBiBqlSzdmhiTEjEXdsdH5XDI
-	ilvicnGd4OITDk4CMAHEqmkxrYbZoWGdqlAtjdH6QlACI2OV4pr3iAk1dI//Ca/e9ugmQX2ILWW
-	Peb9qHBZ67AwRV4IV8Gi7RM/sEGJISwNw1+Z12ypn+gmHM7eIaWcKQ6RyfPCfP+9egN2x/U7iVB
-	1FVnp8I9Kd11zFajrSk4jWqdgtDQw5CAw3/gx2ZfA1Pb7QNpC6Bzp85rdKMWJIyad3MBfG/ehl+
-	HnwL2APVLeKRSl3f48aih+pJa6/3tuseczq0YH14W9e/UtufSqJ5nIuaxB2FT5oNn5bw5M4tC6J
-	5r+Y4rvfSbdyEm80NmbMkJGDwFJbLUvRUvSIIuwz/PBX0iUpWlVBYtQHSEta+Jdi0cf+Q2jqrAS
-	akjekEm0GWUbR6CWUrqmzgpjbWpeJCJuXpkycP5wzyinaelmpSa+4EX391EsNihqqnCifIJKw==
-X-Received: by 2002:a05:600c:c48e:b0:4a1:f7f4:7cf1 with SMTP id 5b1f17b1804b1-4ac16bc47f8mr229484545e9.11.1793622199807;
-        Mon, 02 Nov 2026 04:23:19 -0800 (PST)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abf67aa704sm255490595e9.8.2026.11.02.04.23.18
+        d=1e100.net; s=20260707; t=1793622872; x=1794227672;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Swv5UcPabS6E/hCnFYMyFqMC2vY1/PiK8X3IqFBNP6s=;
+        b=Bz9tSd4Z5MIgaA4FSqFMSbeBK2nPuYV5KIRiqnMJdXdk3xnmKGlDbiiV//2GVc3JRO
+         JRA79P3uVH/TlMC5RbQJ1fBd1QL+eIafrjtLadS+GFW41CAjUfSpRhEJSdg03jczLWtQ
+         5IpAPSCjI2DOCTWxEyUrNZ9eTMvnAPobr+qooQv8uJY5CrzFoIfVWJg+Ayg4n6KoWDOA
+         GhPDVEIDV1M3blRXLhBroCrmPlWdkFDCMM0NLemvkk+t+/p1Clcb2eRVp3gRsWieaiRV
+         P8kfx2TI4VoAn8stENMCk07haKQtL/P4sRs3KFVFFsg6C04HGaMJ1Z5vFdFhWFtcVF5B
+         dUMA==
+X-Forwarded-Encrypted: i=1; AKwUvBw9gIaDVK9jzVV18MfLxOnubH9UbjwMNK8MOji9LZVp2LSxD/WSSVW6ce1acoui0do3+s4P3ZDo72pzEkyWCQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJN9PzpFABRxnU19TSvuK7IlPKSXQku9JIAldKarHKBXioOxdwq
+	t2SQb7Mvt3y432cytGQXk0fsmAUyhqVRK+grcN8TZ2xArEDDyuZdWDyP
+X-Gm-Gg: AYBFou38EGLBdmwt2tWDS6nKV6+Med33Ky6DYWJ6vDCSCxhtP5zLjKfpOQXKEeSgtUT
+	fCjkDQkdT61fIW7cXpWq8rHMYPgwS/s9CU3r+i793a0Ya402ideQ2OubPvxUEN8gm2e9UdbMjvP
+	kJEVp+6EIrtSlOmVEBdZed/Wp/rRsB0LcqfQyNyznAu9TZ3VbeAUaoeeztmvQi+yEF1wCrdJGUM
+	H48MtAZUUxOYA1gzr0odImzy9LxNw/iibCgiETbsASw4fOWSRSFA07vqXVz6Nrk/q3S1TwYZu7O
+	2ajTPadVomlcDBlEy6V1xittz5J4lB++TovggxSsUxhQUVC1OOzG5fhE14ABbpYnAb4h0jyDnA4
+	YhqpVGtZx4ssY28IWZweDAWJ1KLHBONXvIRZHeLWxgYDYqBQcgDHvujrZrz0kXhEGJcDLAvNGj7
+	pwE+u3Xqav5bVQYuLUTCRv+ZFL/ieylVQmPeOXF4jCbc2yPRpZ8iSohBveEzfztJLCUz9eOWc1c
+	uj4rAPwirtDfxFFY4WnL7MbjTnFWEbLfxeBLUIaRXcU2843GjYsl1GMHfgIdQfGbjceiqHD7SrM
+	UzzaVTIMy4TKAGB6Ap1bJChK7wchQsvkLQg=
+X-Received: by 2002:a05:600c:3554:b0:49e:6581:7baf with SMTP id 5b1f17b1804b1-4ac14ec66d9mr242086245e9.2.1793622872329;
+        Mon, 02 Nov 2026 04:34:32 -0800 (PST)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b80ecbsm20321842f8f.35.2026.11.02.04.34.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 04:23:18 -0800 (PST)
-From: Tristan Madani <tristmd@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	fariyaf@gmail.com,
-	linville@tuxdriver.com,
-	kvalo@kernel.org,
+        Mon, 02 Nov 2026 04:34:31 -0800 (PST)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Tristan Madani <tristan@talencesecurity.com>,
-	stable@vger.kernel.org
-Subject: [PATCH wireless 1/2] wifi: brcmfmac: zero-pad SDIO write to 4-byte boundary
-Date: Mon,  2 Nov 2026 12:23:10 +0000
-Message-ID: <20261102122311.181075-2-tristmd@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261102122311.181075-1-tristmd@gmail.com>
-References: <20261102122311.181075-1-tristmd@gmail.com>
+	mehmet.fide@screeningeagle.com
+Subject: [PATCH ath-next] wifi: ath9k_htc: do not fetch the beacon of a finished countdown
+Date: Mon,  2 Nov 2026 13:34:30 +0100
+Message-ID: <20261102123430.1136741-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -104,36 +98,49 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Tristan Madani <tristan@talencesecurity.com>
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-brcmf_sdiod_skbuff_write() rounds skb->len up to the next 4-byte
-boundary and passes the larger size to sdio_memcpy_toio().  The 1-3
-extra bytes come from heap memory past skb->data, leaking stale kernel
-data to the wireless device.
+ath9k_htc_send_beacon() checks the channel switch countdown only after
+ieee80211_beacon_get(). mac80211 replaces the CSA beacon only after the
+channel change, and ath9k_htc_set_channel() re-enables beaconing before
+that, so an SWBA event can fetch the CSA beacon again on the new channel
+and mac80211 reports "beacon TX faster than countdown".
 
-Zero-fill the padding before the SDIO write.
+Skip the beacon while the countdown is complete and finish the switch
+from there, as ath9k does for non-EDMA chips. Finishing from the skip
+also covers a count of 2, where the first fetch can complete the
+countdown before csa_vif is set.
 
-Fixes: 8f13c87ccc49 ("brcmfmac: Split brcmf_sdiod_buffrw function up.")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+Tested on 6.12 with an AR9271 AP and hostapd chan_switch: the CSA beacon
+was fetched again in 3 of 40 switches with a count of 5 before and in
+none after, and all 60 switches with a count of 2 completed.
+
+Fixes: f0e449627e4a ("ath9k_htc: add support of channel switch")
+Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 71c2f99cdb711..c6dd4148a44ce 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -323,6 +323,9 @@ static int brcmf_sdiod_skbuff_write(struct brcmf_sdio_dev *sdiodev,
- 	req_sz = skb->len + 3;
- 	req_sz &= (uint)~3;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 81fa7cbad892..2b5bf07511bb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -214,6 +214,13 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 		return;
+ 	}
  
-+	if (req_sz > skb->len)
-+		memset(skb->data + skb->len, 0, req_sz - skb->len);
++	if (vif->bss_conf.csa_active &&
++	    ieee80211_beacon_cntdwn_is_complete(vif, 0)) {
++		spin_unlock_bh(&priv->beacon_lock);
++		ath9k_htc_csa_is_finished(priv);
++		return;
++	}
 +
- 	err = sdio_memcpy_toio(func, addr, ((u8 *)(skb->data)), req_sz);
- 
- 	if (err == -ENOMEDIUM)
+ 	/* Get a new beacon */
+ 	beacon = ieee80211_beacon_get(priv->hw, vif, 0);
+ 	if (!beacon) {
+
+base-commit: a3ddbb45768717b5c9f923489387cf55c838d1ad
 -- 
-2.47.3
+2.56.0
 
