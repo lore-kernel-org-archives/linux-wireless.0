@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793657435;
-	b=oDWhwizHK26SK9K+1UcYYg8C1mjBOVkFxWjwtofFS/hQtnHjEmf4fmV6RktivyEvsxzP
-	 lvXyXVWisX5dtvqzNv51qJ7n/E0A2XXlYQ5RZaYGBvaGagaSl6QnS32quiwJHCGpklXtS
-	 pmD8iKHhxJW9fT+IfLBkef724NY7bUvZrFxFizYJCh9RjPJVjBgWJLfDofzO59zwsCC0M
-	 yYRFDs/cPDrGgxHVXeQ9JQmfpwFHxRax443GB4pBrkvWcBnxPtiEXvvXOobGS1CzC99ko
-	 7ZhAKvePCttrvqhjMgstILcb77zjKBoUezluBUoYLWBRRi7DdZaK7lkL00NwNo0Mvcw==
+	t=1793657436;
+	b=pQ6dP6V4SNYSnGbgzu0AfvN2b6hAiB9MidQKxfEZFIiON25cH2yYN4FJUgg0vMsuYUhD
+	 5uaUcSeouAbej1TYr5W5hoqtOPe11gnJwq3kInB351BV1sAzQ/P2ADzcBovPx/27mDwOw
+	 pizkg7OlB/4u88RbPXSmKG6XE/T1Ta8xwYpzKLT1fq1VsoTmDlmqYePlP7XYR/f8dm/B5
+	 fMJCtbAQ//1WhAZGLhy3Mgaxz7QY5im+JyP1NRokE/J6QR3SRaiGLoaN/JnRej7YA7G0O
+	 pGJFGsMbcUsGpAawQc2NIiTiSVCsdUYM+2/DiyVSxXmwW5iW8lP63ofZHu5tc1UhE/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793657435;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793657436;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=YnETBOmftWKSfY5Ix+w+P9w0EmkUNyoP4oLTYuVkrRU=;
-	b=zBmOgLSIoe79A15uDDzMk4v0vLmmWzUAA0w1+RjcPL5ULBMNZT3QeKBHcbFLXGVyVeA3
-	 AoYVGDsTqFPZvyDFnjjwn1FUdsDu2c5BFfPJbIALUq26fxWW6LxoIDIN1aKs5uMoBEheY
-	 GGnE2n1iNjqO56Jt5m8LzjC//+mibgM4TTqUtQjTkbKBDFWZmp8eIz5Tnkb3ZMiWk40VE
-	 aV36KepTL+9eccASKTz9oBnT0fEVFF1Kjxl6s0eDztPY/WIQ7lT+UBzWI7cUbd1ZPZCC9
-	 Csuu1DCNjxjWQUOQhzM937wnvbltPX1LHbLUSxDfYuwoK4dzzAdyrYf4NxHkXfWD6FQ==
+	bh=OQldY4l1pHnqTBxGE0TBUNvZ0yOl5hQJwG3arxwD9ug=;
+	b=cgZGoh15UbvR/BcIHe68nz4BJBwnvWtHu5nmIaaucywJnk2WQ8itBw8ZmCLkTmWe7OQO
+	 NdulKtGkUA9Heo2F2MdC4Woo8BLqKnVjvQG/Go6B6gm7xOm4UAz+rjAYpB2oRRJKf4wzn
+	 SPzkiqtbXGkJd+bsIv05nw8Q+RvOh743SCuzOBJ/dQcvbfUPtIcj9K0UmHrVUmVc25FFZ
+	 vSMg+Uxg35QGOdupRBkQLGpZ1g2D4v7XKj8Gk8ZasabrPCauI9QKLr1CDbm1H+tq7WllZ
+	 978MlxwrURysSjetoikXkTR15sbO+XAhnsNu7AMdHduvze8bMy6YWTynadPZS0MI+8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=FwZy3VSE;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=GB977INd;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D32B606A338
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D29F606A337
 	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:10:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=FwZy3VSE
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=GB977INd
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=YnETBOmftWKSfY5Ix+w+P9w0EmkUNyoP4oLTYuVkrRU=;
-	t=1793657435; x=1794867035; b=FwZy3VSETUXc1PHbZAMBzY+N27ELIAgC+xl8RZkcn/dF/YQ
-	tCx1lg8BzmwyTilO3IHt8wRFwIEr5vdlwoAhO2fUYZW4pk9D2riBCvOlPKdS4X9/Q/gzAdMJTXmYq
-	fw5Hpbz5fzIOl2KCEkVOjnRECPEfIsV880RvrKOkA8QFMLF1JxbAGkT0WcL/Wmf6z3U9BJzdjl98r
-	uQqNkBYhitc/Ah5SPtdr1b1YIw/BWI7xoUXfB9sZeld5j3tKNm7rkZBWc6vefW926dYFp8LEBDhNn
-	DvA6iPnAx0hbLxDXe5Wq7EoJcGTmMXS8nIqWVYdg7CXAk5h39HMqvxU1AL+VfbIg==;
+	Resent-Cc:Resent-Message-ID; bh=OQldY4l1pHnqTBxGE0TBUNvZ0yOl5hQJwG3arxwD9ug=;
+	t=1793657435; x=1794867035; b=GB977INd+rW4Hehm+xdQSgAJehjrOupVDKLndEkv68ABY1D
+	FAeRV8JaTpC350RPDeCmNnPDqxgnKgae6zGao/+QfEue2kEV2Mh+K1z9j11K1OdBaJVBQQiY2cp3c
+	/tGv5fz0yw/qEuIlZlSfcBZL5xOMv8jwHrNthM7CEDFv+l4WhurM+ZIFl0/E1gDkG7nvhjMMDAog8
+	cCLaln3eSSBciVy8Czd7JoP+Wr9XOxrdrBGtLa1SjBz6FI/P453TeCSe1gYCv4MeF7GJdiKYxWNlK
+	ew2PVHrfUYSabni3la2CwYYIhgcAVa8Im4Hlg0F34EqRqU3GFM6zDl9BViHWi2OQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xO0Ea-000000022rO-4Anb;
-	Mon, 02 Nov 2026 23:10:33 +0100
+	id 1xO0Ea-000000022rO-1LW2;
+	Mon, 02 Nov 2026 23:10:32 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 2/8] wifi: mac80211: factor out ieee80211_mgd_reset_ap_state()
-Date: Mon,  2 Nov 2026 23:08:22 +0100
-Message-ID: <20261102231028.245d30c619d3.I80499e8508954d8e9eeb2dda830bbc35c9ad4cc3@changeid>
+Subject: [PATCH wireless-next 1/8] wifi: mac80211: refactor link handling
+Date: Mon,  2 Nov 2026 23:08:21 +0100
+Message-ID: <20261102231028.49ce503535aa.Idab522ee67653f0fd6666ff4ccd4d2e7076109c2@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102221028.1124852-10-johannes@sipsolutions.net>
 References: <20261102221028.1124852-10-johannes@sipsolutions.net>
@@ -68,133 +68,294 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-ieee80211_set_disassoc() resets all the AP state, but most
-of that will also need to be reset during SMD Transition.
-Factor out parts into a new ieee80211_mgd_reset_ap_state()
-function to be able to reuse it later, and add some things
-that should have been in it (e.g. cancelling works).
+For SMD transition, we're going to have to allocate links that
+are for the connection to the target AP MLD, which are not
+linked into the vif/sdata yet.
 
-Assisted-by: LLM
+Refactor the link allocation, attaching, detaching and freeing
+so that we can separately allocate (and free on abandon) those
+links; expose those functions.
+
+Actually swapping over to the new links during SMD Transition
+will require more work, however.
+
+While at it add a missing synchronize_rcu() on the error path,
+the links were previously published in the data structure.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 76 ++++++++++++++++++++++++++-------------------
- 1 file changed, 44 insertions(+), 32 deletions(-)
+ net/mac80211/ieee80211_i.h |   5 ++
+ net/mac80211/iface.c       |   1 +
+ net/mac80211/link.c        | 132 ++++++++++++++++++++++++++-----------
+ 3 files changed, 98 insertions(+), 40 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8eda8154ba3d..7e8d0a9fe650 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4584,6 +4584,49 @@ static u8 ieee80211_mgd_next_dialog_token(struct ieee80211_sub_if_data *sdata)
- 	return sdata->u.mgd.dialog_token_alloc;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9906a62ee99c..eb31691c89d5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2265,6 +2265,11 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
+ 			 int link_id,
+ 			 struct ieee80211_link_data *link,
+ 			 struct ieee80211_bss_conf *link_conf);
++struct ieee80211_link_data *
++ieee80211_alloc_link(struct ieee80211_sub_if_data *sdata, int link_id);
++void ieee80211_free_link(struct ieee80211_link_data *link);
++void ieee80211_link_attach(struct ieee80211_link_data *link);
++void ieee80211_link_detach(struct ieee80211_link_data *link);
+ void ieee80211_link_stop(struct ieee80211_link_data *link);
+ int ieee80211_vif_set_links(struct ieee80211_sub_if_data *sdata,
+ 			    u16 new_links, u16 dormant_links);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 8bfd6bc9c9fe..0f3fab2a3490 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1252,6 +1252,7 @@ static void ieee80211_sdata_init(struct ieee80211_local *local,
+ 	 * MLD connection, we get a separate allocation for it.
+ 	 */
+ 	ieee80211_link_init(sdata, -1, &sdata->deflink, &sdata->vif.bss_conf);
++	ieee80211_link_attach(&sdata->deflink);
  }
  
-+static void ieee80211_mgd_reset_ap_state(struct ieee80211_sub_if_data *sdata)
+ int ieee80211_add_virtual_monitor(struct ieee80211_local *local,
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index ce1c95b40cd9..428759f8dec3 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -152,12 +152,7 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
+ 		default:
+ 			WARN_ON(1);
+ 		}
+-
+-		ieee80211_link_debugfs_add(link);
+ 	}
+-
+-	rcu_assign_pointer(sdata->vif.link_conf[link_id], link_conf);
+-	rcu_assign_pointer(sdata->link[link_id], link);
+ }
+ 
+ void ieee80211_link_stop(struct ieee80211_link_data *link)
+@@ -189,6 +184,61 @@ struct link_container {
+ 	struct ieee80211_bss_conf conf;
+ };
+ 
++struct ieee80211_link_data *
++ieee80211_alloc_link(struct ieee80211_sub_if_data *sdata, int link_id)
 +{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct wiphy *wiphy = sdata->local->hw.wiphy;
++	bool non_sta = sdata->vif.type != NL80211_IFTYPE_STATION;
++	struct link_container *link;
 +
-+	ieee80211_stop_poll(sdata);
-+	wiphy_work_cancel(wiphy, &ifmgd->monitor_work);
-+	wiphy_work_cancel(wiphy, &ifmgd->beacon_connection_loss_work);
-+	wiphy_work_cancel(wiphy, &ifmgd->csa_connection_drop_work);
++	link = kzalloc_obj(*link);
++	if (!link)
++		return NULL;
 +
-+	/* existing TX TSPEC sessions no longer exist */
-+	memset(ifmgd->tx_tspec, 0, sizeof(ifmgd->tx_tspec));
-+	wiphy_delayed_work_cancel(wiphy, &ifmgd->tx_tspec_wk);
++	ieee80211_link_init(sdata, link_id, &link->data, &link->conf);
++	ieee80211_link_setup(&link->data);
++	if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		ieee80211_set_wmm_default(&link->data, true, non_sta);
 +
-+	memset(&ifmgd->ttlm_info, 0, sizeof(ifmgd->ttlm_info));
-+	wiphy_hrtimer_work_cancel(wiphy, &ifmgd->ttlm_work);
-+
-+	memset(&sdata->vif.neg_ttlm, 0, sizeof(sdata->vif.neg_ttlm));
-+	wiphy_delayed_work_cancel(wiphy, &ifmgd->neg_ttlm_timeout_work);
-+
-+	ifmgd->removed_links = 0;
-+	wiphy_hrtimer_work_cancel(wiphy, &ifmgd->ml_reconf_work);
-+
-+	wiphy_work_cancel(wiphy, &ifmgd->teardown_ttlm_work);
-+
-+	/*
-+	 * if disconnection happens in the middle of the ML reconfiguration
-+	 * flow, cfg80211 must called to release the BSS references obtained
-+	 * when the flow started.
-+	 */
-+	ieee80211_ml_reconf_reset(sdata);
-+
-+	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
-+
-+	ifmgd->epcs.dialog_token = 0;
-+
-+	ifmgd->uhr_omp.links = 0;
-+	ifmgd->uhr_omp.acked = false;
-+	ifmgd->uhr_omp.pending = 0;
-+	ifmgd->uhr_omp.pending_init = 0;
-+	wiphy_hrtimer_work_cancel(wiphy, &ifmgd->uhr_omp.status_work);
++	return &link->data;
 +}
 +
- static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 				   u16 stype, u16 reason, bool tx,
- 				   u8 *frame_buf)
-@@ -4613,8 +4656,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON(!ifmgd->associated))
- 		return;
++void ieee80211_free_link(struct ieee80211_link_data *link)
++{
++	struct link_container *container =
++		container_of(link, struct link_container, data);
++
++	ieee80211_link_stop(link);
++	kfree(container);
++}
++
++void ieee80211_link_attach(struct ieee80211_link_data *link)
++{
++	struct ieee80211_sub_if_data *sdata = link->sdata;
++
++	if (link != &sdata->deflink)
++		ieee80211_link_debugfs_add(link);
++
++	rcu_assign_pointer(sdata->vif.link_conf[link->link_id], link->conf);
++	rcu_assign_pointer(sdata->link[link->link_id], link);
++}
++
++void ieee80211_link_detach(struct ieee80211_link_data *link)
++{
++	struct ieee80211_sub_if_data *sdata = link->sdata;
++
++	/*
++	 * The deflink's debugfs lives directly in the vif directory and is
++	 * (re)created together with it in ieee80211_debugfs_recreate_netdev();
++	 * it is torn down explicitly in ieee80211_tear_down_links() after that
++	 * recreation, so skip it here.
++	 */
++	if (link != &sdata->deflink)
++		ieee80211_link_debugfs_remove(link);
++
++	rcu_assign_pointer(sdata->vif.link_conf[link->link_id], NULL);
++	rcu_assign_pointer(sdata->link[link->link_id], NULL);
++}
++
+ static void ieee80211_tear_down_links(struct ieee80211_sub_if_data *sdata,
+ 				      struct link_container **links, u16 mask)
+ {
+@@ -205,8 +255,9 @@ static void ieee80211_tear_down_links(struct ieee80211_sub_if_data *sdata,
+ 		if (WARN_ON(!link))
+ 			continue;
+ 		ieee80211_remove_link_keys(link, &keys);
+-		ieee80211_link_debugfs_remove(link);
+ 		ieee80211_link_stop(link);
++		if (link == &sdata->deflink)
++			ieee80211_link_debugfs_remove(link);
+ 	}
  
--	ieee80211_stop_poll(sdata);
--
- 	ifmgd->associated = false;
- 
- 	if (tx) {
-@@ -4796,10 +4837,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	sdata->deflink.u.mgd.csa.ignored_same_chan = false;
- 	ieee80211_vif_unblock_queues_csa(sdata);
- 
--	/* existing TX TSPEC sessions no longer exist */
--	memset(ifmgd->tx_tspec, 0, sizeof(ifmgd->tx_tspec));
--	wiphy_delayed_work_cancel(local->hw.wiphy, &ifmgd->tx_tspec_wk);
--
- 	sdata->vif.bss_conf.power_type = IEEE80211_REG_UNSET_AP;
- 	sdata->vif.bss_conf.pwr_reduction = 0;
- 	ieee80211_clear_tpe(&sdata->vif.bss_conf.tpe);
-@@ -4808,39 +4845,14 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	sdata->vif.cfg.eml_med_sync_delay = 0;
- 	sdata->vif.cfg.mld_capa_op = 0;
- 
--	memset(&sdata->u.mgd.ttlm_info, 0,
--	       sizeof(sdata->u.mgd.ttlm_info));
--	wiphy_hrtimer_work_cancel(sdata->local->hw.wiphy, &ifmgd->ttlm_work);
--
--	memset(&sdata->vif.neg_ttlm, 0, sizeof(sdata->vif.neg_ttlm));
--	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
--				  &ifmgd->neg_ttlm_timeout_work);
--
--	sdata->u.mgd.removed_links = 0;
--	wiphy_hrtimer_work_cancel(sdata->local->hw.wiphy,
--				  &sdata->u.mgd.ml_reconf_work);
--
--	wiphy_work_cancel(sdata->local->hw.wiphy,
--			  &ifmgd->teardown_ttlm_work);
--
--	/* if disconnection happens in the middle of the ML reconfiguration
--	 * flow, cfg80211 must called to release the BSS references obtained
--	 * when the flow started.
--	 */
--	ieee80211_ml_reconf_reset(sdata);
-+	ieee80211_mgd_reset_ap_state(sdata);
- 
- 	ieee80211_vif_set_links(sdata, 0, 0);
- 
--	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
--
- 	ifmgd->epcs.enabled = false;
--	ifmgd->epcs.dialog_token = 0;
- 
- 	memset(ifmgd->userspace_selectors, 0,
- 	       sizeof(ifmgd->userspace_selectors));
--
--	ifmgd->uhr_omp.pending = 0;
--	ifmgd->uhr_omp.pending_init = 0;
+ 	synchronize_rcu();
+@@ -214,15 +265,6 @@ static void ieee80211_tear_down_links(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_free_key_list(sdata->local, &keys);
  }
  
- static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+-static void ieee80211_free_links(struct ieee80211_sub_if_data *sdata,
+-				 struct link_container **links)
+-{
+-	unsigned int link_id;
+-
+-	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++)
+-		kfree(links[link_id]);
+-}
+-
+ static int ieee80211_check_dup_link_addrs(struct ieee80211_sub_if_data *sdata)
+ {
+ 	unsigned int i, j;
+@@ -296,11 +338,10 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 	unsigned long sta_rem = rem;
+ 	unsigned int link_id;
+ 	int ret;
+-	struct link_container *links[IEEE80211_MLD_MAX_NUM_LINKS] = {}, *link;
++	struct link_container *links[IEEE80211_MLD_MAX_NUM_LINKS] = {};
+ 	struct ieee80211_bss_conf *old[IEEE80211_MLD_MAX_NUM_LINKS];
+ 	struct ieee80211_link_data *old_data[IEEE80211_MLD_MAX_NUM_LINKS];
+ 	bool use_deflink = old_links == 0; /* set for error case */
+-	bool non_sta = sdata->vif.type != NL80211_IFTYPE_STATION;
+ 	struct sta_info *sta;
+ 
+ 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+@@ -319,12 +360,14 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* allocate new link structures first */
+ 	for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
+-		link = kzalloc_obj(*link);
+-		if (!link) {
++		struct ieee80211_link_data *data;
++
++		data = ieee80211_alloc_link(sdata, link_id);
++		if (!data) {
+ 			ret = -ENOMEM;
+ 			goto free;
+ 		}
+-		links[link_id] = link;
++		links[link_id] = container_of(data, struct link_container, data);
+ 	}
+ 
+ 	/* keep track of the old pointers for the driver */
+@@ -336,18 +379,20 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* grab old links to free later */
+ 	for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
+-		if (rcu_access_pointer(sdata->link[link_id]) != &sdata->deflink) {
++		struct ieee80211_link_data *old_link =
++			rcu_access_pointer(sdata->link[link_id]);
++
++		if (old_link != &sdata->deflink) {
+ 			/*
+ 			 * we must have allocated the data through this path so
+ 			 * we know we can free both at the same time
+ 			 */
+-			to_free[link_id] = container_of(rcu_access_pointer(sdata->link[link_id]),
++			to_free[link_id] = container_of(old_link,
+ 							typeof(*links[link_id]),
+ 							data);
+ 		}
+ 
+-		RCU_INIT_POINTER(sdata->link[link_id], NULL);
+-		RCU_INIT_POINTER(sdata->vif.link_conf[link_id], NULL);
++		ieee80211_link_detach(old_link);
+ 	}
+ 
+ 	if (!old_links)
+@@ -358,16 +403,14 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 		WARN_ON(!use_deflink &&
+ 			rcu_access_pointer(sdata->link[link_id]) == &sdata->deflink);
+ 
+-		link = links[link_id];
+-		ieee80211_link_init(sdata, link_id, &link->data, &link->conf);
+-		ieee80211_link_setup(&link->data);
+-		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+-			ieee80211_set_wmm_default(&link->data, true, non_sta);
++		ieee80211_link_attach(&links[link_id]->data);
+ 	}
+ 
+-	if (new_links == 0)
++	if (new_links == 0) {
+ 		ieee80211_link_init(sdata, -1, &sdata->deflink,
+ 				    &sdata->vif.bss_conf);
++		ieee80211_link_attach(&sdata->deflink);
++	}
+ 
+ 	ret = ieee80211_check_dup_link_addrs(sdata);
+ 	if (!ret) {
+@@ -397,14 +440,14 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 		ret = 0;
+ 
+ 	if (ret) {
+-		/* restore config */
+-		memcpy(sdata->link, old_data, sizeof(old_data));
+-		memcpy(sdata->vif.link_conf, old, sizeof(old));
++		/* restore config; add/rem can overlap on link 0, so detach first */
++		for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS)
++			ieee80211_link_detach(&links[link_id]->data);
++		for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS)
++			ieee80211_link_attach(old_data[link_id]);
+ 		ieee80211_set_vif_links_bitmaps(sdata, old_links, dormant_links);
+-		for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
+-			ieee80211_link_debugfs_remove(&links[link_id]->data);
+-			ieee80211_link_stop(&links[link_id]->data);
+-		}
++		/* the new links were published, wait before freeing them */
++		synchronize_rcu();
+ 		/* and free (only) the newly allocated links */
+ 		memset(to_free, 0, sizeof(links));
+ 		goto free;
+@@ -445,13 +488,16 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ free:
+ 	/* if we failed during allocation, only free all */
+ 	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
+-		kfree(links[link_id]);
++		if (links[link_id])
++			ieee80211_free_link(&links[link_id]->data);
+ 		links[link_id] = NULL;
+ 	}
+ deinit:
+-	if (use_deflink)
++	if (use_deflink) {
+ 		ieee80211_link_init(sdata, -1, &sdata->deflink,
+ 				    &sdata->vif.bss_conf);
++		ieee80211_link_attach(&sdata->deflink);
++	}
+ 	return ret;
+ }
+ 
+@@ -463,7 +509,13 @@ int ieee80211_vif_set_links(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ret = ieee80211_vif_update_links(sdata, links, new_links,
+ 					 dormant_links);
+-	ieee80211_free_links(sdata, links);
++
++	/*
++	 * Removed links were already stopped and RCU-synchronized in
++	 * ieee80211_tear_down_links(), so only the memory is left to free.
++	 */
++	for (int i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++)
++		kfree(links[i]);
+ 
+ 	return ret;
+ }
 -- 
 2.56.0
 
