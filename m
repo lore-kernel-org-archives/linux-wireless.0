@@ -1,52 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.197
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793610635;
-	b=s2Px3vFDus4xefOktRSl28cU8dFq+spqtTbHBbqe+H3/ez9ZssqfR+Z3M8+zMDD+bZlU
-	 so1KRYxXG6XyC8dyrbI41+JaV/eRXgqVPbKHrCYg9xNe6O3UKfP/NslQATge6vjShYp1g
-	 JfKg+EvhjXGQhzBBx//08E3Hjld1kLLMCLkTqhqh596c95ZgOZbJ6FJWFZxBsVfHRLO7c
-	 gn0YioeyF53mUJ11Ve+8fwVVGor55DDMGJWgnEh3MwhPhOOH1H8wv6zlULm5zbQo5Shic
-	 pa6g1ktBM3iyEj5RmgLZlJSMS8GnZ2M7NGaCI7slIiha93MMVIQoSVPlqWq5e78OlsA==
+	t=1793611683;
+	b=SOU8f/ZLV4S7e8ombqz8aoMszo/GzmY5JcTTgBbRhYHcqVNAeEBcWmLfroDKTMVLTINz
+	 fChLdl/QW89u36qZUiBS6dkWIN6jBmjFJcS3vy6todYeXq7BEhUFikTlBMymaJtxQD3DN
+	 JKNllUcJeOhWwGBq3gbaiXG3drP8+AwH9ddF///w9uuqPBlr/6GrswOSa5mHRNFhVnuf4
+	 Uw3bn+sAPCWoTWY4kmaHIUEX250bpFWHmoceGx+ovrCIC+qUuYKwsj9OJzlqFv4pqwAEN
+	 ebiLEEqJyzkWApuZZ9Y+nYsfcX/x79JkCkT5oi7jmf4UK4G6kaOSMuf/+ioythDIhrQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793610635;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=K55TA0Xx4eo4x4aGz06tjfzrbSjfUgna9+vbhgB+sZc=;
-	b=jk1wzxS6WRgeOoGtU34Ghar9/VCQ7RNzDHskzo84IvDk27m+62sCUelkFGWe4wARjKN5
-	 rNAXcyOtG1aT1BkXW02TyfOzX+vtPInHpoORWiZgPG4x37zQ/FfI7VV1wbrUWFwW+5UQM
-	 xWwI45S2bvog9VVEwbqaeg9MkuweTcXc6y9NwPoxBUdKu1wb0Uw3up8LmKvtBt9O7dUoi
-	 lkrTG1vaSplytRm9Yf4dcEBBXVL9f1seWAM5oWCjXsHvEFEEVXswZ0QlsH9TOG4PNOQ5g
-	 rcfXtT+jFoBUjrnqlOHFZHv1IWYD+7CZAypxDda6q1d7AiL9u5BjOLo7rAdBWiFABUw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793611683;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 References:In-Reply-To:Accept-Language:Content-Language:
+	 X-MS-Has-Attach:x-originating-ip:Content-Type:MIME-Version;
+	bh=wPVAFSBmIV/kgdwRW82oRb48CIpX6KK6+rQQCVihC44=;
+	b=cdnCjmidOvraM14iP6eDbjwJrPIxohpBai3S1JhQ92lRl6mdOA6aBTqn/pWSbbVghh/G
+	 St4Gf/CjrOsznDz+Vc6ZutnucXobYidabBoNO52pgAG2Tg58MqwiSJQbSKBkJrWA7cM9o
+	 EZt8ealLgyzTQN6nwO2eIbXUzKwAumhnb01bCjoJMNbYDL4fAAyHOUgAdORv29JVXDc/Z
+	 19A4yfJV2JjWuv7fccIz5ZRKBmjWxia0lebgvEM/6p8psaj35pqSEoWZ9JdCcKJ/IQYVT
+	 z9GIPPc3pBk4/4Y0pTdKf18o0cxfCZGAubIV3/ZAtwSE5n4HZxhn9H691GJFHGyyA/A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fnxzQQ3Z;
-	arc=none smtp.remote-ip=91.218.175.197
-Received: from mta0.migadu.com (out-197.mta0.migadu.com [91.218.175.197])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=jNLjJgfB;
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A250606A324
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 09:10:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4A250606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A787606A32C
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 09:28:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A787606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fnxzQQ3Z
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=K55TA0Xx4eo4x4aGz06tjfzrbSjfUgna9+vbhgB+sZc=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793610632; v=1; x=1794215432;
- b=fnxzQQ3Zu3WF8DdF4cQ36GOWNZc6NYHwUNXMQN0mEqIHdQoli/XhS62YTcLQ/I5V0NjtFiY7
- Va7Bo+3PVGRsWJNU9+/jgufh8PfB3SxTJBQSWFD0HuXj0mMdxMLQQVpkxzn/AzYf1F9ennOPZYa
- NJ/hwr1iQcvIisYhbjxfFvjQ=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8e8f11a4a2200b66;
-	Mon, 02 Nov 2026 09:10:32 +0000
-X-Mizu-Trace-ID: 8e8f11a4a2200b66
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=jNLjJgfB
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A29RhGnA2027676, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1793611664; bh=wPVAFSBmIV/kgdwRW82oRb48CIpX6KK6+rQQCVihC44=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version;
+	b=jNLjJgfBkw9/z35G8HvDZ45jPxrte/exlognbqvTDojJPn6hWQIKwvI6tnlm+rm9f
+	 SvPzavSwgvkgcG68bajuCUTEM6Jmu1yd3gnsL5ZEwqsUuN1G8zuOwf4TwVMacKzaey
+	 y9s9FqPUQQmMyQKxC9QXsDXXhcpOSTTuF51Id96+P9MeZD/z+Is4e0UmFgyl3QZy6o
+	 yd4l4DN3Sfg+eQ4XhJjl3Ii4zHGwbfsxDa1BqbyR5MA0PVZd3xBIg5coElqqYa7cRy
+	 tSmW1Xh9WigE6eh+nRZVo05Q61UGd4yahvT2fwif9gWLDgHh4mxx71MxyKK27ImdWG
+	 8azLqKvzJWcUg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A29RhGnA2027676
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 2 Nov 2026 17:27:43 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Mon, 2 Nov 2026 17:27:44 +0800
+Received: from RTKEXHMBS05.realtek.com.tw ([fe80::bbab:78ea:8d39:6f1e]) by
+ RTKEXHMBS05.realtek.com.tw ([fe80::bbab:78ea:8d39:6f1e%4]) with mapi id
+ 15.02.2562.056; Mon, 2 Nov 2026 17:27:44 +0800
+From: Bernie Huang <phhuang@realtek.com>
+To: Robert Beckett <bob.beckett@collabora.com>, Ping-Ke Shih
+	<pkshih@realtek.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "Luka
+ Gejak" <luka.gejak@linux.dev>, Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Timlee <timlee@realtek.com>, "matthew.leach@collabora.com"
+	<matthew.leach@collabora.com>, "kernel@collabora.com" <kernel@collabora.com>
+Subject: RE: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted, poisoning
+ CCMP replay counter
+Thread-Topic: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted,
+ poisoning CCMP replay counter
+Thread-Index: AQHdXaL8zmsOj0CE6U6ENy6Km2GOWLcHlFUQgABIg4CAATP90P//8EsAgBGQSRA=
+Date: Mon, 2 Nov 2026 09:27:43 +0000
+Message-ID: <527f96d6034f43d481c3bbacf0313f3a@realtek.com>
+References: <a615f09bb6f54128b792a13ebcbf8970@realtek.com>
+ <20261021190529.3893821-1-bob.beckett@collabora.com>
+ <90c40c3223c34562b2c171c52d987c2e@realtek.com>
+ <1a163984687.46e4c9841111898.2085291868591283475@collabora.com>
+In-Reply-To: <1a163984687.46e4c9841111898.2085291868591283475@collabora.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: yes
+Content-Type: multipart/mixed;
+	boundary="_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_"
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,59 +89,172 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Mon, 02 Nov 2026 09:10:31 +0000
+
+--_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <b3e27bc36adc6f4682da6202382ef214209b7c89@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v2 1/2] wifi: rtw88: drop C2H packets shorter
- than the C2H header
-To: "Huihui Huang" <hhhuang@smu.edu.sg>, linux-wireless@vger.kernel.org
-Cc: "Huihui Huang" <hhhuang@smu.edu.sg>, "Ping-Ke Shih" <pkshih@realtek.com>,
- stable@vger.kernel.org
-In-Reply-To: <20261031175621.2228762-2-hhhuang@smu.edu.sg>
-References: <20261031175621.2228762-1-hhhuang@smu.edu.sg>
- <20261031175621.2228762-2-hhhuang@smu.edu.sg>
+Content-Transfer-Encoding: base64
 
-October 31, 2026 at 6:56 PM, "Huihui Huang" <hhhuang@smu.edu.sg> wrote:
+Qm9iIEJlY2tldHQgPGJvYi5iZWNrZXR0QGNvbGxhYm9yYS5jb20+IHdyb3RlOg0KPiAgPiA+IE9u
+IFdlZCwgMjEgT2N0IDIwMjYgMDc6MzA6NTggKzAwMDAsIFBpbmctS2UgU2hpaA0KPiA8cGtzaGlo
+QHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gID4gPiA+IEJvYiBCZWNrZXR0IDxib2IuYmVja2V0dEBj
+b2xsYWJvcmEuY29tPiB3cm90ZToNCj4gID4gPiA+ID4NCj4gID4gPiA+ID4gVGhlIEFQJ3Mgb3du
+IFBOIHNlcXVlbmNlIGlzIGNvbnNpc3RlbnQgYmVmb3JlIGFuZCBhZnRlciB0aGUgYmFkDQo+IGZy
+YW1lLCAgPiA+ID4gPiBzbyB0aGUgY29ycnVwdGlvbiBoYXBwZW5zIG9uIHRoZSByZWNlaXZlIHNp
+ZGUuDQo+ICA+ID4gPg0KPiAgPiA+ID4gTWF5YmUgdGhpcyBpcyBhIGhpbnQgdG8gbWFrZSBhIHBh
+dGNoIHRvIGRlZmVyIChkcm9wKSByZXBvcnRpbmcgd2VpcmQNCj4gcGFja2V0LCAgPiA+ID4gYXMg
+THVrYSBoYXMgZml4ZWQgMyBvZiA0IHByb2JsZW1zLg0KPiAgPg0KPiAgPiBJIHF1aWNrbHkgY2hl
+Y2tlZCB0aGUgZGVidWcgcGF0Y2hlcywgd2hpY2ggc2VlbSBub3QgZGV0ZWN0IGlmIFBOIHNlcXVl
+bmNlDQo+IGlzICA+IGNvcnJlY3QgYWZ0ZXIgdGhlIGJhZCBmcmFtZSwgZm9yIGV4YW1wbGUNCj4g
+ID4gICBzZXEgICAgIFBODQo+ICA+ICAgIDEgICAgICAxMDENCj4gID4gICAgMiAgICAgIDk5OTk5
+ICAgLy8gYmFkIGZyYW1lLiBzaG91bGQgYmUgMTAyLg0KPiAgPiAgICAzICAgICAgMTAzICAgICAv
+LyBub3QgZGV0ZWN0IHRoaXMNCj4gID4NCj4gID4gT3IgSSBtaXNzZWQgc29tZXRoaW5nPw0KPiAN
+Cj4gaWYgcG4ganVtcHMsIHJ0d19yeF9wbl9ndWFyZCByZXR1cm5zIGVhcmx5IGJlZm9yZSBsYXRj
+aGluZyBwbiwgc28gdGhlIG5leHQNCj4gY29ycmVjdGVkIHBuIHdvdWxkIGp1c3QgYmUgYSByZWd1
+bGFyIGluY3JlYXNlIGFuZCBub3QgZ2V0IGRyb3BwZWQuDQo+IA0KPiAgPg0KPiAgPiA+ID4gPiA0
+LiBGb3IgY29tcGxldGVuZXNzOiBvbiB0aGVzZSBjaGlwcyBjYW4gUlhCRF9JRFggb3IgdGhlDQo+
+ICA+ID4gPiA+ICAgIGJ1ZmZlci1kZXNjcmlwdG9yIFJYIHRhZyBldmVyIGJlIHVwZGF0ZWQgYmVm
+b3JlIHRoZSBwYWNrZXQgZGF0YQ0KPiBETUENCj4gID4gPiA+ID4gICAgaGFzIGNvbXBsZXRlZCwg
+YXMgZGVzY3JpYmVkIGZvciBXaUZpIDcgaW4gcnR3ODkgMGJjN2QxZDRlNjNjPw0KPiAgPiA+ID4N
+Cj4gID4gPiA+IFRoZSBSWCB0YWcgaW4gcnR3ODggbG9jYXRlZCBvbiBtZW1vcnkgYWxsb2NhdGVk
+IGJ5DQo+IGRtYV9hbGxvY19jb2hlcmVudCgpLCBhbmQgID4gPiA+IHRoZSBSWCB0YWcgbXVzdCBi
+ZSBzZXQgYWZ0ZXIgcGFja2V0IGRhdGENCj4gTUFDIGNvbXBsZXRlZC4NCj4gID4NCj4gID4gKGZp
+eCB0eXBvOiAgICAgICAgICAgICAgICAgICAgICAgICAgLi4uIGRhdGEgRE1BIGNvbXBsZXRlZC4p
+DQo+ICA+DQo+ICA+ID4NCj4gID4gPiBVbmRlcnN0b29kIHRoYXQgdGhpcyBpcyB0aGUgZGVzaWdu
+IGludGVudC4gTXkgcXVlc3Rpb24gd2FzIHdoZXRoZXIgdGhlDQo+IGhvc3QgY2FuICA+ID4gZXZl
+ciBvYnNlcnZlIHRoZSB0YWcgYmVmb3JlIHRoZSBkYXRhLiBkbWFfYWxsb2NfY29oZXJlbnQoKQ0K
+PiBvbmx5IG1ha2VzIHRoZSB0YWcgID4gPiB2aXNpYmxlIHRvIHRoZSBDUFUgd2l0aG91dCBjYWNo
+ZSBtYWludGVuYW5jZTsgdGhlDQo+IHBheWxvYWQgaXMgaW4gYSBzZXBhcmF0ZSAgPiA+IHN0cmVh
+bWluZyBtYXBwaW5nIChhIFNXSU9UTEIgYm91bmNlIGJ1ZmZlciBvbg0KPiB0aGlzIHBsYXRmb3Jt
+KSwgc28gdGhlIG9yZGVyIGluICA+ID4gd2hpY2ggdGhlIGhvc3Qgc2VlcyB0aGVtIGRlcGVuZHMg
+b24gdGhlDQo+IG9yZGVyIG9mIHRoZSBkZXZpY2UncyBQQ0llIHdyaXRlcy4NCj4gID4gPiBSZWxh
+eGVkIE9yZGVyaW5nIGlzIGVuYWJsZWQgb24gdGhlIDg4MjJDRSBoZXJlIChEZXZDdGwgUmx4ZE9y
+ZCspLg0KPiAgPiA+IERvZXMgdGhlIDg4MjJDRSBzZXQgdGhlIFJPIGF0dHJpYnV0ZSBvbiBSWCBE
+TUEgd3JpdGVzLCBpbiBwYXJ0aWN1bGFyIHRoZQ0KPiA+ID4gYnVmZmVyLWRlc2NyaXB0b3IvdGFn
+IHVwZGF0ZT8gSWYgaXQgZG9lcywgdGhlIHRhZyB3cml0ZSBtYXkgcGFzcyB0aGUgcGF5bG9hZA0K
+PiA+ID4gd3JpdGVzLg0KPiAgPiA+DQo+ICA+ID4gV2UgYXJlIGhvcGluZyB0byB0ZXN0IHRoaXMg
+ZGlyZWN0bHkgd2l0aCB0aGUgbmV4dCByb3VuZCBvZiB0ZXN0cy4gdGhlDQo+IHJ4X2RlYnVnICA+
+ID4gb3B0aW9uIHJlLXN5bmNzIGEgc3VzcGVjdCBidWZmZXIgMTAwIHVzIGxhdGVyLCBzbyBsYXRl
+IHBheWxvYWQNCj4gd3JpdGVzIG1pZ2h0ICA+ID4gc2hvdyB1cCBhcyBjaGFuZ2VkIGJ5dGVzLCBh
+bmQgd2UgY2FuIHJlcGVhdCB0aGUgdGVzdCB3aXRoDQo+IFJlbGF4ZWQgT3JkZXJpbmcgID4gPiBk
+aXNhYmxlZC4NCj4gID4NCj4gID4gSSdsbCBjaGVjayB0aGUgYmVoYXZpb3IgaW50ZXJuYWxseSBh
+bmQgZ2V0IGJhY2sgdG8geW91Lg0KPiAgPg0KPiAgPg0KPiAgPg0KPiANCg0KLy8gUGxlYXNlIGln
+bm9yZSB0aGUgcHJldmlvdXMgdHdvIGVtYWlscw0KDQpIaSBCb2IsDQoNCkRvIHlvdSBtaW5kIHRl
+c3RpbmcgdGhpcyBwYXRjaD8NClJlcHJvZHVjZSBhZ2FpbiB3aXRoIHRoZSBzYW1lIGZ0cmFjZSBh
+bmQgc25pZmZlciBsb2dzDQpCeSB0aGUgcmVzdWx0IHdlIGNhbiBkaWZmZXJlbnRpYXRlIHdoaWNo
+IGlzIHRoZSBjYXNlOg0KKDEpIEFQIHNlbmRzIGluY29ycmVjdCBDQ01QIGhlYWRlciAobGVzcyBs
+aWtlbHkpDQooMikgRE1BIGluY29tcGxldGUsIGJ1dCBsYXRlciB0aGUgY29ycmVjdCBkYXRhIGNh
+biBiZSByZXRyaWV2ZWQNCigzKSBETUEgaW5jb21wbGV0ZSwgZGF0YSBuZXZlciByZWNvdmVycw0K
+DQpJSVVDLCBvdXIgaGFyZHdhcmUgd3JpdGVzIHBheWxvYWQgZmlyc3QgdGhlbiB0aGUgdGFnLg0K
+VGhlIFJPIGF0dHJpYnV0ZSBpcyBuZXZlciBzZXQgaW4gb3VyIFRMUCwgc28gZGVzcGl0ZSB0aGUg
+Y29uZmlndXJhdGlvbg0Kc3BhY2Ugc2V0dGluZ3MsIFBDSUUgUkMgc2hvdWxkbid0IGRvIHJlb3Jk
+ZXJpbmcuDQpJIGFtIHdhaXRpbmcgZm9yIHByb3RvY29sIGFuYWx5emVyIHRvIHZlcmlmeSB0aGlz
+LCBhbmQgd2lsbCB1cGRhdGUgDQpsYXRlciB3aGVuIEkgaGF2ZSB0aGUgcmVzdWx0Lg0KSWYgdGhl
+IGJ1ZmZlciBwb2lzb25pbmcgc29tZWhvdyBjaGFuZ2VzIHRoZSB0aW1pbmcsIGFuZCBmYWlsIGJl
+Y29tZXMNCm5vdCByZXByb2R1Y2libGUsIHBsZWFzZSBsZXQgdXMga25vdywgdGhhbmtzIQ0K
 
->=20
->=20rtw_fw_c2h_cmd_rx_irqsafe() and rtw_fw_c2h_cmd_handle() compute the C=
-2H
-> payload length as
->=20
->=20 len =3D skb->len - pkt_offset - 2;
->=20
->=20where len is a u8, without checking that the skb holds the 2-byte C2H
-> header (id and seq).
->=20
->=20If the header is incomplete, the C2H payload length underflows: zero
-> bytes after pkt_offset produce len =3D 254, and one byte produces
-> len =3D 255. With zero bytes, reading c2h->id also accesses data beyond
-> skb->len. The wrapped len defeats the minimum-length checks in
-> rtw_fw_ra_report_handle() and rtw_coex_wl_fwdbginfo_notify(), which the=
-n
-> read their fixed-size reports beyond the valid packet data.
->=20
->=20skb->len is pkt_offset plus pkt_len from the RX descriptor, and
-> rtw_rx_query_rx_desc() returns for C2H packets before its
-> "pkt_len <=3D FCS_LEN" check, so a short C2H packet is not rejected the=
-re.
->=20
->=20Drop C2H packets that are too short to hold the C2H header. Since
-> rtw_fw_c2h_cmd_handle() only sees skbs queued by
-> rtw_fw_c2h_cmd_rx_irqsafe(), this covers both computations.
->=20
->=20Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-> Cc: stable@vger.kernel.org
-> Assisted-by: LLM
-> Signed-off-by: Huihui Huang <hhhuang@smu.edu.sg>
-> ---
+--_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_
+Content-Type: application/octet-stream;
+	name="0001-wifi-rtw88-test-for-stale-packet.patch"
+Content-Description: 0001-wifi-rtw88-test-for-stale-packet.patch
+Content-Disposition: attachment;
+	filename="0001-wifi-rtw88-test-for-stale-packet.patch"; size=5302;
+	creation-date="Mon, 02 Nov 2026 09:27:27 GMT";
+	modification-date="Mon, 02 Nov 2026 09:27:27 GMT"
+Content-Transfer-Encoding: base64
 
-Looking good to me.
+RnJvbSA0MTE3NWY4ZTU0YTA0NGE1YTBlMjczZTNhYzliOTFlODg2NmZjZGYwIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBQby1IYW8gSHVhbmcgPHBoaHVhbmdAcmVhbHRlay5jb20+CkRh
+dGU6IE1vbiwgMiBOb3YgMjAyNiAxNzoyNjozMSArMDgwMApTdWJqZWN0OiBbUEFUQ0hdIHdpZmk6
+IHJ0dzg4OiB0ZXN0IGZvciBzdGFsZSBwYWNrZXQKCkZlbGxvdyBkZXZlbG9wZXJzIGZvdW5kIGV2
+aWRlbmNlIHRoYXQgRE1BIG9wZXJhdGlvbnMgbWlnaHQKYmUgaW5jb21wbGV0ZSBkdXJpbmcgZGVi
+dWdnaW5nLiBlLmcuIFJ4IHRhZyBpcyBuZXcgYnV0IHRoZQpyZW1haW5pbmcgUnggYnVmZmVyIGlz
+IG9sZCBkYXRhLgpTaW5jZSBwcm90b2NvbCBhbmF5bHplciBpcyBub3QgYXZhaWxhYmxlIGF0IHRo
+ZSBtb21lbnQsCndyaXRlIHRoZSBSeCBidWZmZXIgdG8gYSBtYWdpYyBudW1iZXIgYWZ0ZXIgZWFj
+aCB1c2UsIGFuZCBjaGVjawpmb3IgbW9yZSBjb252aW5jaW5nIGV2aWRlbmNlIGZvciBmdXJ0aGVy
+IHRyb3VibGVzaG9vdGluZy4KClNpZ25lZC1vZmYtYnk6IFBvLUhhbyBIdWFuZyA8cGhodWFuZ0By
+ZWFsdGVrLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5j
+IHwgMTAxICsrKysrKysrKysrKysrKysrKysrKystCiAxIGZpbGUgY2hhbmdlZCwgOTcgaW5zZXJ0
+aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9yZWFsdGVrL3J0dzg4L3BjaS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4
+OC9wY2kuYwppbmRleCA2NmQyZTVmNTE0NDQuLjgxNTA4Nzc4OWI5MyAxMDA2NDQKLS0tIGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9wY2kuYworKysgYi9kcml2ZXJzL25ldC93
+aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5jCkBAIC0xNSw2ICsxNSwxMCBAQAogI2luY2x1ZGUg
+ImRlYnVnLmgiCiAjaW5jbHVkZSAibWFjLmgiCiAKKyNkZWZpbmUgUlRXX1BDSV9SWF9QT0lTT04J
+CTB4REVBREJFRUYKKyNkZWZpbmUgUlRXX1BDSV9SWF9QT0lTT05fTEVOCQkyNTYKKyNkZWZpbmUg
+UlRXX1BDSV9SWF9QT0lTT05fVElNRU9VVAkxMDAKKwogc3RhdGljIGJvb2wgcnR3X2Rpc2FibGVf
+bXNpOwogc3RhdGljIGJvb2wgcnR3X3BjaV9kaXNhYmxlX2FzcG07CiBtb2R1bGVfcGFyYW1fbmFt
+ZWQoZGlzYWJsZV9tc2ksIHJ0d19kaXNhYmxlX21zaSwgYm9vbCwgMDY0NCk7CkBAIC0yMDcsNiAr
+MjExLDk0IEBAIHN0YXRpYyBpbnQgcnR3X3BjaV9pbml0X3R4X3Jpbmcoc3RydWN0IHJ0d19kZXYg
+KnJ0d2RldiwKIAlyZXR1cm4gMDsKIH0KIAorc3RhdGljIHZvaWQgcnR3X3BjaV9yeF9wb2lzb24o
+c3RydWN0IHNrX2J1ZmYgKnNrYikKK3sKKwltZW1zZXQzMigodTMyICopc2tiLT5kYXRhLCBSVFdf
+UENJX1JYX1BPSVNPTiwKKwkJIFJUV19QQ0lfUlhfUE9JU09OX0xFTiAvIDQpOworfQorCitzdGF0
+aWMgYm9vbCBydHdfcGNpX3J4X3JhbmdlX3BvaXNvbmVkKHN0cnVjdCBydHdfZGV2ICpydHdkZXYs
+CisJCQkJICAgICAgc3RydWN0IHNrX2J1ZmYgKnNrYiwgdTMyIHN0YXJ0LCB1MzIgbGVuKQorewor
+CXUzMiAqd29yZCA9ICh1MzIgKilza2ItPmRhdGE7CisJdTMyIGksIGZpcnN0ID0gc3RhcnQgLyA0
+LCBsYXN0ID0gRElWX1JPVU5EX1VQKHN0YXJ0ICsgbGVuLCA0KTsKKworCWlmICghbGVuKQorCQly
+ZXR1cm4gZmFsc2U7CisKKwlmb3IgKGkgPSBmaXJzdDsgaSA8IGxhc3Q7IGkrKykKKwkJaWYgKFJF
+QURfT05DRSh3b3JkW2ldKSA9PSBSVFdfUENJX1JYX1BPSVNPTikgeworCQkJcnR3X3dhcm4ocnR3
+ZGV2LCAicnggYnVmZmVyIHN0aWxsIDB4ZGVhZGJlZWZcbiIpOworCQkJcmV0dXJuIHRydWU7CisJ
+CX0KKworCXJldHVybiBmYWxzZTsKK30KKworc3RhdGljIGJvb2wgcnR3X3BjaV9yeF9zdGFsZShz
+dHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQoreworCXN0cnVjdCBy
+dHdfcnhfZGVzYyAqcnhfZGVzYyA9ICh2b2lkICopc2tiLT5kYXRhOworCXUzMiBkZXNjX3N6ID0g
+cnR3ZGV2LT5jaGlwLT5yeF9wa3RfZGVzY19zejsKKwl1OCBkcnZfaW5mb19zeiwgc2hpZnQsIGVu
+Y190eXBlOworCXN0cnVjdCBpZWVlODAyMTFfaGRyICpoZHI7CisJdTMyIHBrdF9sZW4sIG9mZnNl
+dCwgbGVuOworCWJvb2wgaXNfYzJoOworCV9fbGUxNiBmYzsKKworCWlmIChydHdfcGNpX3J4X3Jh
+bmdlX3BvaXNvbmVkKHJ0d2Rldiwgc2tiLCAwLCBkZXNjX3N6KSkKKwkJcmV0dXJuIHRydWU7CisK
+Kwlwa3RfbGVuID0gbGUzMl9nZXRfYml0cyhyeF9kZXNjLT53MCwgUlRXX1JYX0RFU0NfVzBfUEtU
+X0xFTik7CisJZHJ2X2luZm9fc3ogPSBsZTMyX2dldF9iaXRzKHJ4X2Rlc2MtPncwLCBSVFdfUlhf
+REVTQ19XMF9EUlZfSU5GT19TSVpFKTsKKwlzaGlmdCA9IGxlMzJfZ2V0X2JpdHMocnhfZGVzYy0+
+dzAsIFJUV19SWF9ERVNDX1cwX1NISUZUKTsKKwlvZmZzZXQgPSBkZXNjX3N6ICsgZHJ2X2luZm9f
+c3ogKiA4ICsgc2hpZnQ7CisJaWYgKG9mZnNldCA+PSBSVFdfUENJX1JYX1BPSVNPTl9MRU4pCisJ
+CXJldHVybiBmYWxzZTsKKworCWlzX2MyaCA9IGxlMzJfZ2V0X2JpdHMocnhfZGVzYy0+dzIsIFJU
+V19SWF9ERVNDX1cyX0MySCk7CisJaWYgKGlzX2MyaCkgeworCQlsZW4gPSBtaW5fdCh1MzIsIHBr
+dF9sZW4sIDQpOworCX0gZWxzZSBpZiAocGt0X2xlbiA8IHNpemVvZihmYykpIHsKKwkJbGVuID0g
+cGt0X2xlbjsKKwl9IGVsc2UgeworCQlpZiAocnR3X3BjaV9yeF9yYW5nZV9wb2lzb25lZChydHdk
+ZXYsIHNrYiwgb2Zmc2V0LCBzaXplb2YoZmMpKSkKKwkJCXJldHVybiB0cnVlOworCisJCWhkciA9
+IChzdHJ1Y3QgaWVlZTgwMjExX2hkciAqKShza2ItPmRhdGEgKyBvZmZzZXQpOworCQlmYyA9IGhk
+ci0+ZnJhbWVfY29udHJvbDsKKwkJbGVuID0gaWVlZTgwMjExX2hkcmxlbihmYyk7CisKKwkJZW5j
+X3R5cGUgPSBsZTMyX2dldF9iaXRzKHJ4X2Rlc2MtPncwLCBSVFdfUlhfREVTQ19XMF9FTkNfVFlQ
+RSk7CisJCWlmIChpZWVlODAyMTFfaGFzX3Byb3RlY3RlZChmYykgJiYgZW5jX3R5cGUgPT0gUlhf
+REVTQ19FTkNfQUVTKQorCQkJbGVuICs9IElFRUU4MDIxMV9DQ01QX0hEUl9MRU47CisJCWxlbiA9
+IG1pbihsZW4sIHBrdF9sZW4pOworCX0KKworCWxlbiA9IG1pbihsZW4sIFJUV19QQ0lfUlhfUE9J
+U09OX0xFTiAtIG9mZnNldCk7CisKKwlyZXR1cm4gcnR3X3BjaV9yeF9yYW5nZV9wb2lzb25lZChy
+dHdkZXYsIHNrYiwgb2Zmc2V0LCBsZW4pOworfQorCitzdGF0aWMgdm9pZCBydHdfcGNpX3J4X3N5
+bmNfYW5kX3dhaXRfZnJlc2goc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwKKwkJCQkJICAgc3RydWN0
+IHNrX2J1ZmYgKnNrYiwgZG1hX2FkZHJfdCBkbWEpCit7CisJa3RpbWVfdCBkZWFkbGluZSA9IGt0
+aW1lX2FkZF9tcyhrdGltZV9nZXQoKSwgUlRXX1BDSV9SWF9QT0lTT05fVElNRU9VVCk7CisKKwlk
+bWFfc3luY19zaW5nbGVfZm9yX2NwdShydHdkZXYtPmRldiwgZG1hLCBSVEtfUENJX1JYX0JVRl9T
+SVpFLAorCQkJCURNQV9GUk9NX0RFVklDRSk7CisKKwl3aGlsZSAocnR3X3BjaV9yeF9zdGFsZShy
+dHdkZXYsIHNrYikpIHsKKwkJaWYgKCFrdGltZV9iZWZvcmUoa3RpbWVfZ2V0KCksIGRlYWRsaW5l
+KSkgeworCQkJcnR3X3dhcm4ocnR3ZGV2LCAicnggYnVmZmVyIHN0aWxsIHBvaXNvbmVkIGFmdGVy
+ICVkIG1zXG4iLAorCQkJCSBSVFdfUENJX1JYX1BPSVNPTl9USU1FT1VUKTsKKwkJCXJldHVybjsK
+KwkJfQorCQl1ZGVsYXkoMSk7CisJCWRtYV9zeW5jX3NpbmdsZV9mb3JfY3B1KHJ0d2Rldi0+ZGV2
+LCBkbWEsIFJUS19QQ0lfUlhfQlVGX1NJWkUsCisJCQkJCURNQV9GUk9NX0RFVklDRSk7CisJfQor
+fQorCiBzdGF0aWMgaW50IHJ0d19wY2lfcmVzZXRfcnhfZGVzYyhzdHJ1Y3QgcnR3X2RldiAqcnR3
+ZGV2LCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLAogCQkJCSBzdHJ1Y3QgcnR3X3BjaV9yeF9yaW5nICpy
+eF9yaW5nLAogCQkJCSB1MzIgaWR4LCB1MzIgZGVzY19zeikKQEAgLTIxOSw3ICszMTEsOCBAQCBz
+dGF0aWMgaW50IHJ0d19wY2lfcmVzZXRfcnhfZGVzYyhzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LCBz
+dHJ1Y3Qgc2tfYnVmZiAqc2tiLAogCWlmICghc2tiKQogCQlyZXR1cm4gLUVJTlZBTDsKIAotCWRt
+YSA9IGRtYV9tYXBfc2luZ2xlKCZwZGV2LT5kZXYsIHNrYi0+ZGF0YSwgYnVmX3N6LCBETUFfRlJP
+TV9ERVZJQ0UpOworCXJ0d19wY2lfcnhfcG9pc29uKHNrYik7CisJZG1hID0gZG1hX21hcF9zaW5n
+bGUoJnBkZXYtPmRldiwgc2tiLT5kYXRhLCBidWZfc3osIERNQV9CSURJUkVDVElPTkFMKTsKIAlp
+ZiAoZG1hX21hcHBpbmdfZXJyb3IoJnBkZXYtPmRldiwgZG1hKSkKIAkJcmV0dXJuIC1FQlVTWTsK
+IApAQCAtMjQxLDcgKzMzNCw4IEBAIHN0YXRpYyB2b2lkIHJ0d19wY2lfc3luY19yeF9kZXNjX2Rl
+dmljZShzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LCBkbWFfYWRkcl90IGRtYSwKIAlzdHJ1Y3QgcnR3
+X3BjaV9yeF9idWZmZXJfZGVzYyAqYnVmX2Rlc2M7CiAJaW50IGJ1Zl9zeiA9IFJUS19QQ0lfUlhf
+QlVGX1NJWkU7CiAKLQlkbWFfc3luY19zaW5nbGVfZm9yX2RldmljZShkZXYsIGRtYSwgYnVmX3N6
+LCBETUFfRlJPTV9ERVZJQ0UpOworCXJ0d19wY2lfcnhfcG9pc29uKHJ4X3JpbmctPmJ1ZltpZHhd
+KTsKKwlkbWFfc3luY19zaW5nbGVfZm9yX2RldmljZShkZXYsIGRtYSwgYnVmX3N6LCBETUFfQklE
+SVJFQ1RJT05BTCk7CiAKIAlidWZfZGVzYyA9IChzdHJ1Y3QgcnR3X3BjaV9yeF9idWZmZXJfZGVz
+YyAqKShyeF9yaW5nLT5yLmhlYWQgKwogCQkJCQkJICAgICBpZHggKiBkZXNjX3N6KTsKQEAgLTEw
+NjUsOCArMTE1OSw3IEBAIHN0YXRpYyB1MzIgcnR3X3BjaV9yeF9uYXBpKHN0cnVjdCBydHdfZGV2
+ICpydHdkZXYsIHN0cnVjdCBydHdfcGNpICpydHdwY2ksCiAJCXJ0d19wY2lfZG1hX2NoZWNrKHJ0
+d2RldiwgcmluZywgY3VyX3JwKTsKIAkJc2tiID0gcmluZy0+YnVmW2N1cl9ycF07CiAJCWRtYSA9
+ICooKGRtYV9hZGRyX3QgKilza2ItPmNiKTsKLQkJZG1hX3N5bmNfc2luZ2xlX2Zvcl9jcHUocnR3
+ZGV2LT5kZXYsIGRtYSwgUlRLX1BDSV9SWF9CVUZfU0laRSwKLQkJCQkJRE1BX0ZST01fREVWSUNF
+KTsKKwkJcnR3X3BjaV9yeF9zeW5jX2FuZF93YWl0X2ZyZXNoKHJ0d2Rldiwgc2tiLCBkbWEpOwog
+CQlyeF9kZXNjID0gc2tiLT5kYXRhOwogCQlyZXQgPSBydHdfcnhfcXVlcnlfcnhfZGVzYyhydHdk
+ZXYsIHJ4X2Rlc2MsCiAJCQkJCSAgICZwa3Rfc3RhdCwgJnJ4X3N0YXR1cyk7Ci0tIAoyLjI1LjEK
+Cg==
 
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
-
-Best regards,
-Luka Gejak
+--_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_--
