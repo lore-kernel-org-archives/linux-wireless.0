@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793663773;
-	b=k8ojSGpEYxWjS/kLQ/pfAVzBgdwzwl9z+pZOK9z/UpNz2cbhBsqp4c/muZZtF8iU8Tfy
-	 lnpOr6MrdHSzKywsOhURzWJTNpbavO9ZXz/WKf/GdqFnOhrRruaU5wHwmYhsmBX2bGPBv
-	 QBMzPzYJVasVeJOkGbCkyZZ/OmirZ3pplznF13KFwXa41vDFrW6lPBK5Nvc8wjrVYXIpP
-	 3cSRKtLsCFOeN3ZRhYgzs8QVJmgbgPDzuryPyPLZHTO0RYqT/XYDqyq521yxEVCTK6vQy
-	 d9++Ek5f5bHAnpbJybMpZO0/28+TMQnQyI9qmQn8IZ5dU4FlHbEOs6JwCIUNLTrEMTg==
+	b=cDe7TVPMu8k3EuMWZR/Ak/wo7k/InvIOPo3wLmkLuIHLrMOW9EHBYWHXqkNzzaI6rAgW
+	 xn9rbv8xChPggSLIEP+aFu67VfVCASnauvmNtK0yxoDHdnyMJZhJPNRl4jA/ByLVG05bw
+	 mmN3sSO9YhHP69RGNNBavDnbcQykxJmHXsP4WkKSinzZwSzoVjwPvUQhvw1nots3Y9w47
+	 Owk01JSqYTMTt23ylsG3w3KxIunlpQ7jPQK3+oFuq57z2vFqpmt4va34Q3I7US8AQ7nsJ
+	 /u4cL30N6PNXZUNZxKB9CqqjHsZ1+YAgPFPXQx8U+bO8Hby9y6+QElqoBMDYru0YVBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793663773;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=+gvoldmwYxkPa9VSEY8e9PSr59gp9t25tI57/a1fNIA=;
-	b=wjz0/zILWf8+fA8TDhBp+voqbik0y1rM8Rd62sZHS9qCxGT0G+ctbg65b5bF8MRwYY4n
-	 0xhxkBUEcRm5OgsUw/NBovSLOqUyozU/iIdT7X3fcehiy0ATu9ybtfwU7kkoWuafvss5L
-	 XRYBOC7B1iHkUZnT27RLcmN2MtSMRftiDlC9WjeMM8jfLeyqF3B419Gbt2VzniGPkLA2X
-	 YJZw9VLpm3whlB9Jg+L24c40DX9pmvqhWzXHr4bHmmfk1d4acKkWYOk86CvjVEYF97KLT
-	 L9syziw8j/2ZoyYOOsIqJ3JEa8HGefJPyKnCA65EDKA8Y5vgAS6u8wKONrsMYqR7OfQ==
+	bh=jYXvgtAfAX2h4ZhQpN/DtwHGxlww24IO11XWuqOASI8=;
+	b=GeKNVX378KOfQWpGDTrLADy3a7KLkdYklhOdyXjAg6RHZ/YD2OgQwJfkh7Cb5qH54yML
+	 lw6kCVRWmnCMtM8Kf6BjM4jahbYaaDlki9HMegUUuOg3jLKg6EaBcPMwFA8P9fnrKoNZ0
+	 UEjTtvIbgUFxOllCR/BxCFb1bD8WC379uipvaWV6P2grHKMNUWK1Fsd7Tm0XBgMrs3zqU
+	 0jjVj0qQzEzxkZR5MY0DPDWeo7PN3O4eTWoZ6EvJhDGdynE7dhSwS+1nVxHAjYtEzhSqg
+	 j2QH0Wlx5UKZJ2XkGPN4Jz1Gi3RkvKloludMnYVjCeUHcmTnLXW3c1ONav+CpQazaIQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=gBmtJixQ;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=GL6MsZuQ;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47429606D805
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF5BC606A334
 	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 23:56:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=gBmtJixQ
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=GL6MsZuQ
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=+gvoldmwYxkPa9VSEY8e9PSr59gp9t25tI57/a1fNIA=;
-	t=1793663772; x=1794873372; b=gBmtJixQBgYYAEKMMgJ6Jx+GcxMTwl4fbxB8WNOYlHMaT+I
-	1Gf7BE2YARTobq3ybFMNqpkIJm4YsI9MGCV3JJOx4UvtwYZx6lAEbGOxJBE0xeuhMwKkLEyVq16Bc
-	UsYam9dYVilnXwu2kZj3vQSR08E/Ns4wzI1f3MvwWFgzQdgyEkvYSoCs83Rxw4ecEFx/51xpYX9Fs
-	57isvqAhjO4KRkPfeqnmK4NTTg4Gm67T5ihkZDFpqpDUVViJ9zKKuV+UuiQQeTPvEinumvOacc326
-	ylr4cJUgW6zHqJuYmFChUKWEyfISAX9KN1vKs6tmph+IE34vnN8/fR1sGfS+4ICQ==;
+	Resent-Cc:Resent-Message-ID; bh=jYXvgtAfAX2h4ZhQpN/DtwHGxlww24IO11XWuqOASI8=;
+	t=1793663772; x=1794873372; b=GL6MsZuQ+dNAf9khHH0ro4wxvYO6lYHMQFZXs6XSTSIGWfm
+	7n1/MLMAfxslgtlaW0Hn18XGIIxNq/o8BcfL7ESgknuhYI5qcCkZUjSs5C/hb1ZunYowSNXNQ1xkf
+	SbLFi5IytU50nG4FC8odbMIQooQxG8KYgmyvg11Xb1DnYxL5J9XuWJ51b6r768BcAxp2v/9vZcT4m
+	YXNUXzQ0koFj0ew21V3r3JjHMUneU3LpP+EQvVdDP/UVLcmsJLkKwX5tB/oyUKCQI/o6X4Pk3Wq7q
+	p0tby4+aqL9y3EiN+VrAX5oybY/hTYyJp1xWbv6gkcIA85g0KYB4x2sD2nxgOMGQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xO1sn-00000002AZf-1cDZ;
-	Tue, 03 Nov 2026 00:56:09 +0100
+	id 1xO1so-00000002AZf-2pJ6;
+	Tue, 03 Nov 2026 00:56:10 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 5/7] wifi: mac80211: asynchronously start TX BA sessions
-Date: Tue,  3 Nov 2026 00:54:02 +0100
-Message-ID: <20261102235603.1181883-14-johannes@sipsolutions.net>
+Subject: [PATCH wireless-next 7/7] wifi: mac80211: destroy AP stations asynchronously
+Date: Tue,  3 Nov 2026 00:54:04 +0100
+Message-ID: <20261102235603.1181883-16-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102235603.1181883-9-johannes@sipsolutions.net>
 References: <20261102235603.1181883-9-johannes@sipsolutions.net>
@@ -68,304 +68,247 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When starting a TX BA session, mac80211 needs to wait
-for an RCU grace period to have disabled fragmentation
-and get the correct SSN, and uses synchronize_net() to
-achieve that, with the wiphy mutex held.
+When hostapd removes a station, the station destruction
+needs to wait for an RCU grace period, all while holding
+the wiphy mutex and blocking hostapd.
 
-Use wiphy_rcu_work instead to avoid blocking the mutex
-for that. If the session was stopped, then just remove
-it when the work runs, nothing cares yet.
+For AP stations, use a wiphy_rcu_work to finish the
+cleanup after an RCU grace period, without holding the
+wiphy mutex while waiting.
 
-Since the RCU work is cancelled and requeued whenever a
-session start is deferred, it running implies that the
-grace period has elapsed for all deferred sessions, so
-only continue starting sessions from the RCU work, not
-from the regular BA session work.
+To avoid confusion in drivers, destroy stations that are
+waiting for destruction synchronously before adding new
+(link) stations, as well as suspend/restart.
 
 Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/agg-tx.c      | 97 +++++++++++++++++++++++++++-----------
- net/mac80211/ht.c          | 35 +++++++++++---
- net/mac80211/ieee80211_i.h |  3 ++
- net/mac80211/sta_info.c    |  2 +
- net/mac80211/sta_info.h    |  5 ++
- 5 files changed, 109 insertions(+), 33 deletions(-)
+ net/mac80211/ieee80211_i.h |  7 +++
+ net/mac80211/main.c        |  4 ++
+ net/mac80211/pm.c          |  2 +
+ net/mac80211/sta_info.c    | 87 +++++++++++++++++++++++++++++++++++---
+ net/mac80211/sta_info.h    |  1 +
+ 5 files changed, 94 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index b49f0b3c0b9c..c56064243550 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -285,6 +285,22 @@ static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
- 	kfree_rcu(tid_tx, rcu_head);
- }
- 
-+static void ieee80211_agg_abort_start(struct sta_info *sta, int tid,
-+				      struct tid_ampdu_tx *tid_tx)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+
-+	spin_lock_bh(&sta->lock);
-+	ieee80211_agg_splice_packets(sdata, tid_tx, tid);
-+	ieee80211_assign_tid_tx(sta, tid, NULL);
-+	ieee80211_agg_splice_finish(sdata, tid);
-+	spin_unlock_bh(&sta->lock);
-+
-+	ieee80211_agg_start_txq(sta, tid, false);
-+
-+	kfree_rcu(tid_tx, rcu_head);
-+}
-+
- /* returns 1 if the driver must be notified after synchronize_net() */
- static int ieee80211_stop_tx_ba_session_prep(struct sta_info *sta, u16 tid,
- 					     enum ieee80211_agg_stop_reason reason)
-@@ -345,6 +361,12 @@ static int ieee80211_stop_tx_ba_session_prep(struct sta_info *sta, u16 tid,
- 		return 0;
- 	}
- 
-+	if (test_bit(HT_AGG_STATE_START_RCU, &tid_tx->state)) {
-+		spin_unlock_bh(&sta->lock);
-+		ieee80211_agg_abort_start(sta, tid, tid_tx);
-+		return 0;
-+	}
-+
- 	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
- 
- 	ieee80211_agg_stop_txq(sta, tid);
-@@ -528,7 +550,36 @@ static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
- 
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- {
--	struct tid_ampdu_tx *tid_tx;
-+	struct tid_ampdu_tx *tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-+
-+	/*
-+	 * Start queuing up packets for this aggregation session.
-+	 * We're going to release them once the driver is OK with
-+	 * that.
-+	 */
-+	clear_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
-+
-+	/*
-+	 * Make sure no packets are being processed before telling the
-+	 * driver. This ensures that we have a valid starting sequence
-+	 * number and that in-flight packets have been flushed out and
-+	 * no packets for this TID will go into the driver during the
-+	 * ampdu_action call.
-+	 */
-+	set_bit(HT_AGG_STATE_START_RCU, &tid_tx->state);
-+
-+	/*
-+	 * Cancel first so it waits for a new grace period (if already
-+	 * queued), that way the RCU work only runs after _all_ TIDs
-+	 * have passed a grace period.
-+	 */
-+	wiphy_rcu_work_cancel(sta->local->hw.wiphy, &sta->ampdu_mlme.rcu_work);
-+	wiphy_rcu_work_queue(sta->local->hw.wiphy, &sta->ampdu_mlme.rcu_work);
-+}
-+
-+static void ieee80211_tx_ba_session_start_drv(struct sta_info *sta, int tid,
-+					      struct tid_ampdu_tx *tid_tx)
-+{
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_ampdu_params params = {
-@@ -541,23 +592,6 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- 	};
- 	int ret;
- 
--	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
--
--	/*
--	 * Start queuing up packets for this aggregation session.
--	 * We're going to release them once the driver is OK with
--	 * that.
--	 */
--	clear_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
--
--	/*
--	 * Make sure no packets are being processed. This ensures that
--	 * we have a valid starting sequence number and that in-flight
--	 * packets have been flushed out and no packets for this TID
--	 * will go into the driver during the ampdu_action call.
--	 */
--	synchronize_net();
--
- 	tid_tx->ndp = ieee80211_s1g_use_ndp_ba(sdata, sta);
- 	params.ssn = sta->tid_seq[tid] >> 4;
- 	ret = drv_ampdu_action(local, sdata, &params);
-@@ -575,21 +609,30 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- 		ht_dbg(sdata,
- 		       "BA request denied - HW unavailable for %pM tid %d\n",
- 		       sta->sta.addr, tid);
--		spin_lock_bh(&sta->lock);
--		ieee80211_agg_splice_packets(sdata, tid_tx, tid);
--		ieee80211_assign_tid_tx(sta, tid, NULL);
--		ieee80211_agg_splice_finish(sdata, tid);
--		spin_unlock_bh(&sta->lock);
--
--		ieee80211_agg_start_txq(sta, tid, false);
--
--		kfree_rcu(tid_tx, rcu_head);
-+		ieee80211_agg_abort_start(sta, tid, tid_tx);
- 		return;
- 	}
- 
- 	ieee80211_send_addba_with_timeout(sta, tid_tx);
- }
- 
-+void ieee80211_tx_ba_session_handle_rcu(struct sta_info *sta, int tid,
-+					bool blocked)
-+{
-+	struct tid_ampdu_tx *tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-+
-+	lockdep_assert_wiphy(sta->local->hw.wiphy);
-+
-+	if (!tid_tx ||
-+	    !test_and_clear_bit(HT_AGG_STATE_START_RCU, &tid_tx->state))
-+		return;
-+
-+	if (blocked)
-+		ieee80211_agg_abort_start(sta, tid, tid_tx);
-+	else
-+		ieee80211_tx_ba_session_start_drv(sta, tid, tid_tx);
-+}
-+
- void ieee80211_refresh_tx_agg_session_timer(struct ieee80211_sta *pubsta,
- 					    u16 tid)
- {
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 21c1d6e03c1f..0f918e4bde87 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -305,6 +305,8 @@ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- 	 */
- 	if(reason == AGG_STOP_DESTROY_STA) {
- 		wiphy_work_cancel(sta->local->hw.wiphy, &sta->ampdu_mlme.work);
-+		wiphy_rcu_work_cancel(sta->local->hw.wiphy,
-+				      &sta->ampdu_mlme.rcu_work);
- 
- 		for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
- 			struct tid_ampdu_tx *tid_tx =
-@@ -319,10 +321,8 @@ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- 	}
- }
- 
--void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
-+static void ieee80211_ba_session_process(struct sta_info *sta, bool rcu_done)
- {
--	struct sta_info *sta =
--		container_of(work, struct sta_info, ampdu_mlme.work);
- 	struct tid_ampdu_tx *tid_tx;
- 	bool blocked;
- 	int tid;
-@@ -382,9 +382,8 @@ void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
- 				/* Give the task working on the txq a chance
- 				 * to send out the queued frags
- 				 */
--				synchronize_net();
--
--				wiphy_work_queue(sdata->local->hw.wiphy, work);
-+				wiphy_rcu_work_queue(sdata->local->hw.wiphy,
-+						     &sta->ampdu_mlme.rcu_work);
- 				return;
- 			}
- 
-@@ -418,11 +417,35 @@ void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
- 		if (test_and_clear_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state))
- 			__ieee80211_stop_tx_ba_session(sta, tid,
- 						       AGG_STOP_LOCAL_REQUEST);
-+
-+		if (rcu_done) {
-+			/* this may free tid_tx */
-+			ieee80211_tx_ba_session_handle_rcu(sta, tid, blocked);
-+
-+			tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-+			if (!tid_tx)
-+				continue;
-+		}
-+
- 		if (test_and_clear_bit(HT_AGG_STATE_STOP_CB, &tid_tx->state))
- 			ieee80211_stop_tx_ba_cb(sta, tid, tid_tx);
- 	}
- }
- 
-+void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
-+{
-+	ieee80211_ba_session_process(container_of(work, struct sta_info,
-+						  ampdu_mlme.work),
-+				     false);
-+}
-+
-+void ieee80211_ba_session_rcu_work(struct wiphy *wiphy, struct wiphy_work *work)
-+{
-+	ieee80211_ba_session_process(container_of(work, struct sta_info,
-+						  ampdu_mlme.rcu_work.work),
-+				     true);
-+}
-+
- void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
- 			  const u8 *da, u16 tid,
- 			  u16 initiator, u16 reason_code,
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2da93a4b9e8e..94540f6e23dd 100644
+index 933336c9c838..dc2105b4829b 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -2387,7 +2387,10 @@ void ieee80211_start_tx_ba_cb(struct sta_info *sta, int tid,
- void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- 			     struct tid_ampdu_tx *tid_tx);
- void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work);
-+void ieee80211_ba_session_rcu_work(struct wiphy *wiphy, struct wiphy_work *work);
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid);
-+void ieee80211_tx_ba_session_handle_rcu(struct sta_info *sta, int tid,
-+					bool blocked);
- void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
+@@ -1623,6 +1623,13 @@ struct ieee80211_local {
+ 	struct rhltable link_sta_hash;
+ 	struct timer_list sta_cleanup;
+ 	int sta_generation;
++	/*
++	 * stations waiting to be destroyed: the first list is covered by
++	 * the grace period of the pending sta_destroy_work, the second has
++	 * those removed while the work was already pending
++	 */
++	struct list_head sta_destroy_list, sta_destroy_new;
++	struct wiphy_rcu_work sta_destroy_work;
  
- u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
+ 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+ 	struct tasklet_struct tx_pending_tasklet;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 6e31076bcc10..c2628e10b0f8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -522,6 +522,9 @@ static void ieee80211_restart_work(struct work_struct *work)
+ 	/* wait for all packet processing to be done */
+ 	synchronize_net();
+ 
++	/* finish removing stations before the driver is reconfigured */
++	sta_info_destroy_flush(local);
++
+ 	ret = ieee80211_reconfig(local);
+ 	wiphy_unlock(local->hw.wiphy);
+ 
+@@ -1728,6 +1731,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	wiphy_lock(local->hw.wiphy);
+ 	wiphy_delayed_work_cancel(local->hw.wiphy, &local->roc_work);
++	wiphy_rcu_work_cancel(local->hw.wiphy, &local->sta_destroy_work);
+ 	wiphy_work_cancel(local->hw.wiphy, &local->reconfig_filter);
+ 	wiphy_work_cancel(local->hw.wiphy, &local->sched_scan_stopped_work);
+ 	wiphy_work_cancel(local->hw.wiphy, &local->radar_detected_work);
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 6a27f8f35c8e..e41d0fa09d1e 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -39,6 +39,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan,
+ 
+ 	ieee80211_del_virtual_monitor(local);
+ 
++	sta_info_destroy_flush(local);
++
+ 	if (ieee80211_hw_check(hw, AMPDU_AGGREGATION) &&
+ 	    !(wowlan && wowlan->any)) {
+ 		lockdep_assert_wiphy(local->hw.wiphy);
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 23166fc39729..17247ba3209f 100644
+index 17247ba3209f..0908374dbdf7 100644
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -665,6 +665,8 @@ __sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	spin_lock_init(&sta->ps_lock);
- 	INIT_WORK(&sta->drv_deliver_wk, sta_deliver_ps_frames);
- 	wiphy_work_init(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
-+	wiphy_rcu_work_init(&sta->ampdu_mlme.rcu_work,
-+			    ieee80211_ba_session_rcu_work);
- #ifdef CONFIG_MAC80211_MESH
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		sta->mesh = kzalloc_obj(*sta->mesh, gfp);
+@@ -1042,6 +1042,9 @@ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
+ 	might_sleep();
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
++	/* the driver must not see the new station before old ones are gone */
++	sta_info_destroy_flush(local);
++
+ 	err = sta_info_insert_check(sta);
+ 	if (err) {
+ 		sta_info_free(local, sta);
+@@ -1384,6 +1387,11 @@ static int __must_check __sta_info_destroy_part1(struct sta_info *sta)
+ 	list_del_rcu(&sta->list);
+ 	sta->removed = true;
+ 
++	local->num_sta--;
++	local->sta_generation++;
++
++	ieee80211_sta_debugfs_remove(sta);
++
+ 	if (sta->uploaded)
+ 		drv_sta_pre_rcu_remove(local, sta->sdata, sta);
+ 
+@@ -1596,9 +1604,6 @@ static void __sta_info_destroy_part2(struct sta_info *sta, bool recalc)
+ 
+ 	cancel_work_sync(&sta->drv_deliver_wk);
+ 
+-	local->num_sta--;
+-	local->sta_generation++;
+-
+ 	while (sta->sta_state > IEEE80211_STA_NONE) {
+ 		ret = _sta_info_move_state(sta, sta->sta_state - 1, recalc);
+ 		if (ret) {
+@@ -1622,8 +1627,6 @@ static void __sta_info_destroy_part2(struct sta_info *sta, bool recalc)
+ 	cfg80211_del_sta_sinfo(&sdata->wdev, sta->sta.addr, sinfo, GFP_KERNEL);
+ 	kfree(sinfo);
+ 
+-	ieee80211_sta_debugfs_remove(sta);
+-
+ 	ieee80211_destroy_frag_cache(&sta->frags);
+ 
+ 	cleanup_single_sta(sta);
+@@ -1653,15 +1656,78 @@ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+ 	return __sta_info_destroy(sta);
+ }
+ 
++static void sta_info_destroy_queue(struct ieee80211_local *local)
++{
++	lockdep_assert_wiphy(local->hw.wiphy);
++
++	if (list_empty(&local->sta_destroy_new))
++		return;
++
++	/*
++	 * If the work was actually queued now, its grace period covers all
++	 * stations removed so far, otherwise it's already pending and will
++	 * requeue itself for the new ones when it runs.
++	 */
++	if (wiphy_rcu_work_queue(local->hw.wiphy, &local->sta_destroy_work))
++		list_splice_tail_init(&local->sta_destroy_new,
++				      &local->sta_destroy_list);
++}
++
+ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr)
+ {
++	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
++	int err;
+ 
+-	lockdep_assert_wiphy(sdata->local->hw.wiphy);
++	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	sta = sta_info_get_bss(sdata, addr);
+-	return __sta_info_destroy(sta);
++
++	if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		return __sta_info_destroy(sta);
++
++	err = __sta_info_destroy_part1(sta);
++	if (err)
++		return err;
++
++	/* finish later, after an RCU grace period */
++	list_add_tail(&sta->free_list, &local->sta_destroy_new);
++	sta_info_destroy_queue(local);
++
++	return 0;
++}
++
++static void sta_info_destroy_work(struct wiphy *wiphy, struct wiphy_work *work)
++{
++	struct ieee80211_local *local =
++		container_of(work, struct ieee80211_local,
++			     sta_destroy_work.work);
++	struct sta_info *sta, *tmp;
++
++	lockdep_assert_wiphy(local->hw.wiphy);
++
++	list_for_each_entry_safe(sta, tmp, &local->sta_destroy_list, free_list) {
++		list_del(&sta->free_list);
++		__sta_info_destroy_part2(sta, true);
++	}
++
++	/* requeue for stations removed after the work was queued */
++	sta_info_destroy_queue(local);
++}
++
++/* finish destroying all stations that are pending, waiting if needed */
++void sta_info_destroy_flush(struct ieee80211_local *local)
++{
++	lockdep_assert_wiphy(local->hw.wiphy);
++
++	/* the work might requeue itself, flush it twice */
++	wiphy_rcu_work_flush(local->hw.wiphy, &local->sta_destroy_work);
++	wiphy_rcu_work_flush(local->hw.wiphy, &local->sta_destroy_work);
++
++	WARN_ON(!list_empty(&local->sta_destroy_list) ||
++		!list_empty(&local->sta_destroy_new));
+ }
+ 
+ static void sta_info_cleanup(struct timer_list *t)
+@@ -1703,6 +1769,9 @@ int sta_info_init(struct ieee80211_local *local)
+ 
+ 	spin_lock_init(&local->tim_lock);
+ 	INIT_LIST_HEAD(&local->sta_list);
++	INIT_LIST_HEAD(&local->sta_destroy_list);
++	INIT_LIST_HEAD(&local->sta_destroy_new);
++	wiphy_rcu_work_init(&local->sta_destroy_work, sta_info_destroy_work);
+ 
+ 	timer_setup(&local->sta_cleanup, sta_info_cleanup, 0);
+ 	return 0;
+@@ -1730,6 +1799,8 @@ int __sta_info_flush(struct ieee80211_sub_if_data *sdata, bool vlans,
+ 	WARN_ON(vlans && sdata->vif.type != NL80211_IFTYPE_AP);
+ 	WARN_ON(vlans && !sdata->bss);
+ 
++	sta_info_destroy_flush(local);
++
+ 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
+ 		if (sdata != sta->sdata &&
+ 		    (!vlans || sdata->bss != sta->sdata->bss))
+@@ -3489,6 +3560,8 @@ int ieee80211_sta_activate_link(struct sta_info *sta, unsigned int link_id)
+ 	if (WARN_ON(old_links == new_links || !link_sta))
+ 		return -EINVAL;
+ 
++	sta_info_destroy_flush(sdata->local);
++
+ 	rcu_read_lock();
+ 	if (link_sta_info_hash_lookup(sdata->local, link_sta->addr)) {
+ 		rcu_read_unlock();
 diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 8c6a9fee6b29..2d9268db8cc8 100644
+index fdb4820755f2..aef3eea9e942 100644
 --- a/net/mac80211/sta_info.h
 +++ b/net/mac80211/sta_info.h
-@@ -122,6 +122,8 @@ enum ieee80211_sta_info_flags {
- #define HT_AGG_STATE_START_CB		6
- #define HT_AGG_STATE_STOP_CB		7
- #define HT_AGG_STATE_SENT_ADDBA		8
-+/* waiting for an RCU grace period before telling the driver to start */
-+#define HT_AGG_STATE_START_RCU		9
+@@ -956,6 +956,7 @@ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata,
+ 			  const u8 *addr);
+ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr);
++void sta_info_destroy_flush(struct ieee80211_local *local);
  
- DECLARE_EWMA(avg_signal, 10, 8)
- enum ieee80211_agg_stop_reason {
-@@ -277,6 +279,8 @@ struct tid_ampdu_rx {
-  * @unexpected_agg: bitmap indicating which TID already sent a delBA due to
-  *	unexpected aggregation related frames outside a session
-  * @work: work struct for starting/stopping aggregation
-+ * @rcu_work: work struct for continuing to start TX aggregation
-+ *	after an RCU grace period
-  * @tid_tx: aggregation info for Tx per TID
-  * @tid_start_tx: sessions where start was requested, not just protected
-  *	by wiphy mutex but also sta->lock
-@@ -295,6 +299,7 @@ struct sta_ampdu_mlme {
- 	unsigned long unexpected_agg[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
- 	/* tx */
- 	struct wiphy_work work;
-+	struct wiphy_rcu_work rcu_work;
- 	struct tid_ampdu_tx __rcu *tid_tx[IEEE80211_NUM_TIDS];
- 	struct tid_ampdu_tx *tid_start_tx[IEEE80211_NUM_TIDS];
- 	unsigned long last_addba_req_time[IEEE80211_NUM_TIDS];
+ void sta_info_recalc_tim(struct sta_info *sta);
+ 
 -- 
 2.56.0
 
