@@ -1,95 +1,112 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.230.202
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793602604;
-	b=S/fNCa+jCodpHILJRd8hocqR0zWUlmEdd0IGkbVXIuM0Ny7igP+CK4jEZrZijteCmpeA
-	 FCCy2ZwtiNLK8EW12vQBZn1IJ233ui2N5lxOivnVDfS6SKBH5dbqRDvNjybuNGVt39b/V
-	 RgsW9FwE/K8SZxqM1ejENX7pF4NfyaVIbzItcl+QQ30XyhAp9GhVwPF45CSHLxPkLTlvQ
-	 eqb2gt7bTuev6NUSHnFbdx+NWhl0NA79Frs59knrVBDk/4h2MIMG1C08jILg3nJhqinE1
-	 Kri37MHZjMJq0QyurCOFV2V/WybTZJP/cjFw3RDXuIi6gwz5ZvYTDv8ZqStv+LIQLWQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793602604;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
-	bh=7/kmaXTA+b0BspwBrbDFJ6sroDVJi4Y69NetlFPloD0=;
-	b=ZOxw5wzxyghpfRppSXhHgikDnqBzGCnQS5YVhevecMP9rmldHrcF776syb1FCgjCDG1m
-	 G5pjrCs6+wu838JqkHSJtPh+eD/10SFxfR/dNkqj+hpCI2fvBwhTdK7mgxTgCE9BM7ab1
-	 eb8ffOJ1Upkzi7FyjxakCtx54oSN2GrxbMtIGHlV3IUlB2BWC+yHWeCy5fe1ie8rYyXyj
-	 3bk2XETbRfDjwKJR/b4V3P6LNCAW6+D2uhFMbspUqqePFT9ae4UnzUbmMjNYrOmkBjDrj
-	 fUDUcKmXtWkdjmTvY1yMrR1ft6tFHI5h1RwJBCGE5UkCkNGBDfC6nflh630PYQNcgZg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=K0udj9I6;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.230.202
-Received: from mail-qk2-f10.google.com (mail-qk2-f10.google.com [74.125.230.202])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793603646;
+	b=m+1+bp9vJnlVdbpC33AG5u9cg+Mqpp3wZg82YB6HL2sQRJOgZDHusECvPovLGjPT5p6c
+	 Z83EDvCI8wzD2LgLMFVW9gkdPuyg2zSlnYTVULqvBGWk/yXJj8wq3iNqUvEs1ni+ffHip
+	 8IBLeDImpkpKYvPrvUzZ108yeFVFN5VtqHmk1mb3JUDMAayYwqVHF5VmP1qG/Kn3perps
+	 eZTjBFRJPL1ZS+YJgAxATeSliOUt6BEs8rM3z9YXSI4XPaEtjHzzQju3Go7obqN3PDcjW
+	 giSDKJ3hvKiGrEbA4t/LpFS1k4W2fAcrXZEcOe8CRC1acH/1vEgV7jzkZA1I+x3BXHA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793603646;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=STBsifDRh0Wop1/8BVxqcSX5YT3lhc62OfRZbkhPUAg=;
+	b=FSAnBjcvZg9QqhKrJauutqwaduC4rUrdkgTYeh73KHRv1LOUkLEj7ZsM/BUJcaMkRd6r
+	 tj+U+PU85QCs67Zuh6CmrnyNoY2HLdr8Cszr5WhozH/8f9hruLR0YbU/PXB6QFje9nMzQ
+	 LBLte3CH7EbUZm9xzdxC83z7EGH9KSTetbnvXAve53EDbk/YY1hWExL4IGFfJcjhwg7ah
+	 T7AsHC28MuNhx64rRkCYGY2k5yRgTTDAz81MC0THhAuwlYeiuhLRQlt8c9Lg+jHpKJ4S3
+	 eWnKiPoTgbHuhKQenqqwi9p1pEOR7ARPv2HWZK5eU4sGK+TU992ohA0fOu+9/GKrSyA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=hsppKOwq;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cAFdM7Uh;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA202606A324
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 06:56:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA202606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 239BD606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 07:14:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 239BD606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=K0udj9I6
-Received: by mail-qk2-f10.google.com with SMTP id af79cd13be357-930f59d1dc6so224692985a.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 22:56:43 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793602603; cv=none;
-        d=google.com; s=arc-20260327;
-        b=bt+OVmXcJUgASpMkRAm1VUl576F8i4OSJCn8bMucqt0zI+2n3/1LFbqjrAt1VQVNN7
-         1ekOhe5Fy5kIbbq+jeEFWfvN5qdbi6OyWa+rO7jFhyHHE99iXgtVN3FFuVZ0RCWA7kRS
-         SU9Vi413vJ0iEhoM4r8ia1Kqnvqxpy2AbIbM1UHD/MI4f0UCFFSZHh8gcVVsSBgER+X+
-         pYiC2Zxjj1EQTKfSURvzQNkL/B18M/YEJsr24MRv1CbstZj4tUnO3xuCf7jdN9RZ287Z
-         D5Rs2/ZzDyikdcjqe3Sab28zZoziiZQaujSKamCDWRWafAxMpNA026LWhs7JIU1ihcxh
-         bccw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=7/kmaXTA+b0BspwBrbDFJ6sroDVJi4Y69NetlFPloD0=;
-        fh=g4qIvl6/31HtnerxyVK37f4FNVcorEF6JuBH5wiMpis=;
-        b=nnbfGqSvVK3cain5ECaWJ1ggyfXYLKpF6IlO0a/JEA24tDoJTwqo9jXnSaBJ7bokZI
-         h29OmEn18XNvgiCFoNQEsXmOwFPEPtnGQurvcvLSHsVu1MPgADbwXbZoQ/iPY98OJnQ7
-         8LgQPE8ADdokk/VWfIBa1Sge8IeUAYvJov5fzCGlRabsT+TPoJLDeuYzgC8IoPJR/Fgy
-         9BSuoyL6NN9hqTiZSg5H+tJAvDOdDHAwPjDBMtIecmX5X1UbHO1liMAqh3OeAV0ru0W7
-         a+4mPaMZibJq3wYdslhC91UFzQUzUv4l+JXRG3zNbislCVaRQcfRqTULUXm5GNnCiJIe
-         XjFA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=hsppKOwq;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cAFdM7Uh
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A23vIqC3769143
+	for <linux-wireless@vger.kernel.org>; Mon, 2 Nov 2026 07:14:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	STBsifDRh0Wop1/8BVxqcSX5YT3lhc62OfRZbkhPUAg=; b=hsppKOwqp1u+UC4z
+	AGGBX7baZQAsdluNVdcg57eiYgzscdXDpa9qPFj7RjLhNhHaZI2MFHwbT2+ORDWp
+	auEz2W1oUE0xNsm1oYxm3JZU1YzQr1NdZn94Uvgrfo9xAvYTpmfX8yBIF2V1OsVE
+	5vJncsUmgKVpC9lE4RjDPkGvjyS3mNmM3/XPoHVLxljgB+GHLotEWlo47rMThcX6
+	nNpt9bqeDS7udaRkAI/yH8ktPKCB0ssjA3eTx9qkwdW5OToqepApPD8LBwazPxm6
+	n9rus3/qoVfl0hs92ZvGHxnAeMNEQCFmyb0H3d7CEp/NT6Mw4TGXMSxHOljhWGKH
+	uoUXOw==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hn79rwrcb-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 07:14:05 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-36a1e2485fdso7459830eec.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 23:14:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793602603; x=1794207403; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7/kmaXTA+b0BspwBrbDFJ6sroDVJi4Y69NetlFPloD0=;
-        b=K0udj9I6mLYv7FcJadLBzThOhSd0Wbzk/u9syJJE1e9CxyvDn1uoweRivih6WbfXPh
-         E7rDvA8aCpI3WCmdjbotmkqzTp5iVS9HDwVqT4B3gJPJmaTKxNdLwV8bGye/X78NWVdl
-         bCLPz14XI1d1JjamUpAPL8/djSnzQnpVk7CWNhobUNU9eyr7aKtwaPVDBuvP/9dmllPS
-         b5GFZsdV7/OreGa8ho1sPvIkuTepmnMEogZfzZ9HULfagfoyaTcS0Fc3kaN2sbu6toY6
-         k0BzLwFsjeFMH/R6Rdbx0KoZtsELlFIXlbP5mxkIK2/e31Zf55OQM/Ja9WGKTeerdUye
-         t9Lg==
+        d=oss.qualcomm.com; s=google; t=1793603644; x=1794208444; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=STBsifDRh0Wop1/8BVxqcSX5YT3lhc62OfRZbkhPUAg=;
+        b=cAFdM7UhtGfxkq1jA+Aew/iTz2dYuY7a+K8kq2S9J6cpVSoAVuxJ9lksx9owrU4tQM
+         O7kH36/vpjSUHVaKZLzaKCHCO3O4OUYjx6WzBYodwqQGhv6S6JtJZuNh2lVhendiP6qE
+         yGhv38uJ6vSmglXOT+dIuoQ89VDOSOdFOUVPoZSFVgTgcsjQuy3WZIgsoH4BwBVjqLYJ
+         T7B7wr56I2Sh39tx0omqVmcehtArfKpeY+afHaL3dI/gGDWT+X1O02iimbusRaaeAXbF
+         yw4O+VZdhgSM7ZQAn6zmrb0xsC7JP8d9EHduiL3o0LRE3fhfxWVVMQdJvIrsrJlD9+NA
+         aTjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793602603; x=1794207403;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=7/kmaXTA+b0BspwBrbDFJ6sroDVJi4Y69NetlFPloD0=;
-        b=fpBNpa9HenHoRpUK/E3F0cC8wT11YhCVWpCy6OyfwWfgDydhOyB9l9ECbRlDeL1r0E
-         EgXmzUN85m1kPWWBgHJD8Om5g5pt3sTjPkGA4sdhc82rmC9trdt4Rb7tSpFG23MWk+ET
-         Gm+QI+XnaFeUnZLpHpVWvGgZH83LuqSMypxhl1diH7v8AP99TZt/Jl+e/s2IxBXMz5Au
-         0MGWbE+fU1E56LVHGnZSXeAIxm88hxGfCG2m2cEGQxVwN4+9VSPUh1GEIJSKq7A9o0OW
-         UXlnv3KSzm7sfG5rYVHWiPBHALSCXt9C0lM4PDBoqaZIMmgdsh2qTJPQOi6eH4Cw8mGu
-         SZiQ==
-X-Gm-Message-State: AFq9FYL+tLz2xp0cRFqrmxmzzrbF17NQrG7Sms16TwQG0d4uJyCfpuui
-	1IZkmYpVYZxEFssoSJE9c9lHRXO3xiJlkXcK7LwUkVeaZOVsuoKMfEroy382Xkmw2YX88xTJDqp
-	R43ffGk8dwsoeDfnX1hq7gieWGN1gUje2bDVhYtI5mQ==
-X-Gm-Gg: AYBFou2BOyn/N4kWEo1bXu15WupaTuoueG5tK1XPfkOr1wFILf/TSf/kOTKFQz4pwtb
-	FyavxVH94sWReh8uqCMBJXW++qWEhhX64f95mDVA9vBFOKHbRv72lbWg7LyOcieXj3LyIU5hrvS
-	8QV9N2BbnIXV9ooOwqRhRXf8cojd/8FSJ+ARImbfQAXYOFW3wtbD0xCkqLQ1LovR2IKssxBcHJO
-	f6bIORD3YGKxsrspIR+KpNGp/Ma1cd/FPUvmheXYiL7fyJdIJKeNtt0ru1F2TEGnG/dq3Porhj+
-	CR8Gaq2HvNBei0HXVXG1/pNY+2iXo6T5nuJZIwVcQ0ak4Oc++4nSRuDRDXEpk80dH9SmDO63xCx
-	kCl5ZWLzQJtvEP0BgA7mZj2bwUxtOVIdVbXEg
-X-Received: by 2002:a05:620a:8393:b0:93e:c12c:4416 with SMTP id
- af79cd13be357-94421805919mr1249913985a.82.1793602602797; Sun, 01 Nov 2026
- 22:56:42 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793603644; x=1794208444;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=STBsifDRh0Wop1/8BVxqcSX5YT3lhc62OfRZbkhPUAg=;
+        b=pApOmOIzJwWPdwTmrtNcbpoXzIKa17fb5DL70s1Vn5MtN4RpkjJpIcEIeYLcxuz0ec
+         Dm/KWvSX5CJM2woDx+kjJSTNF/sRyYsx3y0pKnxQXWhaFzjfxg9TPrBMySIE9s526h28
+         9QAZhy+e0iWENDJ54W95mb/1j+pYFupsKsS3GcfDss6PKL7Ig552QnbdiQXoZdOV/s6n
+         WTsD7A+C8ZKhLQo4U18Cm3lEV8v4ebjRsx5qylvkor8/SoV8VK7Ve8m+yNzMhLIijTJz
+         Gr/KIHzdqWPaz1aNK9E7+OAdDK1FqfZnGp0oQFMMwnfkL2iG04aBfUIoLU3TxAH8VQ3P
+         l0jw==
+X-Forwarded-Encrypted: i=1; AKwUvBzyfs5x98t52fBEbx8/dPn70LryP9ELx0Ldo/YgTK3j4wUfzLlPL5YtOUEIF06OPBaAZXikHnJF4wusaBgNwQ==@vger.kernel.org
+X-Gm-Message-State: APuU4Z93xl5u0MWStGc8coZssHUHmoMYiG987BRBnzkDD+He+euEKG40
+	Qwrz1zOA7mO3mMGLWSmI+Rx5bPCTgp1h4hGQqIHvXxWerE1wOp+K40t11utx4j7HqddS6R9FBtb
+	2HynlMfads5YT4R/mmEnNxmB7D2LGQqnRVhHijZGUJ3af0xwo8y+RHcvG5ZWrBFpv8YH2Cw==
+X-Gm-Gg: AYBFou3jw+CH9Hs1xbtP7P7LIn5O6XSIVKAixXFAT4cOpftBqGNRPDwyXmSWg9t83KP
+	efiOarEp0SyaDzFSGg8bOQQqAnVegwmhNWWV6TYy75VAl5LwwnC++mJ4JK5ahdjz2+wltiW6WLw
+	nOf+mmV2vsXKJpazzca8PRXi8P32kIAerdjGVRFodXMLFS6c5f+HwJffnGcBrdRbaUnpyTNq5Wk
+	8alhlYbeuf8kd7eD6gsh6toZN77MHhk5INuWztJrnHg8XMOtYdoSmWlIdZ7HNHkifGQoAhpklD/
+	mfT1MYiLVWD1qFHIuiQwibmcz5dXl/8i8hAgF9uSYpZDbI0I6ZRHRTnQMWuOrn/mASPlEZ2FD2L
+	SkyXzWEqEq3cfU6FHy0RiTIBBhpOBH9+KPXiMO/G9yDLi4XlBkCp9i7t4zdQFiiucvTLF0CJPjb
+	dM
+X-Received: by 2002:a05:693c:880e:10b0:369:987f:d15e with SMTP id 5a478bee46e88-36a4221b055mr14782216eec.2.1793603644234;
+        Sun, 01 Nov 2026 23:14:04 -0800 (PST)
+X-Received: by 2002:a05:693c:880e:10b0:369:987f:d15e with SMTP id 5a478bee46e88-36a4221b055mr14782164eec.2.1793603643375;
+        Sun, 01 Nov 2026 23:14:03 -0800 (PST)
+Received: from [10.152.204.131] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a428af1dfsm36299529eec.7.2026.11.01.23.13.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 01 Nov 2026 23:14:02 -0800 (PST)
+Message-ID: <904cabf1-b803-457d-8a89-d80bed639de5@oss.qualcomm.com>
+Date: Mon, 2 Nov 2026 12:43:57 +0530
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,34 +116,413 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: Hyeon Woo Bae <yoursanstv@gmail.com>
-Date: Mon, 2 Nov 2026 15:56:31 +0900
-X-Gm-Features: AclHuK-7m2bypolPdUDzTWdqJPxgAJmZBe6hyjRH28nUrDnAv-PD6OYuB_lgUKQ
-Message-ID: <CAAATUifZVZjjNm_sLqshpc8uwAawnDNivysacCYuVgVfF2x7Eg@mail.gmail.com>
-Subject: rtw88: question about RTL8812F (8812FR) support
-To: pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] wifi: ath12k: rely on page_pool APIs for buffer
+ allocation
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+        Ripan Deuri <quic_rdeuri@quicinc.com>,
+        P Praneesh
+ <quic_ppranees@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
+        Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+References: <20261008-ath12k-pp-v1-0-68f888cd7eec@oss.qualcomm.com>
+ <20261008-ath12k-pp-v1-3-68f888cd7eec@oss.qualcomm.com>
+Content-Language: en-US
+From: Praneesh P <praneesh.p@oss.qualcomm.com>
+In-Reply-To: <20261008-ath12k-pp-v1-3-68f888cd7eec@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: o0OVMJIG2iHiyjt4W-eKZwyEWWD5xX3j
+X-Authority-Analysis: v=2.4 cv=Wtq+otfv c=1 sm=1 tr=0 ts=6ae8383d cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=EUspDBNiAAAA:8 a=-srEPthScLmXCGoj88AA:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTAyMDAyOCBTYWx0ZWRfX4w7UK7ZEFnu1
+ ZwHpsrxAxFkc/02Sf86ndH/hWhu+WxqCsk5nRLQ97tP2vBFAEQqT/u/ngTDt/BcQ2nLL01+bBhZ
+ ie2poUuLqy9uEm1fe9MJ70VgtCiINl8=
+X-Proofpoint-GUID: o0OVMJIG2iHiyjt4W-eKZwyEWWD5xX3j
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTAyMDAyOCBTYWx0ZWRfX/nEyVuIRPrKN
+ t7f1WdUypNRzb0nrFOJXN/oZhgjt53sJyMnJc2pXj01tOjjus88pwpzFVlSXuJBEKrTbi/LLJHj
+ 8ck6xi3QeAyjLj9/AvMMHLqvGmZuDgSedMD8Nn9Zqx/OtnenTHQ1i8Wy/3AxBPmXyqcrt1RXd9B
+ ERuFX2F7QP3WSaV142qifhSoodyihOZR9lDsHQ843Irdpzk3fSbfAXFaHEKwyQb6jEvN6J1SUAV
+ ET+H468Y+5ZRI6yeljYgeZi/rc5/fAQ70Gk1Y3pVO6RAU9ZTBvA64oVZZ5peFxp8QdgqtyHLSmd
+ RTUwUjJDFLiqPERaHAX/JuR3ilYgnv2LF4y3LH/YHrgWdkIpEQc9O21TUckrD3p7B8XtpxB0XUA
+ I9L1V5FZQsVMw9wWme+OdD+PJIRAomc9eGhVc7gGxKlbGpCgyYwfAIYvCH1FXx6B9UMESvt/Xu7
+ cXfpfYP+6ER2O0Xc0dQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-02_02,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 impostorscore=0 clxscore=1015 bulkscore=0
+ priorityscore=1501 spamscore=0 adultscore=0 phishscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611020028
 
-Hi Ping-Ke,
 
-I am working on an OpenWrt port for a router based on the RTL8197F SoC.
-Its 5 GHz radio is an RTL8812FR (11ac 2x2, PCIe).
-
-As far as I can tell, rtw88 and rtw89 do not support RTL8812F, and I
-could not find any public source for it. The vendor firmware on the
-router only contains a built-in binary driver.
-
-I would like to ask:
-
-1. Are there any plans to support RTL8812F in rtw88?
-2. If not, would Realtek be open to a community contribution? In that
-   case, could the firmware be made redistributable via linux-firmware,
-   and is there a reference (vendor driver source or a similar chip such
-   as 8822C) that I should base the work on?
-
-A short "no plans" answer is also very helpful, so I know where to
-focus.
-
-Thanks,
-Hyeon Woo Bae
+On 10/8/2026 6:46 PM, Lorenzo Bianconi wrote:
+> Convert the Rx refill buffers to the page_pool API instead of allocating
+> an skb with dev_alloc_skb() and mapping it with dma_map_single(). The pool
+> handles the DMA mapping and buffer recycling.
+>
+> Add a page_pool to struct dp_rxdma_ring, created in
+> ath12k_dp_rxdma_ring_buf_setup() and destroyed in
+> ath12k_dp_rxdma_ring_buf_cleanup().
+>
+> Update ath12k_dp_unmap_rx_buf() to sync page_pool buffers for the CPU
+> instead of unmapping them, and guard the teardown paths
+> (ath12k_dp_cc_cleanup(), ath12k_dp_h_msdu_buffer_type()) against
+> page_pool buffers. In the re-inject path, sync an already mapped
+> page_pool buffer for the device instead of mapping it again, and fill the
+> descriptor with the DMA address stored in the rxcb.
+>
+> The monitor, CE and TX paths are left unchanged.
+>
+> This is just preliminary support: the goal is to use a single page to map
+> two separated fragments of 2048B.
+>
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath12k/Kconfig       |   1 +
+>   drivers/net/wireless/ath/ath12k/dp.h          |   1 +
+>   drivers/net/wireless/ath/ath12k/dp_rx.c       | 101 ++++++++++++++++++--------
+>   drivers/net/wireless/ath/ath12k/dp_rx.h       |  32 ++++++--
+>   drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c |  34 ++++++---
+>   5 files changed, 121 insertions(+), 48 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
+> index 0d5d1c55bfc1..13985daffaee 100644
+> --- a/drivers/net/wireless/ath/ath12k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath12k/Kconfig
+> @@ -7,6 +7,7 @@ config ATH12K
+>   	select QRTR
+>   	select QRTR_MHI
+>   	select PCI_PWRCTRL_PWRSEQ if HAVE_PWRCTRL
+> +	select PAGE_POOL
+>   	help
+>   	  Enable support for Qualcomm Technologies Wi-Fi 7 (IEEE
+>   	  802.11be) family of chipsets, for example WCN7850 and
+> diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+> index c53eac20b989..599ce3c45c7a 100644
+> --- a/drivers/net/wireless/ath/ath12k/dp.h
+> +++ b/drivers/net/wireless/ath/ath12k/dp.h
+> @@ -59,6 +59,7 @@ struct dp_rxdma_mon_ring {
+>   
+>   struct dp_rxdma_ring {
+>   	struct dp_srng refill_buf_ring;
+> +	struct page_pool *page_pool;
+>   	int bufs_max;
+>   };
+>   
+> diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+> index cfaf26ae2720..de9ea84323df 100644
+> --- a/drivers/net/wireless/ath/ath12k/dp_rx.c
+> +++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+> @@ -68,6 +68,31 @@ static void ath12k_dp_rx_enqueue_free(struct ath12k_dp *dp,
+>   	spin_unlock_bh(&dp->rx_desc_lock);
+>   }
+>   
+> +static struct sk_buff *ath12k_dp_rx_build_skb(struct ath12k_dp *dp,
+> +					      struct dp_rxdma_ring *rx_ring)
+> +{
+> +	struct sk_buff *skb;
+> +	struct page *page;
+> +
+> +	if (!rx_ring->page_pool)
+> +		return NULL;
+> +
+> +	page = page_pool_dev_alloc_pages(rx_ring->page_pool);
+> +	if (!page)
+> +		return NULL;
+> +
+> +	skb = build_skb(page_address(page), PAGE_SIZE);
+> +	if (!skb) {
+> +		page_pool_put_full_page(rx_ring->page_pool, page, false);
+> +		return NULL;
+> +	}
+> +
+> +	ATH12K_SKB_RXCB(skb)->paddr = page_pool_get_dma_addr(page);
+> +	skb_mark_for_recycle(skb);
+> +
+> +	return skb;
+> +}
+> +
+>   /* Returns number of Rx buffers replenished */
+>   int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
+>   				struct dp_rxdma_ring *rx_ring,
+> @@ -81,7 +106,6 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
+>   	int num_free;
+>   	int num_remain;
+>   	u32 cookie;
+> -	dma_addr_t paddr;
+>   	struct ath12k_rx_desc_info *rx_desc;
+>   	enum hal_rx_buf_return_buf_manager mgr = dp->hal->hal_params->rx_buf_rbm;
+>   
+> @@ -114,51 +138,33 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
+>   	}
+>   
+>   	while (num_remain > 0) {
+> -		skb = dev_alloc_skb(DP_RX_BUFFER_SIZE +
+> -				    DP_RX_BUFFER_ALIGN_SIZE);
+> +		skb = ath12k_dp_rx_build_skb(dp, rx_ring);
+>   		if (!skb)
+>   			break;
+>   
+> -		if (!IS_ALIGNED((unsigned long)skb->data,
+> -				DP_RX_BUFFER_ALIGN_SIZE)) {
+> -			skb_pull(skb,
+> -				 PTR_ALIGN(skb->data, DP_RX_BUFFER_ALIGN_SIZE) -
+> -				 skb->data);
+> -		}
+> -
+> -		paddr = dma_map_single(dp->dev, skb->data,
+> -				       skb->len + skb_tailroom(skb),
+> -				       DMA_FROM_DEVICE);
+> -		if (dma_mapping_error(dp->dev, paddr))
+> -			goto fail_free_skb;
+> -
+>   		rx_desc = list_first_entry_or_null(used_list,
+>   						   struct ath12k_rx_desc_info,
+>   						   list);
+>   		if (!rx_desc)
+> -			goto fail_dma_unmap;
+> -
+> -		rx_desc->skb = skb;
+> -		cookie = rx_desc->cookie;
+> +			goto fail_free_skb;
+>   
+>   		desc = ath12k_hal_srng_src_get_next_entry(ab, srng);
+>   		if (!desc)
+> -			goto fail_dma_unmap;
+> +			goto fail_free_skb;
+>   
+> -		list_del(&rx_desc->list);
+> -		ATH12K_SKB_RXCB(skb)->paddr = paddr;
+> +		rx_desc->skb = skb;
+> +		cookie = rx_desc->cookie;
+>   
+> +		list_del(&rx_desc->list);
+>   		num_remain--;
+>   
+> -		ath12k_hal_rx_buf_addr_info_set(dp->hal, desc, paddr, cookie,
+> -						mgr);
+> +		ath12k_hal_rx_buf_addr_info_set(dp->hal, desc,
+> +						ATH12K_SKB_RXCB(skb)->paddr,
+> +						cookie, mgr);
+>   	}
+>   
+>   	goto out;
+>   
+> -fail_dma_unmap:
+> -	dma_unmap_single(dp->dev, paddr, skb->len + skb_tailroom(skb),
+> -			 DMA_FROM_DEVICE);
+>   fail_free_skb:
+>   	dev_kfree_skb_any(skb);
+>   out:
+> @@ -196,12 +202,21 @@ static int ath12k_dp_rxdma_mon_buf_ring_free(struct ath12k_base *ab,
+>   	return 0;
+>   }
+>   
+> +static void ath12k_dp_rxdma_ring_buf_cleanup(struct dp_rxdma_ring *rx_ring)
+> +{
+> +	if (rx_ring->page_pool) {
+> +		page_pool_destroy(rx_ring->page_pool);
+> +		rx_ring->page_pool = NULL;
+> +	}
+> +}
+> +
+>   static int ath12k_dp_rxdma_buf_free(struct ath12k_base *ab)
+>   {
+>   	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
+>   	int i;
+>   
+>   	ath12k_dp_rxdma_mon_buf_ring_free(ab, &dp->rxdma_mon_buf_ring);
+> +	ath12k_dp_rxdma_ring_buf_cleanup(&dp->rx_refill_buf_ring);
+>   
+>   	if (ab->hw_params->rxdma1_enable)
+>   		return 0;
+> @@ -236,11 +251,28 @@ static int ath12k_dp_rxdma_mon_ring_buf_setup(struct ath12k_base *ab,
+>   static int ath12k_dp_rxdma_ring_buf_setup(struct ath12k_base *ab,
+>   					  struct dp_rxdma_ring *rx_ring)
+>   {
+> +	struct page_pool_params pp_params = {
+> +		.order = 0,
+> +		.flags = PP_FLAG_DMA_MAP | PP_FLAG_DMA_SYNC_DEV,
+> +		.nid = NUMA_NO_NODE,
+> +		.dma_dir = DMA_BIDIRECTIONAL,
+> +		.max_len = PAGE_SIZE,
+> +		.dev = ab->dev,
+> +		.offset = 0,
+> +	};
+Did you observe any improvement when increasing the pool size from the 
+default 1K
+to the RXDMA ring size? Also, is there any specific reason for using the 
+default pool size?
+>   	LIST_HEAD(list);
+>   
+>   	rx_ring->bufs_max = rx_ring->refill_buf_ring.size /
+>   			ath12k_hal_srng_get_entrysize(ab, HAL_RXDMA_BUF);
+>   
+> +	rx_ring->page_pool = page_pool_create(&pp_params);
+> +	if (IS_ERR(rx_ring->page_pool)) {
+> +		int err = PTR_ERR(rx_ring->page_pool);
+> +
+> +		rx_ring->page_pool = NULL;
+> +		return err;
+> +	}
+> +
+>   	ath12k_dp_rx_bufs_replenish(ath12k_ab_to_dp(ab), rx_ring, &list, 0);
+>   
+>   	return 0;
+> @@ -263,10 +295,13 @@ static int ath12k_dp_rxdma_buf_setup(struct ath12k_base *ab)
+>   		ret = ath12k_dp_rxdma_mon_ring_buf_setup(ab,
+>   							 &dp->rxdma_mon_buf_ring,
+>   							 HAL_RXDMA_MONITOR_BUF);
+> -		if (ret)
+> +		if (ret) {
+>   			ath12k_warn(ab,
+>   				    "failed to setup HAL_RXDMA_MONITOR_BUF\n");
+> -		return ret;
+> +			goto error;
+> +		}
+> +
+> +		return 0;
+>   	}
+>   
+>   	for (i = 0; i < ab->hw_params->num_rxdma_per_pdev; i++) {
+> @@ -276,11 +311,15 @@ static int ath12k_dp_rxdma_buf_setup(struct ath12k_base *ab)
+>   		if (ret) {
+>   			ath12k_warn(ab,
+>   				    "failed to setup HAL_RXDMA_MONITOR_STATUS\n");
+> -			return ret;
+> +			goto error;
+>   		}
+>   	}
+>   
+>   	return 0;
+> +error:
+> +	ath12k_dp_rxdma_ring_buf_cleanup(&dp->rx_refill_buf_ring);
+> +
+> +	return ret;
+>   }
+>   
+>   static void ath12k_dp_rx_pdev_srng_free(struct ath12k *ar)
+> diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.h b/drivers/net/wireless/ath/ath12k/dp_rx.h
+> index c3715c99054f..a1113f8b7399 100644
+> --- a/drivers/net/wireless/ath/ath12k/dp_rx.h
+> +++ b/drivers/net/wireless/ath/ath12k/dp_rx.h
+> @@ -6,6 +6,7 @@
+>   #ifndef ATH12K_DP_RX_H
+>   #define ATH12K_DP_RX_H
+>   
+> +#include <net/page_pool/helpers.h>
+>   #include "core.h"
+>   #include "debug.h"
+>   
+> @@ -187,15 +188,32 @@ void ath12k_dp_extract_rx_desc_data(struct ath12k_hal *hal,
+>   	hal->ops->extract_rx_desc_data(rx_info, rx_desc, ldesc);
+>   }
+>   
+> -static inline void ath12k_dp_unmap_rx_buf(struct ath12k_dp *dp,
+> -					  struct sk_buff *skb)
+> +static inline bool ath12k_skb_from_page_pool(struct sk_buff *skb)
+>   {
+> -	struct ath12k_skb_rxcb *rxcb = ATH12K_SKB_RXCB(skb);
+> -	enum dma_data_direction dir;
+> +	if (!skb->head_frag || !skb->pp_recycle)
+> +		return false;
+>   
+> -	dir = rxcb->reinjected ? DMA_BIDIRECTIONAL : DMA_FROM_DEVICE;
+> -	dma_unmap_single(dp->dev, rxcb->paddr, skb->len + skb_tailroom(skb),
+> -			 dir);
+> +	return page_pool_page_is_pp(virt_to_head_page(skb->head));
+> +}
+> +
+> +static inline void ath12k_dp_unmap_rx_buf(struct ath12k_dp *dp, struct sk_buff *skb)
+> +{
+> +	if (likely(ath12k_skb_from_page_pool(skb))) {
+> +		struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
+> +		struct page *page = virt_to_head_page(skb->data);
+> +		int offset = (void *)skb->data - page_address(page);
+> +
+> +		page_pool_dma_sync_for_cpu(rx_ring->page_pool, page,
+> +					   offset,
+> +					   skb->len + skb_tailroom(skb));
+> +	} else {
+> +		struct ath12k_skb_rxcb *rxcb = ATH12K_SKB_RXCB(skb);
+> +		enum dma_data_direction dir;
+> +
+> +		dir = rxcb->reinjected ? DMA_BIDIRECTIONAL : DMA_FROM_DEVICE;
+> +		dma_unmap_single(dp->dev, rxcb->paddr,
+> +				 skb->len + skb_tailroom(skb), dir);
+> +	}
+>   }
+>   
+>   void ath12k_dp_rx_h_undecap(struct ath12k_pdev_dp *dp_pdev, struct sk_buff *msdu,
+> diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
+> index 9cd9c0bb07db..d1703c736d49 100644
+> --- a/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
+> +++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
+> @@ -902,14 +902,26 @@ static int ath12k_wifi7_dp_rx_h_defrag_reo_reinject(struct ath12k_dp *dp,
+>   	/* change msdu len in hal rx desc */
+>   	ath12k_dp_rxdesc_set_msdu_len(hal, rx_desc, defrag_skb->len - hal_rx_desc_sz);
+>   
+> -	buf_paddr = dma_map_single(dp->dev, defrag_skb->data,
+> -				   defrag_skb->len + skb_tailroom(defrag_skb),
+> -				   DMA_BIDIRECTIONAL);
+> -	if (dma_mapping_error(dp->dev, buf_paddr))
+> -		return -ENOMEM;
+> +	if (ath12k_skb_from_page_pool(defrag_skb)) {
+> +		struct dp_rxdma_ring *rx_ring;
+> +
+> +		rx_ring = &dp->rx_refill_buf_ring;
+> +		dma_sync_single_for_device(dp->dev,
+> +					   ATH12K_SKB_RXCB(defrag_skb)->paddr,
+> +					   defrag_skb->len +
+> +					   skb_tailroom(defrag_skb),
+> +					   rx_ring->page_pool->p.dma_dir);
+> +	} else {
+> +		buf_paddr = dma_map_single(dp->dev, defrag_skb->data,
+> +					   defrag_skb->len +
+> +					   skb_tailroom(defrag_skb),
+> +					   DMA_BIDIRECTIONAL);
+> +		if (dma_mapping_error(dp->dev, buf_paddr))
+> +			return -ENOMEM;
+>   
+> +		rxcb->paddr = buf_paddr;
+> +	}
+>   	rxcb->reinjected = true;
+> -	rxcb->paddr = buf_paddr;
+>   
+>   	spin_lock_bh(&dp->rx_desc_lock);
+>   	desc_info = list_first_entry_or_null(&dp->rx_desc_free_list,
+> @@ -928,8 +940,8 @@ static int ath12k_wifi7_dp_rx_h_defrag_reo_reinject(struct ath12k_dp *dp,
+>   	list_del(&desc_info->list);
+>   	spin_unlock_bh(&dp->rx_desc_lock);
+>   
+> -	ath12k_wifi7_hal_rx_buf_addr_info_set(&msdu0->buf_addr_info, buf_paddr,
+> -					      desc_info->cookie,
+> +	ath12k_wifi7_hal_rx_buf_addr_info_set(&msdu0->buf_addr_info,
+> +					      rxcb->paddr, desc_info->cookie,
+>   					      HAL_RX_BUF_RBM_SW3_BM);
+>   
+>   	/* Fill mpdu details into reo entrance ring */
+> @@ -994,8 +1006,10 @@ static int ath12k_wifi7_dp_rx_h_defrag_reo_reinject(struct ath12k_dp *dp,
+>   	list_add_tail(&desc_info->list, &dp->rx_desc_free_list);
+>   	spin_unlock_bh(&dp->rx_desc_lock);
+>   err_unmap_dma:
+> -	dma_unmap_single(dp->dev, buf_paddr, defrag_skb->len + skb_tailroom(defrag_skb),
+> -			 DMA_BIDIRECTIONAL);
+> +	if (!ath12k_skb_from_page_pool(defrag_skb))
+> +		dma_unmap_single(dp->dev, ATH12K_SKB_RXCB(defrag_skb)->paddr,
+> +				 defrag_skb->len + skb_tailroom(defrag_skb),
+> +				 DMA_BIDIRECTIONAL);
+>   	return ret;
+>   }
+>   
+>
