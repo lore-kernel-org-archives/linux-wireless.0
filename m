@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.91
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793610354;
-	b=cWEwMxuRc6R6OubZGr1TSS7q/PnR2um+EroBEzMOUGy13p4NdjN/By9QGPfMaVeNC0lC
-	 CWp2QtYkOto+V9zkeMvl0SmOEBdieicMQBcNwWCZQUlOxYf9f6BB7SCZxLYQWPYvN4bpT
-	 vmA/yNhArjt0aYdBB5ya1WrmxAKZ5B8F2si/qhdwoiS9LxTdi+9k2O0VIfwtLvgcIg3sk
-	 sugddv0TERG8rT/OUY9ftjIZjvf2TItFiOMXzP680IBLeyCwO7qxJd0Uj4H2raf0ikP65
-	 +GFnvm4AXep0mfAwrcFMaFcHryLCmNdCxgbjWhE1+g6Un/zAqmtd5lzv6BoavoXpa2g==
+	t=1793610635;
+	b=s2Px3vFDus4xefOktRSl28cU8dFq+spqtTbHBbqe+H3/ez9ZssqfR+Z3M8+zMDD+bZlU
+	 so1KRYxXG6XyC8dyrbI41+JaV/eRXgqVPbKHrCYg9xNe6O3UKfP/NslQATge6vjShYp1g
+	 JfKg+EvhjXGQhzBBx//08E3Hjld1kLLMCLkTqhqh596c95ZgOZbJ6FJWFZxBsVfHRLO7c
+	 gn0YioeyF53mUJ11Ve+8fwVVGor55DDMGJWgnEh3MwhPhOOH1H8wv6zlULm5zbQo5Shic
+	 pa6g1ktBM3iyEj5RmgLZlJSMS8GnZ2M7NGaCI7slIiha93MMVIQoSVPlqWq5e78OlsA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793610354;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793610635;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
 	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
 	 In-Reply-To:References;
-	bh=hFAPZJU1NpNmffumzVrKY0D5GwTTfxtDmIvR2zKxyHg=;
-	b=l2LYIRulI8QPe17hgF47WIQ8mbqU/42bhFvSwnUfDXR512WTQ27KHskm5F2rrAinwhLZ
-	 OebmFSR1WqXuUwVtc+Dc5fQwEeKyigWUzfAbGguaCKhgqARlWLbFa3Y3rlOlQJ0UXonRh
-	 LDn8Gdn953EgTafyf6xmThSTKNzN3/HmnzmWzFk8VIjG77R8m/a3eDY4BO8EZjbtZICeW
-	 plOdYGOVMI9HfLp19A3+fyHJsTXJqIdRQvVH4MO8eCRj7wYDzxkG7YXhUb4yEfQwym+1r
-	 kR4C33c5uID31GvvucDxs7Kl37vqP8TKbzbgoDzsx/jgW3vn/XRfJ/nAjui0PcVg3KA==
+	bh=K55TA0Xx4eo4x4aGz06tjfzrbSjfUgna9+vbhgB+sZc=;
+	b=jk1wzxS6WRgeOoGtU34Ghar9/VCQ7RNzDHskzo84IvDk27m+62sCUelkFGWe4wARjKN5
+	 rNAXcyOtG1aT1BkXW02TyfOzX+vtPInHpoORWiZgPG4x37zQ/FfI7VV1wbrUWFwW+5UQM
+	 xWwI45S2bvog9VVEwbqaeg9MkuweTcXc6y9NwPoxBUdKu1wb0Uw3up8LmKvtBt9O7dUoi
+	 lkrTG1vaSplytRm9Yf4dcEBBXVL9f1seWAM5oWCjXsHvEFEEVXswZ0QlsH9TOG4PNOQ5g
+	 rcfXtT+jFoBUjrnqlOHFZHv1IWYD+7CZAypxDda6q1d7AiL9u5BjOLo7rAdBWiFABUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=kduObnTZ;
-	arc=none smtp.remote-ip=91.218.175.91
-Received: from mta0.migadu.com (out-91.mta0.migadu.com [91.218.175.91])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fnxzQQ3Z;
+	arc=none smtp.remote-ip=91.218.175.197
+Received: from mta0.migadu.com (out-197.mta0.migadu.com [91.218.175.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE446606A324
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 09:05:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DE446606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A250606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 09:10:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4A250606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=kduObnTZ
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fnxzQQ3Z
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=rj84BJmdv3Gf/7Ce/0swnvMv4/NDNGaDGlbZ9duKzio=;
+DKIM-Signature: a=rsa-sha256; bh=K55TA0Xx4eo4x4aGz06tjfzrbSjfUgna9+vbhgB+sZc=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793610350; v=1; x=1794215150;
- b=kduObnTZugcFIi/wvqpUp2ODHgqMRLXt7gh7nQtigrietFXW/5/oakv5D3p0Rls0HTKuV0N5
- 9U4BLtkjw+6sYySN0bRL3bhOUYM2toenkZl/pPPpqlyNKqazCnKx3fLd4ugFFGjlIf02jhpR/BJ
- EVm0+bsJFcnwyD9of2kLXnY8=
+ t=1793610632; v=1; x=1794215432;
+ b=fnxzQQ3Zu3WF8DdF4cQ36GOWNZc6NYHwUNXMQN0mEqIHdQoli/XhS62YTcLQ/I5V0NjtFiY7
+ Va7Bo+3PVGRsWJNU9+/jgufh8PfB3SxTJBQSWFD0HuXj0mMdxMLQQVpkxzn/AzYf1F9ennOPZYa
+ NJ/hwr1iQcvIisYhbjxfFvjQ=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 45a05da21da06750;
-	Mon, 02 Nov 2026 09:05:50 +0000
-X-Mizu-Trace-ID: 45a05da21da06750
+Received: by smtp.migadu.com with ESMTPS id 8e8f11a4a2200b66;
+	Mon, 02 Nov 2026 09:10:32 +0000
+X-Mizu-Trace-ID: 8e8f11a4a2200b66
 X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,60 +56,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Mon, 02 Nov 2026 09:05:50 +0000
+Date: Mon, 02 Nov 2026 09:10:31 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <89b76c1edf151f509a912f887d9fe0b93cc9e19c@linux.dev>
+Message-ID: <b3e27bc36adc6f4682da6202382ef214209b7c89@linux.dev>
 TLS-Required: No
-Subject: Re: [PATCH rtw-next v2 2/2] wifi: rtw88: check the C2H payload
- length before reading it
+Subject: Re: [PATCH rtw-next v2 1/2] wifi: rtw88: drop C2H packets shorter
+ than the C2H header
 To: "Huihui Huang" <hhhuang@smu.edu.sg>, linux-wireless@vger.kernel.org
-Cc: "Huihui Huang" <hhhuang@smu.edu.sg>, "Ping-Ke Shih" <pkshih@realtek.com>
-In-Reply-To: <20261031175621.2228762-3-hhhuang@smu.edu.sg>
+Cc: "Huihui Huang" <hhhuang@smu.edu.sg>, "Ping-Ke Shih" <pkshih@realtek.com>,
+ stable@vger.kernel.org
+In-Reply-To: <20261031175621.2228762-2-hhhuang@smu.edu.sg>
 References: <20261031175621.2228762-1-hhhuang@smu.edu.sg>
- <20261031175621.2228762-3-hhhuang@smu.edu.sg>
-
-Hi Huihui,
-
-Thanks for the v2. One comment below.
+ <20261031175621.2228762-2-hhhuang@smu.edu.sg>
 
 October 31, 2026 at 6:56 PM, "Huihui Huang" <hhhuang@smu.edu.sg> wrote:
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wire=
-less/realtek/rtw88/fw.c
-> index 0a909bf79cf5..6bc684726669 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.c
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
+>=20
+>=20rtw_fw_c2h_cmd_rx_irqsafe() and rtw_fw_c2h_cmd_handle() compute the C=
+2H
+> payload length as
+>=20
+>=20 len =3D skb->len - pkt_offset - 2;
+>=20
+>=20where len is a u8, without checking that the skb holds the 2-byte C2H
+> header (id and seq).
+>=20
+>=20If the header is incomplete, the C2H payload length underflows: zero
+> bytes after pkt_offset produce len =3D 254, and one byte produces
+> len =3D 255. With zero bytes, reading c2h->id also accesses data beyond
+> skb->len. The wrapped len defeats the minimum-length checks in
+> rtw_fw_ra_report_handle() and rtw_coex_wl_fwdbginfo_notify(), which the=
+n
+> read their fixed-size reports beyond the valid packet data.
+>=20
+>=20skb->len is pkt_offset plus pkt_len from the RX descriptor, and
+> rtw_rx_query_rx_desc() returns for C2H packets before its
+> "pkt_len <=3D FCS_LEN" check, so a short C2H packet is not rejected the=
+re.
+>=20
+>=20Drop C2H packets that are too short to hold the C2H header. Since
+> rtw_fw_c2h_cmd_handle() only sees skbs queued by
+> rtw_fw_c2h_cmd_rx_irqsafe(), this covers both computations.
+>=20
+>=20Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+> Signed-off-by: Huihui Huang <hhhuang@smu.edu.sg>
+> ---
 
-[ ... ]
+Looking good to me.
 
-> @@ -2381,6 +2386,9 @@ void rtw_hw_scan_status_report(struct rtw_dev *rt=
-wdev, struct sk_buff *skb)
->       if (!test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
->               return;
->
-> +     if (rtw_c2h_payload_len(skb) < 3)
-> +             return;
-> +
-
-As far as I can see, apart from the abort paths this report is the only
-thing that completes a hw scan. So, a short report now leaves the scan
-pending. RTW_FLAG_SCANNING stays set, scanning_vif is never cleared,
-and I couldn't find anything in rtw88 that times the scan out.
-
-Until something cancels it, e.g. a disconnect or the interface going
-down, every new scan then fails with -EBUSY, since the old request is
-still pending.
-
-Before this patch the scan still completed, only with a return code read
-past skb->len. Maybe it is better to complete it as aborted here instead
-of dropping the report, something like:
-
-        if (rtw_c2h_payload_len(skb) < 3) {
-                rtw_hw_scan_complete(rtwdev, vif, true);
-                return;
-        }
+Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
 
 Best regards,
 Luka Gejak
