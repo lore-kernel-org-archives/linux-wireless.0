@@ -1,48 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793633839;
-	b=JrXglJXtsWg89+ahopnLOcTbi2Snrsz06jf+2iSaLSMykmtr4ORtat4sFG3M1txNC3sK
-	 f9SinC3ay8cvRc+wTw6XqeNbAxeG575+vJkhm1XyrFFGJyedMxjkHqRj/nE0XYISEzV+t
-	 UlXBE7Ygu5l1J7H7DUCKYIlXZzioJk2EAtu5eTJZaKUohfto7LZsPrtbMFOrETd5zTIIy
-	 gDj1I+77v0vRNKa950chGQMZ5Hza98dcyt0kdkPCWyQa/dsIx18LwVgREU4bGBZyrovB1
-	 m3M7G/ruDh1zXCyLC6z+yAcSUnOWNiV4Ym2Nj9WAuQnO3QeD838+n+gcvx1qu8NRXlQ==
+	t=1793633859;
+	b=HrRZOzgh6eDMdPBvWvByqdT965ipdDxwMnupeHsorONHd5MEzqEpk7QnfXa72npSaGqg
+	 HRUBDcZXlWpytb0LmMsCqcH1gODGk5b+Tr05darUC/lBRpEdUKKydfGGi6BzGdSaFh2Gn
+	 ZmfvnFI2/lh294i5daathxKYkKjb0jiCNBgyzxJrJKmRSECWtPhYbOoHGwMMGUIbGWDhF
+	 SHjpPmG10D3iQloydBK0fQq7LHdz4fzakxmGT25WXwoQm53VdWAr0s2WSGatquOWN9uL+
+	 GyMR8LQM2hMYNeOf6tu/w9VZHIlLEJiXsOK8VjIege6GkQTknZpGOOieE6bD3Kn/c0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793633839;
-	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=MkQRjvaZWXm4tuezHj6GIBRblccuaWpNe7JtwA3svBQ=;
-	b=zoFUZ9MCh2thOAKqvjDxifOxuGyjV1VT/I11nmgzhCPfHsQnlvY8eVC5YGQKiyJn0r6m
-	 C8NFp7wPpkaTuyKVC7Zwc5KHisvCwT41JWawAUPwJHgvoPpiiZO2BZCwu0/p7hdi5UGab
-	 VkMD8xnRPnPKoWAoK6vTDR15Ig6mutKxPCTdAe+68m3LQGkX8gk1CLbc9K/p1KpSfgCHE
-	 LaTEnkCblH+D6ug7ubayFAnusP6HHPHqcXB0jIuuVkhi5PpJWtXLtb/l3yXzFBmLqoJoK
-	 hyRqQK4PgT+fAmyYkFjxUpjT+8p5t1sIdtgXD55ibG7hJKVjlf2gZ01KckgS9lIBrlw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793633859;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:To:Cc:Subject:Content-Language:From:Content-Type:
+	 Content-Transfer-Encoding:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=oyfnNpy1b78sl00t26qycUkL8HD/T7BbVQF3a+A49i8=;
+	b=NRG/gUOdT85AGvEeghrbPgk+AapO/bZg+dtlXscMYpRKQgWgeL8LsGQhD5EKYCNbvu6T
+	 IAhmIqMPpNxyFHKVzSEhVzeStgTZiAkd5CLVTv0xQvfTefwbjtBFli80SBZjP4Wz30qbg
+	 jFlK0umCdqUklxZifT3MkHuqFtXPUT1vzwZJgCogRzRZDMk73UZ3UrUDdQ7FV7STwh2Iq
+	 e8MJNfL9gY8XP1AZ8BWUcE/mQRPQrUHwC6EXw+j9B2eMs99RBAvQOsBydde6BJbdnr4oc
+	 T2iWWYXbtBJxF4ELILe/OnZCWGPS0R/RoU29+LDGQfSyb6zM5z/G4qZzd68NCuHjCRA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N5d8raPn;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jjKN8T31;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=EAkHy0kx;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD2E60E500A;
-	Mon,  2 Nov 2026 15:37:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCC59606BA44
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 15:37:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DCC59606BA44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N5d8raPn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 287BC1F00A16;
-	Mon,  2 Nov 2026 15:36:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793633837;
-	bh=MkQRjvaZWXm4tuezHj6GIBRblccuaWpNe7JtwA3svBQ=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=N5d8raPng3UsswrfEfRD/6Yf+jypyuu/YJ4VCAay1GiuUsmcXR0Y+Fa7sMVAYeevV
-	 WM7BUZsbSmL4Fu5gyoWA16hCX0R0Hfuk4/6rrpwUW/n5HR1xQ9hkyJzb1TV8UUEY39
-	 sq81QZhsVNtwBY1vJDzc8qXh8JzgLKmWgem0vI3jtE3Fhmef11/+wBMp2eZbVJNCDl
-	 FVALapmecAgWsUbKfgsbVhfxmQ7Wf8WjCjAYtzp3O7fVon30zJQFMARHQKCK9TYt4X
-	 Gn6a+T3+o2m68mj19GQb8PAki38MHMtf0oH5fqX+2eADrgXwfXQgFFcusidzk7J6TX
-	 G2CFGyyqTA8eg==
-From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:15:57 +0100
-Subject: [PATCH RFC 4/5] proc: rename ->proc_read() and ->proc_read_iter()
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jjKN8T31;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=EAkHy0kx
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A2Dp9Mv4033827
+	for <linux-wireless@vger.kernel.org>; Mon, 2 Nov 2026 15:37:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=oyfnNpy1b78sl00t26qycU
+	kL8HD/T7BbVQF3a+A49i8=; b=jjKN8T31v+jIiZZAXA8JZIFGeabOsy9Dd0Tkzo
+	ntvNKWQkCMHHHbOUjti0duD98kwwbS6p7Gp+Mo4VNIGUa+g1LJjqYDdUT+PmS5+t
+	4ixW8M1HIp9TFv8gOLuyRkndvnon3WR5suY1FsiNIx9UjdnAIUvZAblAnx+uY/8s
+	URUYuCjBFU2lOtZZo/zsajPPkeIPbeQcW3GnnN9iQOjBTaQhMUVVa+OeG3SL2XVK
+	l9FpLnDjEEl8DMtELI41liqUjeb5XYpweFbdpNrKJDVbDfEOzqOIS8PXWqojKJFb
+	0TDqW1fuuitMPDsqwTfII4/xSM0yCwl/00MjUIoYyQVpjoJA==
+Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hppfe9vfd-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 15:37:38 +0000 (GMT)
+Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-1acbaf81bebso3892287c88.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 07:37:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793633857; x=1794238657; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=oyfnNpy1b78sl00t26qycUkL8HD/T7BbVQF3a+A49i8=;
+        b=EAkHy0kx2Ju50NDhN09h+Xt7G8xuEQeLcHX7nzl6+wmKS1VTG0D+zF0qSrhlRecJzt
+         DbwdPnG+NpcmVc7bKW2Pu6Sap5nvgy0g41IpMEguk3ebct/+HpB8zuUpt+WJVToVPAgU
+         adoCX/zyryGdfnsXbT8cn8KW9oFP1LpzJIPz5+OotwaR6ib/6W8n+8D1EpE4A5wknoTo
+         WnMxJNM52sF+DFOPg7TL1n+4vxMSNc/OYL4FnYfl5WXUuTYmv+zMFs7cBBxjAk/CLCVy
+         XTy+/LQYGps2pSvIBy9ALdoro8CVYFnPtmgAhhRvt8ETpj7aaB8uCzD349dLw2XHCzxq
+         gOEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793633857; x=1794238657;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=oyfnNpy1b78sl00t26qycUkL8HD/T7BbVQF3a+A49i8=;
+        b=pc4cRecOcxmb+9WwNUPB2zVeCiDVcwWM3SQOvVQCGonxyqMAJ9J0JhcZUY1fOiFzTO
+         D0HSuC3VglgOm46Y+/cSneeD++SWzqET0sFlvgRFU5xgkjSdmgrPZJRgkfrbPpLGKBOm
+         bDh0PrVuSNwQXwSYIR6maKerdWFOrlgn15Pp6zP4skuHDQyK661vZgQ6TIutnjbGY1al
+         vWUIiiJWXWlHQWpJrUXJEKoMPuETnW3rgZkhtVKFYV1PC5JjWvDxh/SB2yT5hb0Ub2bM
+         U1UrMAceAKlWIPQjb7OM/i8VrH1I7nbXvlAUbWtoLDpNU31EZtRYtrz2iyvPjLaJRpuM
+         si/w==
+X-Gm-Message-State: AFq9FYKNIGdZp7re4aiIWRxTAQPndM+Za1KWEoXiQfVNTWJy/+/Tjuy9
+	YB+0yUq5IDwoU1D/I5LWBUV+74X0HJoC9zrTxNWMT24FeoEl5lKj20ZOROEmJQRZlF5vjbJKNnh
+	i3AwcM3eHEDBgkvOg5c/1BYer5H7FuWlxap+A7Uf2nPONH4V+1jNOP87rsUyN8NsxTRcO+ZJaxV
+	J+ZA==
+X-Gm-Gg: AYBFou21bOcmBTRSgB1FUttmKHxSGUT7oIvamfZQkW0s4KNtl/gej5HOwwpCQ+obXPp
+	wTh4em4feI/z68f2HUVoJhTG6i0UbKz+oqIYkwieRK+NQxKu76fARYUg2pIui6kbucisYu309HI
+	ZZHvFwSQnR2ZyI0sUgcorbnbKi3xxcSz5oKqQc50Qgwv1Y60uElMCl/qp5xyiKnb3ngF1GvahzQ
+	UYW0v/YDt9NgRM8HiFVpSYYEp8bX2ixuwc/NkjmNKVhmnr+KvoE9MCc/3v2hwXgJs8GG5wVN0ju
+	ZZsiyChoUkI0K7vG06x8hqm2oMqY16HQ4TqPGc4r9qUYZrRPVr1E12g1MBjJTCuDj8xV3nM2g4g
+	cBt+iOyT7v2OKg8B+7unCLwnRM160OqflKIJ9eaRCXVhXBO6IV9mX8zQa7rps2oBWXDh5kJVnNr
+	nDeQVgofk=
+X-Received: by 2002:a05:7022:29b:b0:151:94a6:6f5f with SMTP id a92af1059eb24-1ac5c3699aamr15001761c88.10.1793633857091;
+        Mon, 02 Nov 2026 07:37:37 -0800 (PST)
+X-Received: by 2002:a05:7022:29b:b0:151:94a6:6f5f with SMTP id a92af1059eb24-1ac5c3699aamr15001712c88.10.1793633856334;
+        Mon, 02 Nov 2026 07:37:36 -0800 (PST)
+Received: from [10.81.91.45] (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1b0a628bsm36987053c88.22.2026.11.02.07.37.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Nov 2026 07:37:35 -0800 (PST)
+Message-ID: <8e38f8dc-88f9-4974-8f98-687795fb360a@oss.qualcomm.com>
+Date: Mon, 2 Nov 2026 07:37:34 -0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -52,286 +113,95 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+To: linux-wireless@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, jjohnson@kernel.org
+Subject: pull-request: ath-current-20261102
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-cleanup-v1-4-c40014bc12f5@kernel.org>
-References: <20261102-work-procfs-cleanup-v1-0-c40014bc12f5@kernel.org>
-In-Reply-To: <20261102-work-procfs-cleanup-v1-0-c40014bc12f5@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
- Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
- Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
- NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
- Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
- Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
- Greg Kroah-Hartman <gregkh@suse.de>, 
- Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
- Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
- coreteam@netfilter.org, kexec@lists.infradead.org, 
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
- netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
- linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
- linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
- linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
- sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
- linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
- linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
- linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
- linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
- linux-debuggers@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Chuck Lever <cel@kernel.org>
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9255; i=brauner@kernel.org;
- h=from:subject:message-id; bh=LiuenQB/cw1jutoK/+2XN6spwsgEUsgUo+MfZZ5B3rY=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WJlT4nDmwwaZ4MPi7y7HTLWT2yy0SGjlkrpEyzOXf
- 5j+WJVe1FHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjARvShGho+MfBYBi1ZMC9JP
- Son9PcXCOjZk/kJLH7FSxbfvt1Q4X2X4Z1mltufL22qVj4zPQrZu1u8WtJtZ97XhY+dhz0QLh8f
- C7AA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+X-Authority-Analysis: v=2.4 cv=SeZi5fRu c=1 sm=1 tr=0 ts=6ae8ae42 cx=c_pps
+ a=kVLUcbK0zfr7ocalXnG1qA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=VwQbUJbxAAAA:8 a=qsoVpiIQ6ULyzOpuFuoA:9 a=QEXdDO2ut3YA:10
+ a=vr4QvYf-bLy2KjpDp97w:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTAyMDA2MiBTYWx0ZWRfX6m9bA2ozqkO2
+ nJqrMAempigFd2f8G+8/D1Ia6GL6t1x9GuxXMxRIKglTWKVPo9qX8V5O6BXpdnMqjVF/+LNfnDp
+ PO1XjJyBXST3ahRp6Zk+cXI1+oAT59L9xT1gq6VdbkN8xCb6p8L1/2nEoyQBGwXtSmoFnMvhpHy
+ GK7/cs6hnO5BIPjpye9+LFP3LjHV7a5XnDhpWkI6WtnFYetMnm34520arRQEMTW5dHj9C1IZKNg
+ h5EO0a3mRyYnLCYeHSdWXRKBqv7WB7Dsr4Re5yKDU2EpU83P/kww8b1PspNrL7NhrwNidj1n8kO
+ lrXGd107h/GxOvjTaRJJZm1Ji0yM7nrLM4DkcX/In6b4WxxZpvtejO4xn3Lv31xNez3a5eLDfH+
+ zVdjdtOWqpm9k1UpzS5tHzmlgo2tk9tBYW4O6CNxfzKNtiBJJ5iX5XMmKUSOlVPWRe07+Xxg6km
+ JniYKrKxB2y6D03kBBQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTAyMDA2MiBTYWx0ZWRfX+Xa6K2druJub
+ tWhZQtv8AANA+kj9bhcy9Gu9AFuilS/gB9NJ+6anI+LoF5VoMHJ/PhYkRf1vPxW/BNQLnqGttk/
+ gbXKJ5jcDtJCPs4YD53FSitG3Oogd1Q=
+X-Proofpoint-ORIG-GUID: 2UwdH60xfzkGHFZOe_4wn30olQS1Af5j
+X-Proofpoint-GUID: 2UwdH60xfzkGHFZOe_4wn30olQS1Af5j
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-02_04,2026-11-02_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 lowpriorityscore=0 adultscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 priorityscore=1501 clxscore=1015 phishscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611020062
 
-Only entries that are never removed may implement ->proc_read() or
-->proc_read_iter() now, and PROC_ENTRY_PERMANENT is 0 in modules. But a
-module that sets one of them still builds fine and only finds out when
-registering its entry fails with a warning.
+The following changes since commit 25e73f1d6868c759c8eb56cad4e411692c5341b4:
 
-So rename them to ->proc_permanent_read() and
-->proc_permanent_read_iter(). A module that sets one of them doesn't
-build anymore and the name says which entries may use them. Hiding the
-members from modules behind #ifdef MODULE instead would give modules a
-different layout of struct proc_ops than the rest of the kernel.
+  wifi: mac80211: reinstate IEEE80211_TX_CTL_AMPDU flag in ieee80211_tx_prep_agg() (2026-10-26 12:20:45 +0100)
 
-While at it, rename PROC_ENTRY_proc_read_iter and
-pde_has_proc_read_iter() to match.
+are available in the Git repository at:
 
-No functional changes.
+  git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git tags/ath-current-20261102
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- fs/proc/generic.c       | 15 +++++++++------
- fs/proc/inode.c         |  9 +++++----
- fs/proc/internal.h      |  5 +++--
- fs/proc/kcore.c         |  2 +-
- fs/proc/kmsg.c          |  2 +-
- fs/proc/page.c          |  6 +++---
- include/linux/proc_fs.h | 10 ++++++----
- kernel/profile.c        |  2 +-
- 8 files changed, 29 insertions(+), 22 deletions(-)
+for you to fetch changes up to 83d689bbe8f90ce39961bcc3a64f2ca2ec184019:
 
-diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 7c8def4ed9fc..4bcec5a29b5f 100644
---- a/fs/proc/generic.c
-+++ b/fs/proc/generic.c
-@@ -444,7 +444,8 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 	if (proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
- 		pde->flags |= PROC_ENTRY_PERMANENT;
- 	/* These copy to userspace and only an entry that can't go away may. */
--	if (WARN_ON_ONCE((proc_ops->proc_read || proc_ops->proc_read_iter) &&
-+	if (WARN_ON_ONCE((proc_ops->proc_permanent_read ||
-+			  proc_ops->proc_permanent_read_iter) &&
- 			 !pde_is_permanent(pde)))
- 		return -EINVAL;
- 	if (proc_ops->proc_seq_ops) {
-@@ -457,7 +458,8 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 	}
- 	if (pde_is_seq_file(pde)) {
- 		/* procfs reads and seeks through the seq_file itself */
--		if (WARN_ON_ONCE(proc_ops->proc_read || proc_ops->proc_read_iter ||
-+		if (WARN_ON_ONCE(proc_ops->proc_permanent_read ||
-+				 proc_ops->proc_permanent_read_iter ||
- 				 proc_ops->proc_lseek))
- 			return -EINVAL;
- 		/* and frees it, see pde_seq_release() */
-@@ -467,8 +469,8 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 			return -EINVAL;
- 		pde->flags |= PROC_ENTRY_proc_lseek;
- 	} else {
--		if (proc_ops->proc_read_iter)
--			pde->flags |= PROC_ENTRY_proc_read_iter;
-+		if (proc_ops->proc_permanent_read_iter)
-+			pde->flags |= PROC_ENTRY_proc_permanent_read_iter;
- 		if (proc_ops->proc_lseek)
- 			pde->flags |= PROC_ENTRY_proc_lseek;
- 	}
-@@ -479,8 +481,9 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 			pde->flags |= PROC_ENTRY_SHORT_WRITES;
- 	}
- 	if (proc_ops->proc_read_buf) {
--		if (WARN_ON_ONCE(pde_is_seq_file(pde) || proc_ops->proc_read ||
--				 proc_ops->proc_read_iter))
-+		if (WARN_ON_ONCE(pde_is_seq_file(pde) ||
-+				 proc_ops->proc_permanent_read ||
-+				 proc_ops->proc_permanent_read_iter))
- 			return -EINVAL;
- 		pde->flags |= PROC_ENTRY_proc_read_buf;
- 		pde->read_size = proc_ops->proc_read_size ?: PAGE_SIZE;
-diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-index a7f8818b0b74..16d8f00bfc26 100644
---- a/fs/proc/inode.c
-+++ b/fs/proc/inode.c
-@@ -464,7 +464,7 @@ static ssize_t proc_reg_read_iter(struct kiocb *iocb, struct iov_iter *iter)
- 	if (pde_has_proc_read_buf(pde))
- 		return pde_read_buf(pde, iocb, iter);
- 	/* only permanent entries have one, see pde_set_flags() */
--	return pde->proc_ops->proc_read_iter(iocb, iter);
-+	return pde->proc_ops->proc_permanent_read_iter(iocb, iter);
- }
- 
- static ssize_t proc_reg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
-@@ -475,9 +475,9 @@ static ssize_t proc_reg_read(struct file *file, char __user *buf, size_t count,
- 	 * Only permanent entries have one, see pde_set_flags(). Anything else
- 	 * might be gone along with its ->proc_ops.
- 	 */
--	if (!pde_is_permanent(pde) || !pde->proc_ops->proc_read)
-+	if (!pde_is_permanent(pde) || !pde->proc_ops->proc_permanent_read)
- 		return -EIO;
--	return pde->proc_ops->proc_read(file, buf, count, ppos);
-+	return pde->proc_ops->proc_permanent_read(file, buf, count, ppos);
- }
- 
- /*
-@@ -880,7 +880,8 @@ struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
- 		inode->i_op = de->proc_iops;
- 		if (pde_is_seq_file(de))
- 			inode->i_fop = &proc_seq_file_ops;
--		else if (pde_has_proc_read_iter(de) || pde_has_proc_read_buf(de))
-+		else if (pde_has_proc_permanent_read_iter(de) ||
-+			 pde_has_proc_read_buf(de))
- 			inode->i_fop = &proc_iter_file_ops;
- 		else
- 			inode->i_fop = &proc_reg_file_ops;
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 93d20995b6fe..f4677815ebfa 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -89,9 +89,10 @@ static inline void pde_make_permanent(struct proc_dir_entry *pde)
- 	pde->flags |= PROC_ENTRY_PERMANENT;
- }
- 
--static inline bool pde_has_proc_read_iter(const struct proc_dir_entry *pde)
-+static inline bool
-+pde_has_proc_permanent_read_iter(const struct proc_dir_entry *pde)
- {
--	return pde->flags & PROC_ENTRY_proc_read_iter;
-+	return pde->flags & PROC_ENTRY_proc_permanent_read_iter;
- }
- 
- static inline bool pde_has_proc_lseek(const struct proc_dir_entry *pde)
-diff --git a/fs/proc/kcore.c b/fs/proc/kcore.c
-index 390547b992ac..5584b2642f2f 100644
---- a/fs/proc/kcore.c
-+++ b/fs/proc/kcore.c
-@@ -664,7 +664,7 @@ static int release_kcore(struct inode *inode, struct file *file)
- 
- static const struct proc_ops kcore_proc_ops = {
- 	.proc_flags	= PROC_ENTRY_PERMANENT,
--	.proc_read_iter	= read_kcore_iter,
-+	.proc_permanent_read_iter = read_kcore_iter,
- 	.proc_open	= open_kcore,
- 	.proc_release	= release_kcore,
- 	.proc_lseek	= default_llseek,
-diff --git a/fs/proc/kmsg.c b/fs/proc/kmsg.c
-index 2fc92a13f9f8..28b40ffccdfb 100644
---- a/fs/proc/kmsg.c
-+++ b/fs/proc/kmsg.c
-@@ -48,7 +48,7 @@ static __poll_t kmsg_poll(struct file *file, poll_table *wait)
- 
- static const struct proc_ops kmsg_proc_ops = {
- 	.proc_flags	= PROC_ENTRY_PERMANENT,
--	.proc_read	= kmsg_read,
-+	.proc_permanent_read = kmsg_read,
- 	.proc_poll	= kmsg_poll,
- 	.proc_open	= kmsg_open,
- 	.proc_release	= kmsg_release,
-diff --git a/fs/proc/page.c b/fs/proc/page.c
-index 6aa99e42ec22..6a68f392453c 100644
---- a/fs/proc/page.c
-+++ b/fs/proc/page.c
-@@ -133,7 +133,7 @@ static ssize_t kpagecount_read(struct file *file, char __user *buf,
- static const struct proc_ops kpagecount_proc_ops = {
- 	.proc_flags	= PROC_ENTRY_PERMANENT,
- 	.proc_lseek	= mem_lseek,
--	.proc_read	= kpagecount_read,
-+	.proc_permanent_read = kpagecount_read,
- };
- 
- 
-@@ -259,7 +259,7 @@ static ssize_t kpageflags_read(struct file *file, char __user *buf,
- static const struct proc_ops kpageflags_proc_ops = {
- 	.proc_flags	= PROC_ENTRY_PERMANENT,
- 	.proc_lseek	= mem_lseek,
--	.proc_read	= kpageflags_read,
-+	.proc_permanent_read = kpageflags_read,
- };
- 
- #ifdef CONFIG_MEMCG
-@@ -271,7 +271,7 @@ static ssize_t kpagecgroup_read(struct file *file, char __user *buf,
- static const struct proc_ops kpagecgroup_proc_ops = {
- 	.proc_flags	= PROC_ENTRY_PERMANENT,
- 	.proc_lseek	= mem_lseek,
--	.proc_read	= kpagecgroup_read,
-+	.proc_permanent_read = kpagecgroup_read,
- };
- #endif /* CONFIG_MEMCG */
- 
-diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-index 17516b064922..4db79f1ab97e 100644
---- a/include/linux/proc_fs.h
-+++ b/include/linux/proc_fs.h
-@@ -18,7 +18,8 @@ enum {
- 	/*
- 	 * All /proc entries using this ->proc_ops instance are never removed.
- 	 * procfs calls into them without pinning them, so they may copy to
--	 * userspace themselves through ->proc_read() or ->proc_read_iter().
-+	 * userspace themselves through ->proc_permanent_read() or
-+	 * ->proc_permanent_read_iter().
- 	 *
- 	 * If in doubt, ignore this flag.
- 	 */
-@@ -28,7 +29,7 @@ enum {
- 	PROC_ENTRY_PERMANENT		= 1U << 0,
- #endif
- 
--	PROC_ENTRY_proc_read_iter	= 1U << 1,
-+	PROC_ENTRY_proc_permanent_read_iter = 1U << 1,
- 	PROC_ENTRY_proc_lseek		= 1U << 3,
- 	PROC_ENTRY_proc_seq_ops		= 1U << 4,
- 	PROC_ENTRY_proc_show		= 1U << 5,
-@@ -78,8 +79,9 @@ struct proc_ops {
- 	 * These two are only for PROC_ENTRY_PERMANENT entries. Everything else
- 	 * uses ->proc_read_buf().
- 	 */
--	ssize_t	(*proc_read)(struct file *, char __user *, size_t, loff_t *);
--	ssize_t (*proc_read_iter)(struct kiocb *, struct iov_iter *);
-+	ssize_t	(*proc_permanent_read)(struct file *, char __user *, size_t,
-+				       loff_t *);
-+	ssize_t (*proc_permanent_read_iter)(struct kiocb *, struct iov_iter *);
- 	/*
- 	 * mandatory unless nonseekable_open() or equivalent is used, procfs
- 	 * seeks seq_file entries itself
-diff --git a/kernel/profile.c b/kernel/profile.c
-index 6f2441dd4a00..72e30bb30396 100644
---- a/kernel/profile.c
-+++ b/kernel/profile.c
-@@ -207,7 +207,7 @@ static ssize_t write_profile(struct file *file, char *buf, size_t count,
- 
- static const struct proc_ops profile_proc_ops = {
- 	.proc_flags	= PROC_ENTRY_PERMANENT,
--	.proc_read	= read_profile,
-+	.proc_permanent_read = read_profile,
- 	.proc_write_buf	= write_profile,
- 	.proc_lseek	= default_llseek,
- };
+  wifi: ath12k: don't advertise EHT-MCS15 to firmware unless we support it (2026-11-02 07:16:28 -0800)
 
--- 
-2.53.0
+----------------------------------------------------------------
+ath.git update for v7.4-rc2
 
+Fix a few user-visible issues in ath9k, ath10k, and ath12k.
+
+----------------------------------------------------------------
+Baochen Qiang (1):
+      wifi: ath12k: don't advertise EHT-MCS15 to firmware unless we support it
+
+Benoit Masson (1):
+      wifi: ath12k: assign device id from the WSI index
+
+Filippo Falezza (1):
+      wifi: ath10k: Stop unanswered temperature reads
+
+Kang Yang (1):
+      wifi: ath12k: set MSDU payload correctly
+
+Lorenzo Bianconi (1):
+      wifi: ath12k: fix decap of MSDUs spanning multiple RX buffers
+
+Mehmet Fide (2):
+      wifi: ath9k_htc: do not start ANI before the first channel is set
+      wifi: ath9k_htc: start ANI when an AP interface begins to beacon
+
+Miaoqing Pan (1):
+      wifi: ath12k: Fix failure to create ath12k_dp_peer on MLO reconnect
+
+P Praneesh (1):
+      wifi: ath12k: fix IRQ disable imbalance in AHB ext interrupt handler
+
+ drivers/net/wireless/ath/ath10k/core.c             |  1 +
+ drivers/net/wireless/ath/ath10k/thermal.c          |  9 +++++-
+ drivers/net/wireless/ath/ath10k/thermal.h          |  2 ++
+ drivers/net/wireless/ath/ath12k/ahb.c              | 11 ++++----
+ drivers/net/wireless/ath/ath12k/core.c             |  3 +-
+ drivers/net/wireless/ath/ath12k/dp_mon.c           |  8 +++---
+ drivers/net/wireless/ath/ath12k/mac.c              | 17 ++++++++++--
+ .../net/wireless/ath/ath12k/wifi7/hal_qcc2072.c    | 30 ++++++++++----------
+ .../net/wireless/ath/ath12k/wifi7/hal_qcn9274.c    | 32 +++++++++++-----------
+ .../net/wireless/ath/ath12k/wifi7/hal_wcn7850.c    | 30 ++++++++++----------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |  8 +++---
+ 11 files changed, 88 insertions(+), 63 deletions(-)
