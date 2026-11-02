@@ -1,130 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.155
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793652391;
-	b=AEEyOgScko1dclbuj3eazLL28SzHw4HcZvZ7kn37qm03QL1aIOV8e53AGaT4tQ24ifuK
-	 N1ljpvqGnldgqx55afR7R49mDR1zIaKlCs10uwLAN3l19utNu0UKT54jqFCWjZR8Q9Bto
-	 0thCPISqx79Pj0PnP+slrw+b1oVT7qJkYNchJxEcI31rMYir/KqWR7YDimtY7M0liVim0
-	 DlPRhXyrSao/hskrHI3Tp/wswVAbWCojaZ6Qt47WIHHHnUPazaj9UbFQjbfpBaARXZ9Gh
-	 68a0s1RdH+/C3acR0hz1z4S+ozmCYkGpS1PgrNFcq4zQUWsOAGCI5NsnmoP/TeOy3kQ==
+	t=1793653401;
+	b=oP1IqNBs2WgjYWg53ICKKsnXcErLqqWF0O5VaoHikMnfVNpKP/oIU9w3UlgicFJJO+yy
+	 LFKu5tlhiy26RbUBKb4z3q/rJShh+Len3Jt6ozM35FXyeeYNg0EZVHqcc+a8W6XcPLMBH
+	 KSlvajhnttRsya/fm8wTBPSR81eTFBS8heu4X65BLdGbk+Vto1dAt0yc48iUG+RD+uyUI
+	 ModL1nPZBaYQxcc6xBYpgH9+xNtJ530D8RDzGHM10xnN1iLR4X3Ur9FRflBpAR4/S4WJE
+	 kNvaNTKQPJa3M6hMJRfkapGofgu0cmD32FvkPOtGsxpU71t8fRPfbXB/6eZcMomkZ4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793652391;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=rIkyhrFM98T/vHO6RdFHgX5SpA5k8kK+utueYBru5u4=;
-	b=c6DZ2o2QU0EpiZubJCtUBkb2cjfWNvdEZ5w91RUJqXhgJeOEE2BfZZ9c6HspJUz13AMi
-	 5WcIj/YxXCu4Z/cXJozCkpAVqtr7doXJRoihVI+svIGdnfRc8DAogWgsFVHZNBVy07ogm
-	 g9GrKU7NpfLh951o7x4TlMP6uzi+qF0rtExdNJGweHdL5Djd+0cIMzgSlUWTRiDLCfblJ
-	 RxjPfHw23bMk0Rll+qXZaIxNO5aE0YvtsUFlLLJV5a+2uqtfN3Y+PWOqwlSbzxJ6s2aPI
-	 pBSnkprhX1KwlpYZJm4iDEpDd1dwrJfFdvV/2W2G896DAa6GBuhvVISpRN9hegX5N4w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793653401;
+	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=XI1vibZyT4TcoB3+q9Ej9r2osyH37zBdqNJVHXqLwUM=;
+	b=IM1+e6alDFhpcSGEfsb/iVAeTl1wxwml6dMBmFNBjChmGW0I5eNTQHvBsSVdbNrVxR/E
+	 wo6fDLo6fkU0G5WWLvl6jTiFvl54EMcC756LqUniNQaVK/6sW2bIvSzJpdL6tGStTxRgk
+	 3h91UbKQQ2PlTw68mYdi/+/JUmh83TAOnZIhdj3EBzR7U7X3IhS9RfsP5l6zWChGPvcTi
+	 XgAfPT+H0CqvJY78r9lJAH11GW/oMxW4ZYzcJFsxGVFXLOM15USsUZhv9y/tw+Kiw3G+E
+	 89S0QTwB6dUogALXmyv6SiN2rcjrGuRVH/MHcxpmoBbAHrZGvTUz4qgFp+g5kxSUlRQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=jannau.net;
-	spf=pass smtp.mailfrom=jannau.net;
-	dkim=pass header.d=jannau.net header.i=@jannau.net header.a=rsa-sha256 header.s=fm1 header.b=dEl4irC7;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b="hb/5GuHx";
-	arc=none smtp.remote-ip=103.168.172.155
-Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
+	dmarc=permerror header.from=sipsolutions.net;
+	spf=pass smtp.mailfrom=sipsolutions.net;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=YI76s4ff;
+	arc=none smtp.remote-ip=168.119.38.16
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54ADB606A330
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:46:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 54ADB606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jannau.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53B60606A324;
+	Mon,  2 Nov 2026 21:03:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=jannau.net header.i=@jannau.net header.a=rsa-sha256 header.s=fm1 header.b=dEl4irC7;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=hb/5GuHx
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 66F381400229
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 15:46:29 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-10.internal (MEProxy); Mon, 02 Nov 2026 15:46:29 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jannau.net; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm1; t=1793652389; x=1793738789; bh=rIkyhrFM98
-	T/vHO6RdFHgX5SpA5k8kK+utueYBru5u4=; b=dEl4irC7E3FvWjeE0C3xyQtmm7
-	P97SKDgblnSCufI4yAIrH2SNZ5xaaIo6YCW+E+AJEbuzzc7bRRUiIGpmUkhNuQUX
-	lZtFyR9+qp/DbXkHR1NGndJOzqjuuqqTAkteUdlCOhMbLcJrbc+IWa7namxUd0dN
-	yRr+PLHRqmF5mSvYBnXwc8UNvduBVJ+hc41Bo576y/mQNagAFUc17txOtwmSJJ/3
-	ZbWg0AZdn8vHynHHx1zgr424czQVPHRmFsErftVuIL2gyYZro2/Z19Fdy6e1Ux++
-	f1k+Q+MzfQ2MkjTHJBle/Hxu4RBJT3qzZ3U5ih+y2xGtBdnuclQxQhtiOu/w==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1793652389; x=1793738789; bh=rIkyhrFM98T/vHO6RdFHgX5SpA5k8kK+utu
-	eYBru5u4=; b=hb/5GuHx9arLWK/83a2O9c+5JIGOXLS+L9Zy66hbfAscUYqwOoc
-	VsYmG6DcF9HURay0Sf2hvm+jMKVEuvWAZUxYXo/RMdNjdBIm6d9f2VBzAA/oCUvw
-	SejtLGAK5+QR6C5sCcdRGnBqAZYDkql+XH/yiNBaqyFwfE4P01OYxWZoImi8UrYq
-	3or/ChFto1BBMGv8886tXleFNf43WbdWikhPnQra09z3klG2LCWXCj6N5SoLamOH
-	Gyx+X4lcNbb8X100yEeNOfGJ6dzIpAc6W7ucXj5T4dZCdLVNiAumdFhWzkCV8kyu
-	2tS0YPgDrqOeZwEwtX5g83eeSCvaImz0RxQ==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-08;
-	repo=github.com/dkim2wg/interop; date=2026-10-28; sw=lmtpprox;
-	action=sign d=jannau.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1793652389; d=jannau.net;
-	mf=PGpAamFubmF1Lm5ldD4=;
-	rt=PGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4=;
-	s=fm1:rsa-sha256:jL0TRQrqWbkH9yODmHVnPI5q89N7Ln/RzOE/nuDDmgtN4+d
-	Aai69wQP0w0O9D3bQgGh3Q5ZLITwLXe4cC5L1wXq9lYN1QDnX3EZILNcEDBS/qLV
-	wi5iL79kma9/fDDn7Xrl7wyrHQ8RXFCb5qTJby6pmkX4tgDs9PNOFS5upSY+GVu/
-	Ke9xiqH6Uvban9P5CRjR+jJeAU/EIYrdg9tSuh0S80KppPJeW0HFlcA3xTd93eTn
-	ZA82e/pHFXVAzMeyWb9cegTsebTZcd0ddbSWjt8aZUnLbuBvzHI03DNohtCMwyhh
-	n9MmRvnUbrtUyqmMCRT0SsIe/RFLH0RL7L3DVUg==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-08;
-	repo=github.com/dkim2wg/interop; date=2026-10-28; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-disposition,content-type,date,feedback-id,from,
-	in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:5qtDy5+gC/134ujdEXJCgDet/gYQRgVF9N+5lkrmpMs=:Gn10J397k5HpCEWL0ZNgmvyOP2E7JV/sxhKi87f4cII=;
-X-ME-Sender: <xms:pfboamHfEo-EZXq2j3tTdktenK2LErO5dL3DKHi3BwrH-lNhDFCrfw>
-    <xme:pfboaml63A9VuyOdytu1CITv7hd_BmmEDM-qWijw280EDttU0JtwBIOUdsWtMGLNu
-    e7zwugBrTaE7cblC8uT2lI31BWMnryWV0xIspocqYhZ3_aaFvoPeacF>
-X-ME-Received: <xmr:pfboai9pBdhEG_OIqx-cDuypCSFrKX2hNzo856S1Vkgxx46ti-YmFYW16MZg-_hAaVRR0QaLIcInMxY_pQje_ZNM0NMvdn3RGXY>
-X-ME-Proxy-Cause: dmFkZTGf099nM2Uoe/+0Y+gh+ygQ0na0IsUtMAqk+PMxwzP2m8G9Q/hXN7oNPOeSqczmlP
-    GpkzUsJ06wZ8msVagoBN4R+93hsBSsBlJ1Mzsf42vFsKBRDuNEvQ/xrdRAqox3ElghD2xK
-    7E75Bgl/us+1sE3ayKnEWsGXBzJxOfXOLmcvkaqgfW7oOMKIZFEoJAsTcyIm27pC8tWWRg
-    vMw4lrmP9zxfk/yl0kVbQIOjqSqcjImNQKY2rPt/hBfr36bijDlsMpbo+Stu3NNd/S4gjY
-    uCKCg4lwJoIn45T0q6O9Xzvwq4TaNxaYnU+dkVnb3jF0Ptrpkj/ADHdCV79kFomBcL0xEI
-    3VK698brKMUkVzsMMpY7zaTUPx9Ehx2ZTdba2+qawwem/ILOdovw+qTHSJnD6c6nI5zBr6
-    Wb3y9K1X5dQyX5v2k9pLWssqDsHud3lCX5bfKPfjcKXw9gxJn+rJSRpJqf4r9eAG9/3lxF
-    8xv1wH1ng3nFJh/TMN+KHo11r3XXHHU4hlH0ntmPhWU8HekGodQFW5Fj+OXm3jEovUvqmD
-    01wpIf+qr659w2oiKf99rBNIxchbUZw1TF26Mk17DVxsP6NVeNfzk9uMLn/adtUc6hPnnA
-    y0FOYVqutYCh8BKc2Lct6LVjixtvhUkR6Fcz8VS4NmZwDQICL66/wRn48u3g
-X-ME-Proxy: <xmx:pfboanna8wzaIV8ebKY_qzXqC-knuQoxidBmRQmg9q3G7yunYoNylw>
-    <xmx:pfboagkE9SIh0sazd6KgHiEDC4mN-pFBp4unPM27i0VGmhQI--icdQ>
-    <xmx:pfboarscQmZJN9G-ta6XpR2emjQFZRHwKW7fNgIQhCButsziRSkW0w>
-    <xmx:pfboaqIkbp8Bc3ttYGfAYX58n479NGSxncc0hy9Cm29aD4p55-kDGA>
-    <xmx:pfboaogzj7z_G_h1QuQGbdxgrZjixRsIF6HwyO8sXoz9H17_gtrM1eUX>
-Feedback-ID: i47b949f6:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 2 Nov 2026 15:46:28 -0500 (EST)
-Date: Mon, 2 Nov 2026 21:46:27 +0100
-From: Janne Grunau <j@jannau.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: michael.reeves077@gmail.com,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"Franky Lin (Zhenhui)" <frankyl@broadcom.com>,
-	Mathy Vanhoef <vanhoefm@gmail.com>, Kalle Valo <kvalo@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com, asahi@lists.linux.dev,
-	Hector Martin <marcan@marcan.st>,
-	Daniel Berlin <dberlin@dberlin.org>, linux-kernel@vger.kernel.org,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-hardening@vger.kernel.org,
-	Peter Robinson <pbrobinson@gmail.com>,
-	Izabela Bakollari <ibakolla@redhat.com>
-Subject: Re: [PATCH 00/13] wifi: brcmfmac: Add BCM4388 support
-Message-ID: <20261102204627.GB770347@robin.jannau.net>
-References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
- <d78cbbd2-601a-4cf1-800f-3be57a2b7de2@broadcom.com>
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=YI76s4ff
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=XI1vibZyT4TcoB3+q9Ej9r2osyH37zBdqNJVHXqLwUM=; t=1793653400; x=1794863000; 
+	b=YI76s4ffRxtnrepuMS5+071FcClMYqOlrmHtERABMfpWhlUDNLnsfklDYYJKm9rl3X6WaFfGmSk
+	A6iyawkT93agLhyDjrO1LHnrG6FsyGKL/twauLM6CxAaRSA0nJxPbhspWM2gwbw5Ph1iXOKuSzA6H
+	+ciQqZUSlh6gcfEmSMZETyOJQJka31O8Z9kEMQHDpzWQxRLyp/uFvdTVh1nLA+33XWWxHQIk3Njf4
+	0lDsrJQYWS/WjceD1KAb4LS7xGTyTrLqjg4xGSGyWc9/OzCW/oAJyx3MOqpHgif7w9vYsNWu0QSeH
+	vNkzUda1DKzD3M/jPqxEqQwEPVIg0dBGgZqg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xNzBU-00000001xqw-3NKe;
+	Mon, 02 Nov 2026 22:03:17 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	stable@vger.kernel.org,
+	Benjamin Berg <benjamin.berg@intel.com>
+Subject: [PATCH wireless] wifi: mac80211: fix use-after-free on TTLM disconnect
+Date: Mon,  2 Nov 2026 22:03:13 +0100
+Message-ID: <20261102220313.3cf5e709417b.I339967c7e614057253aa68c005d9ae220577f99a@changeid>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -134,51 +65,108 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <d78cbbd2-601a-4cf1-800f-3be57a2b7de2@broadcom.com>
+Content-Transfer-Encoding: 8bit
 
-On Sun, Nov 01, 2026 at 08:27:22PM +0100, Arend van Spriel wrote:
-> + Peter, Izabela
-> 
-> On 25/09/2026 15:43, Michael Reeves via B4 Relay wrote:
-> > The Broadcom BCM4388 chipset requires new PCIe initialization and
-> > firmware interfaces. Add support for these interfaces to brcmfmac to
-> > enable basic station operation.
-> > 
-> > This series adds:
-> > - Signed firmware loading and mailbox transport
-> > - Fixes for chip identification and firmware capability matching
-> > - Versioned scan and join requests, and extended PMK payloads
-> > - Updated event mask handling
-> > 
-> > These changes include work by Hector Martin and Daniel Berlin from Asahi
-> > Linux, refactored where needed for upstream inclusion.
-> > 
-> > The series provides basic station support only. 6 GHz support is planned
-> > for a follow-up patchset after this lands. The driver retains legacy
-> > interfaces for older firmware.
-> > 
-> > Tested on an Apple M3 MacBook Air (J613):
-> > - Device boot and network scanning
-> > - 5 GHz WPA2-PSK association and DHCP
-> > - Bidirectional TCP traffic
-> 
-> Finally got some time to get this series tested on my setup. The patches 
-> generally look good. So far no regressions observed. It would be good if 
-> some more people could test this series on their equipment. I will do 
-> some more testing and wait some days.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Tested series on top of v7.3 + commit 7ed5dce55fa8 ("wifi: brcmfmac: map
-msgbuf RX packet IDs bidirectional") in wireless/main with resolving the
-conflict by dropping the conflicting hunk of this series.
+If ieee80211_process_adv_ttlm() disconnects, and some other
+changes were also detected in the beacon, the link update
+to the driver is still done, leading to use-after-free. Fix
+this by returning, like other functions, whether or not the
+update was accepted by the function.
 
-Tested on Mac mini (M1, BCM4378) and Macbook Pro 14-inch (M1 Max,
-BCM4387) without regressions (except for the resolved RX msgbuf
-mapping).
+Cc: stable@vger.kernel.org
+Fixes: 702e80470a33 ("wifi: mac80211: support handling of advertised TID-to-link mapping")
+Reviewed-by: Benjamin Berg <benjamin.berg@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
-Tested-by: Janne Grunau <j@jannau.net>
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8eda8154ba3d..4e2e01d2f5d3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -7950,15 +7950,15 @@ static void ieee80211_tid_to_link_map_work(struct wiphy *wiphy,
+ 	sdata->u.mgd.ttlm_info.switch_time = 0;
+ }
+ 
+-static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
+-					  struct ieee802_11_elems *elems,
+-					  u64 beacon_ts)
++static bool ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
++				       struct ieee802_11_elems *elems,
++				       u64 beacon_ts)
+ {
+ 	u8 i;
+ 	int ret;
+ 
+ 	if (!ieee80211_vif_is_mld(&sdata->vif))
+-		return;
++		return true;
+ 
+ 	if (!elems->ttlm_num) {
+ 		if (sdata->u.mgd.ttlm_info.switch_time) {
+@@ -7976,14 +7976,14 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
+ 						      0);
+ 			if (ret) {
+ 				sdata_info(sdata, "Failed setting valid/dormant links\n");
+-				return;
++				return true;
+ 			}
+ 			ieee80211_vif_cfg_change_notify(sdata,
+ 							BSS_CHANGED_MLD_VALID_LINKS);
+ 		}
+ 		memset(&sdata->u.mgd.ttlm_info, 0,
+ 		       sizeof(sdata->u.mgd.ttlm_info));
+-		return;
++		return true;
+ 	}
+ 
+ 	for (i = 0; i < elems->ttlm_num; i++) {
+@@ -7995,7 +7995,7 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
+ 
+ 		if (res) {
+ 			__ieee80211_disconnect(sdata);
+-			return;
++			return false;
+ 		}
+ 
+ 		if (ttlm_info.switch_time) {
+@@ -8020,7 +8020,7 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
+ 			 * switch the AP will continue to announce it anyway.
+ 			 */
+ 			if (delay > IEEE80211_ADV_TTLM_ST_UNDERFLOW)
+-				return;
++				return true;
+ 
+ 			delay_usec = ieee80211_tu_to_usec(delay);
+ 
+@@ -8039,9 +8039,11 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
+ 			wiphy_hrtimer_work_queue(sdata->local->hw.wiphy,
+ 						 &sdata->u.mgd.ttlm_work,
+ 						 us_to_ktime(delay_usec));
+-			return;
++			return true;
+ 		}
+ 	}
++
++	return true;
+ }
+ 
+ static void
+@@ -8535,8 +8537,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 					       elems->cisco_dtpc_elem);
+ 
+ 	ieee80211_ml_reconfiguration(sdata, elems);
+-	ieee80211_process_adv_ttlm(sdata, elems,
+-				      le64_to_cpu(mgmt->u.beacon.timestamp));
++	if (!ieee80211_process_adv_ttlm(sdata, elems,
++					le64_to_cpu(mgmt->u.beacon.timestamp)))
++		goto free;
+ 
+ apply:
+ 	ieee80211_link_info_change_notify(sdata, link, changed);
+-- 
+2.56.0
 
-thanks,
-
-Janne
