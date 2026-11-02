@@ -1,60 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793653408;
-	b=E4jzU2/xNRw3/AUw4BE23gG+3lR55zp1UzGJ/7QB+QCn0Xzi1lnYgWqgz63FDX+TW/wZ
-	 Sf2r5GZVfc38o1CtbZR9d8glFZ0IR3oLCIeJ8vz9bKH5+Yw+ktnSmTmWc/A5zurl2KPiF
-	 C3XuTLA1usesB8iOWMZuHKHzCs+iOZ9XwGYuqOO8my3jlp4yii87LX4uEl33CwULFdejB
-	 Pw9vpXtd9aEjW0t5yOgWDaNNfLwqcjXuN3sPg/wEpphkb5zPJc/qikw59zf25E6CTwTyk
-	 XEygpMawemw2w88cph8vkRP/c5oytPNgn9i9LuJ0NfpGbd2mTFGpI6jQeMs8zSWzB4w==
+	t=1793653906;
+	b=IO0juAz981eN5uv0c0HDaIgoKXF5P0UNr5XYczeBHOcQ7jpQDysR2l0YRp8o35GfVZU+
+	 Fa/yr7VD91+pyiBFxibye+iIrAIGQQ0VomElaHyNqZMjNlqcnjMo3eNBRn/TVx4Zwf0ur
+	 uReGIMf3/xbemZ/NtzOsUxU7jfDrIRt5mtloaZxs9l6T3/yOXWxO+Byan4bqPvLLS36EA
+	 4UE5R5+ipOMFIFt4JP2FNJJ42tHJb6OUvw+DAJPnAAS9lklmxZPc4PKYsSyrIPIysIZ+S
+	 20KbWoxgvYIfEtX2F1fz4rFh1gvLZ5oEiDX/X2/AptTXNerSkxSaCGrH6RnJh6pw3Ew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793653408;
-	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=TuJ2ldsJC8+jJL460Itk1jlnN1VC1ICHcq/6TmJ/uhQ=;
-	b=JXcF/l6vui7blrHAXzM8O42SRYXIL+P8rWU5n4S6zcisxEHJW0LN1Zv9oe+75wn67F1g
-	 ySh2zOB6b9VkEHlpR6lvYW93L+EzPE/iVAUiwrtxiAkng6DM3vLyU8mGkQQAmjGh8Uj+G
-	 8Cgqto/CRn6/DsCmOgSlXCvgEodN6Yg90byfU7SON2Hp0TKo6ZMpAMvfEheRcz4pyqarg
-	 tXN+WXjfEEp6AvOPi5V25EEh1X/m4m04Uhm614OYifiG9GGUq6fxP4S5lIwxdF8uuj/zx
-	 sScKkQu1tedAgUbAWqUS2bx8NDKI4vGlyonJ2uH+das8yivs3pbiGcQYa027h6czJ9g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793653906;
+	h=Received:DKIM-Signature:Received:Received:X-ME-Sender:
+	 X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
+	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
+	 References:Subject:Content-Type:Content-Transfer-Encoding;
+	bh=xxWoHxsw4VPFqHPAqACZbusTmTkHUnFSnkXXJwnJ4WA=;
+	b=g8Ge1wzG/hWJQCHSaIxjoVDe8dyz9R8OVz4tosCTIFQvGtpryy0DV6WLMA6Qw/FY/dJJ
+	 ZPpbou/PVXXfwMwJS2TWDFIEufBnH8RoYeI1H5DDJA+V/nZoKysC9GncHv1uCWijiNJRE
+	 qSxebUnnzEgNaCVo4mLMZn0e8HaJ9QPOJBTuokJrGzVcE36D0dbq9adz6eVFD1G8RgLlS
+	 yhjBbAKdkGD2yNdv/QlmrqhRGI/CSwjB0Bmbth0nHUBK0cWNf7kPrFjtwCJ/7+iz4N89Z
+	 JwUelRXBu4elH5wIMkGfaH3BO8fzi3jcMeJJ66Tb/TVA6I8uqSLxxJNAPNc45KhBeSw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=gfWH1iIL;
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XZe6+tyY;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9CA606A324
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 21:03:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB505606A326;
+	Mon,  2 Nov 2026 21:11:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=gfWH1iIL
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=TuJ2ldsJC8+jJL460Itk1jlnN1VC1ICHcq/6TmJ/uhQ=; t=1793653407; x=1794863007; 
-	b=gfWH1iILFVEGcIhBVGCuqnOPUKDHiQpmDwOrQkVnJQRAmpiEwEtGyzgbcYf789jRg2PDf9k2iiC
-	p8rFTWpCDYm8XAba2AQNC8nI39XicmtuEZXEIkDsebOpEbXv9vw3Y4kwHCkOuSYBxhRI6Zv4EjhqF
-	8WpEdKFxechDbMPwqvX2ONiEdlpl/Nt+ZRO3oVP1xPCCAg7syDDPjw54euhGb6v8a/y4Rpcs8FRRr
-	C0c5nEDvoXggmCe3UNxe1NNFOI4XVG3J8XqeMPjgY9oCazbt1dYJkpqu5zQ64cUNN6JzjHa1NBheP
-	Gs0LAHbBRH+j46dFiIUNvDZxo/3WTykoi7jQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNzBc-00000001xrT-24It;
-	Mon, 02 Nov 2026 22:03:24 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless] wifi: nl80211: fix ERR_PTR use on wdev disappearance
-Date: Mon,  2 Nov 2026 22:03:21 +0100
-Message-ID: <20261102220322.39fb821963fa.I69d89618155b337779d44eed78c51e5068bad42f@changeid>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XZe6+tyY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 633961F00A1B;
+	Mon,  2 Nov 2026 21:11:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793653905;
+	bh=xxWoHxsw4VPFqHPAqACZbusTmTkHUnFSnkXXJwnJ4WA=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=XZe6+tyYLswAenBO8yAzFdeWRzKxvbqg1Ev/mg/a4IY5Ykl6dyrcjlnUec04HQhAB
+	 wUqBfr7XNAis1gRkRlwuGTTv/aLI8n5inKL/pOeo0qX2ZMVH6ZsIHjb5NCZh9zUPL2
+	 o/ohakMyhEJMO6zYmevE4LT4/D6JmGaT3h4w7BN89zF2VUs59WIhKi/DP83L+kUnC9
+	 SsDT8nIZxjYMyLxMxFoJC8PTJcen/wSXsZsrKVj0Q0tCq0A7kxVFkRR+wzfD8le+If
+	 Wl/DtyEEVNWoCvyuUqF5srUDKOCiBW/Gb9kIb+nJ5eqrm2qnqAgrPwEWkqx/H5R5yQ
+	 Crn9JOHwAhkOw==
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 9A2D2F40069;
+	Mon,  2 Nov 2026 16:11:44 -0500 (EST)
+Received: from phl-imap-15 ([10.202.2.104])
+  by phl-compute-10.internal (MEProxy); Mon, 02 Nov 2026 16:11:44 -0500
+X-ME-Sender: <xms:kPzoauT46RzZZAtJ9pk6EmeQC8cMELBagB3u1iMeAaHmOjnENab40A>
+    <xme:kPzoaumk-opmRQlpeWeKnkRMlTth_z6pBLrv31d5JNfpKtehryrVtBuG3qfafkapL
+    0UJlxT0ifcf_WdI3louCiTK_NZW_9YRI03kfo2jNxtQamFkpy63zY0b>
+X-ME-Proxy-Cause: dmFkZTGGTt1pQq16zbZlBikp5z2kGCzhIzyCgkLQFgSXoffQhlPZQXfjBFq1ZiXvdSuuXZ
+    LGfrLfwbRgm8cT/TQHLtmkS2wq/scJf8NlSAUsi0B9JpHEGQcArw2onxUgxSVXeSq73Th3
+    +MD0Qi/P+BTULU9VUvoeDDNpVnNmDbD7jQoN3v4l/IoJhT2uLJVTZ+qQoBDMXBdvnbBuoB
+    9tDR+if4J7M64uHI42/0BjtEfvrRTVsfVuGRQKjlc4H4/Tpb6Ukdvkgbe36C9jT+yX7xq2
+    jBGJCbh4CPX6idD2imiKQ6v9tm9bzRUVfoBUnOyYFMrBkFYiOOBWgnG0kr7aHqxli45kQp
+    ohMXmtjBzal9CB+YgOYOkiE9b51wZucg/4Qex1khPYx+JLGLu0NEFrvGtoRmQ6eE2VafNW
+    CY+B7UtOu2dLLX0YzJKc7HKLrBl+UhzkRfMrCHLaMOitCefJUNU2mkw7vcohOcdeMVRCgw
+    TQWRrq9hCVC/B8Rxe6VYHSl8gHOGuRazDUmW6qr5GDwgwEuKJT0vVpSDws8RN4u7/JR2Bw
+    7Q9JGl1Z/LH2lgcMAQgF+wjiqdsKo0vCxpzH21ZsG7KiWO33lqILFRfkvZC562OP5TxBQG
+    hvqFJiKnoaGgu8gvbQah48jOhQq3KspK10b5m5ASEOwP4kkYmm4PvM17d+KA
+X-ME-Proxy: <xmx:kPzoakThPn76RnRib5bZ_FntPITCT1o4Ovwx9E8rstI1voUg5JpAIA>
+    <xmx:kPzoahfEU2tfoiygDyUOVgUPLZrN0jZ-87YF5q5IhIxNwkm1ztvL0w>
+    <xmx:kPzoatetgw6gOoAhlTHOnt-HZbmjY916FiHHIyaUhhTihCSwAOX_gA>
+    <xmx:kPzoaj1ywieDU5FAFn3LFQMJapowgQlEbMPUeurA4l5-zBDlAnyByg>
+    <xmx:kPzoat9Ejs2zX8NiQVdXzLsXpl7UKGdgzTPDTECnMqAK4pso_NRi0RMI>
+Feedback-ID: ifa6e4810:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 7098678273B; Mon,  2 Nov 2026 16:11:44 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,41 +77,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-ThreadId: AFgPYeWZplpR
+Date: Mon, 02 Nov 2026 16:11:23 -0500
+From: "Chuck Lever" <cel@kernel.org>
+To: "Christian Brauner" <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+ "Jann Horn" <jannh@google.com>, "Josef Bacik" <josef@toxicpanda.com>,
+ "Chris Mason" <mason@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>,
+ "Thomas Gleixner" <tglx@kernel.org>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Jonathan Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>,
+ "Greg Kroah-Hartman" <gregkh@suse.de>,
+ "Joel Granados" <joel.granados@kernel.org>, "Kees Cook" <kees@kernel.org>,
+ "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>,
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-s390@vger.kernel.org,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
+ "Linuxppc Dev" <linuxppc-dev@lists.ozlabs.org>, netdev@vger.kernel.org,
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+ coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
+ jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org,
+ linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+ samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
+ linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
+ "Takashi Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org
+Message-Id: <7ee779f9-db3d-4829-bdd8-1d09e3f74c43@app.fastmail.com>
+In-Reply-To: <20261102-work-procfs-net-v1-6-982104a4f592@kernel.org>
+References: <20261102-work-procfs-net-v1-0-982104a4f592@kernel.org>
+ <20261102-work-procfs-net-v1-6-982104a4f592@kernel.org>
+Subject: Re: [PATCH RFC 06/11] SUNRPC: let procfs own the seq_file of the cache content
+ file
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-If the wdev disappears during an unlocked dump that
-the driver returned -EAGAIN for (to get it locked),
-the code will attempt to dereference the ERR_PTR()
-on the way out. Since it's obviously not locked in
-that case (it wasn't even found), return instead of
-using the error label.
 
-Fixes: 599b8a3c549b ("wifi: cfg80211: support unlocked station get/dump")
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+On Mon, Nov 2, 2026, at 10:07 AM, Christian Brauner wrote:
+> Declare the seq_operations and let procfs open and free the seq_file of
+> /proc/net/rpc/<cache>/content. ->proc_open() and ->proc_release() only
+> take and drop the module reference and set up ->private now. The
+> rpc_pipefs file is unchanged. Reading the procfs file then no longer
+> holds up its removal when the network namespace goes away.
+>
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2fc680382418..a49224a5f83b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9046,10 +9046,8 @@ static int nl80211_dump_station(struct sk_buff *skb,
- 				/* this fails if the wdev is being removed */
- 				wdev = __nl80211_lock_held_wdev(rdev, netns,
- 								wdev);
--				if (IS_ERR(wdev)) {
--					err = PTR_ERR(wdev);
--					goto out_err;
--				}
-+				if (IS_ERR(wdev))
-+					return PTR_ERR(wdev);
- 
- 				/* try again locked now */
- 				locked = true;
+Acked-by: Chuck Lever <cel@kernel.org>
+
+
 -- 
-2.56.0
-
+Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
