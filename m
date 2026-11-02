@@ -1,94 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793589884;
-	b=P5qRaGkZ9hki9+DsadX2DR7B/jmJXB1stBWTj8BsR1VvzdDh2+5jsvdAPpMFciVHpae6
-	 nn2bB0dUJQbgMjf1uxpUBTEZhXmgGgLH5tFW9E5D59B4Fr2N0v/UhAQDfUht3pv2CjKDX
-	 OVh0Yis2myl0Xrrnyi0qhcsRTHTIqEt47TOmcudrLWUIpjo1JoKh5TLTuTGsU6CaRpRmM
-	 Qvl1JzZiKCypVyQ+uVNTK0YTJKdNFRORioW+fXmU6oWlWoemu6aqB0CS/pvAwcLmhXENR
-	 yZB+AJgiqWwrXQrPaB1bCESkhyA+0yE86gDEABfTLeybkURdHermjlXkjXyphVNv1Ow==
+	t=1793590114;
+	b=L/qVP68Cptf6zX9LHNpAjU6LWhY+sD24WodcJ9lFpZJ017ociCj1giPUtz+HjKf7MxFW
+	 CFAGMLEXacH/STLk1s9x+WwF0b/P6y67ENRX7rZ0D+s5rv3JiEw5U8YHL1tgGOXuD3HMm
+	 npKEhEZMJVjFjp9r5RNHNdx4RF88bx/eUJO+7KZYzyMDbYYfqXZxa6gPuS51R2n7WWxV0
+	 sP+N+pchAGjnhJnrMqp0tyyY1juTk33fDPaxSMMXA0IKFJu4FCrtiH8OywwK5a7miNKlP
+	 ZFGKyVFrCd5QBtj2FZeYbrYBZLojq5tZOsPCfucObwFCMgqBRXoZwrgULSsAPV5S7BQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793589884;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=5Oyg7MidDkH2XnR8LERs6tT7rPX18G6kuPdnqFHnUfU=;
-	b=KQGBwSGJhswI06R0CsViOGHaYOiZqjoIAJ/Vd0Qj2K1LggrNWCoLDR3YRolKKKMM+fuD
-	 HUeditaDUVgT8IcCbLFXXLvtW/lPPtWJVVvPauQ9ALMrdWE0f9dlSO13GgPjdsgIwl503
-	 BmoYwABM6/1+xG9TnMUtyFQdGNKx6ZGRv4XutRWmjem5Hg0kLE0QMERKQV63IlKGLYpCz
-	 wPcBljdeCPCkQF5pi4NwM0cd6DmFDj93ElkbUA27JCrb3RxJDd5bo1aEwMlkbe+4MXLb2
-	 ktRoDr+xaFzzjD+36QTdzRC7gcfgsejZ1RzkGBjGFJSq+Y51DUivqjwwKNwwzqMrwJg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793590114;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 References:In-Reply-To:Accept-Language:Content-Language:
+	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=AsyZ2rRSDNzE0zB4SNUDz4Q+VubPg3NirSbzcFzF+zQ=;
+	b=cw9ub6V2+om4b3NSmfSZWxGQBNqRAqEFpUHMrqkOf5l1h6FtUcbqAm0pN3y6GBDUwI2W
+	 kFBeHV2E/68PyGWzETywmAu3wHPK8JSw/HpFy0T7lDqwNLteq1wPBQggp4KptJ2+piCJD
+	 93iFhRC0OtwR6vjjb+AW4jQcnM0UEHr+UuC0dcjd19/T2nA8IgPuDaSwjLY81x+WEc/jE
+	 DUcg9rpPe6j9jDy1KEjcl2ABFoerXjR0MCotNLZ26iXMJuiHGyQAzt3bMMvMIQVtFNoBG
+	 a6kzJbITpH77p9R+fsiR99eJZaXn6dxbpuWymXeW91Uvjpmfcc0blVyOf1NN3hn4YPw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xqC2vHhV;
-	arc=none smtp.remote-ip=209.85.214.170
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=FvBy+aII;
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 888B0606A326
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 03:24:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 888B0606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4E4606A324;
+	Mon,  2 Nov 2026 03:28:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C4E4606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xqC2vHhV
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2ea0efd636dso23252725ad.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 19:24:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793589884; x=1794194684; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5Oyg7MidDkH2XnR8LERs6tT7rPX18G6kuPdnqFHnUfU=;
-        b=xqC2vHhVsxX6SVptTr/KXC/b0NnZcdD1e+gWluYRmb67gA6b3oN71/gF6ofaxo957E
-         U6d2hA8N27/gmt+wr8UvkFpM8Rlof+c4kXYVx4UBreJUjAxlKU3SrgNEaBdLUzLK/Pr7
-         JPHvylia3OGckBslOKygGlsRGraHmPmfK1jjcAUC71kpwe8ZaN2Xg+O6xDZg8GsMK4DS
-         z4Cd47NuRrnJcuZySA76BHi8/fO0Qbh2NS7T4RcFzmpR3jkkOUf/d62ubjIxoVqJUkgE
-         sLexWNPc9ILOkNUCnO1MxM21GplY5BAdzfBjePmySkOitJ1JICt0l3LQK0YHYdynzwcp
-         /geg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793589884; x=1794194684;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5Oyg7MidDkH2XnR8LERs6tT7rPX18G6kuPdnqFHnUfU=;
-        b=Q386ZeLR6i8bT13oaq8IBzi1wu1ctBj4pCIuW3W/XX5vF7vzqkYWcUqvE3f4agJIqM
-         41tIYvEep2JNnd2jPJCrhbtkZTzmM1mLJrB8IrPKspMKAJVC79q68ALnpTsNnB4Et16B
-         OFf2loo0m8aNeUaAty+ehPN1zjYW0Dr2Os5ElgN77QXtcmBeBFLqmTX1RbV1K2SLo2se
-         GP9txGif53QrjRbBGdougXwYqggzebwxgDzDFZDlnqVZR2lXXiOVwfg/O57nwo0DSARO
-         XRp+Ood7vAcnNkzlqbOg0UgRT6bxUodfIeASIU9zXdcbFzbgRXgpyn4VSxh3DGUVjg/d
-         ospw==
-X-Gm-Message-State: APuU4Z9/249OHGs9lSJktGfc1mZT6n4mUcmd9XuYpnnUsItuHsOGmxg5
-	djKy33wTNHYcmHy3YAi1ikXYNZtaiGYhCG+hWv/FtY4uj7XUfeicZF+k
-X-Gm-Gg: AYBFou1IpiWbmz7CI1zhpbDyO2VszNw3wRJ2ehHBBdA10mCpeACoa/SamUr5bs2Jg2I
-	eMroAwh+905Ph8vjy/yM2erK95JnGAYn8CE3McZkDbkdptbtUFbtglPg7Bdm5vstlJqrbBrpCFh
-	b/EKogi/F8QakCrm7AoZduCwMkzjxHlwfq5wkn22aXwwSl3DgZNfYtbtm3aewzlminVSEEYnG2U
-	kVPLf4IMUcevT9UgXCWCXlNiu/bo5SBLabBYhZnNXgxeghQQZps43+DK5nQKSlxBCoKkWJLlEfV
-	BEeIT4tL7tLf0Ru6XLy9+R/JFyzkQuDItO4PkJDM3JP7gIOJd5qmbP9gSR3z8fXVoEEKEcgMl+W
-	CGVZa8q2I67QVOBIqPTj3ku7UryZ9wP9uxYesRK22ETCktOobEGaUhU9ViiXDDhimq92ykOYRxE
-	8eVLbnFimKToiJvBAnHKZ6HlPs/UHO2ksmaulI80NuGFNy8bR5VZGvt1UsiKXRy0aaVgn06yObr
-	3LmFPRDWkbyfTszhRwJz6YBaxkoM6NHmFj/haPrdcti4qyRTCjCyPa1ELj2+b2gAt3cUuhBaPDi
-	2kIHEj7lf2Q4fuuCK9nCWC1RbsBR7e9VEHkCev8X951MMlbmyEJ2pKrZ9dBjevEM1n5i6pETpww
-	3Qb3LBg==
-X-Received: by 2002:a17:902:ec85:b0:2e9:a23b:643d with SMTP id d9443c01a7336-2eb364d253fmr80430915ad.35.1793589883793;
-        Sun, 01 Nov 2026 19:24:43 -0800 (PST)
-Received: from hostname.tail4fb79.ts.net ([2401:7400:c804:b668:65cc:625f:9c43:1e88])
-        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-2eb392b15f0sm21822195ad.73.2026.11.01.19.24.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 19:24:43 -0800 (PST)
-From: Ho Jie Feng <hjf3108@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ho Jie Feng <hjf3108@gmail.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	neo_jou <neo_jou@realtek.com>,
-	Hans Ulli Kroll <linux@ulli-kroll.de>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH rtw-next v4] wifi: rtw88: usb: don't report the aggregation buffer as a frame
-Date: Mon,  2 Nov 2026 11:24:25 +0800
-Message-ID: <20261102032425.8249-1-hjf3108@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=FvBy+aII
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A23SQVg81819896, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1793590106; bh=AsyZ2rRSDNzE0zB4SNUDz4Q+VubPg3NirSbzcFzF+zQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=FvBy+aIITEiu5MYgGLDhJ+G/7NJhogsuVBBahzwso578UE0Ce1zj3sAXuO8PJ97A0
+	 NSrA4MBU99wxLATDc0Xb33nF98jKSlMUvl8f2NiB8+yGHP0pOmuXWHgUzP0CjO5Vda
+	 0AOpDUMxLOmTPDgsOwsO+A+WRkT0mOd+6aM9oo8U4ftRn/MficKZixBKAUklHodUc4
+	 ZUHiPIRjkRGx2GFgBdj5Km8uY1sIQ17uaGBE7jEo6rjFJxwcG4Cg0BU6F/HCvc7R0p
+	 ad4dZ7hRl6EvLDDjXJr5Zal9TX94vO9VKypd2/2jE6a0jRuVhlWjyz3572WZH/gPpH
+	 y+JS2udgzcHQg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A23SQVg81819896
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 2 Nov 2026 11:28:26 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Mon, 2 Nov 2026 11:28:26 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
+ 15.02.2562.056; Mon, 2 Nov 2026 11:28:26 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Rosen Penev <rosenp@gmail.com>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: Zong-Zhe Yang <kevin_yang@realtek.com>, Kalle Valo <kvalo@kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next] wifi: rtw89: acpi: check for _DSM function
+ support before evaluating it
+Thread-Topic: [PATCH rtw-next] wifi: rtw89: acpi: check for _DSM function
+ support before evaluating it
+Thread-Index: AQHdak/ux0lhlq5WtE+cZkh8fkWQOLcaHI1w
+Date: Mon, 2 Nov 2026 03:28:26 +0000
+Message-ID: <ebd3c83183464c3e9c218337a568b59a@realtek.com>
+References: <20261101222535.34573-1-rosenp@gmail.com>
+In-Reply-To: <20261101222535.34573-1-rosenp@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,75 +83,36 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-When rtw_usb_tx_agg_skb() has more than one frame queued, it copies them
-into a new buffer. That buffer was also handed to mac80211, as one
-additional TX completion.
+Rosen Penev <rosenp@gmail.com> wrote:
+> When the WiFi device has no ACPI companion, or the firmware does not
+> implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() calls
+> acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
+>=20
+>   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 r=
+ev:0 func:10 (0x1001)
+>   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 r=
+ev:0 func:6 (0x1001)
+>=20
+> Here the handle is NULL, and acpi_evaluate_object() returns
+> AE_BAD_PARAMETER. All callers already treat failure as "no policy
+> provided by the platform", so this is only noise.
+>=20
+> Use acpi_check_dsm() first. It returns false for a NULL handle and for
+> functions that are not advertised, so absent functions fail quietly at
+> debug level, as rtw89_acpi_evaluate_method() already does.
 
-Report TX status only for the original frames, and free the aggregate
-buffer without passing it to mac80211.
+The acpi_check_dsm() is to evaluate func 0 before actually accessing func.=
+=20
+I'm not sure if all platforms will implement func 0. Do you know that?
 
-In the case the ieee80211_purge_tx_queue is called, the frame is
-passed to ieee80211_report_used_skb. Since it fulfills none of the
-conditions within the function, the frame is freed as normal without
-a TX status in that case too
+>=20
+> Seen on an RTL8852BE in a desktop PCIe slot.
+>=20
+> Fixes: e897b0bef38a ("wifi: rtw89: introduce realtek ACPI DSM method")
 
-Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/usb.c | 9 +++++++++
- drivers/net/wireless/realtek/rtw88/usb.h | 1 +
- 2 files changed, 10 insertions(+)
+Does it need a Fixes? As I see, this is not a bug.=20
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 715a2ce342d92..10f6d3bea0dfd 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -342,6 +342,11 @@ static void rtw_usb_write_port_tx_complete(struct urb *urb)
- 
- 		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
- 
-+		if (tx_data->drv_frame) {
-+			dev_consume_skb_any(skb);
-+			continue;
-+		}
-+
- 		/* enqueue to wait for tx report */
- 		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
- 			rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
-@@ -431,6 +436,9 @@ static bool rtw_usb_tx_agg_skb(struct rtw_usb *rtwusb, struct sk_buff_head *list
- 		goto queue;
- 	}
- 
-+	/* report TX status only for the original frames */
-+	rtw_usb_get_tx_data(skb_head)->drv_frame = true;
-+
- 	while (skb_iter) {
- 		unsigned long flags;
- 
-@@ -655,6 +663,7 @@ static int rtw_usb_tx_write(struct rtw_dev *rtwdev,
- 	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, skb->data);
- 	tx_data = rtw_usb_get_tx_data(skb);
- 	tx_data->sn = pkt_info->sn;
-+	tx_data->drv_frame = false;
- 
- 	skb_queue_tail(&rtwusb->tx_queue[ep], skb);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
-index 94ff21dd08463..e861e9a66ab22 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.h
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -59,6 +59,7 @@ struct rx_usb_ctrl_block {
- 
- struct rtw_usb_tx_data {
- 	u8 sn;
-+	bool drv_frame;
- };
- 
- struct rtw_usb {
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
 
-base-commit: 9b0be45d4d52fd223994e151f169743a97abd290
--- 
-2.55.0
 
