@@ -1,60 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793653401;
-	b=oP1IqNBs2WgjYWg53ICKKsnXcErLqqWF0O5VaoHikMnfVNpKP/oIU9w3UlgicFJJO+yy
-	 LFKu5tlhiy26RbUBKb4z3q/rJShh+Len3Jt6ozM35FXyeeYNg0EZVHqcc+a8W6XcPLMBH
-	 KSlvajhnttRsya/fm8wTBPSR81eTFBS8heu4X65BLdGbk+Vto1dAt0yc48iUG+RD+uyUI
-	 ModL1nPZBaYQxcc6xBYpgH9+xNtJ530D8RDzGHM10xnN1iLR4X3Ur9FRflBpAR4/S4WJE
-	 kNvaNTKQPJa3M6hMJRfkapGofgu0cmD32FvkPOtGsxpU71t8fRPfbXB/6eZcMomkZ4g==
+	t=1793653408;
+	b=E4jzU2/xNRw3/AUw4BE23gG+3lR55zp1UzGJ/7QB+QCn0Xzi1lnYgWqgz63FDX+TW/wZ
+	 Sf2r5GZVfc38o1CtbZR9d8glFZ0IR3oLCIeJ8vz9bKH5+Yw+ktnSmTmWc/A5zurl2KPiF
+	 C3XuTLA1usesB8iOWMZuHKHzCs+iOZ9XwGYuqOO8my3jlp4yii87LX4uEl33CwULFdejB
+	 Pw9vpXtd9aEjW0t5yOgWDaNNfLwqcjXuN3sPg/wEpphkb5zPJc/qikw59zf25E6CTwTyk
+	 XEygpMawemw2w88cph8vkRP/c5oytPNgn9i9LuJ0NfpGbd2mTFGpI6jQeMs8zSWzB4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793653401;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793653408;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=XI1vibZyT4TcoB3+q9Ej9r2osyH37zBdqNJVHXqLwUM=;
-	b=IM1+e6alDFhpcSGEfsb/iVAeTl1wxwml6dMBmFNBjChmGW0I5eNTQHvBsSVdbNrVxR/E
-	 wo6fDLo6fkU0G5WWLvl6jTiFvl54EMcC756LqUniNQaVK/6sW2bIvSzJpdL6tGStTxRgk
-	 3h91UbKQQ2PlTw68mYdi/+/JUmh83TAOnZIhdj3EBzR7U7X3IhS9RfsP5l6zWChGPvcTi
-	 XgAfPT+H0CqvJY78r9lJAH11GW/oMxW4ZYzcJFsxGVFXLOM15USsUZhv9y/tw+Kiw3G+E
-	 89S0QTwB6dUogALXmyv6SiN2rcjrGuRVH/MHcxpmoBbAHrZGvTUz4qgFp+g5kxSUlRQ==
+	bh=TuJ2ldsJC8+jJL460Itk1jlnN1VC1ICHcq/6TmJ/uhQ=;
+	b=JXcF/l6vui7blrHAXzM8O42SRYXIL+P8rWU5n4S6zcisxEHJW0LN1Zv9oe+75wn67F1g
+	 ySh2zOB6b9VkEHlpR6lvYW93L+EzPE/iVAUiwrtxiAkng6DM3vLyU8mGkQQAmjGh8Uj+G
+	 8Cgqto/CRn6/DsCmOgSlXCvgEodN6Yg90byfU7SON2Hp0TKo6ZMpAMvfEheRcz4pyqarg
+	 tXN+WXjfEEp6AvOPi5V25EEh1X/m4m04Uhm614OYifiG9GGUq6fxP4S5lIwxdF8uuj/zx
+	 sScKkQu1tedAgUbAWqUS2bx8NDKI4vGlyonJ2uH+das8yivs3pbiGcQYa027h6czJ9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=YI76s4ff;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=gfWH1iIL;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53B60606A324;
-	Mon,  2 Nov 2026 21:03:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9CA606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 21:03:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=YI76s4ff
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=gfWH1iIL
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
 	Resent-Message-ID:In-Reply-To:References;
-	bh=XI1vibZyT4TcoB3+q9Ej9r2osyH37zBdqNJVHXqLwUM=; t=1793653400; x=1794863000; 
-	b=YI76s4ffRxtnrepuMS5+071FcClMYqOlrmHtERABMfpWhlUDNLnsfklDYYJKm9rl3X6WaFfGmSk
-	A6iyawkT93agLhyDjrO1LHnrG6FsyGKL/twauLM6CxAaRSA0nJxPbhspWM2gwbw5Ph1iXOKuSzA6H
-	+ciQqZUSlh6gcfEmSMZETyOJQJka31O8Z9kEMQHDpzWQxRLyp/uFvdTVh1nLA+33XWWxHQIk3Njf4
-	0lDsrJQYWS/WjceD1KAb4LS7xGTyTrLqjg4xGSGyWc9/OzCW/oAJyx3MOqpHgif7w9vYsNWu0QSeH
-	vNkzUda1DKzD3M/jPqxEqQwEPVIg0dBGgZqg==;
+	bh=TuJ2ldsJC8+jJL460Itk1jlnN1VC1ICHcq/6TmJ/uhQ=; t=1793653407; x=1794863007; 
+	b=gfWH1iILFVEGcIhBVGCuqnOPUKDHiQpmDwOrQkVnJQRAmpiEwEtGyzgbcYf789jRg2PDf9k2iiC
+	p8rFTWpCDYm8XAba2AQNC8nI39XicmtuEZXEIkDsebOpEbXv9vw3Y4kwHCkOuSYBxhRI6Zv4EjhqF
+	8WpEdKFxechDbMPwqvX2ONiEdlpl/Nt+ZRO3oVP1xPCCAg7syDDPjw54euhGb6v8a/y4Rpcs8FRRr
+	C0c5nEDvoXggmCe3UNxe1NNFOI4XVG3J8XqeMPjgY9oCazbt1dYJkpqu5zQ64cUNN6JzjHa1NBheP
+	Gs0LAHbBRH+j46dFiIUNvDZxo/3WTykoi7jQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNzBU-00000001xqw-3NKe;
-	Mon, 02 Nov 2026 22:03:17 +0100
+	id 1xNzBc-00000001xrT-24It;
+	Mon, 02 Nov 2026 22:03:24 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	stable@vger.kernel.org,
-	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless] wifi: mac80211: fix use-after-free on TTLM disconnect
-Date: Mon,  2 Nov 2026 22:03:13 +0100
-Message-ID: <20261102220313.3cf5e709417b.I339967c7e614057253aa68c005d9ae220577f99a@changeid>
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: [PATCH wireless] wifi: nl80211: fix ERR_PTR use on wdev disappearance
+Date: Mon,  2 Nov 2026 22:03:21 +0100
+Message-ID: <20261102220322.39fb821963fa.I69d89618155b337779d44eed78c51e5068bad42f@changeid>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,104 +68,37 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If ieee80211_process_adv_ttlm() disconnects, and some other
-changes were also detected in the beacon, the link update
-to the driver is still done, leading to use-after-free. Fix
-this by returning, like other functions, whether or not the
-update was accepted by the function.
+If the wdev disappears during an unlocked dump that
+the driver returned -EAGAIN for (to get it locked),
+the code will attempt to dereference the ERR_PTR()
+on the way out. Since it's obviously not locked in
+that case (it wasn't even found), return instead of
+using the error label.
 
-Cc: stable@vger.kernel.org
-Fixes: 702e80470a33 ("wifi: mac80211: support handling of advertised TID-to-link mapping")
-Reviewed-by: Benjamin Berg <benjamin.berg@intel.com>
+Fixes: 599b8a3c549b ("wifi: cfg80211: support unlocked station get/dump")
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+ net/wireless/nl80211.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8eda8154ba3d..4e2e01d2f5d3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7950,15 +7950,15 @@ static void ieee80211_tid_to_link_map_work(struct wiphy *wiphy,
- 	sdata->u.mgd.ttlm_info.switch_time = 0;
- }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2fc680382418..a49224a5f83b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9046,10 +9046,8 @@ static int nl80211_dump_station(struct sk_buff *skb,
+ 				/* this fails if the wdev is being removed */
+ 				wdev = __nl80211_lock_held_wdev(rdev, netns,
+ 								wdev);
+-				if (IS_ERR(wdev)) {
+-					err = PTR_ERR(wdev);
+-					goto out_err;
+-				}
++				if (IS_ERR(wdev))
++					return PTR_ERR(wdev);
  
--static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
--					  struct ieee802_11_elems *elems,
--					  u64 beacon_ts)
-+static bool ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee802_11_elems *elems,
-+				       u64 beacon_ts)
- {
- 	u8 i;
- 	int ret;
- 
- 	if (!ieee80211_vif_is_mld(&sdata->vif))
--		return;
-+		return true;
- 
- 	if (!elems->ttlm_num) {
- 		if (sdata->u.mgd.ttlm_info.switch_time) {
-@@ -7976,14 +7976,14 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
- 						      0);
- 			if (ret) {
- 				sdata_info(sdata, "Failed setting valid/dormant links\n");
--				return;
-+				return true;
- 			}
- 			ieee80211_vif_cfg_change_notify(sdata,
- 							BSS_CHANGED_MLD_VALID_LINKS);
- 		}
- 		memset(&sdata->u.mgd.ttlm_info, 0,
- 		       sizeof(sdata->u.mgd.ttlm_info));
--		return;
-+		return true;
- 	}
- 
- 	for (i = 0; i < elems->ttlm_num; i++) {
-@@ -7995,7 +7995,7 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
- 
- 		if (res) {
- 			__ieee80211_disconnect(sdata);
--			return;
-+			return false;
- 		}
- 
- 		if (ttlm_info.switch_time) {
-@@ -8020,7 +8020,7 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
- 			 * switch the AP will continue to announce it anyway.
- 			 */
- 			if (delay > IEEE80211_ADV_TTLM_ST_UNDERFLOW)
--				return;
-+				return true;
- 
- 			delay_usec = ieee80211_tu_to_usec(delay);
- 
-@@ -8039,9 +8039,11 @@ static void ieee80211_process_adv_ttlm(struct ieee80211_sub_if_data *sdata,
- 			wiphy_hrtimer_work_queue(sdata->local->hw.wiphy,
- 						 &sdata->u.mgd.ttlm_work,
- 						 us_to_ktime(delay_usec));
--			return;
-+			return true;
- 		}
- 	}
-+
-+	return true;
- }
- 
- static void
-@@ -8535,8 +8537,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 					       elems->cisco_dtpc_elem);
- 
- 	ieee80211_ml_reconfiguration(sdata, elems);
--	ieee80211_process_adv_ttlm(sdata, elems,
--				      le64_to_cpu(mgmt->u.beacon.timestamp));
-+	if (!ieee80211_process_adv_ttlm(sdata, elems,
-+					le64_to_cpu(mgmt->u.beacon.timestamp)))
-+		goto free;
- 
- apply:
- 	ieee80211_link_info_change_notify(sdata, link, changed);
+ 				/* try again locked now */
+ 				locked = true;
 -- 
 2.56.0
 
