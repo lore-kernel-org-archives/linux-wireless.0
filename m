@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793663773;
-	b=cDe7TVPMu8k3EuMWZR/Ak/wo7k/InvIOPo3wLmkLuIHLrMOW9EHBYWHXqkNzzaI6rAgW
-	 xn9rbv8xChPggSLIEP+aFu67VfVCASnauvmNtK0yxoDHdnyMJZhJPNRl4jA/ByLVG05bw
-	 mmN3sSO9YhHP69RGNNBavDnbcQykxJmHXsP4WkKSinzZwSzoVjwPvUQhvw1nots3Y9w47
-	 Owk01JSqYTMTt23ylsG3w3KxIunlpQ7jPQK3+oFuq57z2vFqpmt4va34Q3I7US8AQ7nsJ
-	 /u4cL30N6PNXZUNZxKB9CqqjHsZ1+YAgPFPXQx8U+bO8Hby9y6+QElqoBMDYru0YVBQ==
+	t=1793663770;
+	b=kNPaVzo/lBkgaA34dKHVfRcfFAwtmUDaX0dJ/ajaYGV7QL0xBcp3H94mESW7sPglyj4f
+	 3CyA1rkmI1eUkOAQv6t1UkvYhox4joCgg11zj3jEDQJXDZrRP46LqT6PUW4so82m+e6ez
+	 PNKqIf9Bu3ysU0gqA185CsGregj0Ju2z+1xIN0h2P1sDYemfGjBnc3a3X3BRxx3Gq9x9S
+	 IKJVlChGhyuVuAibo81DBp2oftLX7XVsBXXcscGoDC9hXmr6YB8vyNrFHVGbHrSP8vQCZ
+	 9Ica3wXtfuM4y4PzbH8d/tOSika4fH/wpaePnEe/wwhw6R6i10D3mpFFtS5ghtKXVbw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793663773;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793663770;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=jYXvgtAfAX2h4ZhQpN/DtwHGxlww24IO11XWuqOASI8=;
-	b=GeKNVX378KOfQWpGDTrLADy3a7KLkdYklhOdyXjAg6RHZ/YD2OgQwJfkh7Cb5qH54yML
-	 lw6kCVRWmnCMtM8Kf6BjM4jahbYaaDlki9HMegUUuOg3jLKg6EaBcPMwFA8P9fnrKoNZ0
-	 UEjTtvIbgUFxOllCR/BxCFb1bD8WC379uipvaWV6P2grHKMNUWK1Fsd7Tm0XBgMrs3zqU
-	 0jjVj0qQzEzxkZR5MY0DPDWeo7PN3O4eTWoZ6EvJhDGdynE7dhSwS+1nVxHAjYtEzhSqg
-	 j2QH0Wlx5UKZJ2XkGPN4Jz1Gi3RkvKloludMnYVjCeUHcmTnLXW3c1ONav+CpQazaIQ==
+	bh=eNir8LGbOcgLOW78S8zEEq2RpkSc+cNclHB1aQovCD4=;
+	b=YB7BIeiy3nh01LE91Ak7LonD4qXSbN0iZHZaYItOoM7lW06QUhzSIAct0AUGnev1V/oA
+	 1QS7/jrBuqLkXG+o02Rka7B4V0hBpGzzCgmxti+R3KbmgEZ8JHH5WfKFVcFEvxwdqRhxN
+	 Qy5MwaLqzzCHXFwhExMediTmXOczUV59Ap7GhmbYksAucL9Fzk7XUq7mrOwUu8DNQugOm
+	 wF9DR25P8bDYm3MpVnyrjztYQc2R4Njb3yZGtUE3foWvftUnawpq5Qr7/mKbUYS8JpVVg
+	 A7k7+Ni4t2PX+8Nx8JPwWHJC1+0EKI0gdqnXwIUMCgKFyvbWVvni7+L20cQa6m76a2g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=GL6MsZuQ;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=cTRLNq7+;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF5BC606A334
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 23:56:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA66606A32F
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 23:56:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=GL6MsZuQ
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=cTRLNq7+
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=jYXvgtAfAX2h4ZhQpN/DtwHGxlww24IO11XWuqOASI8=;
-	t=1793663772; x=1794873372; b=GL6MsZuQ+dNAf9khHH0ro4wxvYO6lYHMQFZXs6XSTSIGWfm
-	7n1/MLMAfxslgtlaW0Hn18XGIIxNq/o8BcfL7ESgknuhYI5qcCkZUjSs5C/hb1ZunYowSNXNQ1xkf
-	SbLFi5IytU50nG4FC8odbMIQooQxG8KYgmyvg11Xb1DnYxL5J9XuWJ51b6r768BcAxp2v/9vZcT4m
-	YXNUXzQ0koFj0ew21V3r3JjHMUneU3LpP+EQvVdDP/UVLcmsJLkKwX5tB/oyUKCQI/o6X4Pk3Wq7q
-	p0tby4+aqL9y3EiN+VrAX5oybY/hTYyJp1xWbv6gkcIA85g0KYB4x2sD2nxgOMGQ==;
+	Resent-Cc:Resent-Message-ID; bh=eNir8LGbOcgLOW78S8zEEq2RpkSc+cNclHB1aQovCD4=;
+	t=1793663770; x=1794873370; b=cTRLNq7+Yo05iomwpLqjbFxaT+F7ecrQA9scWHonBJUAuaC
+	UoTZ1nZdTBEh8seQQhs5BhCBsfVT80HTpKXUA/0zv4mfFPKhs9pxv2Pb56UIsadDuaFhCmb2HVU48
+	Ds8MoMnP5tHK0lc+nKKU/LOT9AYOEW6+v5yk1BY8pO7IwrPRnGb/zFoK2bb7vsk8QWEmudffHLWe3
+	Ny3wKRvKXvFAFfhc9Z4xxNl3aDU3FkWHUT8GRpHFptPngJKmiUIoJk0gLw/dgdv+4nV81TNL/DN6f
+	RF/u7LDtTG+biH6oVExPXrdByxIUtanbYblR44hEIVI4dwh6cvPxDJ/EQlLxairw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xO1so-00000002AZf-2pJ6;
-	Tue, 03 Nov 2026 00:56:10 +0100
+	id 1xO1sl-00000002AZf-2qpk;
+	Tue, 03 Nov 2026 00:56:07 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 7/7] wifi: mac80211: destroy AP stations asynchronously
-Date: Tue,  3 Nov 2026 00:54:04 +0100
-Message-ID: <20261102235603.1181883-16-johannes@sipsolutions.net>
+Subject: [PATCH wireless-next 2/7] wifi: cfg80211: free scan requests after RCU grace period
+Date: Tue,  3 Nov 2026 00:53:59 +0100
+Message-ID: <20261102235603.1181883-11-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102235603.1181883-9-johannes@sipsolutions.net>
 References: <20261102235603.1181883-9-johannes@sipsolutions.net>
@@ -68,247 +68,133 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When hostapd removes a station, the station destruction
-needs to wait for an RCU grace period, all while holding
-the wiphy mutex and blocking hostapd.
+Drivers may, and mac80211 needs to, access the scan request
+within the RX path, under RCU. Therefore, they now have to
+call synchronize_rcu() before cfg80211_scan_done() but that
+can take some time and happens under wiphy mutex.
 
-For AP stations, use a wiphy_rcu_work to finish the
-cleanup after an RCU grace period, without holding the
-wiphy mutex while waiting.
+Free all scan requests only with call_rcu() so that we can
+avoid the synchronize_rcu().
 
-To avoid confusion in drivers, destroy stations that are
-waiting for destruction synchronously before adding new
-(link) stations, as well as suspend/restart.
+Note that this then fixes some error paths in mac80211 that
+were missing the synchronization which is no longer needed
+now.
 
 Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  7 +++
- net/mac80211/main.c        |  4 ++
- net/mac80211/pm.c          |  2 +
- net/mac80211/sta_info.c    | 87 +++++++++++++++++++++++++++++++++++---
- net/mac80211/sta_info.h    |  1 +
- 5 files changed, 94 insertions(+), 7 deletions(-)
+ include/net/cfg80211.h |  4 ++++
+ net/wireless/core.h    |  1 +
+ net/wireless/nl80211.c |  2 +-
+ net/wireless/scan.c    | 12 ++++++------
+ net/wireless/sme.c     |  2 +-
+ 5 files changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 933336c9c838..dc2105b4829b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1623,6 +1623,13 @@ struct ieee80211_local {
- 	struct rhltable link_sta_hash;
- 	struct timer_list sta_cleanup;
- 	int sta_generation;
-+	/*
-+	 * stations waiting to be destroyed: the first list is covered by
-+	 * the grace period of the pending sta_destroy_work, the second has
-+	 * those removed while the work was already pending
-+	 */
-+	struct list_head sta_destroy_list, sta_destroy_new;
-+	struct wiphy_rcu_work sta_destroy_work;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 46ba0fb27b14..516f6fa591fe 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -8314,6 +8314,10 @@ int reg_query_regdb_wmm(char *alpha2, int freq,
+  *
+  * @request: the corresponding scan request
+  * @info: information about the completed scan
++ *
++ * After calling this, the driver must no longer use the request, except
++ * that readers within an RCU read-side critical section that started
++ * before this call may still access it.
+  */
+ void cfg80211_scan_done(struct cfg80211_scan_request *request,
+ 			struct cfg80211_scan_info *info);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 7318cec3a956..729f6f4aa3a8 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -27,6 +27,7 @@ extern struct mutex cfg80211_mutex;
  
- 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
- 	struct tasklet_struct tx_pending_tasklet;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 6e31076bcc10..c2628e10b0f8 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -522,6 +522,9 @@ static void ieee80211_restart_work(struct work_struct *work)
- 	/* wait for all packet processing to be done */
- 	synchronize_net();
+ struct cfg80211_scan_request_int {
+ 	struct cfg80211_scan_info info;
++	struct rcu_head rcu_head;
+ 	bool notified;
+ 	/*
+ 	 * set while the request is handed to the driver, i.e. between
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2fc680382418..f79645ee32aa 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -12013,7 +12013,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
  
-+	/* finish removing stations before the driver is reconfigured */
-+	sta_info_destroy_flush(local);
-+
- 	ret = ieee80211_reconfig(local);
- 	wiphy_unlock(local->hw.wiphy);
+  out_free:
+ 	rdev->scan_req = NULL;
+-	kfree(request);
++	kfree_rcu(request, rcu_head);
  
-@@ -1728,6 +1731,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	return err;
+ }
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index ac56338f0f43..4954d63cca18 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1057,9 +1057,9 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev,
+ 		err = rdev_scan(rdev, request);
+ 		if (err) {
+ 			rdev->int_scan_req = old;
+-			kfree(request);
++			kfree_rcu(request, rcu_head);
+ 		} else {
+-			kfree(old);
++			kfree_rcu(old, rcu_head);
+ 		}
  
- 	wiphy_lock(local->hw.wiphy);
- 	wiphy_delayed_work_cancel(local->hw.wiphy, &local->roc_work);
-+	wiphy_rcu_work_cancel(local->hw.wiphy, &local->sta_destroy_work);
- 	wiphy_work_cancel(local->hw.wiphy, &local->reconfig_filter);
- 	wiphy_work_cancel(local->hw.wiphy, &local->sched_scan_stopped_work);
- 	wiphy_work_cancel(local->hw.wiphy, &local->radar_detected_work);
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 6a27f8f35c8e..e41d0fa09d1e 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -39,6 +39,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan,
- 
- 	ieee80211_del_virtual_monitor(local);
- 
-+	sta_info_destroy_flush(local);
-+
- 	if (ieee80211_hw_check(hw, AMPDU_AGGREGATION) &&
- 	    !(wowlan && wowlan->any)) {
- 		lockdep_assert_wiphy(local->hw.wiphy);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 17247ba3209f..0908374dbdf7 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1042,6 +1042,9 @@ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
- 	might_sleep();
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
-+	/* the driver must not see the new station before old ones are gone */
-+	sta_info_destroy_flush(local);
-+
- 	err = sta_info_insert_check(sta);
+ 		return err;
+@@ -1106,7 +1106,7 @@ int cfg80211_scan(struct cfg80211_registered_device *rdev)
+ 	rdev_req->req.first_part = true;
+ 	err = rdev_scan(rdev, request);
  	if (err) {
- 		sta_info_free(local, sta);
-@@ -1384,6 +1387,11 @@ static int __must_check __sta_info_destroy_part1(struct sta_info *sta)
- 	list_del_rcu(&sta->list);
- 	sta->removed = true;
+-		kfree(request);
++		kfree_rcu(request, rcu_head);
+ 		return err;
+ 	}
  
-+	local->num_sta--;
-+	local->sta_generation++;
-+
-+	ieee80211_sta_debugfs_remove(sta);
-+
- 	if (sta->uploaded)
- 		drv_sta_pre_rcu_remove(local, sta->sdata, sta);
- 
-@@ -1596,9 +1604,6 @@ static void __sta_info_destroy_part2(struct sta_info *sta, bool recalc)
- 
- 	cancel_work_sync(&sta->drv_deliver_wk);
- 
--	local->num_sta--;
--	local->sta_generation++;
--
- 	while (sta->sta_state > IEEE80211_STA_NONE) {
- 		ret = _sta_info_move_state(sta, sta->sta_state - 1, recalc);
- 		if (ret) {
-@@ -1622,8 +1627,6 @@ static void __sta_info_destroy_part2(struct sta_info *sta, bool recalc)
- 	cfg80211_del_sta_sinfo(&sdata->wdev, sta->sta.addr, sinfo, GFP_KERNEL);
- 	kfree(sinfo);
- 
--	ieee80211_sta_debugfs_remove(sta);
--
- 	ieee80211_destroy_frag_cache(&sta->frags);
- 
- 	cleanup_single_sta(sta);
-@@ -1653,15 +1656,78 @@ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata, const u8 *addr)
- 	return __sta_info_destroy(sta);
+@@ -1126,7 +1126,7 @@ static void cfg80211_put_scan_req(struct cfg80211_scan_request_int *req)
+ 	if (req->driver_owns)
+ 		req->stale = true;
+ 	else
+-		kfree(req);
++		kfree_rcu(req, rcu_head);
  }
  
-+static void sta_info_destroy_queue(struct ieee80211_local *local)
-+{
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	if (list_empty(&local->sta_destroy_new))
-+		return;
-+
-+	/*
-+	 * If the work was actually queued now, its grace period covers all
-+	 * stations removed so far, otherwise it's already pending and will
-+	 * requeue itself for the new ones when it runs.
-+	 */
-+	if (wiphy_rcu_work_queue(local->hw.wiphy, &local->sta_destroy_work))
-+		list_splice_tail_init(&local->sta_destroy_new,
-+				      &local->sta_destroy_list);
-+}
-+
- int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr)
- {
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-+	int err;
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
+@@ -1222,7 +1222,7 @@ void cfg80211_scan_done(struct cfg80211_scan_request *request,
+ 		 * The scan is already completed as far as we're concerned,
+ 		 * it was just kept around for the driver - done now, free it.
+ 		 */
+-		kfree(intreq);
++		kfree_rcu(intreq, rcu_head);
+ 		return;
+ 	}
  
--	lockdep_assert_wiphy(sdata->local->hw.wiphy);
-+	lockdep_assert_wiphy(local->hw.wiphy);
+@@ -3713,7 +3713,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 	}
  
- 	sta = sta_info_get_bss(sdata, addr);
--	return __sta_info_destroy(sta);
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_AP &&
-+	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+		return __sta_info_destroy(sta);
-+
-+	err = __sta_info_destroy_part1(sta);
-+	if (err)
-+		return err;
-+
-+	/* finish later, after an RCU grace period */
-+	list_add_tail(&sta->free_list, &local->sta_destroy_new);
-+	sta_info_destroy_queue(local);
-+
-+	return 0;
-+}
-+
-+static void sta_info_destroy_work(struct wiphy *wiphy, struct wiphy_work *work)
-+{
-+	struct ieee80211_local *local =
-+		container_of(work, struct ieee80211_local,
-+			     sta_destroy_work.work);
-+	struct sta_info *sta, *tmp;
-+
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	list_for_each_entry_safe(sta, tmp, &local->sta_destroy_list, free_list) {
-+		list_del(&sta->free_list);
-+		__sta_info_destroy_part2(sta, true);
-+	}
-+
-+	/* requeue for stations removed after the work was queued */
-+	sta_info_destroy_queue(local);
-+}
-+
-+/* finish destroying all stations that are pending, waiting if needed */
-+void sta_info_destroy_flush(struct ieee80211_local *local)
-+{
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	/* the work might requeue itself, flush it twice */
-+	wiphy_rcu_work_flush(local->hw.wiphy, &local->sta_destroy_work);
-+	wiphy_rcu_work_flush(local->hw.wiphy, &local->sta_destroy_work);
-+
-+	WARN_ON(!list_empty(&local->sta_destroy_list) ||
-+		!list_empty(&local->sta_destroy_new));
+  out:
+-	kfree(creq);
++	kfree_rcu(creq, rcu_head);
+ 	return err;
  }
  
- static void sta_info_cleanup(struct timer_list *t)
-@@ -1703,6 +1769,9 @@ int sta_info_init(struct ieee80211_local *local)
- 
- 	spin_lock_init(&local->tim_lock);
- 	INIT_LIST_HEAD(&local->sta_list);
-+	INIT_LIST_HEAD(&local->sta_destroy_list);
-+	INIT_LIST_HEAD(&local->sta_destroy_new);
-+	wiphy_rcu_work_init(&local->sta_destroy_work, sta_info_destroy_work);
- 
- 	timer_setup(&local->sta_cleanup, sta_info_cleanup, 0);
- 	return 0;
-@@ -1730,6 +1799,8 @@ int __sta_info_flush(struct ieee80211_sub_if_data *sdata, bool vlans,
- 	WARN_ON(vlans && sdata->vif.type != NL80211_IFTYPE_AP);
- 	WARN_ON(vlans && !sdata->bss);
- 
-+	sta_info_destroy_flush(local);
-+
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
- 		if (sdata != sta->sdata &&
- 		    (!vlans || sdata->bss != sta->sdata->bss))
-@@ -3489,6 +3560,8 @@ int ieee80211_sta_activate_link(struct sta_info *sta, unsigned int link_id)
- 	if (WARN_ON(old_links == new_links || !link_sta))
- 		return -EINVAL;
- 
-+	sta_info_destroy_flush(sdata->local);
-+
- 	rcu_read_lock();
- 	if (link_sta_info_hash_lookup(sdata->local, link_sta->addr)) {
- 		rcu_read_unlock();
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index fdb4820755f2..aef3eea9e942 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -956,6 +956,7 @@ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata,
- 			  const u8 *addr);
- int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr);
-+void sta_info_destroy_flush(struct ieee80211_local *local);
- 
- void sta_info_recalc_tim(struct sta_info *sta);
- 
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index b481d31dd8cc..2c5e95a701da 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -138,7 +138,7 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 		dev_hold(wdev->netdev);
+ 	} else {
+ 		rdev->scan_req = NULL;
+-		kfree(request);
++		kfree_rcu(request, rcu_head);
+ 	}
+ 	return err;
+ }
 -- 
 2.56.0
 
