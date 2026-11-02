@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793631897;
-	b=AwmmcGiCCMW+lDaBOIu5X4dCdEp+z2f/oMCDJvOR69jyNfwP0lqD8uI0Nd6kehmO59R7
-	 4h4A3lXVr4zrxgl5hWk6pXe8m0HzM4yVwLBDj64t1jReLJfQO4cYJuaGQoz9OFGy1bJAT
-	 vvCf0OIa0gh0Rj+eYZ8p/lemadgYafGGKwdl3pVThqwg+VpeLW7XccSQZxd83Kf9j2zSV
-	 wzvHZdtXzcjQKND8P8iBYvh/4ifhJ7OLc8kd8U11reC90yA4dzY2JO3vy5rjp9GfaS/Dc
-	 zz9uvaDNFVam7sGZvQ4o16QPVAtksd3qK7aLXz7n3nRxth/qjmfF7EmC9LqFjROzyxw==
+	t=1793631935;
+	b=19v8rPw2rJUDSo+PSIdmM2HW0mErlwHQ/8l6whqljkEkpSCzbTs5Oir5Ft/CR30DDoPR
+	 4fTXcayYr79z+jxsnwCFniNwPR/KB4ZiOAmz5IVmhyrudQlv6RUNhNgAm+Dg0fSzW6bDo
+	 MnMYXUkDY0IjJKW+mFjhXiNkaerhZS+ip8xGiKWehkSrITD6LEWzVLm9gQz1570hf+ber
+	 Qf748zm8o/Rg+A1Y2vZdvDRSLfpHOhQC1GpLKFGonssuFu7hfZC21N/Jv3WGQw6QgD6Ru
+	 zOGOKYfCcICyTb8Bcqwbhd8NqYzfBBYBNCR8UZaULKd1QPLYuGC3DTLxeSVZzxDXJsw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793631897;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793631935;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer;
-	bh=7nrFZB8SEXLZU/mzbmWvrr/UMB/DFOM38jlkmOKcofA=;
-	b=K6nhL6hiMCFs20Ijd2HPTYDalBmlFoIY8jX/olI9f18n9cOvqv3VuYEvTBOfIStB5s15
-	 OU3LyqhW422yVov/rM8xEkZL1P9nWaQHDh8VLTEEXiH5BhSkWAdzr1uYwGP3IQA+yTiz5
-	 6GAz4qC9ISjJBIMbgVROQ/lmGI6HctlNQqV5DPHA88U+Ghm473GBv1apzCb097Z7xCAuU
-	 UGaRbzs7WKglYLk8CPHulWxyS37U703qVSf8JIbu9xfw5VPCNXpoLkBRnI/ZEKPqp5fgy
-	 6viGwqsgHixfYE53sLA88ZRluGswIf5Q4yevaXWbnJDlnshhDirnAaFyok+ufvsS92g==
+	bh=2GaZul5nsAkiA2gFzaNhtmiz6cl7FK3FoYt1S3NMwg0=;
+	b=5AhB56NQuFT1i/Q0XwYz9b2reHqKxhO3P5YYooXogdkgdOa54OGAKo+3n9AGoU8eVqrD
+	 4uhaxqvd/zE3ScBmAC/vXRYspCE7Q98OWevZK/f3J6ZIyy3azAon8yer5I6jfjfL6UJ+g
+	 Tfn2gDzfxBJNzph1hC1yW+Wcgah1uuE/W/xZrqMkZrXMFFz+I5Frf0Vlbm3mgqpeHHGFN
+	 gOoEa+8AKMDNwGTnEngMDU4WtoW/9CKStPbTXTCLlQw1agZv0iiwONTPayXiEfXkROxbO
+	 IlE9fYxvGznRmXQyK4zaihGG5xDegayr5JN+d7N91QBioricQMzLLVr/WChu6fRvCwQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="PWJB1/iB";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gPYohCzD;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAC9D609CDAF;
-	Mon,  2 Nov 2026 15:04:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5BF6084434;
+	Mon,  2 Nov 2026 15:05:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PWJB1/iB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C841D1F00A16;
-	Mon,  2 Nov 2026 15:04:43 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gPYohCzD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFC891F00A16;
+	Mon,  2 Nov 2026 15:05:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793631896;
-	bh=7nrFZB8SEXLZU/mzbmWvrr/UMB/DFOM38jlkmOKcofA=;
+	s=k20260515; t=1793631935;
+	bh=2GaZul5nsAkiA2gFzaNhtmiz6cl7FK3FoYt1S3NMwg0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=PWJB1/iBfhOBGJhYFAN08DibMR52AbswEVevpOPJlFFd/6YKCBFk0rjdPQlcIsJCu
-	 M7wETxh7POrPS2R+Bxe8GmEN+ztbrfn17IFousp5Q45SpUKBKeMwCZa4HLCkdaAMTL
-	 nGuwpeu7tYiAoCalRJnwkfTozxEROSln5Zntfv5jW4jL6w1IaglXpEtlA1N+4XsaUQ
-	 ixKM+Nu24AeZWPtukuV1DIGkbYg3XlqbEgIkFveiguvX3I5APXV8ea+vTsUzrvxLhH
-	 oQKy6vg2GUEAk0BT3S3W863rpi7gQfQhWY1o71BBu5E6HzUMTMlRLe2ZVsoDsvf6bw
-	 X9nFDARzygnDg==
+	b=gPYohCzDqrsQn8T7TOjQzO9kH78swG2borvDZMC6jw8GKugG2jigIBNCmf3EfbRog
+	 yxvhj7CSRV/sJqfNt6IzZWz7NbW/xuPFzaZzRxL8W9WId9cYqsYqwOpJnSNHd9Zx00
+	 cVCWJlmHSPUqmOWftRxlfoYvxfeTa2bvDLbr+SmQTCQMClvPyfEa80ucz/9F7McAts
+	 lpUGT6YWauh99d+fYUOnejKSIPRBXooAdLcFwky+UxQUTCrbGWHl0wHARoO6g8KLF4
+	 jS4r3/hO+n7We6evEMM+LHhfwrC3xfWwpo3o7tQV451heeAi+52LI3LZMXaeoL+eQ8
+	 lXFrvyo0JPSLQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:01:37 +0100
-Subject: [PATCH RFC 10/22] sparc: led: let procfs copy in writes
+Date: Mon, 02 Nov 2026 16:01:39 +0100
+Subject: [PATCH RFC 12/22] x86/mtrr: let procfs own the seq_file of
+ /proc/mtrr
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-arch-v1-10-c9492ab08480@kernel.org>
+Message-Id: <20261102-work-procfs-arch-v1-12-c9492ab08480@kernel.org>
 References: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 In-Reply-To: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,55 +92,44 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
 
-Implement ->proc_write_buf() so procfs copies in what is written to
-/proc/led before it pins the entry, and parse the command from that
-copy. Writes larger than PAGE_SIZE - 1 bytes fail with -EINVAL now.
+Declare the show function and let procfs open and free the seq_file.
+->proc_open() only does the checks now and ->proc_release() only drops
+the MTRRs the file added.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/sparc/kernel/led.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ arch/x86/kernel/cpu/mtrr/if.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/arch/sparc/kernel/led.c b/arch/sparc/kernel/led.c
-index 12400bb59ab8..01449b056cdd 100644
---- a/arch/sparc/kernel/led.c
-+++ b/arch/sparc/kernel/led.c
-@@ -60,17 +60,12 @@ static int led_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static ssize_t led_proc_write(struct file *file, const char __user *buffer,
-+static ssize_t led_proc_write(struct file *file, char *buf,
- 			      size_t count, loff_t *ppos)
- {
--	char *buf = NULL;
--
- 	if (count > LED_MAX_LENGTH)
- 		count = LED_MAX_LENGTH;
--
--	buf = memdup_user_nul(buffer, count);
--	if (IS_ERR(buf))
--		return PTR_ERR(buf);
-+	buf[count] = '\0';
- 
- 	/* work around \n when echo'ing into proc */
- 	if (count > 0 && buf[count - 1] == '\n')
-@@ -95,14 +90,12 @@ static ssize_t led_proc_write(struct file *file, const char __user *buffer,
- 		auxio_set_led(AUXIO_LED_OFF);
+diff --git a/arch/x86/kernel/cpu/mtrr/if.c b/arch/x86/kernel/cpu/mtrr/if.c
+index 4049235b1bfe..9510e01d5103 100644
+--- a/arch/x86/kernel/cpu/mtrr/if.c
++++ b/arch/x86/kernel/cpu/mtrr/if.c
+@@ -349,7 +349,7 @@ static int mtrr_close(struct inode *ino, struct file *file)
+ 		kfree(fcount);
+ 		FILE_FCOUNT(file) = NULL;
  	}
- 
--	kfree(buf);
--
- 	return count;
+-	return single_release(ino, file);
++	return 0;
  }
  
- static const struct proc_ops led_proc_ops = {
- 	.proc_show	= led_proc_show,
--	.proc_write	= led_proc_write,
-+	.proc_write_buf	= led_proc_write,
- };
- #endif
+ static int mtrr_seq_show(struct seq_file *seq, void *offset)
+@@ -391,13 +391,12 @@ static int mtrr_open(struct inode *inode, struct file *file)
+ 		return -ENXIO;
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+-	return single_open(file, mtrr_seq_show, NULL);
++	return 0;
+ }
  
+ static const struct proc_ops mtrr_proc_ops = {
++	.proc_show		= mtrr_seq_show,
+ 	.proc_open		= mtrr_open,
+-	.proc_read		= seq_read,
+-	.proc_lseek		= seq_lseek,
+ 	.proc_write		= mtrr_write,
+ 	.proc_ioctl		= mtrr_ioctl,
+ #ifdef CONFIG_COMPAT
 
 -- 
 2.53.0
