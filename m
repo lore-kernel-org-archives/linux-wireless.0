@@ -1,59 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793657665;
-	b=4eDmrbRMURWAx+3Y/VtMwPEodxmWnFf1piw9EcSVRUKgi2l6em9x43YSQ7X4i3YYfT9e
-	 uVoCkD6tVV+iHkbBQv68DPZxR8EdVr8pc8mpL+aqy480BegEew4xnuuloUsgqcctpyiAH
-	 2oEXBWSvDAV/06AY4uenlpkPvS0K+zq+0uF/tOjXgNOSt87ABIXVT/PfNW9Il+Ca0dmvp
-	 KhpTp4b5O9CsxUdcZn8c8ClYm3JMxE1pwTBtd2cGvyOHR7Kyjbkhn8QNjs26w5BZEHzVX
-	 EtE6EnI5HkA1KhhWYbpiLyOHid7+p3JJgb5Rotu9NY1PMoglAc9evJSZBGuBlFhyNdg==
+	t=1793657735;
+	b=EfiiTqrh3c0zUZzkf/vXPCiep9bwh26LmTbLStjoYxYVhA+mcl0hmXftt3Hp6Hciac81
+	 uaY7cC2kGZg8CVmn7qf7eaTGkMSuUQiZYbjFRn6ikt++vpnwgL7gdQMA9zhNvmmJHOZWA
+	 A5CjOYjLZBBMFtMN9vPiUtS6vtdqUt70dyCZLAUmcueU0kOsG5PRwks8DTkkxw+MaM8pR
+	 gYCI2+/O0aZd4EB/N9EyGpkamTFnBjOajjj56ZVjeq6NK22rAoxG/yUdz8RGbEJV75JfW
+	 hwtecozXRtIWtIlkPwA43D7YWyoEE2Gxjlnz09Ja/6gsbvBZ9ueeDZP8N2uECA34bPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793657665;
-	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793657735;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=ILf63+xkNPHQ4126QQZcu+0mjcEJemAjqi/VnEaKeSo=;
-	b=YXtJpze4Y++VWqHVCacb+ddF5T+zUL529BULPVHiDe6ThVFam6fMYVHEMKxY6tOj1Clq
-	 JNVPpv28LdCD8Y/na396jqoTCgVft/3pC3VAdXWwajeBWDejA0o/MofnNJucAAnvTMnz7
-	 hF/vK+LZ6YEVGJZN5yIcDnd83xK6vs1fj2R2OP0/8jJjyfeLKg04z9Hx6Rh6SIMxHIlR9
-	 SmGEWjlq0nIrv/EDpqmENrHRprbO5gtKYygqrZNO1WoCQIdXyBA0IrPjf/cEcQ7zSDI9C
-	 /iTI+0tlQjatqx3X3hVdhHR3Jeme/bBGRWomFBqJo/vTuo6hTCx+x6xBphl6kxhdmrA==
+	bh=QzAycytcomj7YtaQRGxKObOzpf4opDuIErlVoBcZTss=;
+	b=4cL6ROndism9ooB7XK6NJDwvGzw4kGUWUpkU3RkBgYSZkWX2bDKM11+Le+a2DzQ00hX7
+	 gz1ZexlzbANO+zehMz0pOiyw3StzR1utqU/fJNIKLv88AzmhD7i/UOVr9e51COR6YyF5I
+	 K06aUCu+DxloHEWzZ0p6I02eNgXcSl7wQ0DK9U8e+iEuuotai5KtgVzsMbz4xSnzUmTyu
+	 q5lvswR7BydKOKbnBvUJ4Y40Ui+MLwd/0BVMHAUaUwKwcjV45CG9IXxZe4onMXfQbb3ic
+	 lDkHdi+3oQppteYXuvDydupQ0DLbnesOkLRM8vwXsJidyygwuta+yqYcVo29O/k5i/g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=kr6NPXin;
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GGzavak3;
+	arc=none smtp.remote-ip=209.85.221.41
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D404606A327
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:14:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352A1606A336
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:15:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 352A1606A336
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=kr6NPXin
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=ILf63+xkNPHQ4126QQZcu+0mjcEJemAjqi/VnEaKeSo=; t=1793657664; x=1794867264; 
-	b=kr6NPXin/qyfVvwKcvLcDCl9MFzzvRUBLdTeLk4Lwm6fzGhVLDRdhupVlwZTmWPYN4vHmrnbsEP
-	6tGes8hPyi50lM8uM6EIfkhQ7TRadtPK3JYBXEMn+nTa/2nIPdqTyWWejyhCS0EbE8DYaX+IZtjj2
-	SREmI9P9TY3Y27AM+gpHmY1BwWp+vSByfRtlhkLOaWZdEmqjK4P5iIdlD0/iW0bd1uRRjbICdWLaB
-	j5O81LQHF0ra6g8+BmlFDscw4Z3SNTvAOHdl7ZVAPPD+Nq4imFe9pYqVxCO+LIy7OyyN0VQLvpppU
-	A6We9T3TVQAxTkhLk0ne1LBDwaFgTp1qQBNA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xO0IH-000000023Es-1sNE;
-	Mon, 02 Nov 2026 23:14:21 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: move flush fallback into drv_flush_sta()
-Date: Mon,  2 Nov 2026 23:14:19 +0100
-Message-ID: <20261102231419.4ba107276a39.I8e484338e2eac6a6ac782069d76816aa919282d5@changeid>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GGzavak3
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-48e20ed3b9dso3138940f8f.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 14:15:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793657734; x=1794262534; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QzAycytcomj7YtaQRGxKObOzpf4opDuIErlVoBcZTss=;
+        b=GGzavak3e0tA7DrLmdafsU9MiTNFGXwVcuNo3wc33/hneDtK5/ziKFuxm2xZUq9+sx
+         7h9D6opsLVutH4YG38lhjZEJTB4QciVNBUdN8o2+++QXDq5c/Al40ZYrt2XJt8KHfBXN
+         nfoKkzp9m/fsJ+V8wdO1YsCGD4tWKPadxIfzNSfBoC8pRusOvtp/POf04BU8TRyLSrve
+         t2JQS2NlbB+eSegEqjlxUSPPwi+pCkaN11FOU/itEAVIu27HAHqW1Oh3wvGigsSp7u2A
+         FP/eb9r5ai4NEme3Gb5seyYGK0gnwNY3U0FnkhHf9WkZE1bmvx/YLZXJvnTarb+lX1M/
+         FCew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793657734; x=1794262534;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QzAycytcomj7YtaQRGxKObOzpf4opDuIErlVoBcZTss=;
+        b=zZyWKSQv8GAYhcMaWL6FHrz+td8Sdjzn/zVATUL93T+akZijYSV4IGq6Wg8hNYGQKM
+         N+wZXTtT+MSvVWSXwTdwLwom6i+maKWxzgKkr87L/fijuww5k21RVh6Z60Cl0qLsqf89
+         dwllQAB9jy6UOKpve3g4dZCXqPEyee/KHVRfdDa0daj4RGgE6yb8cptbtT3KmUMGzkIj
+         nOQOLBKci/8CWqzhQzcCFAsXx4jmKBvuEAHdgyV/5vOLodDMmpQEjLFrGig0maKCLUGC
+         ACnMp+J8D1IC5gBqQJxBRes/LaXP7Ww+Fff4iKwwIEenV0iGH9N0RYjTtvvMym7vmVSh
+         eAOw==
+X-Forwarded-Encrypted: i=1; AKwUvBz9/X642uB19x8XlaUqo3vX8Z3wF7ujVQgH4rwkhb5AfthsLA68J9UB+O+qzskLDMIFJvgH1OKtLNVB+/PQzQ==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9c/c9Zt3kFWWOsqmv3LDeppvdrEYZcHoAkufb6RgdHiUw8/nwy
+	+OD8pfqPyBunXIIoLGG9MJmZcN8ZFyoeBAY5I7OU7Kscn7Ja/S9oCiI=
+X-Gm-Gg: AYBFou1aXpf5yn9ZvSS2kR4zs2cxkGn9GmVCetyFvDwkoB1IkCwbvLio3ybjAd1+wVf
+	Iwt4rz/wpfoAsswWOV8DOOd+SenAhRH/szyJg1XhWhN+07XgyOaDIEk5YoE5PAzszaCHxyAuITW
+	qoAOTXHX9h0E0+25yWipucbxhcSsIb9ZoVtNjPrxkaHQ5KN9zxFR2qGfjkpdLVyT5AX34ZbtTCN
+	P6ZNWezLY1j8cWMnxa2Uvd0ls74qKBh2yG1S2Kry3lPL/Lhh5S968zL/LV5osFElaHeXEFeFuC/
+	00b5Hzi0tz89YdQZUgqlGv67Nu38+EG2nD2XOvl9kKdOAJM6GRikhQLZKzTlYR6wQQYJHtYK4xV
+	r0RjomSi0et1ynzt5K2obZDdjgyVHK4JHImI7+Sj3MfgndGPM4qOvVc8DO3q/5YQhEBfOF1U70G
+	nvzIJxuaTDUpbBZzcfmqJajPikdquh2fgaSwNbM6P3XU1wRQNs5Qk8Kx6RIS/a05ikwghPZmg9/
+	Xv4pgyduHI0RuRNTgZ/D/jNnCty5W34VwdAE2avHDw6vsuNgYo9uPYjyss4sPn2nN3k7nvXryfX
+	f2t+fXAvOZE=
+X-Received: by 2002:a05:6000:2611:b0:48e:4e00:b72f with SMTP id ffacd0b85a97d-48e6e50c8ecmr24326939f8f.32.1793657733478;
+        Mon, 02 Nov 2026 14:15:33 -0800 (PST)
+Received: from debian.. ([2001:41d0:303:db6b::])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b725a2sm20662549f8f.13.2026.11.02.14.15.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Nov 2026 14:15:31 -0800 (PST)
+From: Tristan Madani <tristmd@gmail.com>
+X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Tristan Madani <tristan@talencesecurity.com>
+Subject: [PATCH wireless] wifi: mwifiex: zero-pad SDIO TX buffer to block-aligned transfer length
+Date: Mon,  2 Nov 2026 22:15:30 +0000
+Message-ID: <20261102221530.3469388-1-tristan@talencesecurity.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -65,123 +101,37 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+mwifiex_sdio_host_to_card() rounds up the packet length to
+MWIFIEX_SDIO_BLOCK_SIZE (256 bytes) for SDIO block-mode transfers.
+When the original skb data is shorter than the rounded-up length, the
+SDIO controller reads past the valid payload into uninitialized skb
+tailroom, transmitting stale data to the wireless device firmware.
 
-When the flush_sta operation doesn't exist, the code
-falls back to flushing the interface queues. Move the
-fallback into the drv_flush_sta() wrapper to have it
-available to future callers too.
+Extend the skb to the block-aligned transfer length and zero the
+padding when sufficient tailroom is available, preventing the data
+leak.
 
-While at it, pass the right sdata.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
- net/mac80211/driver-ops.c | 25 ++++++++++++++++++++++++-
- net/mac80211/driver-ops.h | 25 ++++---------------------
- net/mac80211/sta_info.c   |  7 +------
- 3 files changed, 29 insertions(+), 28 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index 1f3e0765a8ab..f3d0b39720e9 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /*
-  * Copyright 2015 Intel Deutschland GmbH
-- * Copyright (C) 2022-2025 Intel Corporation
-+ * Copyright (C) 2022-2026 Intel Corporation
-  */
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-@@ -709,3 +709,26 @@ int drv_link_sta_statistics(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index f039d6f19183a..c46a048cc961a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -2386,6 +2386,9 @@ static int mwifiex_sdio_host_to_card(struct mwifiex_adapter *adapter,
+ 	/* Transfer data to card */
+ 	pkt_len = buf_block_len * blk_size;
  
- 	return 0;
- }
++	if (pkt_len > skb->len && skb_tailroom(skb) >= pkt_len - skb->len)
++		memset(skb_put(skb, pkt_len - skb->len), 0, pkt_len - skb->len);
 +
-+void drv_flush_sta(struct ieee80211_local *local,
-+		   struct ieee80211_sub_if_data *sdata,
-+		   struct sta_info *sta)
-+{
-+	might_sleep();
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	sdata = get_bss_sdata(sdata);
-+
-+	if (sdata && !check_sdata_in_driver(sdata))
-+		return;
-+
-+	if (!sta->uploaded)
-+		return;
-+
-+	trace_drv_flush_sta(local, sdata, &sta->sta);
-+	if (local->ops->flush_sta)
-+		local->ops->flush_sta(&local->hw, &sdata->vif, &sta->sta);
-+	else
-+		ieee80211_flush_queues(local, sdata, false);
-+	trace_drv_return_void(local);
-+}
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 78230779e7fb..0edaaab7ac52 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -2,7 +2,7 @@
- /*
- * Portions of this file
- * Copyright(c) 2016 Intel Deutschland GmbH
--* Copyright (C) 2018-2019, 2021-2025 Intel Corporation
-+* Copyright (C) 2018-2019, 2021-2026 Intel Corporation
- */
- 
- #ifndef __MAC80211_DRIVER_OPS
-@@ -710,26 +710,9 @@ static inline void drv_flush(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
--static inline void drv_flush_sta(struct ieee80211_local *local,
--				 struct ieee80211_sub_if_data *sdata,
--				 struct sta_info *sta)
--{
--	might_sleep();
--	lockdep_assert_wiphy(local->hw.wiphy);
--
--	sdata = get_bss_sdata(sdata);
--
--	if (sdata && !check_sdata_in_driver(sdata))
--		return;
--
--	if (!sta->uploaded)
--		return;
--
--	trace_drv_flush_sta(local, sdata, &sta->sta);
--	if (local->ops->flush_sta)
--		local->ops->flush_sta(&local->hw, &sdata->vif, &sta->sta);
--	trace_drv_return_void(local);
--}
-+void drv_flush_sta(struct ieee80211_local *local,
-+		   struct ieee80211_sub_if_data *sdata,
-+		   struct sta_info *sta);
- 
- static inline void drv_channel_switch(struct ieee80211_local *local,
- 				      struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 23166fc39729..5e46dcd2ae82 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1489,12 +1489,7 @@ static int _sta_info_move_state(struct sta_info *sta,
- 			 */
- 			if (local->ops->set_key) {
- 				synchronize_net();
--				if (local->ops->flush_sta)
--					drv_flush_sta(local, sta->sdata, sta);
--				else
--					ieee80211_flush_queues(local,
--							       sta->sdata,
--							       false);
-+				drv_flush_sta(local, sta->sdata, sta);
- 			}
- 
- 			ieee80211_clear_fast_xmit(sta);
+ 	if (tx_param)
+ 		ret = mwifiex_host_to_card_mp_aggr(adapter, payload, pkt_len,
+ 						   port, tx_param->next_pkt_len
 -- 
-2.56.0
+2.47.3
 
