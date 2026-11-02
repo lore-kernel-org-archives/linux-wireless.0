@@ -1,95 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=90.155.50.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793647083;
-	b=jjLgeQslU+PYVjv++F5yyMeweAbOky4GywthrK/GGtqs1rknFbh1pybSA2O6sfcb/jYw
-	 YElC5WnBQlU5mR7wWxAQkgMN09dphcOHCK3w3ZTVkfGHDpt6cZ5aoAj9Lsi+RZ5N0S2e3
-	 RG4OeK4a8b5ymfqZRfo8gw+P7FMNOZXBEKZ8qzkZcn4NEjEhFXeg3oXeH8aAfxeRTvd33
-	 k/H4vSAePZ0pehJGdQJH+ai1+BSHL12GoC92TYXj1hYNRBD6wlODmHdsaloTTXqwBI8Dr
-	 +A+G7ZtReti4ZPhIObaEt0WWKBrGPogBpxNMvMe9XSabgImYMb+Ug9EDzEmNUtSxyMA==
+	t=1793647405;
+	b=w0mcaiOuLYBzgUjYPY6lufC5RdVqxwdZuVQ+hxj3em8DlPSUiYHabyGMKfh8L6t+5oZw
+	 GWZcAfcM5c7n/REOlJAOXfp5XNkG4sACuNFn4c+kKqm+FrtjgYZJL/ApzkkEiw8n62K0N
+	 oAJXjyPDsBRhLHPQ3iJ60dRy/s3BD/tGCHR4NFjZNvkYsT+qDWGIOWShhpkWcTIBIqRyf
+	 rfer8qC5ELSx40aM+nw52WjQvtZnqChvjLTESxCtCzd4SrvfUq2Nyp6G3osyiMoumZGe3
+	 afk8CKRPlCQ7NWdV0amzBtBf3utgOp/4tOKzsAMAdEamms7MbQwfDuNUuGyD/Skh3KA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793647083;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=FOqLSFlmXa9VNiEma0WSAldud1u92mwnEYoycTmoyt8=;
-	b=Og+u524Enjo/zWqLTvTw2NmNKnCiLI6fUnDHYd8ZDaRDV5KHwAzbEvlfd0SpXWPHlLmm
-	 Y2aQlG9OY7Rvl2v2HghUxP5yCUcPvbnreqZRObfg/T0MIQKTmw6SF7Zg6rDnSZI3Oad5z
-	 BZUE7WAXeSFuDKWycBOH8GVkSaDz4XlOhPbr/FGbaXrdSMRTdMP/iGQxn+Qu1nje4ohBw
-	 pSOP5TGcIrWk1vd7qwQp2SBZbJtyjVrFPv4+Sb6Jhnhwq2+XNSN33EvbAhv8RUiAB5uY3
-	 C9abVlkYs/rObO+zeAYdru5mFNOX+mTcEvyWCCS3Tybj62/Ywn3Z7uAZduZpYeSDxiA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793647405;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition;
+	bh=lCfRb7dvzYLRNpL4mVmuKuvbGYc/kVOpnEXSzysG3Dw=;
+	b=rMGSxDyVZl+QTY8tB9WApPHMQ2iRq8RgDsZ8uYbO4SVcnVMsBuWqTcX5jmGQcnIXBDUV
+	 /qyRFJEBu9390tXumPVkjwELB3lH81lUTb6k0hv6ia+NVAMCfRnmytoqw/GRwl5GODT1c
+	 9ufxDF1Zj+7lEuCIcN0oaMA8aWBaVJ4xGpo/AWWmB1y6mbzdxMJBGCfvcy/YB/6ouy7Iy
+	 PLlx+yMl3jf9nh48Z9gHiABYrGUDfAz2s9De9m/k/fhH91OK51E4cNdZY1sfc9EXfEW3Z
+	 I3F/IbFyZAveZqoD/+TMOBc60qcbW7vfoMr9LPIDoYcMYJ305c9763v4uhqRIDayEqA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=PhHLn3xy;
-	arc=none smtp.remote-ip=209.85.128.48
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=Bphjrv4f;
+	arc=none smtp.remote-ip=90.155.50.34
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11757606A324
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 19:18:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11757606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 944D4606A324;
+	Mon,  2 Nov 2026 19:23:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 944D4606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=PhHLn3xy
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a2000d5fb1so22512095e9.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 11:18:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793647081; x=1794251881; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FOqLSFlmXa9VNiEma0WSAldud1u92mwnEYoycTmoyt8=;
-        b=PhHLn3xycdnqVLb3UZxNFCI2+foitR+doRurslWo5zWx+ZuP9erhNAZazc5g1O0AA7
-         X3Dj9KyynQ72xjN8X59OjfADJ4n8/IjNB89lhHSMIcWx9E+B06bZJh/zJyZf85Hz7VWi
-         jEN2gJX70m2yjwrEpabO7JETQPqER6gctdfhUkRYvHjGFzm5T9Jl0xuz5CBEgPwNgfQ+
-         PetEMH5SSAwzoMGT0s3FOrcikTWDIo+yHfkifKuKR1f+a0h6P/q/Tun6Q/0rbYobI3rp
-         //3gM2yDju/NXhqa6VVeP0xHKMpS7vEj2KfNgt/mWHDl8M/CYit+OfEsHgX2YTM00UVt
-         c+tA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793647081; x=1794251881;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FOqLSFlmXa9VNiEma0WSAldud1u92mwnEYoycTmoyt8=;
-        b=ZcGYVz/4OIky1eAgzuOrBuq/AqxyJpYwyMlYxexVtdF2QBVKW0y1Ml/qfdukzLSfD9
-         tH5a3MEL7Lu7ooITMqxlQFmvAYZHKjhxSfEwRAwUUIVB27NXoKQ4Clkd6qoKT+AoxNLe
-         7pDCIcD6h67RXvpbxVcwauW7vG1tM+Vswwx5Oni0cCzOq8aO2XW2saQca5yX6BI0Dyk4
-         8LwqL4Wr5n/bo97pKQQgpqIO/gyJ3Op/HZSpQMGA4RAJJ3uzYtJ+cLjiaE2YZzXLzRkU
-         +YOiwD5xYZ6gfQ7tf4rBgs9vH/R+EsXuV+/PTjOcGEqmzSQIXs40z9Xmlq00GIXMY9oi
-         Ntdw==
-X-Forwarded-Encrypted: i=1; AKwUvBwr0omUVS020Clt4+Ix1+pg/Td2olTj+pK3QJuaWTTIeIW8wSIJf5fE/8h4/RrPf1ezluyekTKpvhEaEW5pgQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIoP+yyKbEZookQ14QQSyNiMD4oEcxIKqSr2V/0g2PELj7HydSB
-	FiMoRr0KGUhs4cvAkfgrdch3FCCDSVoKYr3qcy+aKggJRNFtiyHO0rg=
-X-Gm-Gg: AYBFou35vqMi7rjKqG4SkS6VaeQRR+LMW8F8LFc0ERkyhDUFPNlM7V+DnpO94n+rHyc
-	hRdf/YG+nuAENyRgYKXuVHcDW+6oI5PUT58TJcVD8tTRZLMPwSMB8PsGtBpPeXcbifeKoXGr7At
-	kZtO1qyK6sBYDfBro7SbYhzYHZagjnTPkbLf7A1X40jvTQ9g/NxKWCy17rHjoI9fGbAkTK6waRF
-	aLP5murm2DvPmipvMYZTmO7U9Mhy0TKfH3IgldkR8HjbEnBWE97LtRxOH0LL42uXWWpSqgZU1Gc
-	ZmESwoDu8RHH7APoskg0K9+/4Y8dGVIiFgw6jK/CoVYDGtE8xUiVk5zD1EfXyMsWsfyyIhPhnZb
-	bR77cW/HTRtgO/wPY0b0o+MUxXFpGOTrnvIm8qZV8mDlBf/Xt7piQiGwU/PHWYyRpPgH6btMvUC
-	B/8yO/nmwDs72rt5KR1+VeWcAkift34kq3QSTha1uwCOdworpMYmANTweV0kgmhr6+IDy3rM7or
-	Ws02AdkkzO05X7OCNkIyFJIWz9xnREv0vL4GL0kElmEKuDIU0PS06GXL5PgV/ywNJP9dzIUz7k6
-	nb6Az5Ivwq0yGmO5x33fzS/B2HvMWPQc
-X-Received: by 2002:a05:600c:3554:b0:4a1:e7ce:107b with SMTP id 5b1f17b1804b1-4ac150b20eamr267450095e9.2.1793647081411;
-        Mon, 02 Nov 2026 11:18:01 -0800 (PST)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b9b54dsm21054948f8f.47.2026.11.02.11.18.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 11:18:00 -0800 (PST)
-From: Tristan Madani <tristmd@gmail.com>
-X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH wireless] wifi: mwifiex: cancel DFS delayed works before destroying workqueues
-Date: Mon,  2 Nov 2026 19:17:59 +0000
-Message-ID: <20261102191800.2309205-1-tristan@talencesecurity.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=Bphjrv4f
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+	Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=lCfRb7dvzYLRNpL4mVmuKuvbGYc/kVOpnEXSzysG3Dw=; b=Bphjrv4fnqb1OAomlKaoz8NZ0u
+	4F1tv5MGwjZ4/0riuR0Q4x34MoEZ8rmmLBSi6DyZyorUfv/kc2O8La75sWuUs1qyn5qKLQzUHjeIs
+	VYGMJBnGsJMlUqzfXOODP+CefjQaVYYK3F4gLYTiHtRBlxnbLQzBvVRfx4fs3bYBgmwSTS7DjyWRz
+	BxqkJxPpohyYuxqJjgA13xhKrk+NGC/mSSdi7RpouSd9jEq0D8l5DfhudutgLEC5+mHoQRz7Gz1fR
+	Y8shKusMQbw0Ycj/YAsrOeKfOCm7/1F2JRHQhc+T8LejEHnK4TWDVL9zBuE0tgBwOVGkZphnU42s6
+	rBeBr12w==;
+Received: from willy by casper.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xNxcj-000000056Px-1CVj;
+	Mon, 02 Nov 2026 19:23:17 +0000
+Date: Mon, 2 Nov 2026 19:23:16 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Devin Wittmayer <lucid_duck@justthetip.ca>,
+	JB Tsai <jb.tsai@mediatek.com>, Xiong <xiong.huang@mediatek.com>,
+	Charlie-cy Wu <charlie-cy.wu@mediatek.corp-partner.google.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: mt7921e hangs when hardware fails
+Message-ID: <aujjJPq-Qth7UyMp@casper.infradead.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,57 +70,72 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-mwifiex_del_virtual_intf() and the error path of
-mwifiex_add_virtual_intf() destroy dfs_cac_workqueue and
-dfs_chan_sw_workqueue without first cancelling the associated
-delayed works. Since destroy_workqueue() does not cancel pending
-delayed work timers, a timer that fires after the workqueue is
-destroyed runs against freed memory.
+Something appears to have gone wrong with the mt7921e in my Framework
+laptop, but my attempts to recover are hindered by the driver hanging.
 
-Add cancel_delayed_work_sync() for dfs_cac_work and
-dfs_chan_sw_work before each destroy_workqueue() call in both the
-error cleanup and interface removal paths.
+lspci:
 
-Fixes: 85afb18621be ("mwifiex: add cfg80211 start_radar_detection handler")
-Fixes: 7d652034d1a0 ("mwifiex: channel switch support for mwifiex")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
+aa:00.0 Network controller: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter
+	Subsystem: MEDIATEK Corp. Device e616
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupts: pin B disabled, MSI(X) routed to IRQ 207
+	IOMMU group: 19
+	Region 0: Memory at 6019200000 (64-bit, prefetchable) [size=1M]
+	Region 2: Memory at 98000000 (64-bit, non-prefetchable) [size=32K]
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 936939ea9c472..1fe366b89a2c2 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3196,9 +3196,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	return &priv->wdev;
- 
- err_reg_netdev:
-+	cancel_delayed_work_sync(&priv->dfs_chan_sw_work);
- 	destroy_workqueue(priv->dfs_chan_sw_workqueue);
- 	priv->dfs_chan_sw_workqueue = NULL;
- err_alloc_chsw:
-+	cancel_delayed_work_sync(&priv->dfs_cac_work);
- 	destroy_workqueue(priv->dfs_cac_workqueue);
- 	priv->dfs_cac_workqueue = NULL;
- err_alloc_cac:
-@@ -3245,11 +3247,13 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		cfg80211_unregister_netdevice(wdev->netdev);
- 
- 	if (priv->dfs_cac_workqueue) {
-+		cancel_delayed_work_sync(&priv->dfs_cac_work);
- 		destroy_workqueue(priv->dfs_cac_workqueue);
- 		priv->dfs_cac_workqueue = NULL;
- 	}
- 
- 	if (priv->dfs_chan_sw_workqueue) {
-+		cancel_delayed_work_sync(&priv->dfs_chan_sw_work);
- 		destroy_workqueue(priv->dfs_chan_sw_workqueue);
- 		priv->dfs_chan_sw_workqueue = NULL;
- 	}
--- 
-2.47.3
 
+Here's the relevant parts of my dmesg:
+
+[   54.429097] mt7921e 0000:aa:00.0: enabling device (0000 -> 0002)
+[   54.434064] mt7921e 0000:aa:00.0: ASIC revision: 79220010
+[   54.532459] mt7921e 0000:aa:00.0: HW/SW Version: 0x8a108a10, Build Time: 2026
+0724143257a
+[   54.906027] mt7921e 0000:aa:00.0: WM Firmware Version: ____000000, Build Time
+: 20260724143402
+[   56.086928] mt7921e 0000:aa:00.0 wlp170s0: renamed from wlan0
+[164937.892036] mt7921e 0000:aa:00.0: driver own failed
+[164938.942093] mt7921e 0000:aa:00.0: driver own failed
+[164939.995093] mt7921e 0000:aa:00.0: driver own failed
+[164941.272075] mt7921e 0000:aa:00.0: Timeout for driver own
+[164942.316076] mt7921e 0000:aa:00.0: driver own failed
+(...)
+[164962.212360] mt7921e 0000:aa:00.0: chip reset failed
+[164962.212383] wlp170s0: Driver requested disconnection from AP 84:a0:6e:ee:3f:b7
+[164965.388396] mt7921e 0000:aa:00.0: Message 00020001 (seq 4) timeout
+[164968.464445] mt7921e 0000:aa:00.0: Message 00020001 (seq 6) timeout
+
+(hundreds of similar lines)
+
+So I tried to rmmod to see if reloading the module would fix anything.
+Unfortunately, it hung like this:
+
+$ sudo cat /proc/136298/stack
+[<0>] __flush_work+0x315/0x4c0
+[<0>] cancel_work_sync+0x5e/0x80
+[<0>] mt7921_pci_remove+0xb0/0x190 [mt7921e]
+[<0>] pci_device_remove+0x4a/0xb0
+[<0>] device_release_driver_internal+0x19e/0x200
+[<0>] driver_detach+0x48/0x90
+[<0>] bus_remove_driver+0x78/0x110
+[<0>] pci_unregister_driver+0x36/0xe0
+[<0>] __do_sys_delete_module+0x1de/0x350
+[<0>] do_syscall_64+0xe1/0x650
+[<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
+
+I think something's wrong with the hardware at this point because lspci
+-vvv reported something funny in config space which has disappeared
+after a power cycle.  Unfortunately I didn't record it, nor did I dump
+lspci -xxxx.  I'll do that next time this happens.
+
+My call to action here is that this driver should more gracefully cope
+with hardware that's not responding properly.  Whatever work is being
+waited for in __flush_work needs to timeout (I left it overnight and it
+didn't timeout) or be cancellable.
+
+After a reboot, it's working fine.  I'm going to try stressing the laptop
+to see if it fails again, but wanted to get this report out first.
