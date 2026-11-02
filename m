@@ -1,74 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793631530;
-	b=013hg72sNDBoAQvdPomvFXvvJPNZukdj1TcD5723jCCSUPox1I0vaouSvS0Nz2jbWaua
-	 lW1VbNflnbQQLAyu+Rw+P9f759O76X0aaXcjiRwBKRYFq+BS5gm2oy9QS2SOhxSh97Ug1
-	 Lsy3ExfBhg17ASVSjOLBoxFmzwgkcFAykrhAR0rkd6wjvBjugEDD3inmv5R6+nephNGH8
-	 kjuLOiuherUp0Gsl31WAEdAif+YjR3cSJz5ZkpPh/pCs2RHemwNEMrtUZ9dVbVq+jgE0p
-	 EVEDg0vJQql/dkaHB4YHbtcdAdugRhN1rJuekiCV2VO8g2SPcAa5fYUlQEt6BKJ92nQ==
+	t=1793631609;
+	b=1MYgR9x1VnSj6Nhvo7D+3rlSIGOfPLio5XG40vaV+78HSjJJ2kz6JvTsQPTf7wAJYylb
+	 yxWYojwpsHuo0YBLi5GK4XG3+7+LaJjlO0X7dp+xZ+L6ZVFjXcDrdIz8RBnAcM0FfNRzI
+	 hZYXjdm29bDQNgjzSkI3YVVTRcO800LsQ3CyO8zCQ2ogk9yg7jYYLpsIaZXErw+/RxOy6
+	 tlOQBxLV4PnmDXy6gotMeHdenaouOihv30OSXJxjbKt6hLgVQWt4I6wHoTTb7Olzqz9SV
+	 Gmf2unh1rt7jL1/DEkxMKOKkRBjryiXMD5SAy7sRZyrsg+/0L9Spm78r3VmasoaDn6Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793631530;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=BGZaLVl/bf+VQNDSvC9YaFRzMNQ+JkOw52QT0TU0FxI=;
-	b=wqkzlqzSrpv+lysLf1JN10uoqLhyucll9Z7KWHPG+M8bl3otyQuxdqHH3n7iQICnfsBu
-	 yCJ7raiv3TfXkhiWION+CtHo1NPJ5dvNf8G6ZqKm/609uqg0r0EeFROqelmzDcy6VK6XP
-	 5+gIx4X9feDzjyzUejFocxi0G3cxeddloi8gl/9Rx7+umdY9V2wzkNjqAXtWlAzfup2UT
-	 OIERcL4YmFL2tZHoRhk8cTHZ6ZAOgNV7rnI5AtMxWk9elaV4NKKnjCr8ebKbDEa8Z4gdx
-	 ep3Htzk2WaH9pbVrhulYJG84ptl+tEq+dIeZPZkU1+khB5IOYlbj4bjQp8aUvoZTwXA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793631609;
+	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
+	 X-Mailer;
+	bh=DA4U0m1CHtqk19BjQpd8o6fqolui3N68b+LzMS0kHTM=;
+	b=wafcBgrgIx4If4F7Fe2zvcThncvS9+sFecm/lXjEHD29fLo7h6qi6rJ3vT5rYwfB4DK2
+	 DanhvSWT1opqXU8qpESE4B4owU0vsMeUH7HtLjxWpsl5XymhiC28S79C/fjUQWllwvYQy
+	 TFJ6wvP3U8+KVNfEBdg2H7kbeHN7bbDY28MSV6LFcz0jA9cEcZwo032Q1HSL7NBgY+QyC
+	 qYPnPjPa14OUqdNt9DZFDxDlSMhi61IlfPhPo/j2ct3iTQzw4OXPyttyN84gyv2oagxvD
+	 2+zp22INlkNji1eOJ8bwGqEdN2+aQda4yNBm6cRMwJHGGGQdyxoazyMsnFawAYBc8OA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=TZywBXE3;
-	arc=none smtp.remote-ip=209.85.214.199
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kIejajPL;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C8E4606C3D5
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 14:58:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1C8E4606C3D5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F214606C55A;
+	Mon,  2 Nov 2026 15:00:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=TZywBXE3
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2ea0fe07201so19379915ad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 06:58:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793631529; x=1794236329; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=BGZaLVl/bf+VQNDSvC9YaFRzMNQ+JkOw52QT0TU0FxI=;
-        b=TZywBXE3oo1AuLBH7fBdMETQ/ZJUgYCO5nOgYZhMM2/RSWMHeOnBsVWpkN2kAt7KvD
-         74dzAt9PIPbwp/6+RUsGUMXtWVUoMV3MdAigrrJIZiU/oT21l+cUq8atuQ+RAalmSlHk
-         g3RJ7DyQkTdkIAvVBxgZUe0Sz810/Xb582RtJwJCvscY3ni5bJfSTeCbvv+C4vp62UV3
-         an0957++A+LpFnNFNacx9MYI7lnZMrH8MOcXyiWyZ5j8n9FueDIB/nvRaAJodCsoUOg1
-         oMXcKKC21ctT7VDibGCwQcUAZ00IKICYtJZusuhXMeMnt4qTZRFqLClfq3HFOkmznWQ7
-         q4pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793631529; x=1794236329;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=BGZaLVl/bf+VQNDSvC9YaFRzMNQ+JkOw52QT0TU0FxI=;
-        b=MHre9hnxCfMf2C28l+3P3D+zvQcxoIC4AdGqeCdug5DUldQWDecM4VCgP/TXmrIfzF
-         u44If1Y/6rCZRE6ofb6uSCja1j8ZW1cUk+Yw7VgMnT8Mce4W72wAdFGj2G0zGuEHMwdO
-         wLDutZBTO8QQyDTM4LfJTHUFBP8JrQofLVczTeimKsZ2Sj/JBFHqX072QqaVm+5h+GIU
-         BD8rIAEPxD/pjgUz+F2clKpUdIf6NioMrIFId5OlsxY8ZMkFSgceQiBryloRDxeJ1/K7
-         TYWXQzhtIzyYZkRB5PQI/Qdw6vRo+Ck/VvtYB8GC8DRrd/fZG5ErABGfGXorIdIsmmHC
-         ypCg==
-X-Forwarded-Encrypted: i=1; AKwUvBwRYf/160NBwdQpxF0if3ELvUieR77LSRYMtrwzAsMLzKtFCobHg9mIo0UiPhwGiRg9dW8A/VLGBmWvtkvsdQ==@vger.kernel.org
-X-Gm-Message-State: APuU4Z+0TuMN9MXAShZsv+ad6EAJ7bs+SpY791pK9CQvEdLP+a7ESywh
-	c5t1lYpsWrbzUT+O09Wefm9PJYUCDViVz0sMkkzTmNp4unqaBmKLAsJk1x60TJ4/R6EzpmkHs9B
-	0HhZ5cg==
-X-Received: from plnl5.prod.google.com ([2002:a17:902:fd85:b0:2ea:44fa:2c44])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:f691:b0:2e2:d39f:182f
- with SMTP id d9443c01a7336-2eb3643d489mr99134825ad.28.1793631529137; Mon, 02
- Nov 2026 06:58:49 -0800 (PST)
-Date: Mon, 2 Nov 2026 06:58:48 -0800
-In-Reply-To: <20261102074657.27715-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kIejajPL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71C201F00A16;
+	Mon,  2 Nov 2026 14:59:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793631608;
+	bh=DA4U0m1CHtqk19BjQpd8o6fqolui3N68b+LzMS0kHTM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=kIejajPLDhBhNAF+5qAkd+IjamKUOnO1hhgOl6ob3NywfSYo1UCCZClj+UVXxg6hN
+	 8GZuczs7QvhEz8GqB31Q0v4Sfe6zaLku1E8g4bV1Nm7S11GUdX9udG3+A+XpQmpG4w
+	 SKp3yZE5RKwGE6D9RxNOhr665KUXvrAf7U9EgM6t8GMzBMTN1Hyi8S9DzqCn2e/KFT
+	 qYkBu+IipshrjT/yGx4WL5OycQQAysKT17bx+VTU/wQ//N1IctW6952TFgl4pmjQUh
+	 Zgj0NC/jh4zpBceIV8H3jC5zH7xmHBcraK25zYbCARrQ8e4MvgCvvVFdA3MjVOm0bI
+	 x3pJnolxi8+9Q==
+From: Christian Brauner <brauner@kernel.org>
+Date: Mon, 02 Nov 2026 15:48:54 +0100
+Subject: [PATCH RFC 14/16] fs/proc/vmcore: let procfs copy out reads
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -77,35 +51,112 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261029165845.GQ1685504@ziepe.ca> <20261102074657.27715-1-jtornosm@redhat.com>
-Message-ID: <auilKFwKLjw-BnZM@google.com>
-Subject: Re: [PATCH v3 2/8] KVM: add PCI MSI hypercall for VFIO passthrough
-From: Sean Christopherson <seanjc@google.com>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: jgg@ziepe.ca, alex@shazbot.org, ath11k@lists.infradead.org, 
-	ath12k@lists.infradead.org, bhelgaas@google.com, jjohnson@kernel.org, 
-	johannes@sipsolutions.net, kevin.tian@intel.com, kvm@vger.kernel.org, 
-	kwilczynski@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	lpieralisi@kernel.org, mani@kernel.org, pbonzini@redhat.com, robh@kernel.org, 
-	vkuznets@redhat.com
-Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261102-work-procfs-core-v1-14-75df35e4f8b8@kernel.org>
+References: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
+In-Reply-To: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
+ Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+ Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+ NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+ Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+ Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+ Greg Kroah-Hartman <gregkh@suse.de>, 
+ Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
+ Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+ coreteam@netfilter.org, kexec@lists.infradead.org, 
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+ netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+ linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+ linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
+ linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+ sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+ linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
+ linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
+ linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+ linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+ linux-debuggers@vger.kernel.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, 
+ Chuck Lever <cel@kernel.org>
+X-Mailer: b4 0.17-dev
 
-On Mon, Nov 02, 2026, Jose Ignacio Tornos Martinez wrote:
-> > I probably would not have selected this, it is why I suggested
-> > virtio-msi or something that could be optional and seperate from the
-> > core KVM guest ABI.
-> >
-> > But maybe there is interest in doing it this way?
-> 
-> Since there was no feedback from KVM maintainers,
+Implement ->proc_read_buf() so procfs copies what is read to userspace
+after it unpinned the entry. __read_vmcore() fills procfs' buffer
+through a kvec iov_iter. So a read goes through that buffer now instead
+of straight from the old memory into the reader's, which is what
+splice() did already. mmap() isn't affected. On ppc64 a machine check
+while reading the old memory used to be recovered through the exception
+table of copy_to_user(), by accident. copy_oldmem_page() copies with
+_copy_mc_to_iter() now, so a read through procfs' buffer recovers from
+it as well.
 
-NAK to adding any KVM-handled hypercall, and probably NAK to any approach that
-requires KVM changes.
+The buffer is 128k, which keeps the entry pinned for one such piece at
+a time, and /proc/vmcore asks for PROC_ENTRY_FULL_READS so that a
+larger read is filled in pieces. kexec-tools treats a short read of it
+as fatal. A read that faults on its buffer in a later piece returns the
+pieces before it now instead of failing with -EFAULT. fadump removes
+/proc/vmcore when its memory is released and that no longer waits for a
+reader that faults on its buffer.
 
-With regard to timing, please show a little patience and awareness.  It's Monday.
-You posted a fairly large series on a Thursday, during a merge window.  If you
-change direction after ~2 days for a series of this natures (touchs multiple
-subsystems and introduces guest/host ABI), you're likely going to end up with
-severe whiplash.
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ fs/proc/vmcore.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/fs/proc/vmcore.c b/fs/proc/vmcore.c
+index ccb795b85509..1c1e71231f4e 100644
+--- a/fs/proc/vmcore.c
++++ b/fs/proc/vmcore.c
+@@ -27,6 +27,7 @@
+ #include <linux/mutex.h>
+ #include <linux/vmalloc.h>
+ #include <linux/pagemap.h>
++#include <linux/sizes.h>
+ #include <linux/uio.h>
+ #include <linux/cc_platform.h>
+ #include <asm/io.h>
+@@ -427,9 +428,14 @@ static ssize_t __read_vmcore(struct iov_iter *iter, loff_t *fpos)
+ 	return acc;
+ }
+ 
+-static ssize_t read_vmcore(struct kiocb *iocb, struct iov_iter *iter)
++static ssize_t read_vmcore(struct file *file, char *buf, size_t count,
++			   loff_t *ppos)
+ {
+-	return __read_vmcore(iter, &iocb->ki_pos);
++	struct kvec kvec = { .iov_base = buf, .iov_len = count };
++	struct iov_iter iter;
++
++	iov_iter_kvec(&iter, ITER_DEST, &kvec, 1, count);
++	return __read_vmcore(&iter, ppos);
+ }
+ 
+ /**
+@@ -709,9 +715,11 @@ static int mmap_vmcore(struct file *file, struct vm_area_struct *vma)
+ #endif
+ 
+ static const struct proc_ops vmcore_proc_ops = {
++	.proc_flags	= PROC_ENTRY_FULL_READS,
+ 	.proc_open	= open_vmcore,
+ 	.proc_release	= release_vmcore,
+-	.proc_read_iter	= read_vmcore,
++	.proc_read_buf	= read_vmcore,
++	.proc_read_size	= SZ_128K,
+ 	.proc_lseek	= default_llseek,
+ 	.proc_mmap	= mmap_vmcore,
+ };
+
+-- 
+2.53.0
+
