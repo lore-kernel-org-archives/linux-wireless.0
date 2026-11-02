@@ -1,81 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793590594;
-	b=EbTuIBqT4c2A0wnaZz/cT5As7/wQl26fBi4+TWXzhCBL/RMFe8+hGvavJvLde5qLpMV2
-	 54oCBmH0X0M9xkbxohut+tDV/kRfMKxOFSJbBLJti7lmb5eaSr0JoVbKXnLdPUY2jY/x8
-	 BeXtcS2O5foAr7d8iwH/fwpcdzxbv/Ei1wkBd4bZ76UNAkGLEdAsUowEcoj98YZIh29lU
-	 5yu/tLUawWM0MJinLtp5F95MghSOJJqZh+GT9WlYhr+eZBvDkR6MbQj8rnuKyp0XZw2W6
-	 Kr6Hky/MKvmPPOx3pbDGP37JbtnCrNow1YUhOHmAoIVYXBWAkA50jKCOSbpZyuV+haw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793590594;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=NkYadLpCf0jAi+yX5dNanaMa6UyF01581EeKVRM6XQE=;
-	b=uKH8oDX1Zc47DjP1nyMG+eO2gR3/gDrbPFUTHZLDW7O5adfDJJyH4nMJc/CDCbpRh7eD
-	 8Dp6HmGFD0iwgIBbzHh28rNtbfG4WxUoI0DJiuJe7pUUYWGA/oUrrEAOm6q5Wuc84rsPe
-	 XPXRI0KvaMCLBpsiTr7G3f5o1Y4E8ympzWdls70GzRNzMlVI1k/qos3Td7PAfcozSG4LY
-	 0uu5zf2q0Fh4MhKbMEZSz9Praj3CC4nXarX1zVKBj5iun4xSnlSIvyy4dSGhSD2QstYca
-	 64fIO6X1JPtLlnaBTj5fgDTbILDJqT7fwfC5UJYmZgOL9BRix68b4yLDJbZ4RugOSTQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=RS14g0ou;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.49
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793591297;
+	b=R0TS44RkwuTvxChdkueCWCvJXimgIPLXWaeWCkyFUJ6h89pI3MBnK9EhntRkdFKClYgP
+	 w+UEGP6TmF4N6hBLP52XTuOq1Bss4hbmaMMLFn9mDYjy6QsvXzHKZRz8Se3f77SmnFxvW
+	 Ymo5br5JN/7/Ym3oawR6uzRtqFR0c6qfBCX7OsptAaby6piZ59j/yfGCkqmczNC/gxpPl
+	 p4qYQvKgnFmlctjhBpPgPR2QpMCH1fmveOXZeT1I1Cx+qbmTo4lmkczQCOM16aku56K4f
+	 gHdAFmvYcL5eZ00hCXwVEFWMel/s2U00qCMlCKQwAKc8oal072DQIydlQ+0nEPjyuZg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793591297;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type;
+	bh=B3x9s/6EVM4gCHk/aCUx2i0TPJIArf9E/dcZEMYK5gY=;
+	b=v6/ATA38N+atKMM+DfOi04oXxJkwgkFYcSGhGwctZRIUXT1v3PLnbieBfps6GGbQiY1U
+	 Z4A2jcLA1JUEGfBfqCUpGrXS+3KC9+ggwrc92l9Yzuj60Y/Q/+3VY8wfU1xMQbJBgKPSE
+	 KuhZRuV/kuMZZ+t872UuSHU2QYFkLCFZNeSn2vbdOakQKKHXXJi+1n8XK4xicjL3hltW4
+	 xEpiFmULWZAaQSbDR7SpHLNYutVDzRYBEuKxNp8tTOYy76pH7T7D4ypnkhTkCZnTiJmMB
+	 PI2HcxouK7yg6oWj/moZby4OxB2RUEeg/o0JOIZKSwFKg7P1Efxu+/5/kzdm8MLlO+w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XbxRaqhj;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.49
+Received: from mail-oa1-f49.google.com (mail-oa1-f49.google.com [209.85.160.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86202606A324;
-	Mon,  2 Nov 2026 03:36:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86202606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F5CE606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 03:48:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F5CE606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=RS14g0ou
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A23a1PP11823631, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793590562; bh=NkYadLpCf0jAi+yX5dNanaMa6UyF01581EeKVRM6XQE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=RS14g0ou2aDk/rlBlXdPsHz9Y4eYeIx/n/smIuCdnViA4gLleqy2kKPGQpSeaJF69
-	 eMQwQte7ypDfTcNQU3BaijgP/DcCsEZeYumur/6SKIuuEAmocGHiXSp5ZQ59dGg7Nc
-	 7WBVXw0oXsIHrJzgAAoXmMXHoQo7NE8c8M4e6TL40pgu/evJPmd/qtNHezX1N50dVM
-	 jX+oaDFFpSgohO5h9Gpegu0xZJkAcH2ZyI64SLnq/CYTMy3SrcdxhCY0anIYtrBztZ
-	 /1BadKm4kTgV4IRM4YxoD00JR2Cis/+Sfj1tA4nCJTSpPu8VzB4FktdAu0U2qYTFti
-	 17TmlDT05mRVg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A23a1PP11823631
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 2 Nov 2026 11:36:01 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Mon, 2 Nov 2026 11:36:02 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
- 15.02.2562.056; Mon, 2 Nov 2026 11:36:02 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ho Jie Feng <hjf3108@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "Luka
- Gejak" <luka.gejak@linux.dev>, Sascha Hauer <s.hauer@pengutronix.de>, "Hans
- Ulli Kroll" <linux@ulli-kroll.de>, Kalle Valo <kvalo@kernel.org>, neo_jou
-	<neo_jou@realtek.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v4] wifi: rtw88: usb: don't report the
- aggregation buffer as a frame
-Thread-Topic: [PATCH rtw-next v4] wifi: rtw88: usb: don't report the
- aggregation buffer as a frame
-Thread-Index: AQHdanrb3hYC3dqgrE6Qc7DM4PY/v7caIUmA
-Date: Mon, 2 Nov 2026 03:36:02 +0000
-Message-ID: <7065bd99615f46c59171e0fe1672f3a1@realtek.com>
-References: <20261102033244.9330-1-hjf3108@gmail.com>
-In-Reply-To: <20261102033244.9330-1-hjf3108@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XbxRaqhj
+Received: by mail-oa1-f49.google.com with SMTP id 586e51a60fabf-48e2d5a69c4so1485033fac.3
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 19:48:17 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793591296; cv=none;
+        d=google.com; s=arc-20260327;
+        b=GF+PLCcIiX/MApubowST1LCk5jGj9YRCfsTBIp8kdTvkGt5rr/94N+CZ9//JFgCLay
+         IP2MPcsKYa6cRKd5iLOOvjK1+rYWdaZVy65QGG/IbjprKkefTOUIUag0cPbosC0EFaL7
+         jlAxrQjpXghqDRcKbfqjOEYcgWnYLjQ2kcZKWsFbA596eO2h1STECQriyCdOBnB7fufV
+         Y4MT6ICiDK7i7MxmfxqYqOTKzmdgcuCN2Af+oV5H4x2fd2Wwk/xMG44TYIRf3W+aGu/n
+         zvZsfTJ6Q71wQkdUfnI5yO5lXizAa4rvtbGM5qprXGshw6+J6Y5iZtZI87+XcL5E+oLl
+         9sfw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=B3x9s/6EVM4gCHk/aCUx2i0TPJIArf9E/dcZEMYK5gY=;
+        fh=MF5yF9oZ48h1KKiO1ISy64SXw/sNj4co2dotvbXMxYI=;
+        b=AnvsWSGnu6gIC4KQ062jZBQAU+c5a2XZOzVM2fDR79a0f2tRiahQ/t/bAr8cpBu08N
+         cC8IBvtOYV9AnyxszS2vWrWJlURjPKAFnunYf/UTtbPtVjAuK3KYb6Na9y3qGmO71a7a
+         FeXuoz9yjXR/H2L/oJhS0JUgC14JL4CkB8bEjbCB+sexAQpbA0Hb0JDRkwwYTT1+Ol0p
+         L42wI+rMb3uREKxPCWa+DvsBfKlnPkbqaZYhYv+FoUzhMf95+Kt+9Onk0hZ8BNm5jujg
+         SFwqzukgW+BwEwtHHOVcJYNFBSDAyZTL9bKkhMSnjZSPJAg+bIzf0iFzwGweykXGJvX5
+         nlrg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793591296; x=1794196096; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=B3x9s/6EVM4gCHk/aCUx2i0TPJIArf9E/dcZEMYK5gY=;
+        b=XbxRaqhjyZPHnOLuz5IQAsGQ+QJEaAtAtE2tosO0JsxtYHFMXdSbskTPTa2qs5KvVE
+         A3oMTr7NhR+XCiF7dmDRysULfqadzeSJHsf+zX/2uXZzukkXQdIh6wVRqyZBm4HtoZTs
+         CJKfKnSieqd3f9DXjs6c82ojjhoAAjktIG3HF85VMUp52J9yE55YPDiUD8hjjm4/RR2R
+         CP4BjMCD91nc5IHstkI9q5cgjqpfkOIi29Iy/ULND20RydHgtxfXcOtWs6xmRYo0/bR4
+         oCwKjFP8uBZDTN9NwneamumR4kIdzkYtXlAVYB0Cv2jL55PI+mxy53MCP9sgl7laYGB8
+         7Fyw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793591296; x=1794196096;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=B3x9s/6EVM4gCHk/aCUx2i0TPJIArf9E/dcZEMYK5gY=;
+        b=uCG/OBwngFAAcJzFSj2vJaefAvvnadVQUTQngchzZvdXUxingqSYNHrsFx4oSNlNUg
+         MB0srdZ47ikKS87TZaRsC3iu14CGKE6nqpBHV8yNk6mNsfPGWMFzxUMn/5V8a24vUiMD
+         eLfVSgrcGpoMLhLJkg0zBYU0M0Nk8w2qZ6Nt+6rXInAhu4AujUKViR/1BYVbkLEhEbV1
+         eGTQ1ZbUTCjsNdWSdwC+TB2/ftFfUjvOi1WTxIanoYKdgBsOWX2cfze08xkh3fX5b6Y2
+         r6EiFlhR0tgYZoxJfAcip+e89DwWJuHtAmxHYBAv+ySEoPQci126gDATSp0UzJrQXylB
+         h0YA==
+X-Gm-Message-State: AFq9FYIGxeOxT03Qh7AyeUngv3+F6V0MbAGk1eoW7Bjgo6IfvgW9KzWw
+	SizxYJUhdIVstOu0L+ueyDVfrWfTEbIfNeyM6SHcvMlcKARL9ZPP8AX+erH3uCGgZhiHSMv2Tpi
+	PRVa4uo+LVEjqbhKLTVZlz626PfCbcos=
+X-Gm-Gg: AYBFou3yPNKVBQa3rllVqFz/c0rDpwoWT0CsjbMiqB8016iKuDzrSD/UKbZTwEzjfWn
+	msJx0A7rfe/87EHqMdymNbl803eDkbBqsBP+eD/9CBqMyyAImRkodILNi8fozNOGd2N/GNOfszH
+	UOQ3ZjfScEhZjcmmvH7TDbCAO+feYdS5FpBCw73W+alHq+KmWKyElFmYz3Pk82A+z8OUepIPBag
+	pc9DzkbLEau641zI58Z/1ut4NdHMFNJCxrYasbyfOC0Tl6ZFlNpbhIKGEua1tNnX7C1TkMGuAnR
+	WQSwRb55UAIrDTNbOUrgk+NLcP9EenXtBmQ+PPWFMv1g1s6//IQQ06C83hl3y4OIPu8H4MG3wzz
+	FT+lke/e3puQWU8YsFFRm8dIKWqbwhrhTrPTS/u+lEMXLXhA8kWsJdybeSa6ScklGKA6wyvI=
+X-Received: by 2002:a05:6870:bacd:b0:4a8:5c86:20bd with SMTP id
+ 586e51a60fabf-4a90764ca98mr5961924fac.14.1793591296222; Sun, 01 Nov 2026
+ 19:48:16 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -85,27 +102,44 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+References: <20261102033244.9330-1-hjf3108@gmail.com> <7065bd99615f46c59171e0fe1672f3a1@realtek.com>
+In-Reply-To: <7065bd99615f46c59171e0fe1672f3a1@realtek.com>
+From: Jie Feng <hjf3108@gmail.com>
+Date: Mon, 2 Nov 2026 11:47:39 +0800
+X-Gm-Features: AclHuK_ILmnjasIrqA0E37vh7pe4UmdcP9K-PuCscZr5IG3089kvsOO8-3MExPw
+Message-ID: <CABOQOSWhp2E1ZiiO8OVzbetH0267m5qA2aoTeOwYaP8s6C+ANQ@mail.gmail.com>
+Subject: Re: [PATCH rtw-next v4] wifi: rtw88: usb: don't report the
+ aggregation buffer as a frame
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, Luka Gejak <luka.gejak@linux.dev>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Hans Ulli Kroll <linux@ulli-kroll.de>, 
+	Kalle Valo <kvalo@kernel.org>, neo_jou <neo_jou@realtek.com>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Ho Jie Feng <hjf3108@gmail.com> wrote:
-> When rtw_usb_tx_agg_skb() has more than one frame queued, it copies them
-> into a new buffer. That buffer was also handed to mac80211, as one
-> additional TX completion.
->=20
-> Report TX status only for the original frames, and free the aggregate
-> buffer without passing it to mac80211.
->=20
-> In the case the ieee80211_purge_tx_queue is called, the frame is
-> passed to ieee80211_report_used_skb. Since it fulfills none of the
-> conditions within the function, the frame is freed as normal without
-> a TX status in that case too
+On Mon, 2 Nov 2026 at 11:36, Ping-Ke Shih <pkshih@realtek.com> wrote:
+>
+> Ho Jie Feng <hjf3108@gmail.com> wrote:
+> > When rtw_usb_tx_agg_skb() has more than one frame queued, it copies them
+> > into a new buffer. That buffer was also handed to mac80211, as one
+> > additional TX completion.
+> >
+> > Report TX status only for the original frames, and free the aggregate
+> > buffer without passing it to mac80211.
+> >
+> > In the case the ieee80211_purge_tx_queue is called, the frame is
+> > passed to ieee80211_report_used_skb. Since it fulfills none of the
+> > conditions within the function, the frame is freed as normal without
+> > a TX status in that case too
+>
+> Miss a period. I'll add it while getting merged.
+Thanks, will be more careful about this.
 
-Miss a period. I'll add it while getting merged.=20
-
->=20
-> Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-> Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
-> Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
-
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-
-
+> >
+> > Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
+> > Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
+> > Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+>
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+>
+>
