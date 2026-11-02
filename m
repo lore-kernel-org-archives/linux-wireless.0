@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793655840;
-	b=RDryt/5MDlzDuBDbtSpj2pxU+tcvuFMzpkU2LXcH2hIBBHCo/SUw9CyDbrsZ4nOl/8Rl
-	 VaGyoqYcwJ5/Tsb84TmauhUnv5v55c7SK2f/hufZIQMeHfvQ0Tp3aSunD0EUGgDYnqnFk
-	 B167x5h1dTT4X7UazC4dROhzarKaKv718wi0BIJ3puHsyHq5g414O5BntlDkhioGPYmoA
-	 VnXYmG5ElelibZcor0Wrqpc3bSWMm6lWAjm3sjZl8to20iIq/uqcy4fPbZYw16fm/4oJB
-	 ID3kKGImHqImxAYUWJUTK+pP4atxCIWUiZyexmdDbXpsQubkQqzSggbt+mCZ7I6vQFw==
+	b=lxPszd8a4KTcRgv+1pRy+Q2JAJ56Pvy1i07kH+2fwFvQOS9saW4ySJmr3KiUVr8yNeMJ
+	 1mBHYonqUyawpapDEGcs0AIubYFhl6FDg+O9vZde/eFFKNun+skK75gwa0H048+Nch3B9
+	 6POeHGNIbDX3hiqIkEUS6BdwAbY3J8Fy0CFTISqelUJMP/N0+DJaa6w9xJJx8T//sEgVC
+	 x/YKWI2yulmXcDoU3z+yxzMtFBSkcNYS6uiADvviqDPfkyizMQ3yePpba8YW4NqxaXkZg
+	 ez7h32DaaiuiAjsE7ukvr4gPMeINcLkM5y9BKvCxUlqc3KqA1kaPJcvVKJCXznGFK5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793655840;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=MeOuUjaJIb4i7cQnLvy5Mkaw6e43VtuFgfFL4lxzquY=;
-	b=ccRP07Yq6tbDYdd77YwSJMgbp2uKqV/70WqDjDbis+vt1zpqJahrIHea/Ekyh85cyoBm
-	 zIwTgP4r6UXzV46XTVCoY17EkgUffNaL/xbNIQwUNT2BVkur+FtLGwH/xGRMqGuSR7XcA
-	 e7B7MTuixZEBNnGcD2Pb9P/TJGm5urShgOh50XJq6Qx2tY1xmf7FT/SeXaAlGoCFtdUJ6
-	 YrNZ2EayH/5dNfOES6jhDl3/0JRV5j5GzltPbJAhLqJcvmn7wANIeIkbTtrmzZS3fknSX
-	 +MQ74MXZGz0QSlPfz3vOhJrXcgb1asApkYMjpTt7D4qWQbAOb+PIV52quQTvVMUbJuA==
+	bh=MzAtDvGaawULHM6bAnALgRWCkYH1tz+GSE3Xt0DJi9E=;
+	b=u4sidmNs/UAuMxHF29WUMA0jWTMYrxB2XH/aUmG1Yd0/aS8fTgFzLVtBrjxhjdALmdyQ
+	 4gF/iGt0fofbVPNQ7alFmfQ38GvLt/vnP3g+k+H3RlxaL0zjE+p53US1Tqpcbusdpv98G
+	 I+GcKFVey2COtkvCWONjVIuBTCiL+rRNw+GCSC+uHjsYEAzctR4dIScstWPgkWhwvgTR8
+	 dfD//jJGjE0xa4t4AmruCtu5x84+UN3MAGKUbSHt4I7yHn63g5E1rPi9GC71OwRMJz08h
+	 T056rHECLN/icDzZu89FnMEOS1MqqFbv8Y0Ok/RM9p0HwPvK0hivNOCfsTp2B8Sts4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b="yEBIv1/O";
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=mlocLvVC;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145ED606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146B5606A32E
 	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 21:43:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=yEBIv1/O
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=mlocLvVC
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=MeOuUjaJIb4i7cQnLvy5Mkaw6e43VtuFgfFL4lxzquY=;
-	t=1793655839; x=1794865439; b=yEBIv1/OKmk8+4JKAx/6nIUSLCM+D18V7hY6RzhjiiLSOuQ
-	ujxD9b3syj1/tJ96X1WKcVV7wAvoMYnsnU7DbLDB0Qn/S0WU4486wM+3ZYJ3nmSPY6NdJ40PrZpXw
-	odTegUZPYEqWbfGbK21R+xG98eVU+q7hu7d6B9+uyL6CzSlePE1GJJnQ7yh8OEuKmWs7+xkSbyKT1
-	YvbxoUOJbUpkkCrzhWiDNp4MJK5FEPTWOx5c8Qo7qUmUomXBZTENtu1KnyWZl2VcSx/+1q3VAr/Ar
-	GdS0McXb+mpEeqwyz+Nkpp3xc3RpOR2YKii3yFDUT5vW6zU++4gFTeXwFqxGzxbw==;
+	Resent-Cc:Resent-Message-ID; bh=MzAtDvGaawULHM6bAnALgRWCkYH1tz+GSE3Xt0DJi9E=;
+	t=1793655839; x=1794865439; b=mlocLvVCBEtS9QUv5t5PiN9fnEa2OHgkwusfQZAUFlrDgCP
+	P9HNckouFDeusJKV3dgVxyvBbhz67nbFUrJO7vl6oKM9c55bXKtnzDbEdv+hTspn3UagRKYQHhtZf
+	odVl2wO78L5I53BV2uae75ZsmUCegfsjhNQ1k5sw2RFR0wefQPZAAr9FGMRvGH/yuUa5ycByXH6RX
+	HS7qq30Ujm4FSi7L5uoPoJW7cZfxz69+skkUbs+EUb1Al+XjNGds0eLb9BdppUidZB/C0he+i1i6w
+	1D+1DKmQrPuxsXM4ziSl249iCGM5R66IME4fJw8TkPoiMMN8jHl/NU/Cy7AKbWww==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNzor-000000020tw-2o7k;
-	Mon, 02 Nov 2026 22:43:57 +0100
+	id 1xNzoq-000000020tw-0yrY;
+	Mon, 02 Nov 2026 22:43:56 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links in for_each_sta_active_link()
-Date: Mon,  2 Nov 2026 22:42:43 +0100
-Message-ID: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
+Subject: [PATCH wireless-next 6/7] wifi: mac80211: track sta->active_links
+Date: Mon,  2 Nov 2026 22:42:42 +0100
+Message-ID: <20261102224349.756ad7919f4d.I14d08fa299816470230189bc7f6f604b447b78a0@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102214348.1104849-9-johannes@sipsolutions.net>
 References: <20261102214348.1104849-9-johannes@sipsolutions.net>
@@ -69,375 +69,202 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-With the new sta->active_links we can simplify the API
-for for_each_sta_active_link() and no longer require
-the vif to be passed in. This leads to bigger changes
-in drivers, including removal of now unused variables.
+We've always assumed that a station has active_links
+that are simply sta->valid_links & vif->active_links,
+and while this should be true most of the time, during
+SMD transition the target AP MLD will have a different
+(set of) active link(s) than the vif, and needs to be
+added so the state can be transferred over.
 
-It's mostly a cleanup, but will also allow drivers to
-change code better in SMD Transition.
+Add and track sta->active_links, and use it in a few
+places. Upon allocation, a sta initially has no active
+links, it's up to the caller to fix that; document it.
+During link switch, the active links change with the
+interface ones, do that in the drv_change_sta_links()
+wrapper.
 
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/iface.c    |  2 +-
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mld/sta.c      | 15 +++++----------
- drivers/net/wireless/intel/iwlwifi/mld/tx.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 ++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c  | 14 +++++++-------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7925/mcu.c   |  4 ++--
- .../net/wireless/mediatek/mt76/mt7996/debugfs.c   |  5 +----
- drivers/net/wireless/mediatek/mt76/mt7996/main.c  |  6 +++---
- include/net/mac80211.h                            |  6 +++---
- 11 files changed, 31 insertions(+), 39 deletions(-)
+ include/net/mac80211.h    |  3 +++
+ net/mac80211/cfg.c        |  8 ++++++++
+ net/mac80211/driver-ops.c | 13 ++++++++++---
+ net/mac80211/key.c        | 10 +++++++---
+ net/mac80211/mlme.c       |  8 ++++++--
+ net/mac80211/sta_info.c   | 12 ++++++++++--
+ net/mac80211/sta_info.h   |  1 +
+ 7 files changed, 45 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
-index 0307abff5644..1d66f106e7bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/iface.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
-@@ -155,7 +155,7 @@ static void iwl_mld_mac_wifi_gen_sta_iter(void *_data,
- 	if (mld_sta->vif != data->vif)
- 		return;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e54fa07e2cbf..335eee075952 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2727,6 +2727,8 @@ struct ieee80211_link_sta {
+  *	would be assigned to link[link_id] where link_id is the id assigned
+  *	by the AP.
+  * @valid_links: bitmap of valid links, or 0 for non-MLO
++ * @active_links: bitmap of active links, always a subset of @valid_links;
++ *	unused (0) for non-MLO
+  * @spp_amsdu: indicates whether the STA uses SPP A-MSDU or not.
+  * @epp_peer: indicates that the peer is an EPP peer.
+  * @cip: indicates whether the STA uses control frame protection or not.
+@@ -2762,6 +2764,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
  
--	for_each_sta_active_link(data->vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		if (link_sta->he_cap.has_he)
- 			data->support->he_support = 1;
- 		if (link_sta->eht_cap.has_eht)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index 99cbd279ce48..898e376e2979 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -1745,7 +1745,7 @@ static void iwl_mld_link_set_2mhz_block(struct iwl_mld *mld,
- 	struct ieee80211_link_sta *link_sta;
- 	unsigned int link_id;
+ 	u16 valid_links;
++	u16 active_links;
+ 	u16 ext_mld_capa_ops;
+ 	bool epp_peer;
+ 	struct ieee80211_link_sta deflink;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 38898fd58692..9e47360ee8f5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2935,6 +2935,14 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct wireless_dev *wdev,
  
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct ieee80211_bss_conf *link_conf =
- 			link_conf_dereference_protected(vif, link_id);
- 		struct iwl_mld_link *mld_link =
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.c b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-index 97f013330f06..cf86f1da959b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-@@ -720,7 +720,7 @@ int iwl_mld_update_all_link_stations(struct iwl_mld *mld,
- 	struct ieee80211_link_sta *link_sta;
- 	int link_id;
+ 		sta = sta_info_alloc_with_link(link, mac,
+ 					       params->link_sta_params.link_mac ?: mac);
++
++		/*
++		 * In this path (AP side), the link the station is created for
++		 * must be active, so just set the active links.
++		 */
++		if (sta)
++			sta->sta.active_links =
++				BIT(params->link_sta_params.link_id);
+ 	} else {
+ 		sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
+ 	}
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index 1f3e0765a8ab..e616bfbe687b 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -515,9 +515,14 @@ int drv_set_key(struct ieee80211_local *local,
+ 	if (!check_sdata_in_driver(sdata))
+ 		return -EIO;
  
--	for_each_sta_active_link(mld_sta->vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		int ret = iwl_mld_add_modify_sta_cmd(mld, link_sta);
+-	if (WARN_ON(key->link_id >= 0 && sdata->vif.active_links &&
+-		    !(sdata->vif.active_links & BIT(key->link_id))))
+-		return -ENOLINK;
++	if (key->link_id >= 0) {
++		u16 active_links = sta ? sta->active_links :
++					 sdata->vif.active_links;
++
++		if (WARN_ON(active_links &&
++			    !(active_links & BIT(key->link_id))))
++			return -ENOLINK;
++	}
  
- 		if (ret)
-@@ -815,7 +815,6 @@ iwl_mld_init_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
- int iwl_mld_add_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
- 		    struct ieee80211_vif *vif)
- {
--	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
- 	struct ieee80211_link_sta *link_sta;
- 	enum iwl_fw_sta_type type;
- 	int link_id;
-@@ -841,7 +840,7 @@ int iwl_mld_add_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
- 	 * in the restart case if the single link that is active during
- 	 * reconfig is not the deflink one.
- 	 */
--	for_each_sta_active_link(mld_sta->vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		ret = iwl_mld_add_link_sta(mld, link_sta);
- 		if (ret)
- 			goto destroy_sta;
-@@ -857,11 +856,10 @@ int iwl_mld_add_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
- 
- void iwl_mld_flush_sta_txqs(struct iwl_mld *mld, struct ieee80211_sta *sta)
- {
--	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
- 	struct ieee80211_link_sta *link_sta;
- 	int link_id;
- 
--	for_each_sta_active_link(mld_sta->vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		int fw_sta_id = iwl_mld_fw_sta_id_from_link_sta(mld, link_sta);
- 
- 		if (fw_sta_id < 0)
-@@ -892,8 +890,6 @@ void iwl_mld_wait_sta_txqs_empty(struct iwl_mld *mld, struct ieee80211_sta *sta)
- 
- void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta)
- {
--	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
--	struct ieee80211_vif *vif = mld_sta->vif;
- 	struct ieee80211_link_sta *link_sta;
- 	u8 link_id;
- 
-@@ -909,7 +905,7 @@ void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta)
- 	for (int i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		iwl_mld_remove_txq(mld, sta->txq[i]);
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		/* Mac8011 will remove the groupwise keys after the sta is
- 		 * removed, but FW expects all the keys to be removed before
- 		 * the STA is, so remove them all here.
-@@ -926,7 +922,6 @@ void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta)
- 
- u32 iwl_mld_fw_sta_id_mask(struct iwl_mld *mld, struct ieee80211_sta *sta)
- {
--	struct ieee80211_vif *vif = iwl_mld_sta_from_mac80211(sta)->vif;
- 	struct ieee80211_link_sta *link_sta;
- 	unsigned int link_id;
- 	u32 result = 0;
-@@ -940,7 +935,7 @@ u32 iwl_mld_fw_sta_id_mask(struct iwl_mld *mld, struct ieee80211_sta *sta)
- 	 */
- 	lockdep_assert_wiphy(mld->wiphy);
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		int fw_id = iwl_mld_fw_sta_id_from_link_sta(mld, link_sta);
- 
- 		if (!(fw_id < 0))
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tx.c b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-index 44aa317b8e7d..882e36aa1ec6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-@@ -182,7 +182,7 @@ iwl_mld_get_queue_size(struct iwl_mld *mld, struct ieee80211_txq *txq)
- 
- 	lockdep_assert_wiphy(mld->wiphy);
- 
--	for_each_sta_active_link(txq->vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		if (link_sta->eht_cap.has_eht) {
- 			max_size = IWL_DEFAULT_QUEUE_SIZE_EHT;
- 			break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 937232882ea2..0f7f03b03037 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3692,7 +3692,7 @@ static bool iwl_mvm_vif_conf_from_sta(struct iwl_mvm *mvm,
- 	 * wpa_s will blocklist the AP...
- 	 */
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct ieee80211_bss_conf *link_conf =
- 			link_conf_dereference_protected(vif, link_id);
- 
-@@ -3721,7 +3721,7 @@ static void iwl_mvm_vif_set_he_support(struct ieee80211_hw *hw,
- 	struct ieee80211_link_sta *link_sta;
- 	unsigned int link_id;
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct ieee80211_bss_conf *link_conf =
- 			link_conf_dereference_protected(vif, link_id);
- 
-@@ -3775,7 +3775,7 @@ iwl_mvm_sta_state_notexist_to_none(struct iwl_mvm *mvm,
+ 	if (fips_enabled)
+ 		return -EOPNOTSUPP;
+@@ -621,6 +626,8 @@ int drv_change_sta_links(struct ieee80211_local *local,
  	if (ret)
  		return ret;
  
--	for_each_sta_active_link(vif, sta, link_sta, i)
-+	for_each_sta_active_link(sta, link_sta, i)
- 		link_sta->agg.max_rc_amsdu_len = 1;
++	sta->active_links = new_links;
++
+ 	/* during reconfig don't add it to debugfs again */
+ 	if (local->in_reconfig || local->resuming)
+ 		return 0;
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index d1e3fe37d2e3..9b6a1f0627c6 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -197,9 +197,13 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 		}
+ 	}
  
- 	ieee80211_sta_recalc_aggregates(sta);
-@@ -3833,7 +3833,7 @@ iwl_mvm_sta_state_auth_to_assoc(struct ieee80211_hw *hw,
- 		if (!mvm->mld_api_is_used)
- 			goto out;
+-	if (key->conf.link_id >= 0 && sdata->vif.active_links &&
+-	    !(sdata->vif.active_links & BIT(key->conf.link_id)))
+-		return 0;
++	if (key->conf.link_id >= 0) {
++		u16 active_links = sta ? sta->sta.active_links :
++					 sdata->vif.active_links;
++
++		if (active_links && !(active_links & BIT(key->conf.link_id)))
++			return 0;
++	}
  
--		for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+		for_each_sta_active_link(sta, link_sta, link_id) {
- 			struct ieee80211_bss_conf *link_conf =
- 				link_conf_dereference_protected(vif, link_id);
+ 	ret = drv_set_key(key->local, SET_KEY, sdata,
+ 			  sta ? &sta->sta : NULL, &key->conf);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8b95a3277066..4caa1853531a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -9763,11 +9763,15 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 	}
  
-@@ -4004,7 +4004,7 @@ int iwl_mvm_mac_sta_state_common(struct ieee80211_hw *hw,
- 	 * legit to have phy_ctxt = NULL. Don't bother not to WARN if we are in
- 	 * recovery flow since we spit tons of error messages anyway.
- 	 */
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		if (WARN_ON_ONCE(!mvmvif->link[link_id] ||
- 				 !mvmvif->link[link_id]->phy_ctxt)) {
- 			mutex_unlock(&mvm->mutex);
-@@ -5752,7 +5752,7 @@ void iwl_mvm_mac_flush_sta(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	int link_id;
+ 	if (!have_sta) {
+-		if (mlo)
++		if (mlo) {
+ 			new_sta = sta_info_alloc_with_link(link, ap_mld_addr,
+ 							   cbss->bssid);
+-		else
++			/* the auth/assoc link is currently the active link */
++			if (new_sta)
++				new_sta->sta.active_links = BIT(link_id);
++		} else {
+ 			new_sta = sta_info_alloc(sdata, ap_mld_addr, GFP_KERNEL);
++		}
  
- 	guard(mvm)(mvm);
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		mvm_link_sta = rcu_dereference_protected(mvmsta->link[link_id],
- 							 lockdep_is_held(&mvm->mutex));
- 		if (!mvm_link_sta)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index da7ed4639a93..483656d39bcc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ 		if (!new_sta) {
+ 			err = -ENOMEM;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index a86da3c70152..a9c0f873266d 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -672,6 +672,7 @@ __sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 		sta_info_add_link(sta, link_id, &sta->deflink,
+ 				  &sta->sta.deflink);
+ 		sta->sta.valid_links = BIT(link_id);
++		/* active_links isn't set yet */
+ 	} else {
+ 		sta_info_add_link(sta, 0, &sta->deflink, &sta->sta.deflink);
+ 	}
+@@ -1087,7 +1088,7 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+ 				continue;
+ 
+ 			ieee80211_link_sta_debugfs_add(link_sta);
+-			if (sdata->vif.active_links & BIT(i))
++			if (sta->sta.active_links & BIT(i))
+ 				ieee80211_link_sta_debugfs_drv_add(link_sta);
+ 		}
+ 	} else {
+@@ -2598,7 +2599,7 @@ void ieee80211_sta_recalc_aggregates(struct ieee80211_sta *pubsta)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 
+-	__ieee80211_sta_recalc_aggregates(sta, sta->sdata->vif.active_links);
++	__ieee80211_sta_recalc_aggregates(sta, sta->sta.active_links);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_recalc_aggregates);
+ 
+@@ -3647,6 +3648,13 @@ void ieee80211_sta_remove_link(struct sta_info *sta, unsigned int link_id)
+ 		ieee80211_unlink_link_sta_keys(sta->local, link_sta);
+ 
+ 	sta->sta.valid_links &= ~BIT(link_id);
++	sta->sta.active_links &= ~BIT(link_id);
++
++	WARN(!sta->sta.valid_links || !sta->sta.active_links,
++	     "STA %pM has no links after removing %d (valid:0x%x, active:0x%x)\n",
++	     sta->sta.addr, link_id,
++	     sta->sta.valid_links,
++	     sta->sta.active_links);
+ 
+ 	if (!WARN_ON(!test_sta_flag(sta, WLAN_STA_INSERTED)))
+ 		drv_change_sta_links(sdata->local, sdata, &sta->sta,
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 110788c0d623..4b1c441b610e 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -922,6 +922,7 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
  /*
-- * Copyright (C) 2022-2025 Intel Corporation
-+ * Copyright (C) 2022-2026 Intel Corporation
+  * Create a new STA info, caller owns returned structure
+  * until sta_info_insert().
++ * Note: neither allocation function sets sta->sta.active_links!
   */
- #include "mvm.h"
- #include "time-sync.h"
-@@ -573,7 +573,7 @@ static int iwl_mvm_mld_alloc_sta_links(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		if (WARN_ON(mvm_sta->link[link_id]))
- 			continue;
- 
-@@ -620,7 +620,7 @@ static int iwl_mvm_alloc_sta_after_restart(struct iwl_mvm *mvm,
- 	 * a valid station. Since we need a link_id to allocate a station,
- 	 * pick up the first valid one.
- 	 */
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct iwl_mvm_vif_link_info *mvm_link;
- 		struct ieee80211_bss_conf *link_conf =
- 			link_conf_dereference_protected(vif, link_id);
-@@ -685,7 +685,7 @@ int iwl_mvm_mld_add_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (ret)
- 		goto err;
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct ieee80211_bss_conf *link_conf =
- 			link_conf_dereference_protected(vif, link_id);
- 		struct iwl_mvm_link_sta *mvm_link_sta =
-@@ -736,7 +736,7 @@ int iwl_mvm_mld_update_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct ieee80211_bss_conf *link_conf =
- 			link_conf_dereference_protected(vif, link_id);
- 		struct iwl_mvm_link_sta *mvm_link_sta =
-@@ -796,7 +796,7 @@ int iwl_mvm_mld_rm_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	/* flush its queues here since we are freeing mvm_sta */
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct iwl_mvm_link_sta *mvm_link_sta =
- 			rcu_dereference_protected(mvm_sta->link[link_id],
- 						  lockdep_is_held(&mvm->mutex));
-@@ -816,7 +816,7 @@ int iwl_mvm_mld_rm_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	iwl_mvm_mld_disable_sta_queues(mvm, vif, sta);
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct iwl_mvm_link_sta *mvm_link_sta =
- 			rcu_dereference_protected(mvm_sta->link[link_id],
- 						  lockdep_is_held(&mvm->mutex));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index a66128a62546..45f5816abcb7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -863,7 +863,7 @@ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
- 		unsigned int link_id;
- 
- 		rcu_read_lock();
--		for_each_sta_active_link(mvmsta->vif, sta, link_sta, link_id) {
-+		for_each_sta_active_link(sta, link_sta, link_id) {
- 			struct iwl_mvm_link_sta *link =
- 				rcu_dereference_protected(mvmsta->link[link_id],
- 							  lockdep_is_held(&mvm->mutex));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 26cdb3f0a98a..5c227e853d04 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -767,7 +767,7 @@ int mt7925_mcu_uni_tx_ba(struct mt792x_dev *dev,
- 	struct ieee80211_link_sta *link_sta;
- 	unsigned int link_id;
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct mt792x_link_sta *mlink;
- 		struct mt792x_bss_conf *mconf;
- 		int ret;
-@@ -801,7 +801,7 @@ int mt7925_mcu_uni_rx_ba(struct mt792x_dev *dev,
- 	struct ieee80211_link_sta *link_sta;
- 	unsigned int link_id;
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct mt792x_link_sta *mlink;
- 		struct mt792x_bss_conf *mconf;
- 		int ret;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7996/debugfs.c
-index 644abd0a0216..44a653deedc0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/debugfs.c
-@@ -776,14 +776,11 @@ mt7996_sta_hw_queue_read(void *data, struct ieee80211_sta *sta)
- 	struct mt7996_vif *mvif = msta->vif;
- 	struct ieee80211_link_sta *link_sta;
- 	struct seq_file *s = data;
--	struct ieee80211_vif *vif;
- 	unsigned int link_id;
- 
--	vif = container_of((void *)mvif, struct ieee80211_vif, drv_priv);
--
- 	rcu_read_lock();
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct mt7996_sta_link *msta_link;
- 		struct mt76_vif_link *mlink;
- 		struct mt7996_phy *phy;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 873c5aef4935..6ec862c01446 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1338,7 +1338,7 @@ u16 mt7996_mac_sta_links(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 	unsigned int link_id;
- 	u16 links = 0;
- 
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct mt7996_sta_link *msta_link;
- 
- 		msta_link = mt7996_sta_link_protected(dev, msta, link_id);
-@@ -2522,7 +2522,7 @@ static void mt7996_sta_set_4addr(struct ieee80211_hw *hw,
- 	mutex_lock(&dev->mt76.mutex);
- 
- 	assign_bit(MT_WCID_FLAG_4ADDR, &msta->wcid_flags, enabled);
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct mt7996_sta_link *msta_link;
- 		struct mt7996_vif_link *link;
- 
-@@ -2558,7 +2558,7 @@ static void mt7996_sta_set_decap_offload(struct ieee80211_hw *hw,
- 	mutex_lock(&dev->mt76.mutex);
- 
- 	assign_bit(MT_WCID_FLAG_HDR_TRANS, &msta->wcid_flags, enabled);
--	for_each_sta_active_link(vif, sta, link_sta, link_id) {
-+	for_each_sta_active_link(sta, link_sta, link_id) {
- 		struct mt7996_sta_link *msta_link;
- 		struct mt7996_vif_link *link;
- 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 335eee075952..f156af2210f3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2796,10 +2796,10 @@ static inline bool lockdep_sta_mutex_held(struct ieee80211_sta *pubsta)
- 	rcu_dereference_check((sta)->link[link_id],		\
- 			      lockdep_sta_mutex_held(sta))
- 
--#define for_each_sta_active_link(vif, sta, link_sta, link_id)			\
-+#define for_each_sta_active_link(sta, link_sta, link_id)			\
- 	for (link_id = 0; link_id < ARRAY_SIZE((sta)->link); link_id++)		\
--		if ((!(vif)->active_links ||					\
--		     (vif)->active_links & BIT(link_id)) &&			\
-+		if ((!(sta)->active_links ||					\
-+		     (sta)->active_links & BIT(link_id)) &&			\
- 		    ((link_sta) = link_sta_dereference_check(sta, link_id)))
- 
- /**
+ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *addr, gfp_t gfp);
 -- 
 2.56.0
 
