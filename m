@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793651937;
-	b=00PaGgEHXj/4TpTa7kNOjNSB6KpT+5UZCL/kOs9LiW/wUFO0rDn5PGp+3vUICgCGBiok
-	 vW2nUfrx3JU61HNkV3DI3aLJ0643xJyui7IOIJnb4h3Tz2oAeT0tDBMfpZOcnt7f+bQEe
-	 j3zC6kRHisol/2Efr/Rn1wtkWx33S14inyYDueF2bmNTvACghrroN0jtB/18RHxLTG7xu
-	 B+3RSnI6aS7s35mU4CinDTVerTgJ9u9afT4ehAFw9+Z0c6xynMg838UofhTQmLAVUaXix
-	 ucDRgH5NipNzErjw/K5jMaDrD4F3Y7Owj69SdlLJKqAnjYwuRPilFqKDVYujlg7Hd2w==
+	t=1793651928;
+	b=GtlaXBT+nuHDW4eMyNd5J9nMFFtgcKmPCpxu2r7yWIX7W0xmkrWXFaPK4Q9kDxVKUS0Q
+	 W6ctQf0K8dxl+e3+p3pcL79PhVzzm502I4PnaAMwIhkYx7doJ6wFx41S/6YtietBNSxUC
+	 CSQx+0HFIfDJQUlPnUTRgIk8fHaYg19LlYPNBsSGQ9053XLFQlFbjaOCNHU/AUFn9fZyU
+	 dK/bFBo2FRG2NWYNktBEKtAlEwOUc8COIBUbNtDNdsUFCBXYUeBNQ5uMZzZU2kKu1aYuI
+	 OQRjBUinD/2hT2QlbTnmKDRG22pkRuvk5cgT0gJrV2VQepY6S9lLOZ9X3nFXpo8WRzQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793651937;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793651928;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=bLRE5HiN1ggMyWHzr5g65cBcKs1mRX1Fkp1vppWex6E=;
-	b=S0jz/o7kIGYi9VwI+ortUpZiVJtlrRPy9THw77Jv2c4rGq5qu6L+9Gm4xVXjroIz+gxw
-	 GTjeU/l/zBv05qWzzBSnFL7cwjO3r/0LcH5V0fBTbv3L0uOf1IuhZ1gYxrXjFeVChevYn
-	 JrYeRrlX8XO1W7eX8smdNkzBUo9SiFM624OByawburorOGVlZoAvQbB2rygdpHe9AvVNv
-	 ez9YCuSnnl71RKoUHFxP1J+NheP404rtfuf1CPLwARZpPrAUpqoEV1BrnFiN652SqzMIe
-	 6cEDGCJCFLY1YXSmEOIgZ6hTQp37Hh3pgNVu9ropi140cipvgNrdmV70f8/ck8lj9gg==
+	bh=oZfVkYglp2cnNyGkrWUM7Mcdrg+Ti8irgS02Fa8b0Ig=;
+	b=MXR9qsKnYnMU8yU26/2EyBaIZxuLbuhoyMwygltlySSDiOL9muKto+GTqy+eap21pa/L
+	 3+Z0mJGWpLQnuW0g9LYh42PkBZg22IsWWX0FlcVG2UOyPR4N5GNIIg9C+4Ht3YmQo08IV
+	 fpaurVjqr4ij+mxk/IPg3gBIlor18+1Yel6nyTsOKHpXtIW1/N9Pr9ATbBFeJ29wk6SNO
+	 SVsriA9SmdBpmoxY4TdEZojq2KmuDwPQwNaD4xtZxicJprGf3d7PnCvc2Al8w4Zp4/fek
+	 9+0N+x+rl8HuL9ibYGg6Kmw1oobb1jYLakbmJ5T3OXVL2hTpwMKwS2dxey7j+CGqQ9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=L90Ge2JP;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=n3kVib79;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76108606D823
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:38:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5E1F606EE97
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:38:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=L90Ge2JP
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=n3kVib79
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=bLRE5HiN1ggMyWHzr5g65cBcKs1mRX1Fkp1vppWex6E=;
-	t=1793651937; x=1794861537; b=L90Ge2JPqGXmOeL5zeZnzKLOvw/xrC+XS9g+RFzUcV20sH9
-	AxrWuoDAFHra+YkeYq5rxjJyXea2+RG+5JVfgJc2aOTfBec3WYkZdCQtWx58LaRJp7L3CTLBB4JQu
-	0PhIGmoDg6BcjlO3DmmudiYtJJPGTvvbWwpyw4srI3nOyMKlgr7+/SntY78s1QqThL+CDfEhUqrDe
-	ftRC0cVU0xzpVIeooO019Qi47+trCVKcCNPID5JF4rr874pb1Q9Aw25tQahkCBbAWJCmQFsqWCaQr
-	jstVNTF34j8LA3YHA34uM83uqwXSB8K4ZIQMkDlDlIkxOZ4EIf1ZjccQSC1pF8gw==;
+	Resent-Cc:Resent-Message-ID; bh=oZfVkYglp2cnNyGkrWUM7Mcdrg+Ti8irgS02Fa8b0Ig=;
+	t=1793651927; x=1794861527; b=n3kVib790tbY69811JWBJJqU/QLz/uI+3mw/3uIl0Gawi4L
+	+/q5e18LDGkzvjV0t3FF3WVXkhyaRp6ppgBCYW5MxKtLMQHf1iswH5rL8hhCGAPCsmtqXYrWLbJ8v
+	h9WSqebPeUyHh3/uPD9zA8rPp4cE0D954ouF2upjTcA+c1SvTwWQVhy+hw0vwitn4Fpi+Sr5BvnLe
+	5aqhVN5MxSdvYnPE9QsBjqcvdiA5G3KqXSU7jlO5wI630pKUULmS+xUGaRxOksod1Ve2D9lPoCjxe
+	ypzUi301c2rehv1kL7t5vQvcvavygpZsa6qmCwtE/PS6A5e7DplRjKtFKJZjkQwQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNynv-00000001vzr-1PLX;
-	Mon, 02 Nov 2026 21:38:55 +0100
+	id 1xNynk-00000001vzr-42yu;
+	Mon, 02 Nov 2026 21:38:45 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 17/30] wifi: mac80211: move ieee80211_txq_enqueue() up
-Date: Mon,  2 Nov 2026 21:23:07 +0100
-Message-ID: <20261102203831.1058362-49-johannes@sipsolutions.net>
+Subject: [PATCH 11/30] wifi: mac80211: mesh: release frames from TXQs sleeping peers
+Date: Mon,  2 Nov 2026 21:23:01 +0100
+Message-ID: <20261102203831.1058362-43-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102203831.1058362-32-johannes@sipsolutions.net>
 References: <20261102203831.1058362-32-johannes@sipsolutions.net>
@@ -69,167 +69,146 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-ieee80211_txq_enqueue() will be needed by the powersave buffering
-code, so move it and the helpers it uses before that, to avoid a
-forward declaration. No functional changes.
+Frames may be held on the TXQs of a mesh peer in powersave,
+e.g. frames that were already queued when the peer entered
+powersave. Release them in mesh peer service periods, and
+consider them for more-data and service periods.
 
 Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 126 +++++++++++++++++++++++-----------------------
- 1 file changed, 63 insertions(+), 63 deletions(-)
+ net/mac80211/mesh_ps.c  | 42 +++++++++++++++++++++++++++++------------
+ net/mac80211/sta_info.c |  9 ++++-----
+ net/mac80211/sta_info.h |  4 ++++
+ 3 files changed, 38 insertions(+), 17 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c29dec9d049d..aca68ab112e0 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -308,6 +308,69 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 	return TX_CONTINUE;
- }
+diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+index 0ec207ee845b..0916de33e6a9 100644
+--- a/net/mac80211/mesh_ps.c
++++ b/net/mac80211/mesh_ps.c
+@@ -458,6 +458,7 @@ static void mpsp_qos_null_append(struct sta_info *sta,
+ static void mps_frame_deliver(struct sta_info *sta, int n_frames)
+ {
+ 	struct ieee80211_local *local = sta->sdata->local;
++	unsigned long txq_buffered_tids;
+ 	int ac;
+ 	struct sk_buff_head frames;
+ 	struct sk_buff *skb;
+@@ -465,18 +466,29 @@ static void mps_frame_deliver(struct sta_info *sta, int n_frames)
  
-+static void ieee80211_set_skb_enqueue_time(struct sk_buff *skb)
-+{
-+	struct sk_buff *next;
-+	codel_time_t now = codel_get_time();
+ 	skb_queue_head_init(&frames);
+ 
+-	/* collect frame(s) from buffers */
++	if (n_frames < 0)
++		n_frames = INT_MAX;
 +
-+	skb_list_walk_safe(skb, skb, next)
-+		IEEE80211_SKB_CB(skb)->control.enqueue_time = now;
-+}
-+
-+static void fq_skb_free_func(struct fq *fq,
-+			     struct fq_tin *tin,
-+			     struct fq_flow *flow,
-+			     struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local;
-+
-+	local = container_of(fq, struct ieee80211_local, fq);
-+	ieee80211_free_txskb(&local->hw, skb);
-+}
-+
-+static void ieee80211_txq_enqueue(struct ieee80211_local *local,
-+				  struct txq_info *txqi,
-+				  struct sk_buff *skb)
-+{
-+	struct fq *fq = &local->fq;
-+	struct fq_tin *tin = &txqi->tin;
-+	struct sta_info *sta = NULL;
-+	u32 flow_idx;
-+
-+	ieee80211_set_skb_enqueue_time(skb);
-+
-+	spin_lock_bh(&fq->lock);
-+	/* TXQ becomes non-empty, update TIM if STA is sleeping */
-+	if (txqi->txq.sta && !txq_has_queue(&txqi->txq)) {
-+		sta = container_of(txqi->txq.sta, struct sta_info, sta);
-+		if (!test_sta_flag(sta, WLAN_STA_PS_STA) &&
-+		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER))
-+			sta = NULL;
-+	}
++	txq_buffered_tids = ieee80211_sta_txq_buffered_tids(sta);
 +
 +	/*
-+	 * For management frames, don't really apply codel etc.,
-+	 * we don't want to apply any shaping or anything we just
-+	 * want to simplify the driver API by having them on the
-+	 * txqi.
++	 * collect frame(s) from buffers, frames on the TXQs were queued
++	 * before those on the PS buffer
 +	 */
-+	if (unlikely(txqi->txq.tid == IEEE80211_NUM_TIDS)) {
-+		IEEE80211_SKB_CB(skb)->control.flags |=
-+			IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
-+		__skb_queue_tail(&txqi->frags, skb);
-+	} else {
-+		flow_idx = fq_flow_idx(fq, skb);
-+		fq_tin_enqueue(fq, tin, flow_idx, skb,
-+			       fq_skb_free_func);
-+	}
-+	spin_unlock_bh(&fq->lock);
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+-		while (n_frames != 0) {
+-			skb = skb_dequeue(&sta->tx_filtered[ac]);
+-			if (!skb) {
+-				skb = skb_dequeue(
+-					&sta->ps_tx_buf[ac]);
+-				if (skb)
+-					local->total_ps_buffered--;
+-			}
+-			if (!skb)
+-				break;
++		while (n_frames > 0 &&
++		       (skb = skb_dequeue(&sta->tx_filtered[ac]))) {
++			n_frames--;
++			__skb_queue_tail(&frames, skb);
++		}
 +
-+	if (sta) {
-+		sta_info_recalc_tim(sta);
-+		sta_info_schedule_cleanup(local);
-+	}
-+}
++		n_frames = ieee80211_sta_ps_dequeue_txqs(sta,
++				txq_buffered_tids & ieee80211_tids_for_ac(ac),
++				n_frames, &frames);
 +
- /* This function is called whenever the AP is about to exceed the maximum limit
-  * of buffered frames for power saving STAs. This situation should not really
-  * happen often during normal operation, so dropping the oldest buffered packet
-@@ -1332,15 +1395,6 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 	return to_txq_info(txq);
++		while (n_frames > 0 &&
++		       (skb = skb_dequeue(&sta->ps_tx_buf[ac]))) {
++			local->total_ps_buffered--;
+ 			n_frames--;
+ 			__skb_queue_tail(&frames, skb);
+ 		}
+@@ -486,6 +498,9 @@ static void mps_frame_deliver(struct sta_info *sta, int n_frames)
+ 			more_data = true;
+ 	}
+ 
++	if (ieee80211_sta_txq_buffered_tids(sta))
++		more_data = true;
++
+ 	/* nothing to send? -> EOSP */
+ 	if (skb_queue_empty(&frames)) {
+ 		mpsp_trigger_send(sta, false, true);
+@@ -599,10 +614,13 @@ void ieee80211_mps_frame_release(struct sta_info *sta,
+ 	    (!elems->awake_window || !get_unaligned_le16(elems->awake_window)))
+ 		return;
+ 
+-	if (!test_sta_flag(sta, WLAN_STA_MPSP_OWNER))
++	if (!test_sta_flag(sta, WLAN_STA_MPSP_OWNER)) {
+ 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+ 			buffer_local += skb_queue_len(&sta->ps_tx_buf[ac]) +
+ 					skb_queue_len(&sta->tx_filtered[ac]);
++		if (ieee80211_sta_txq_buffered_tids(sta))
++			buffer_local++;
++	}
+ 
+ 	if (!has_buffered && !buffer_local)
+ 		return;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 78a4c7d7ed1b..7175dfa41b01 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1081,7 +1081,7 @@ static inline bool __bss_tim_get(u8 *tim, u16 id)
+ 	return tim[id / 8] & (1 << (id % 8));
  }
  
--static void ieee80211_set_skb_enqueue_time(struct sk_buff *skb)
--{
--	struct sk_buff *next;
--	codel_time_t now = codel_get_time();
--
--	skb_list_walk_safe(skb, skb, next)
--		IEEE80211_SKB_CB(skb)->control.enqueue_time = now;
--}
--
- static u32 codel_skb_len_func(const struct sk_buff *skb)
+-static unsigned long ieee80211_tids_for_ac(int ac)
++unsigned long ieee80211_tids_for_ac(int ac)
  {
- 	return skb->len;
-@@ -1471,60 +1525,6 @@ static struct sk_buff *fq_tin_dequeue_func(struct fq *fq,
- 			     codel_dequeue_func);
+ 	/* If we ever support TIDs > 7, this obviously needs to be adjusted */
+ 	switch (ac) {
+@@ -1099,7 +1099,7 @@ static unsigned long ieee80211_tids_for_ac(int ac)
+ 	}
  }
  
--static void fq_skb_free_func(struct fq *fq,
--			     struct fq_tin *tin,
--			     struct fq_flow *flow,
--			     struct sk_buff *skb)
--{
--	struct ieee80211_local *local;
--
--	local = container_of(fq, struct ieee80211_local, fq);
--	ieee80211_free_txskb(&local->hw, skb);
--}
--
--static void ieee80211_txq_enqueue(struct ieee80211_local *local,
--				  struct txq_info *txqi,
--				  struct sk_buff *skb)
--{
--	struct fq *fq = &local->fq;
--	struct fq_tin *tin = &txqi->tin;
--	struct sta_info *sta = NULL;
--	u32 flow_idx;
--
--	ieee80211_set_skb_enqueue_time(skb);
--
--	spin_lock_bh(&fq->lock);
--	/* TXQ becomes non-empty, update TIM if STA is sleeping */
--	if (txqi->txq.sta && !txq_has_queue(&txqi->txq)) {
--		sta = container_of(txqi->txq.sta, struct sta_info, sta);
--		if (!test_sta_flag(sta, WLAN_STA_PS_STA) &&
--		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER))
--			sta = NULL;
--	}
--
--	/*
--	 * For management frames, don't really apply codel etc.,
--	 * we don't want to apply any shaping or anything we just
--	 * want to simplify the driver API by having them on the
--	 * txqi.
--	 */
--	if (unlikely(txqi->txq.tid == IEEE80211_NUM_TIDS)) {
--		IEEE80211_SKB_CB(skb)->control.flags |=
--			IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
--		__skb_queue_tail(&txqi->frags, skb);
--	} else {
--		flow_idx = fq_flow_idx(fq, skb);
--		fq_tin_enqueue(fq, tin, flow_idx, skb,
--			       fq_skb_free_func);
--	}
--	spin_unlock_bh(&fq->lock);
--
--	if (sta) {
--		sta_info_recalc_tim(sta);
--		sta_info_schedule_cleanup(local);
--	}
--}
--
- bool ieee80211_txq_queue_filtered(struct ieee80211_local *local,
- 				  struct txq_info *txqi, struct sk_buff *skb)
+-static unsigned long ieee80211_sta_txq_buffered_tids(struct sta_info *sta)
++unsigned long ieee80211_sta_txq_buffered_tids(struct sta_info *sta)
  {
+ 	struct fq *fq = &sta->local->fq;
+ 	unsigned long tids = 0;
+@@ -2099,9 +2099,8 @@ static bool ieee80211_sta_ps_frame_ends_bu(struct sk_buff *skb)
+ 	return !ieee80211_has_morefrags(hdr->frame_control);
+ }
+ 
+-static int ieee80211_sta_ps_dequeue_txqs(const struct sta_info *sta,
+-					 unsigned long tids, int n_frames,
+-					 struct sk_buff_head *frames)
++int ieee80211_sta_ps_dequeue_txqs(const struct sta_info *sta, unsigned long tids,
++				  int n_frames, struct sk_buff_head *frames)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f3c22806cf6c..8edb95ccbfab 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -1004,6 +1004,10 @@ int ieee80211_sta_activate_link(struct sta_info *sta, unsigned int link_id);
+ void ieee80211_sta_remove_link(struct sta_info *sta, unsigned int link_id);
+ 
+ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
++unsigned long ieee80211_tids_for_ac(int ac);
++unsigned long ieee80211_sta_txq_buffered_tids(struct sta_info *sta);
++int ieee80211_sta_ps_dequeue_txqs(const struct sta_info *sta, unsigned long tids,
++				  int n_frames, struct sk_buff_head *frames);
+ void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta);
+ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
+ 
 -- 
 2.56.0
 
