@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793651948;
-	b=C/2dl4rMTEI7QTSXc9P9HY/TV80+GslZ47dlgo0wr4qucPybZbw1hJvBmZyJGl9eceIZ
-	 +uHpj7bVxcoEdBEeQBc5dcXsxhv8Qz4od+BB9SRrG/pnzC14mo9dEeLDF4ckNZAlzPS//
-	 NU33Kdtozb7HOpsAEjH5pl+BF1QWde7HsXhSLJBGnn/CTlOO96N7U/+1RzxrgwpSjMGlX
-	 isWWW1FLzkMxymbTY4JGan1C4GGr42C1zqy0Kmb6wbWXqzZj0bWtqYfHFcdFpKavpPQ5o
-	 4YPQNdERDFmX3etiq1h6bvfF92qc7I2ggc85fg9UimumBnBI9zVW2sPfpzybrf9y4FA==
+	t=1793651951;
+	b=Vp2TfnRefLr8UpSBT82c4o2sqruQvxr+YwFxHnsGHSuELqVSeXh2+QHApejFYKsNP1Pi
+	 smlwVEE37i+WfG57hCHSp+Qnj2LoTT7mh4y+0aIIU1as6cXXTWtoAigFIa/KiEFxjnRaZ
+	 CeOsHjN1Pap8IIumlyT0g2eIG7e/M48/fjMLxHRlNXF5bDU/aTOOdnd4O6Sr9XgLuSZWV
+	 UjxtXDJNBFVbA76QRllWN+5+jIpAhgW2TVnG6ZX/8TRK9mI916D2BncyNZNE7zlZMsoS7
+	 7pLwIlMXjrSex6XdSx5sbC71nlgNblG1jibngLz8IyuU2LGOKMe74wfIFKctKWtpeZQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793651948;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793651951;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=0KwLCbgabrj7tABSup4JIfw4cz4ImfGPHTDWMn3q4Cw=;
-	b=3pmrAcUDgnXTUpcxNNA7s0TyR/vRg5L5bNBx6/cXEBUeB91GVT0JsOacJ2yw7V5TdRy4
-	 7WFPsnwL7yJRjuP+gGfVipek4sAWG4qR2TY6lvAcjRzH7mYkMou26lvA6pQC5z55v45iP
-	 2RHfIF8ROoT2+4iX6Xcpm3Wpp88Kl3I8pwMo6+8yiAnUfPO/c9eLno2VPnbYVzUXhw0F2
-	 6bArtbARhNinq2jvJtwPdXUWPMx0PNiJ8tsqeTE7oZdfNVC09Cn1ntGp/NNLFCzGLPedr
-	 Cc9P4ef+8BXir0JO1T/G6ogtuBNkfYCkOBQhWbl6grxuSD8cs6wGJ3IAkspEIK1wQ6Q==
+	bh=7AjMDsEJuV9WhfKAuTOTNA7suHpt6+xXadogN7XqyGA=;
+	b=GCJSYpCIhb6Fn5VpNdYdCVmlpy+JcjU5lveJNQ5u4qtKY6YW1s7pHGzH+KayWlsOZFp4
+	 xj4BXbD/2A4z4Ipa9oVh2TmGWKLQQ3i5RAuXDhUuGhU6j7/L617kbZqfg5Y5pZfORagKG
+	 W1tDs8wTtM7NtKiUMdPCkBpgEaDUA1UT0lndfEBm8JURsvelc9n0CcjWA4pLQJ0BOs8FW
+	 Txj6Xbx5ZNICoWiNMlwtJfeLrh24ufbCFwNghqEi9qgj4NOzT8dKppYTZF7+Srq9PVhmr
+	 PIPLYAmARo2Yiw0lg7eOn8MJ5Vkn2OH2N3sMxXWr/DbNOb9TSp47fiMR5rL2F96Q+Cw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=aXJ3H8vA;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=HlWsQ7GC;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63FA3606D807
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:39:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E46DF606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:39:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=aXJ3H8vA
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=HlWsQ7GC
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=0KwLCbgabrj7tABSup4JIfw4cz4ImfGPHTDWMn3q4Cw=;
-	t=1793651948; x=1794861548; b=aXJ3H8vAwHxrBoHlEv8MjNAVFor1UL0A5RBeHu0sIgFxuXt
-	SM8yBUA/ltnBHI/Mroqfc7db7u7vXW5oaTwmRAP7gs+xcJFHYSqVM/XTxBP8y/K60bDZqVh+VYTaL
-	0BOffddpdrXVg9rnHxxf/iZxfQW/WJLMKn9hCElhx6balTTnE8bYPnOj1AoASkAmuaW1mITA3zTeg
-	OmOz65czEcjGKn9DbhtLhd8pyosRWAwqVGQvYfEbmN2Yye6xQ2MTgUH74uEn4VXSjMXIytYhLUScB
-	Z/3vv4EXLhKESadFpzmP3+ER3ctXcM9EcSRTxkZ5LiAVBkOLJG3CeNOyrVVRiHJQ==;
+	Resent-Cc:Resent-Message-ID; bh=7AjMDsEJuV9WhfKAuTOTNA7suHpt6+xXadogN7XqyGA=;
+	t=1793651950; x=1794861550; b=HlWsQ7GCG7vu0z+A1GNjWY7DgJZ3idcJrte2HH+E4OALWjt
+	aYLRyH+n5YRHwRx/JktAOcpGpaHHjVOc9ZrFS/djQzf5+mmyRS1RWawJCB97TRr4n+UXCqgsu7jil
+	QTj3p38M40peTHx8kZdbEZ0Xt7kcD9NUi0DslICJSSvWhhSfJX6ZKqVZSrhSKbO8pc50KGmt+xB9f
+	QDfYa7w7ynIbNxkF2rTglMKphbXa8FfAkmL86WxsrupZaWTK+Pzy0GxusAxpMwd5FFaLOZCdHJgAy
+	Rfb8ozogVBlRsvPyYeiRa6jihFVgvVkb0e68in56nDlm40++y8rHvmLPSpoknPMA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNyo5-00000001vzr-39ZK;
-	Mon, 02 Nov 2026 21:39:06 +0100
+	id 1xNyo7-00000001vzr-3eaG;
+	Mon, 02 Nov 2026 21:39:08 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 28/30] wifi: mac80211: split some TX code into helpers
-Date: Mon,  2 Nov 2026 21:23:18 +0100
-Message-ID: <20261102203831.1058362-60-johannes@sipsolutions.net>
+Subject: [PATCH 30/30] wifi: mac80211: keep fast-xmit for sleeping STAs
+Date: Mon,  2 Nov 2026 21:23:20 +0100
+Message-ID: <20261102203831.1058362-62-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102203831.1058362-32-johannes@sipsolutions.net>
 References: <20261102203831.1058362-32-johannes@sipsolutions.net>
@@ -69,185 +69,118 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Split the dynamic powersave, control port protocol flags
-handling and frame resizing out of the TX code into a few
-helper functions to be used later.
+Fast-xmit is disabled while a station is sleeping
+since we need to handle the header etc., but now
+with all the previous work, this isn't needed any
+more.
+
+Remove the associated code, which now also enables
+sending an A-MSDU as a poll response.
 
 Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 82 ++++++++++++++++++++++++++++++-----------------
- 1 file changed, 52 insertions(+), 30 deletions(-)
+ net/mac80211/rx.c       |  2 --
+ net/mac80211/sta_info.c |  4 ----
+ net/mac80211/status.c   |  1 -
+ net/mac80211/tx.c       | 14 ++------------
+ 4 files changed, 2 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5ab061a010a6..9db16eb96588 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -188,45 +188,44 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 	return cpu_to_le16(dur);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5f31326a84b1..7f8bbcfc2c9f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1682,8 +1682,6 @@ static void sta_ps_start(struct sta_info *sta)
+ 	ps_dbg(sdata, "STA %pM aid %d enters power save mode\n",
+ 	       sta->sta.addr, sta->sta.aid);
+ 
+-	ieee80211_clear_fast_xmit(sta);
+-
+ 	for (tid = 0; tid < ARRAY_SIZE(sta->sta.txq); tid++) {
+ 		struct ieee80211_txq *txq = sta->sta.txq[tid];
+ 		struct txq_info *txqi;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 8e044ff5f716..7a6d428b6a22 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1936,8 +1936,6 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	ps_dbg(sdata,
+ 	       "STA %pM aid %d sending %d management frames since STA woke up\n",
+ 	       sta->sta.addr, sta->sta.aid, buffered);
+-
+-	ieee80211_check_fast_xmit(sta);
  }
  
--/* tx handlers */
--static ieee80211_tx_result debug_noinline
--ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
-+static void ieee80211_tx_dynamic_ps(struct ieee80211_sub_if_data *sdata,
-+				    struct sk_buff *skb)
- {
--	struct ieee80211_local *local = tx->local;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ static void ieee80211_send_null_response(struct sta_info *sta, int tid,
+@@ -2429,7 +2427,6 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
  
- 	/* driver doesn't support power save */
- 	if (!ieee80211_hw_check(&local->hw, SUPPORTS_PS))
--		return TX_CONTINUE;
-+		return;
- 
- 	/* hardware does dynamic power save */
- 	if (ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS))
--		return TX_CONTINUE;
-+		return;
- 
- 	/* dynamic power save disabled */
- 	if (local->hw.conf.dynamic_ps_timeout <= 0)
--		return TX_CONTINUE;
-+		return;
- 
- 	/* we are scanning, don't enable power save */
- 	if (local->scanning)
--		return TX_CONTINUE;
-+		return;
- 
- 	if (!local->ps_sdata)
--		return TX_CONTINUE;
-+		return;
- 
- 	/* No point if we're going to suspend */
- 	if (local->quiescing)
--		return TX_CONTINUE;
-+		return;
- 
- 	/* dynamic ps is supported only in managed mode */
--	if (tx->sdata->vif.type != NL80211_IFTYPE_STATION)
--		return TX_CONTINUE;
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return;
- 
- 	if (unlikely(info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK))
--		return TX_CONTINUE;
-+		return;
- 
--	ifmgd = &tx->sdata->u.mgd;
-+	ifmgd = &sdata->u.mgd;
- 
- 	/*
- 	 * Don't wakeup from power save if u-apsd is enabled, voip ac has
-@@ -243,8 +242,8 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- 	 */
- 	if ((ifmgd->flags & IEEE80211_STA_UAPSD_ENABLED) &&
- 	    (ifmgd->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO) &&
--	    skb_get_queue_mapping(tx->skb) == IEEE80211_AC_VO)
--		return TX_CONTINUE;
-+	    skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
-+		return;
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 		ieee80211_stop_queues_by_reason(&local->hw,
-@@ -258,10 +257,17 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- 
- 	/* Don't restart the timer if we're not disassociated */
- 	if (!ifmgd->associated)
--		return TX_CONTINUE;
-+		return;
- 
- 	mod_timer(&local->dynamic_ps_timer, jiffies +
- 		  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-+}
-+
-+/* tx handlers */
-+static ieee80211_tx_result debug_noinline
-+ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
-+{
-+	ieee80211_tx_dynamic_ps(tx->sdata, tx->skb);
- 
- 	return TX_CONTINUE;
- }
-@@ -588,17 +594,24 @@ ieee80211_tx_h_ps_buf(struct ieee80211_tx_data *tx)
- 		return ieee80211_tx_h_multicast_ps_buf(tx);
- }
- 
--static ieee80211_tx_result debug_noinline
--ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
-+static void
-+ieee80211_tx_set_ctrl_port_flags(const struct ieee80211_sub_if_data *sdata,
-+				 struct sk_buff *skb)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
--	if (unlikely(tx->sdata->control_port_protocol == tx->skb->protocol)) {
--		if (tx->sdata->control_port_no_encrypt)
-+	if (unlikely(sdata->control_port_protocol == skb->protocol)) {
-+		if (sdata->control_port_no_encrypt)
- 			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
- 		info->flags |= IEEE80211_TX_CTL_USE_MINRATE;
- 	}
-+}
-+
-+static ieee80211_tx_result debug_noinline
-+ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
-+{
-+	ieee80211_tx_set_ctrl_port_flags(tx->sdata, tx->skb);
- 
- 	return TX_CONTINUE;
- }
-@@ -2183,14 +2196,13 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
--		    struct sta_info *sta, struct sk_buff *skb)
-+static int ieee80211_tx_resize(struct ieee80211_sub_if_data *sdata,
-+			       struct sk_buff *skb)
- {
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	int headroom;
- 	enum ieee80211_encrypt encrypt;
-+	int headroom;
- 
- 	if (info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)
- 		encrypt = ENCRYPT_NO;
-@@ -2199,13 +2211,23 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 	else
- 		encrypt = ENCRYPT_DATA;
- 
--	headroom = local->tx_headroom;
-+	headroom = sdata->local->tx_headroom;
- 	if (encrypt != ENCRYPT_NO)
- 		headroom += IEEE80211_ENCRYPT_HEADROOM;
- 	headroom -= skb_headroom(skb);
- 	headroom = max_t(int, 0, headroom);
- 
--	if (ieee80211_skb_resize(sdata, skb, headroom, encrypt)) {
-+	return ieee80211_skb_resize(sdata, skb, headroom, encrypt);
-+}
-+
-+void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
-+		    struct sta_info *sta, struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr;
-+
-+	if (ieee80211_tx_resize(sdata, skb)) {
- 		ieee80211_free_txskb(&local->hw, skb);
+ 	if (block) {
+ 		set_sta_flag(sta, WLAN_STA_PS_DRIVER);
+-		ieee80211_clear_fast_xmit(sta);
  		return;
  	}
+ 
+@@ -2447,7 +2444,6 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+ 		ieee80211_queue_work(hw, &sta->drv_deliver_wk);
+ 	} else {
+ 		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
+-		ieee80211_check_fast_xmit(sta);
+ 	}
+ }
+ EXPORT_SYMBOL(ieee80211_sta_block_awake);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 9b8e0b7e173b..94e224038974 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -118,7 +118,6 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	 * when it wakes up for the next time.
+ 	 */
+ 	set_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT);
+-	ieee80211_clear_fast_xmit(sta);
+ 
+ 	/*
+ 	 * This code races in the following way:
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8f528ab7ebf3..820cfe53b29e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1331,10 +1331,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (!tx->sta)
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT)) {
++	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-		ieee80211_check_fast_xmit(tx->sta);
+-	}
+ 
+ 	info->flags |= IEEE80211_TX_CTL_FIRST_FRAGMENT;
+ 
+@@ -3318,12 +3316,6 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 	if (!test_sta_flag(sta, WLAN_STA_AUTHORIZED) || !sta->uploaded)
+ 		goto out;
+ 
+-	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
+-	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
+-	    test_sta_flag(sta, WLAN_STA_PS_DELIVER) ||
+-	    test_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT))
+-		goto out;
+-
+ 	if (sdata->noack_map)
+ 		goto out;
+ 
+@@ -4403,10 +4395,8 @@ static struct sk_buff *__ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		 * is first since it's very unlikely.
+ 		 */
+ 		if (unlikely(test_sta_flag(tx.sta, WLAN_STA_CLEAR_PS_FILT)) &&
+-		    test_and_clear_sta_flag(tx.sta, WLAN_STA_CLEAR_PS_FILT)) {
++		    test_and_clear_sta_flag(tx.sta, WLAN_STA_CLEAR_PS_FILT))
+ 			info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-			ieee80211_check_fast_xmit(tx.sta);
+-		}
+ 	}
+ 
+ 	/*
 -- 
 2.56.0
 
