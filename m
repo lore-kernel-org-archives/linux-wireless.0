@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793651919;
-	b=ewfuq6qC3lZDoylwCmv2AU7dWWQ4JdF09kUHrLE8OGBoV1/3xnrL3rK+Na4I3uRROFUo
-	 3lWjZB1QBjFNYYqoARCa1OKmiIHUi945nIOuuUrT11vVJaGbYyxUhWTyIv28TmetVMz+5
-	 +1Nc36QXx1vzNlComYYzSwML0tZquXwtrLj/OPNOk1P0OmGN2RHgrLu3GixKmYbTUxTCk
-	 7z2JMnYJ48bnOtRoSgKMI9TsuhSJp8WR/cLdSLgDATQF4Pu6xyhr8edvG6aZT/BlI8yPf
-	 nPux+Q4gTTtU5AIBFQdLLCbvx2B8srgeTr/cdQi/0BKiykhISW9ssLBhg7ovX7BCg2g==
+	t=1793651920;
+	b=pBlte2e6vJVdSpR9tWmLbnKJhL3Bc+hE1AQ5sjT1ZYD2V2Z4k9nYgn17GlzWrDvSrjIP
+	 kWWPCSmy0wRbk70AfE83+AVaWMJ2NR18vrElpJCvYprYzkMT0SHooJtAu2HmOJrfc+1/6
+	 S0RWaw+1Z+rxqPDQJugfn14cq6mVsbwjlHJelygqESnlzYksAQhS2syiD9dz7apqaD/lM
+	 XKM4Z67MdxrNr/ZHVRgOdlUBLTCqGUFmkSeW3/12GnPBlCKHwyCpJ2TA/4z0LLHhhR6Aq
+	 ujMW33OA5W3Y+uj3ws0iioAxYbEoduDtx+3AxVneNnHoBD2c/klAzpfQK2NoxZ+DOuA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793651919;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793651920;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=eBYgbtybZ6XBkGVdFqExcQwRwtbzahCZ7En/lsSyjXE=;
-	b=23g2k6/oJZE9cyRkKok9gJbqxvVdtjFUuPMW8RVYycpUUYaja202i1IYC9o0xlGQfN/G
-	 g5SCme4gpb6BPbOWhG2dtaR+SBeYkRhOzkPPpRLkQhuJBuie7U3+l+2I6NIfyBkZSjANU
-	 IKWcEdCnkhW2hHOyHxG3CMnwTGSwp6M5v53bRGNNEcBjpu29V2GSTUmIgMaS00uyH3yJ/
-	 3MsrnfJa+VIUY3TFFFh8zXIyiMEL+kxISTeqURekfPjGH1iG3HfX7FNRJJ1NULYXcG06t
-	 f6wlxpmphWsJOKBXIDH19W+QkUaT5XQUGy0HZbZSVhrx1cvPvAJZ8qt7atifdTmJvWQ==
+	bh=Gt1/vdnR3EkHfEBcZLTqy9ywXqmbtJE/UO6eEWER7nE=;
+	b=WdR4EE5ZLjq71sNcN4PXaCnT6Q6fY8CwQGio2Fx3ftHqJYnCnCr+LMd00ZGubkI59P+s
+	 5G4ZtAX+kEi1xFuAsfDhAIHsZcgnBK3rF5OzvXWMdJZWA6cv6yU7opiTBPL7hWJivgTWx
+	 QiiO4GDjAN03VbU4Gx/rbOQTuJ24a6/VJFBNyJp2y3ULo4vDrzYi1FRuwfx3BiWMhYE6r
+	 JExnYn4UcFmhaD0oxwdXTbxWNc7TBpNWfnxRbGQh4XKAamjKYBcRDlBVH/mzhRV0+i5Lh
+	 y9azxnA1gfvRSit9kzYDhA7TxSSHgCuS7fy95Bpjx/gg2U0vQW43WHjwFyTsIKLi9TA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=iOMvaFlW;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=nwWwSCNm;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F975606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD77606A334
 	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:38:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=iOMvaFlW
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=nwWwSCNm
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=eBYgbtybZ6XBkGVdFqExcQwRwtbzahCZ7En/lsSyjXE=;
-	t=1793651918; x=1794861518; b=iOMvaFlWih2cyel5v2fWWSonDwL2X0lLjmPsCnRRRGtDDD9
-	HnTa7zbE2C2CbMvqLdikNho4pmYwiLnvX0IJZO7aVaGfHYHB8rOsxjN9m/BLi0Fk+LTQ0sSgpntIo
-	DNCO7TojD99wZDMsZHQaTbnKlwRtLz8JxuIUbftCinVjcYiQYaW0gPbdOLkU+vnYVpXJC396MzsDt
-	5nDaBcPbGAA5JQe1Z9FBSA+EGgVQrJU3753rASXA7ThS/0u9ZkYD/yaNyep/QQippS0RyHsizj+Be
-	auBQ7nD9LKSy1Cx9OeaBOuMoTJ242O6C0yd2EP7FLlfQV7QRH/7REMjJV3A08Tdw==;
+	Resent-Cc:Resent-Message-ID; bh=Gt1/vdnR3EkHfEBcZLTqy9ywXqmbtJE/UO6eEWER7nE=;
+	t=1793651919; x=1794861519; b=nwWwSCNmhbNnl11TXsA++JVdyi3gjzpHV7zdQvR9YV+WYqK
+	eIpfMYr5fSMJVrCQM8XFuc1cVUNvikGc2KH3SvCvzmwW+HglmTw0TcZhFMBZV7hHK8oS3SllabZeq
+	xdHjzk3Wh8p28fIjFD6j2pZGgyP3KaFcfF1f5+foPt7TtlWsUxjafjKkCFi7ujE5rgPZAEwoTKGid
+	BO/zcOfxeGn6pIr7OzFIT8fWGkDYpbLGAtZ3PS+GEsXYGimi2S6VFUh2n+o6mQTc9bABNN4dzWe26
+	DxzGaa2hGd2d5ewaLU6i7ye/CThbR1MwtgKlrPngC3c1b4OxJSijA+qSPYCayG1A==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNync-00000001vzr-0x3x;
-	Mon, 02 Nov 2026 21:38:36 +0100
+	id 1xNync-00000001vzr-3SKg;
+	Mon, 02 Nov 2026 21:38:37 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 01/30] wifi: mac80211: mesh: clear PS_STA flag when peer wakes up
-Date: Mon,  2 Nov 2026 21:22:51 +0100
-Message-ID: <20261102203831.1058362-33-johannes@sipsolutions.net>
+Subject: [PATCH 02/30] wifi: mac80211: disable BHs when waking TXQs on PS wakeup
+Date: Mon,  2 Nov 2026 21:22:52 +0100
+Message-ID: <20261102203831.1058362-34-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102203831.1058362-32-johannes@sipsolutions.net>
 References: <20261102203831.1058362-32-johannes@sipsolutions.net>
@@ -69,36 +69,37 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since my old race fix, ieee80211_sta_ps_deliver_wakeup() doesn't
-reset the WLAN_STA_PS_STA flag any more. Evidently, I forgot to
-update the mesh code, so mesh peers that go to sleep are never
-considered having woken up ever again.
+ieee80211_sta_ps_deliver_wakeup() can be called in process
+context, e.g. for mesh when the peer link is changed via
+nl80211, but drivers can dequeue frames from TXQs when
+wake_tx_queue() is called, requiring soft IRQs disabled.
 
-Set WLAN_STA_PS_DELIVER and clear WLAN_STA_PS_STA before calling
-ieee80211_sta_ps_deliver_wakeup().
-
-This commit is ancient, so it's tempting to just remove the mesh
-powersave implementation entirely, but this was easier.
-
-Fixes: e3685e03b40f ("mac80211: fix station wakeup powersave race")
+Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh_ps.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/sta_info.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
-index ebab1f0a0138..0ec207ee845b 100644
---- a/net/mac80211/mesh_ps.c
-+++ b/net/mac80211/mesh_ps.c
-@@ -272,6 +272,8 @@ void ieee80211_mps_sta_status_update(struct sta_info *sta)
- 		mps_dbg(sta->sdata, "start PS buffering frames towards %pM\n",
- 			sta->sta.addr);
- 	} else {
-+		set_sta_flag(sta, WLAN_STA_PS_DELIVER);
-+		clear_sta_flag(sta, WLAN_STA_PS_STA);
- 		ieee80211_sta_ps_deliver_wakeup(sta);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 23166fc39729..80341173ae45 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1865,12 +1865,15 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	if (!ieee80211_hw_check(&local->hw, AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ 
++	/* this can be called in process context, e.g. for mesh */
++	local_bh_disable();
+ 	for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
+ 		if (!sta->sta.txq[i] || !txq_has_queue(sta->sta.txq[i]))
+ 			continue;
+ 
+ 		schedule_and_wake_txq(local, to_txq_info(sta->sta.txq[i]));
  	}
- }
++	local_bh_enable();
+ 
+ 	skb_queue_head_init(&pending);
+ 
 -- 
 2.56.0
 
