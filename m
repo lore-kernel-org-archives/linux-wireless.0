@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793655838;
-	b=l84UHa7f/MoxEgGubgA8Fxap1WFoze8o2lfQ3o/50uP6TE6iwIORtADCLJDHKMyB73YA
-	 WYk8l+1WxBhKxwwDXqc4VyqKLiwUqIHq7d4bbkQkv2Bf/f0ivTJaahDQ8tzBme3PSYC9F
-	 CuuKEaWX/WzdhaetegPVxCLhs+BpUSy+QX+O4gEnSh7xp+uNK5BXLqoP8l6dLZMfQDzrm
-	 pV/CJ0ZKz57PHfP3k7j3flHv7OIf5qZTMziYJ6TSJXW95xqiU9y5/qRn4ofbEbXqsFfB5
-	 Ddyygchum8LxMzxnoAZZMS7dXc8ayhEaUZotjXdt6ogesEsf6wkdGlltWJ3398ziwWw==
+	t=1793655835;
+	b=ZKRCK6zUi4s8ICRp8hXKJ6RLOuaqO4DNU7KDYRDgaQsGGuLUvSmmk4SWg1m9ORhlyJXA
+	 EKK5qNbYWASLgN8SR/+QId7OOr+sU73n8aJ8G6B+U4e00Q5L15vMzz/C802Q9Q/zBInrt
+	 moXbtzUiGNttK6dASpWHlGRltv/tsxW+fbTMxdaJYUDvc57QyVlPaVFP2XQTLvnWKuLEo
+	 pm9aXzMYd2miGmVlpmYh7gOkSPsUfc5kEUeX1RlLvpztxqZA7FMu45V32eOqTSHiqQkDW
+	 wdPTxUFWSkhHLlsMax7m95ie8crVjCmQt1iwLBbKUHcnBNRvsN3I2af6GyCDjfuVcvA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793655838;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793655835;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=AJeOWVPzPpURRiQuonps6badd471Heqm9FDQrYkHK0g=;
-	b=rXBzt/WHOffmQZet4ouH39xkhJnSkGh3qJf/CxPZlfpeUl4ZTBwgcixE2Wr2w6VzlMt5
-	 ovo4MlE46eLJyrZwOoSVjqdOta/+CmEyzA/JOgpu/KP5yR5DoxuVfq1dnzfynUV02Fgcr
-	 POYrj0HiJIsAkd34rUoXL/N42NKrD6xi8Nxch/cJH5nUxi8LccycM/6hKpqA5kFMvoK9F
-	 2LWGpXC5c8euw8Stu59WG4kzkjjDwSQXNfbG+D1ZRc1rQMWNeg/G8HtnxoUaE61WJFytg
-	 3WczS45iU9KX5MRwNwnlMsKmasliLtNd9d/nrol+I0oH/KQEqIS84IKEhg/csoIGjjg==
+	bh=VOWBqTMU0mc9eF+sYYp2J3A6+qvPhDsvfALzj/iNZnU=;
+	b=l0XwWCcwe79hvdCOLohOYODcJsdvZ/3dnxYroJmDeMdJ+lziSB1bWY/IS3010t1Z0ksA
+	 lmDOlzz2djU9iCOqSb+eAb/+Id9gHKZpKt9jHUb8+AK8ieA/iBarbWkH11e3HowEAaHzy
+	 Z/+mBUNcRzCNAt/7MVKyN5inAL5Fz9uLX/YomCpy28VhodetlkxJBUjU8zsWB//qbYZAD
+	 0NUntjY4jG6brN5mGWenijEnA+TWEdMRCydWEt4X59lkRkJUnAeLqWspoi5A2Wg2MLTVA
+	 jHiJ1nV1pA4byF9sGr1hSau3n103qIIprwLYD5yrKCVi4ot9RY41OUSebFIN2blEMtQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=QgbRGHx0;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=Grlt8Ad0;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9973606D80A
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 21:43:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D06606A337
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 21:43:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=QgbRGHx0
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=Grlt8Ad0
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=AJeOWVPzPpURRiQuonps6badd471Heqm9FDQrYkHK0g=;
-	t=1793655837; x=1794865437; b=QgbRGHx0G8RcOvwevElF62f2bAjHyH50XEi+gzQ6Vl6mD4R
-	NTaibhhzoRmxN+AW56+5hmsLEvbQBgQGNUeyT85FPTo84qiSvfyhYrnwbjsq3IM47C/QbuRdglZ8J
-	RnshKVSa+d1/SO0porQ/Ss0u255Tsu0bVNfa384tJ74i/WFJfu30RRcFQqKe3/cbXikNITK+dPzsl
-	ZZsU+BGVfs++fXBMITU812rzjQQZPAgwBRZq4STMXJE0sA7fg7yisNRcBnsCgdIZJuBxs5MgwjyXp
-	6Co2zLy/QP97ffQby477U7C5Jf/Rb2OoTQ2eEgGTzoY7Iqkh7Ex++LAnpIPcGaLQ==;
+	Resent-Cc:Resent-Message-ID; bh=VOWBqTMU0mc9eF+sYYp2J3A6+qvPhDsvfALzj/iNZnU=;
+	t=1793655835; x=1794865435; b=Grlt8Ad05vKKpwWx1hpnzclQcULlFWgDZcInoBd/f+QbfVT
+	/Tu5i3O1bCnwPlwjDVsr1QuppI32QE1GPPQS4uegrup1ZbR0LNbp+woYNOPnJsRyzl9g8MnsgEpPb
+	crogdIe/YniM0R4q0DMPJFHEmaV3PhC5EM3I1jY4YpF2cWRetCur5jWP4Do85yEMF8jMgFb+X4GQn
+	SxfnqUjzF+8NNNVuexHUt5xtZFo9LThcTOTD1DZcNAYMw9wwVtr3kSVBWC3eYYKEfRBOQoFESchfL
+	zSh7/c4GGPmNF0bjrh0C8SofWGzqr+Vg2sKcbcCSBnG3Fw1YItmAJnEqH9jSVCkg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNzoo-000000020tw-3G2o;
-	Mon, 02 Nov 2026 22:43:55 +0100
+	id 1xNzom-000000020tw-3hXr;
+	Mon, 02 Nov 2026 22:43:53 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next 5/7] wifi: mac80211: add sta_info_alloc_with_links()
-Date: Mon,  2 Nov 2026 22:42:41 +0100
-Message-ID: <20261102224349.afbaee552695.Ic42518fe014505f88487c649c7a208a1317d87cf@changeid>
+Subject: [PATCH wireless-next 2/7] wifi: mac80211: clarify station link handling
+Date: Mon,  2 Nov 2026 22:42:38 +0100
+Message-ID: <20261102224348.e080c851cf7e.I00f86a6ab4ea32ebf1d9254125fb19db11a88f13@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102214348.1104849-9-johannes@sipsolutions.net>
 References: <20261102214348.1104849-9-johannes@sipsolutions.net>
@@ -69,165 +69,60 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-For SMD Transition, we'll need to allocate a station with
-multiple links, refactor the existing code to add such a
-function.
+Just like for interfaces, the change_sta_links() method
+really changes the active links of a station, not (just)
+valid ones. It's possible that both change, of course,
+but in many cases (such as link switching) only the
+active ones really change.
+
+Clarify the documentation and add a note in the mac80211
+code about why ieee80211_sta_set_link_valid() can call
+the driver wrapper directly without any check.
 
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/sta_info.c | 96 ++++++++++++++++++++++++++++++++++++++---
- net/mac80211/sta_info.h |  8 ++++
- 2 files changed, 97 insertions(+), 7 deletions(-)
+ include/net/mac80211.h  | 10 ++++++----
+ net/mac80211/sta_info.c |  4 ++++
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 76ff86ff9974..f07a4d262314 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4741,11 +4741,13 @@ struct ieee80211_prep_tx_info {
+  *	Note that removal of link should always succeed, so the return value
+  *	will be ignored in a removal only case.
+  *	This callback can sleep.
+- * @change_sta_links: Change the valid links of a station, similar to
++ * @change_sta_links: Change the active links of a station, similar to
+  *	@change_vif_links. This callback can sleep.
+- *	Note that a sta can also be inserted or removed with valid links,
+- *	i.e. passed to @sta_add/@sta_state with sta->valid_links not zero.
+- *	In fact, cannot change from having valid_links and not having them.
++ *	Note that a sta can also be inserted or removed with active links,
++ *	i.e. passed to @sta_add/@sta_state with sta->valid_links not zero
++ *	(note vif->active_links needs to be considered with sta->valid_links).
++ *	It cannot, in fact, change between having valid_links and not having
++ *	any, since it either represents an MLD or not.
+  * @set_hw_timestamp: Enable/disable HW timestamping of TM/FTM frames. This is
+  *	not restored at HW reset by mac80211 so drivers need to take care of
+  *	that.
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 3c2e08808e99..a86da3c70152 100644
+index 572455549c63..61aadc3c695d 100644
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -677,9 +677,11 @@ __sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	}
+@@ -3507,6 +3507,10 @@ int ieee80211_sta_set_link_valid(struct sta_info *sta, unsigned int link_id)
+ 	 */
+ 	ieee80211_sta_recalc_aggregates(&sta->sta);
  
- 	sta->sta.cur = &sta->sta.deflink.agg;
--	sta->sta.deflink.link_conf = link_data_pub_link_conf(link);
--	if (WARN_ON(!sta->sta.deflink.link_conf))
--		goto free;
-+	if (link) {
-+		sta->sta.deflink.link_conf = link_data_pub_link_conf(link);
-+		if (WARN_ON(!sta->sta.deflink.link_conf))
-+			goto free;
-+	}
- 
- 	spin_lock_init(&sta->lock);
- 	spin_lock_init(&sta->ps_lock);
-@@ -826,6 +828,62 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	return __sta_info_alloc(sdata, &sdata->deflink, addr, -1, addr, gfp);
- }
- 
-+struct sta_info *
-+sta_info_alloc_with_links(struct ieee80211_sub_if_data *sdata,
-+			  const u8 *mld_addr,
-+			  const u8 *link_addrs[IEEE80211_MLD_MAX_NUM_LINKS])
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+	int first = -1;
-+
-+	if (WARN_ON(!link_addrs))
-+		return NULL;
-+
-+	for (int link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
-+		if (!link_addrs[link_id])
-+			continue;
-+		first = link_id;
-+		break;
-+	}
-+
-+	if (WARN_ON(first < 0))
-+		return NULL;
-+
-+	sta = __sta_info_alloc(sdata, NULL, mld_addr, first,
-+			       link_addrs[first], GFP_KERNEL);
-+	if (!sta)
-+		return NULL;
-+
-+	for (int link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
-+		struct sta_link_alloc *alloc;
-+
-+		if (!link_addrs[link_id] || link_id == first)
-+			continue;
-+
-+		alloc = kzalloc_obj(*alloc);
-+		if (!alloc)
-+			goto free;
-+
-+		if (sta_info_alloc_link(local, &alloc->info, GFP_KERNEL)) {
-+			kfree(alloc);
-+			goto free;
-+		}
-+
-+		sta_info_add_link(sta, link_id, &alloc->info, &alloc->sta);
-+		memcpy(alloc->info.addr, link_addrs[link_id], ETH_ALEN);
-+		memcpy(alloc->sta.addr, link_addrs[link_id], ETH_ALEN);
-+
-+		sta->sta.valid_links |= BIT(link_id);
-+	}
-+
-+	return sta;
-+
-+free:
-+	sta_info_free(local, sta);
-+	return NULL;
-+}
-+
- struct sta_info *sta_info_alloc_with_link(struct ieee80211_link_data *link,
- 					  const u8 *mld_addr,
- 					  const u8 *link_addr)
-@@ -969,9 +1027,25 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 	if (err)
- 		goto out_drop_sta;
- 
--	if (sta->sta.valid_links) {
--		err = link_sta_info_hash_add(local, &sta->deflink);
-+	for (int i = 0; i < ARRAY_SIZE(sta->link); i++) {
-+		struct link_sta_info *link_sta;
-+
-+		if (!(sta->sta.valid_links & BIT(i)))
-+			continue;
-+
-+		link_sta = wiphy_dereference(local->hw.wiphy, sta->link[i]);
-+		if (WARN_ON(!link_sta))
-+			continue;
-+
-+		err = link_sta_info_hash_add(local, link_sta);
- 		if (err) {
-+			for (int j = 0; j < i; j++) {
-+				link_sta = wiphy_dereference(local->hw.wiphy,
-+							     sta->link[j]);
-+				if (link_sta)
-+					link_sta_info_hash_del(local,
-+							       link_sta);
-+			}
- 			sta_info_hash_del(local, sta);
- 			goto out_drop_sta;
- 		}
-@@ -1037,8 +1111,16 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 
- 	return 0;
-  out_remove:
--	if (sta->sta.valid_links)
--		link_sta_info_hash_del(local, &sta->deflink);
-+	for (int i = 0; i < ARRAY_SIZE(sta->link); i++) {
-+		struct link_sta_info *link_sta;
-+
-+		if (!(sta->sta.valid_links & BIT(i)))
-+			continue;
-+
-+		link_sta = wiphy_dereference(local->hw.wiphy, sta->link[i]);
-+		if (link_sta)
-+			link_sta_info_hash_del(local, link_sta);
-+	}
- 	sta_info_hash_del(local, sta);
- 	list_del_rcu(&sta->list);
-  out_drop_sta:
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 5187e3eadf30..110788c0d623 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -928,6 +928,14 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- struct sta_info *sta_info_alloc_with_link(struct ieee80211_link_data *link,
- 					  const u8 *mld_addr,
- 					  const u8 *link_addr);
-+/*
-+ * Note: Unlike sta_info_alloc_with_link(), none of the link stations
-+ * actually get a link_conf pointer! Must be set later.
-+ */
-+struct sta_info *
-+sta_info_alloc_with_links(struct ieee80211_sub_if_data *sdata,
-+			  const u8 *mld_addr,
-+			  const u8 *link_addrs[IEEE80211_MLD_MAX_NUM_LINKS]);
- 
- void sta_info_free(struct ieee80211_local *local, struct sta_info *sta);
- 
++	/*
++	 * Note: this is a no-op when new links are added that
++	 * aren't actually active in the vif.
++	 */
+ 	ret = drv_change_sta_links(sdata->local, sdata, &sta->sta,
+ 				   old_links, new_links);
+ 	if (ret) {
 -- 
 2.56.0
 
