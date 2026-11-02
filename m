@@ -1,57 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793601401;
-	b=UseJUoRGCGIncU3kgYdFuvFG9SnsX2nVY9WrZB4x9mH+yt4CgJr/7+1bwORDH9EushaK
-	 /YhLuQdZFILjA9S20NvQpgKK0XZpxr6Pr8ElB52U1AQ0k9IdQ+/17w11A0w0irtB4mqb4
-	 INO+Ex/d2rj83t1J/MBVvVeECdMs9FoIc9LVfBK/dBYt3EPKCfimzpi6n+qfrR3iwf05s
-	 eGfOSpc78/TRMzseX1ZNvCxUPzUCuNY7SpUkGyJnjZjEa2JwsWhBzt+OyUCbs7k2ibn/l
-	 kxYq2PwhdKtVyksHX0Ob8vy1D4h7ZVT0McOlCSWCZlhvVFBtThJ1aSxsusVsXmPQ0WQ==
+	t=1793601530;
+	b=05gAfLcb477GZ3cpoW6YhG2WL8/j6exDr2AbZkiukf/tANokUu9hMeUURK1JeuR6ZGfS
+	 NRLR7twUHQjacuEE5mfaT4D4XkPYelo4ix/vl+tOXNuyKYv0j5+YEDzXgTrx9DP2Z/ulw
+	 YAfstdEoRlAkbL3yG+rjiF7H9Hc+Grfe3T3E/G3hnIYHEsdj+UWmsNl91Kqm73ckgum3R
+	 /eHKJtkSD+qn3XeWTZ7tTTQm1+cg1W2PU/sI7gB5rX+DwRrUYlveQb/cqbv3/J08x8b7h
+	 xGAlYvwZK4RaTwt+4rS1v4DnKAw2hc+AqXE9YLbzfCxP1r7l60GM6EEwJTPhVydN3Fg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793601401;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=atoX9pDrnmOEfuSwTe8PEE8rsrnLvoU/0hK+HZ4aAmk=;
-	b=IVf1+mCb5sEVSkW3eaY1TGgXB+bhjnHee3acJ496jsgH71VWNiSEKmetJG9Y/0zeInSr
-	 0kXpT/v7C3CwyPbe98o12xDeTAqFIE+7qVwkSfRUTZZrK+oMhEU++H9C7Diky7wvkMJxa
-	 VKP+s7iHqeE0xOm6C0V3fFdJVbxbtRGIDLEinhrcYXnHrLKb+7aiXqjCI7hh7hx2CK+hO
-	 J3IQRagcqQbyqayRlz0yggCArmlMbhN8W4Altb5BF1nwDRpdxuB3/3xJzlPHUvfdKe9bM
-	 Y5wabE94TRcaKr8dneVP4G32g7BuKvHbH2fHZPLlM1PP3P9KEfuNi/OhWQD0OXcbRIQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793601530;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Proofpoint-ORIG-GUID:
+	 X-Authority-Analysis:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=MiL1WhFr3Ulb8v7dpJjuraCoLDtcPlOsberrX0tY8lY=;
+	b=39E1rgYJuYIOJLnWrffO4dhG4iQnpZUBOKa0MpDd9hn/aox17FaBKs9Chgns3faOZ+26
+	 zYPddRLv86FkwIgOLhD+FShYKy96FQ2XcjsIPHl94lVCuABDIxnxJEyKQ68+C5/dIxhDs
+	 C32qgdLhcx6goMg99huP25HnvX///vzRGZpVR+KmAhBYP1OsszbWBKKpOZlRCU9X9iOK3
+	 owt1uOBMkC1qBIPRYxTc7FBaPEXKP3WgXMBN0FuhsBGeNwkPNvEED+DgBpmHhFWC8HnHz
+	 +sRr83tFTAfDe/LikbsvEVnDbjClH8tWpDoGuMUwSqmETO6+SyIGK+Ob00FOm3j5Hpg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=protonmail.com;
-	spf=pass smtp.mailfrom=protonmail.com;
-	dkim=pass header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=KwVRzRoU;
-	arc=none smtp.remote-ip=109.224.244.25
-Received: from mail-24425.protonmail.ch (mail-24425.protonmail.ch [109.224.244.25])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=UIu2Cu9w;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=TnEMI21g;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B55606A324
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 06:36:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5B55606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E716A606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 06:38:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E716A606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=KwVRzRoU
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1793601398; x=1793860598;
-	bh=atoX9pDrnmOEfuSwTe8PEE8rsrnLvoU/0hK+HZ4aAmk=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=KwVRzRoUe5hC/hlrSL/rWGkfJgPJtQv+3APJPY0nvrHf3QISM9wsFBNIFsoS9kQ2s
-	 oArPa4u/xFN9cC+xXee4QGDZbfxv8i1Dt61J2oLadMiW+Rq9rCK5+prM+klcyiQzg8
-	 n1o3yC/aMjUoAkbYJFBf1Hgs0llxJleZdF7BLyBh/wg/V4h6YZ+Hhb1UQv9/RtlDYp
-	 ySBu3E9vBcspB84a/fBplaIdMms5SEM8iybCCgSY6K6vua+4T+Hd+tCdlvKO6dbTwt
-	 uxdfLl6ZYH8Wc8CA0wEfXExbTAZFbMvnxWopyTEjPastXOXWrCEwfVATee/tjl/R23
-	 tLo3VTkSxXaxA==
-Date: Mon, 02 Nov 2026 06:36:35 +0000
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: frankth3tank79 <frankth3tank79@protonmail.com>
-Cc: "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Subject: Upload ~15 Mb/s to Technicolor XB7 (CGM4331COM) unless PMF is disabled on the client (iwlwifi AX210 and rtw89 RTL8922AE)
-Message-ID: <3GdfZzytiGgjtiV7JOT7DqKDOB7dAjgMEx9515JX73L9c7oqqSQ3Ol7qThrLYXiSjl9IuraXd8mRVU9rxZRwfez9iKY63dFqaLyssw02Kkk=@protonmail.com>
-Feedback-ID: 71374229:user:proton
-X-Pm-Message-ID: d66db165ef844e902eb01ebf2ccc57301d36ae1f
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=UIu2Cu9w;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=TnEMI21g
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A23vI973324645
+	for <linux-wireless@vger.kernel.org>; Mon, 2 Nov 2026 06:38:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=MiL1WhFr3Ulb8v7dpJjura
+	CoLDtcPlOsberrX0tY8lY=; b=UIu2Cu9wI4E9ymRcqhqdzXslzn56htlgS+xV6p
+	fOSaDgTtqvNB64yGLAGYFg41KKrSombpsbJK5WdlSlNpirpq9hQwkmtn7Fg44x2a
+	Qe3P5+0BDEK394z6fiW3abmVH7bqYpLaToZ000lZCiNbNcXzXRuRQZXV/ig8yEnz
+	od489dQZ8qnsrwnvAEiiFaPQ3PGIGwhGQGfuFRyyDtmunebiu1c7ExJ5O1EZnx82
+	sHkJ3hO+g11kzNLN9ybTMkTkEjtZVYdHeAFs3yzQtz65gJ1h2qSNggok+Q8DICJY
+	MuEZ6EWRdf4Pr/FA2RQdxE3JwK/yGUn5c75FpJwD1KQxJ7Cg==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hn7b6nmsh-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 06:38:48 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3abb4c24125so2208580a91.3
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 22:38:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793601528; x=1794206328; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=MiL1WhFr3Ulb8v7dpJjuraCoLDtcPlOsberrX0tY8lY=;
+        b=TnEMI21geMhsLoCYAzVJJmEHM/5us9+Zjlewgn0B0bSS5wnTWH9j0B6nFgcKuxSTIT
+         zE1M4oJciJPqsymChmdXWcT3AkpMCS2En6Y4rtp3IYinNUdSGV3w1yAtNTf1K68+bxrg
+         l2qFf0muKMEgPJKpQ8QvuQKUBgJtlwYNFa83K3PK6/VCy8qKtzIsukiXWt0Nw0psR8vb
+         rZZtiq9JmbHOj+8Q31cJBa4zq8LNTvMDKp4QBW6XjPpWtlRWkw0rmQS9tumjWa+UQxW0
+         1a/sAZJYikGyk+JBlViURGjjFUORMTmOwkV85kNwVe21WyEu58sk5Kmu6juE0u+izq1t
+         TulQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793601528; x=1794206328;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=MiL1WhFr3Ulb8v7dpJjuraCoLDtcPlOsberrX0tY8lY=;
+        b=fQwrFbk7LgCFoYTxcKdXOk7bCowBLzJy69+c5/KbdCuPwYVOxRist1MUvJr1C8fJXJ
+         nhTJOUelNi71vmWw84XN/uTsXJ71FtHqfdBL4q23ZFjMMkBBYNs9Gea9KjmCNnfcxxpi
+         hRJ+tR3eqcZhbL3KIQSJdqlV6m3muKevq0crGUO2VUUQCp51VrjQeONOzRT/SUFjnMDA
+         FA0q+EMR+VoFruN9kfEuac0O2MztmEbY56I90PD+6rhBIa9Nqhe2NOFNUIhLlsBmn4ma
+         OgitWWNf5PQdv0EdX8UxmLK4ywz86RPMvkDyfWcDXVuswecWoM1AZvM0OA/nlWBoXLzx
+         4ziw==
+X-Gm-Message-State: APuU4Z+4qZrJQWa7R+RXsvLgZpX2hAQDq1XrZvxhVbGCXl9ytD428PTM
+	PZlc/jn82H7KdNcrrJNIzlcfF5Mrr3FVWcUKJPXyfLeJlUjH5eA9BTgEpy4M9tpCOGTX/DBczym
+	KwUB9jcrtXTRiZOPxePWMWKinZVhqirHmzjUlG3hCeV6u8QgXgowv+QECS+6g8ciC+MFD04Iryv
+	GJ3hCN
+X-Gm-Gg: AYBFou3VKOgcxCLTqU7AIn2HmkQv0ICRChijcRDGWTv8SM9P4wVxJM/5I4AFoElmOIs
+	Ph/VaINhzevnfjeT3x5ydPe0hBTHYZvBOtTtUyEGFtGufo35+cgVY64QSI6yhTs0NxEMxdP3vnw
+	llXJ+3+SUUtpelGA4OmR0a9nluxp9zCwoFcyy49dggcVmlkttBspmuJpo5UyitRmr4DhR3sNCHb
+	TCMSho0sZbYRhcWB7JBJzCrjwUyqumevJl1h6HSVOusu8NLPt9U3LqfRQ2p1Otk0QdmHvvOpRgI
+	yfBF++OgM3s80rAEJwHHTM14bmgQo3prUZnCj+1ADttDUfOX3ZTOM0i+0GVr0kV8z+rqeAfW4SL
+	OzLxq+YQGgDwfbFWUlZTV2BMaxCYtC8pSojjm+Vxis7LKh21gDign+UWmDLehrwkegPHtiWGmsv
+	U7r5gkBlxdKAS9lvxkx0E7/dPbSS9Z
+X-Received: by 2002:a17:90b:5645:b0:3ad:53e2:78c1 with SMTP id 98e67ed59e1d1-3ae89776880mr7446929a91.10.1793601527575;
+        Sun, 01 Nov 2026 22:38:47 -0800 (PST)
+X-Received: by 2002:a17:90b:5645:b0:3ad:53e2:78c1 with SMTP id 98e67ed59e1d1-3ae89776880mr7446915a91.10.1793601526913;
+        Sun, 01 Nov 2026 22:38:46 -0800 (PST)
+Received: from [127.0.1.1] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae6e949077sm17313475a91.9.2026.11.01.22.38.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Nov 2026 22:38:46 -0800 (PST)
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Subject: [PATCH ath-next v4 00/11] wifi: ath12k: resolve RX link id via
+ logical link id on WCN7850/QCC2072
+Date: Mon, 02 Nov 2026 14:38:09 +0800
+Message-Id: <20261102-ath12k-logical-link-id-v4-0-f4c7807c299b@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -61,72 +115,98 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIANIv6GoC/3XNwW7DIAwG4FepOJcKm4zATnuPaQcgToOahi1kU
+ acq7z6LQ3tpLpZ+2f/nuyg0Jyri/XAXM62ppDxxaI4HEQc/nUmmjrNAhUa1aKVfBsCLHPM5RT/
+ KMU0XPpGeemwsWEQKgsvfM/XpVuFPwR050W0RX7wZUlny/Fc/rlD3FbfQ7OErSCV9CO6tNwSdb
+ j9yKaefXz/GfL2eeFR5xafmFOxqyBpFTa4F7SHGHU0/NFDK7WqatWgMqWBtZ4J7oW3b9g/xQwF
+ TaQEAAA==
+X-Change-ID: 20260728-ath12k-logical-link-id-aef2481822eb
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Proofpoint-ORIG-GUID: sXFqLVn4JGhc_r3lTonfZ0KYT9d2uVGm
+X-Authority-Analysis: v=2.4 cv=QuvLTlyd c=1 sm=1 tr=0 ts=6ae82ff8 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=EUspDBNiAAAA:8 a=AaJ870xVPVGd3DHDvMsA:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-GUID: sXFqLVn4JGhc_r3lTonfZ0KYT9d2uVGm
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTAyMDAyNiBTYWx0ZWRfXzT6D5wIRdB+U
+ 9wmB7T+b2CI/vY/Zh0dakZeZ2mXkShL8vedlvVpyJwIAIKqZ+hDJ4TO46dREtZc5+pnRTboP1/S
+ 5fGCS7mSBXJcTuz6F0AAoGGYD/yGPP0=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTAyMDAyNiBTYWx0ZWRfXyaF0RlC4w8Cv
+ Rm3/Txc5eqtbgZbLwO3UHLZWbRK/hsYle8xdmhlCTI0xqhsk5YddTFA2Olu1gVXTakRt4GXlQYp
+ XGDqTrvyR7k+CL0y3jlNCl63nmYwyNyqsIbbvcyFUoaMCaWkxTrieZ483uXudXrsVYoX3WW7SLc
+ FL0ZIrmovVi2JzIeLI4pyVM7IfuJC3ncuUOku5/tTNTMXcr87eOU/Lh1VusHyO44jKiR8HmNvRV
+ 6s8i8hiTVLf483x0nXbzplr9yxkVje9ka0kxKtTWTh9BTn1Qe1wea7CjNzY9kLhF7kW9XJu5ZAW
+ jNhDvrH4yZKIOCZ7IHCJFZgqZ6d71xv5x7jXzlmcN4znQBZfGEG1QvBJ10MQFKv+P3X2g9wK+xo
+ JbumCrgFjZUjscrxAnYG2cNF+IpUPO1z+xQAtze4wU5EX3jwLXCc1vz8CamQuUrYmaEEo6wytsJ
+ Z6O09PpG87fxRWi4sKA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-02_02,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 phishscore=0 lowpriorityscore=0 adultscore=0 clxscore=1015
+ impostorscore=0 priorityscore=1501 malwarescore=0 spamscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611020026
 
-Hi,
+ath12k currently relies on hardware link id to resolve the link peer. This
+works for QCN9274, IPQ5332 and IPQ5424 but breaks WCN7850/QCC2072 which use
+logical link id instead. Commit a2fe9dc70f3b ("wifi: ath12k: Fix low MLO RX
+throughput on WCN7850") tries to fix it using peer_id but actually that fix
+doesn't work always. From user PoV, current code has datapath issues like
+EAPOL frames getting dropped on QCC2072, and finally MLO connection failes.
 
-I found this bug while setting up my laptop. Would it be possible to take a=
- look at it?
+Add support for logical link id based link peer resolution to fix it.
 
-Upload (STA -> AP) throughput is about 15 Mb/s when this laptop associates
-with a Comcast/Technicolor XB7 gateway, model CGM4331COM (Broadcom radio,
-ISP-managed). Setting PMF to "disable" in NetworkManager on the client rais=
-es
-it to about 90-100 Mb/s. The same laptop gets about 700 Mb/s upload to a
-different AP. Other (non-Linux) clients on the XB7 are not affected.
+---
+Baochen Qiang (11):
+      wifi: ath12k: fix potential OOB access due to unverified hardware link id
+      wifi: ath12k: skip hw link id match for devices without hw link id support
+      wifi: ath12k: rename ath12k_dp_peer::hw_links to link_id_map
+      wifi: ath12k: rename ath12k_dp_link_peer::hw_link_id to drv_link_id
+      wifi: ath12k: rename ath12k_skb_rxcb::hw_link_id to drv_link_id
+      wifi: ath12k: derive device id without drv_link_id for single device group
+      wifi: ath12k: add support for HTT_T2H_MSG_TYPE_PEER_EXTENDED event
+      wifi: ath12k: allocate logical link id on host when firmware does not report it
+      wifi: ath12k: derive REO RX drv_link_id per device via HAL ops
+      wifi: ath12k: derive WBM RX drv_link_id per device via HAL ops
+      wifi: ath12k: use link_id_map to resolve RX link id for all devices
 
-Hardware / software
-  Laptop: HP OmniBook 5 16-cd0xxx, BIOS F.07
-  Card 1: Intel AX210, iwlmvm, fw 89.b20dcd1f.0 (ty-a0-gf-a0-89.ucode)
-  Card 2: Realtek RTL8922AE (rtw89), the laptop's original card: same sympt=
-om
-  Kernels: 7.2.11-200.fc44 (Fedora 44), 7.3.0-9-generic (Ubuntu 26.04 live)
-  wpa_supplicant 2.11, NetworkManager 1.56.1, linux-firmware 20261019
+ drivers/net/wireless/ath/ath12k/core.c             |   1 +
+ drivers/net/wireless/ath/ath12k/core.h             |   3 +-
+ drivers/net/wireless/ath/ath12k/dp.c               |  18 +++
+ drivers/net/wireless/ath/ath12k/dp.h               |   1 +
+ drivers/net/wireless/ath/ath12k/dp_cmn.h           |   3 +
+ drivers/net/wireless/ath/ath12k/dp_htt.c           |  17 +++
+ drivers/net/wireless/ath/ath12k/dp_htt.h           |  15 ++
+ drivers/net/wireless/ath/ath12k/dp_peer.c          | 169 +++++++++++++++++----
+ drivers/net/wireless/ath/ath12k/dp_peer.h          |  26 +++-
+ drivers/net/wireless/ath/ath12k/dp_rx.c            |   8 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.h            |  16 +-
+ drivers/net/wireless/ath/ath12k/hal.h              |   6 +-
+ drivers/net/wireless/ath/ath12k/hw.h               |  22 +--
+ drivers/net/wireless/ath/ath12k/mac.c              |  53 ++++++-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c      | 112 +++++++-------
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.h      |   8 +-
+ .../net/wireless/ath/ath12k/wifi7/hal_qcc2072.c    |   8 +-
+ .../net/wireless/ath/ath12k/wifi7/hal_qcn9274.c    |  16 +-
+ .../net/wireless/ath/ath12k/wifi7/hal_qcn9274.h    |   1 -
+ .../net/wireless/ath/ath12k/wifi7/hal_wcn7850.c    |  17 ++-
+ .../net/wireless/ath/ath12k/wifi7/hal_wcn7850.h    |   6 +-
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c         |  15 +-
+ drivers/net/wireless/ath/ath12k/wmi.h              |   1 +
+ 23 files changed, 400 insertions(+), 142 deletions(-)
+---
+base-commit: 090ef659b1f31fe852e956b0ebf274cc7d967cb7
+change-id: 20260728-ath12k-logical-link-id-aef2481822eb
 
-Link
-  5 GHz ch 157, 80 MHz, HE 2x2, signal about -60 dBm
-  tx bitrate HE-MCS 5-7 NSS 2 (576-720 Mbit/s), so the PHY rate is fine
-
-Results (iperf3 -P4, STA sending, TCP, to a host behind the AP)
-  PMF default (optional), run 1     15.8 Mbit/s
-  PMF disabled,           run 1    101   Mbit/s
-  PMF default,            run 2     14.0 Mbit/s
-  PMF disabled,           run 2     87.1 Mbit/s
-  Different AP (phone hotspot, HE80 2x2, PMF default)   706-747 Mbit/s
-
-With PMF at default, the upload looks like this:
-  - only ~130 frames/s are handed to the radio (station dump tx packets),
-    with ~35% tx retries and 0 tx failed
-  - ping to the AP rises from 6 ms idle to 85 ms avg / 331 ms max under loa=
-d
-  - UDP upload tops out at ~2,300 frames/s, one datagram per frame
-  - forcing VHT (no HE) gives the same result, so TWT and UL OFDMA are not
-    involved
-  Download from the AP is also limited (~40-50 Mbit/s).
-
-Relevant AP IEs (from iw scan dump)
-  RSN capabilities: 0x000c  (MFPC=3D0, MFPR=3D0: the AP does not advertise =
-PMF)
-  HT capabilities: Max AMSDU 3839, RX AMPDU 65535, spacing 4 usec
-  VHT operation: basic MCS set 0x0000  (demands MCS 0-7 on all 8 streams)
-  HE operation: basic HE-MCS NSS set 0xfffc, BSS color disabled
-  WMM BE: CW 15-1023, AIFSN 3, TXOP 0
-Kernel 6.19.10 logged "required MCSes not supported, disabling HT" with thi=
-s
-AP and fell back to 54 Mbit/s legacy. 7.2/7.3 associate with HE.
-
-So the client advertises MFPC (PMF optional), the AP doesn't, PMF should no=
-t
-be negotiated, yet upload is ~6x slower than with PMF disabled. My guess is
-that the AP mishandles a STA whose RSNE has MFPC set, maybe by treating som=
-e
-frames (e.g. action frames for BA setup) as protected. A capture can be
-provided if useful.
-
-Is this a known XB7 interop issue? Would a quirk make sense, e.g. not
-advertising MFPC when the AP's RSNE has MFPC=3D0?
-
-Thank you,
-Frank
+Best regards,
+-- 
+Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 
