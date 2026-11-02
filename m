@@ -1,92 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793622875;
-	b=yU8Gv20ZNv2aFoFngn2O2FimbaoKAAAEiXMJYo98qwTXgacOOQ5CbBDWKm0pxNgvESf2
-	 1EHggRYEswCR4WSE2dDJLnOX7FZ/zjcsKyerM+oLdJSDKVamSUmWSFmwMPk1o8NLwBCkE
-	 y4WjUbvn7R5RdI2h6t66/yqhtp8RRvE2B0fWyi1D4m+/BqC5ywDSlnrJ9p2/EEEF6HdZc
-	 +TZiHoWb6VcYeWha0dWJegrcPR7rgFYU9tde9VMR5x1igiX/WOoaY8h0Es2I0/+a7BNo5
-	 kceFg38VluGltPeD8reAW3Q80JbZLoJfC8k3XtoUzD1jnajl3hGuH55RvcRqvfKyBYQ==
+	t=1793623739;
+	b=0+tFpG3TJwLKt9G0lfpAAEzV71kYVklftw7Y9Vb9yXBqj4/f2SdIyYU9UP5BdznB21vA
+	 7R0wgvnRJPiK9ynEkbEole3qhIryNvq5fgCpBwOW8/EiqHchoXaJ1WZpbsXuEv5MVTOGo
+	 iynTCkhe4WHRg6MJ3HKBU4/WJrmzuBzUrWas4SIXSy9u9Ly99ioRhpZFtK+dKWDkxNAKs
+	 zIzuUFmRyIcXiB9rtLNtU9Rra3PfrwxUbRzCDoVWo5A8P22MqBxhzSRmXCI4cFSlXLNE2
+	 L8WTepACe8tC+ZDQ9zx/xRWsCHf6elq3SbCLzF7OwH9HJEgac+e+jGXcfMH21mSU2XQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793622875;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793623739;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=Swv5UcPabS6E/hCnFYMyFqMC2vY1/PiK8X3IqFBNP6s=;
-	b=HwPbDrQeYVpB15kgsdkzCUARWKXsOFPS3CUYPEj00k3pZdpaH6c/A0jOlhy4Rcq5Ec3f
-	 MNPlpipfhAK2U68pquXnpEA+11f+45eBjv7fA3qr6UJZkqz9Xw/a4WekLhutrbMmBh0/0
-	 Qxdbj8yANMCq/ZTgi0nIKTL5UftuIShnudLJVcLULAnJO809Uz+Cx2nMWNK+uy2k8nnjH
-	 bEmqBGIAyjyOwqECy4zbMRxyP68V9xjNJ97izdzLmTKpoPvPxGJXefxZaD6b2xEt8enqJ
-	 72JUyC1Y4ytwvKFZi5ru+OmqqDsadd6w+cSosvWjsSlNMcMkfM8bXG2LqNGERckqXfw==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=FHXKwfyjhX6mVoz3qAoilKz+1ex0M8UbC4u4Bj+pau0=;
+	b=Ru753J9ud+kEomwjlWy7KBMhlAV4tT06b7pmm/zy+0sJl1koTA+9aLM8ue/GIPrK/lCh
+	 D9Nci0HyF1UccQiMG8PI1dVqfIrlPh6zSB5rlYtrZQAPjzO0PHACpVqEzVhMaAewA9Vcc
+	 0zyVvThOANLD7X/aFCqap+pYCyQsXcvS/r5AEElRueBDDB660pJTAQF+FVasRYNtbI9pc
+	 eoBmcxD7Mov2rEbjYBUvxnqc//cAry/0+umPpVyjfHw3k62cf/5PwblHqtnaFBy1gxiiK
+	 XLremmoRotp6kvmseXXqP8dRKMBCaIP1+XMP9Wtl2WRW0r72rpCgaDU/lTJDfTh54ZQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hgJFK76F;
-	arc=none smtp.remote-ip=209.85.128.49
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=auizdsJy;
+	arc=none smtp.remote-ip=209.85.221.43
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204E6606A331
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 12:34:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 204E6606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C37960A2604
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 12:48:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C37960A2604
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hgJFK76F
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4a5720b0a57so20917075e9.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 04:34:33 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=auizdsJy
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-48e6eb21a8fso1132588f8f.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 04:48:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793622872; x=1794227672; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Swv5UcPabS6E/hCnFYMyFqMC2vY1/PiK8X3IqFBNP6s=;
-        b=hgJFK76Fhm36xxhyzeI19UjhN/oZQigsRWrV+LXDfh8ZK4oS9UheRcAzrtHTeSkRza
-         U0Byj7jhlD6yQRkDuepZBjfML+SEELFp5EGYGQ/4L+xj6j4W4PhuFFaaZCpONxYYOPus
-         jnq2gMFzf0sCVXsf96NDXuKI92p9xaF75mwClvJGsa9lAFFs4GRoZ+Y+i/JZegxxE3rb
-         z1mf+SntcEZGrtgVjxsW6A5HZ3xRBH1EkhwWn00cA23KnjsaslzJmESbnz+RTFaUJIz9
-         UsQt6tUH0LZJxUdQBHjGjBGCrCL3UyAHMrdSVFqyGLddAADBnt4Gi7Yz9lu7mEgaGfY7
-         xH5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793622872; x=1794227672;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793623737; x=1794228537; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Swv5UcPabS6E/hCnFYMyFqMC2vY1/PiK8X3IqFBNP6s=;
-        b=Bz9tSd4Z5MIgaA4FSqFMSbeBK2nPuYV5KIRiqnMJdXdk3xnmKGlDbiiV//2GVc3JRO
-         JRA79P3uVH/TlMC5RbQJ1fBd1QL+eIafrjtLadS+GFW41CAjUfSpRhEJSdg03jczLWtQ
-         5IpAPSCjI2DOCTWxEyUrNZ9eTMvnAPobr+qooQv8uJY5CrzFoIfVWJg+Ayg4n6KoWDOA
-         GhPDVEIDV1M3blRXLhBroCrmPlWdkFDCMM0NLemvkk+t+/p1Clcb2eRVp3gRsWieaiRV
-         P8kfx2TI4VoAn8stENMCk07haKQtL/P4sRs3KFVFFsg6C04HGaMJ1Z5vFdFhWFtcVF5B
-         dUMA==
-X-Forwarded-Encrypted: i=1; AKwUvBw9gIaDVK9jzVV18MfLxOnubH9UbjwMNK8MOji9LZVp2LSxD/WSSVW6ce1acoui0do3+s4P3ZDo72pzEkyWCQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJN9PzpFABRxnU19TSvuK7IlPKSXQku9JIAldKarHKBXioOxdwq
-	t2SQb7Mvt3y432cytGQXk0fsmAUyhqVRK+grcN8TZ2xArEDDyuZdWDyP
-X-Gm-Gg: AYBFou38EGLBdmwt2tWDS6nKV6+Med33Ky6DYWJ6vDCSCxhtP5zLjKfpOQXKEeSgtUT
-	fCjkDQkdT61fIW7cXpWq8rHMYPgwS/s9CU3r+i793a0Ya402ideQ2OubPvxUEN8gm2e9UdbMjvP
-	kJEVp+6EIrtSlOmVEBdZed/Wp/rRsB0LcqfQyNyznAu9TZ3VbeAUaoeeztmvQi+yEF1wCrdJGUM
-	H48MtAZUUxOYA1gzr0odImzy9LxNw/iibCgiETbsASw4fOWSRSFA07vqXVz6Nrk/q3S1TwYZu7O
-	2ajTPadVomlcDBlEy6V1xittz5J4lB++TovggxSsUxhQUVC1OOzG5fhE14ABbpYnAb4h0jyDnA4
-	YhqpVGtZx4ssY28IWZweDAWJ1KLHBONXvIRZHeLWxgYDYqBQcgDHvujrZrz0kXhEGJcDLAvNGj7
-	pwE+u3Xqav5bVQYuLUTCRv+ZFL/ieylVQmPeOXF4jCbc2yPRpZ8iSohBveEzfztJLCUz9eOWc1c
-	uj4rAPwirtDfxFFY4WnL7MbjTnFWEbLfxeBLUIaRXcU2843GjYsl1GMHfgIdQfGbjceiqHD7SrM
-	UzzaVTIMy4TKAGB6Ap1bJChK7wchQsvkLQg=
-X-Received: by 2002:a05:600c:3554:b0:49e:6581:7baf with SMTP id 5b1f17b1804b1-4ac14ec66d9mr242086245e9.2.1793622872329;
-        Mon, 02 Nov 2026 04:34:32 -0800 (PST)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b80ecbsm20321842f8f.35.2026.11.02.04.34.31
+        bh=FHXKwfyjhX6mVoz3qAoilKz+1ex0M8UbC4u4Bj+pau0=;
+        b=auizdsJy9Ldf+7S8Yco2jp5IjDhkadRv9VqvTUgnZK2styt4f3erznGi6atB80o6pq
+         xYX3KBYX8QfSqNbTKsowMMz3NRmyRZkmMNrkUXoMHOwYW0Z3K/Bc2sD1CWJiCQn8ts9J
+         LWNzH8c/uhoMk74cWwNyp+Rfl4Wm5FSuF+KBhf3vJnGYcapv/xET46KEwc4Lbu/t97EB
+         GK+G5/66dwGRCmvCRuYVM5hfmJciH+GYllsIMV7EO4XMcc+WVFMcUhBKbK6GCZJpIX9C
+         uZUsglGN6vZrjHCgQvUQklmLOB5ogtTHHRpg4NMXbmHxPQAdmoJ+BwRIIvaBgbUZR10P
+         16vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793623737; x=1794228537;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FHXKwfyjhX6mVoz3qAoilKz+1ex0M8UbC4u4Bj+pau0=;
+        b=DTZbdqlaiD9P9uIjPj7fmehCk/1mmpA1WubP70oLc2ldfUJHZDgu+cWUpoUX/i2ZG5
+         b6YrCDA+HbBK0lvb0cfmWdxVNRq8O3NZs3m65RvYCNgLkhKON7I2Ib4MdTcOpYSU3pSB
+         mcoACKee51NGFCEWtThdYsZyW6SM1iLlsjkFZyIntdlZE7ZbhEpX0dhOC7GKKULCLmGH
+         jfX4TMFw7Za8Rew0RTgmjJ2VKqkSuhe6QdhgVoh0Y2fUTvXypD1gtBQUbrKFi0u9iHoD
+         S95RDK5wNZxjSU4uUPcquii6PwOwmVgalyr0p0JJyl3LFwgxXUnbOXJT4ZtI5RMNydDq
+         WZEw==
+X-Forwarded-Encrypted: i=1; AKwUvBxavAvGOMx45Q89vwEcYJdQFsLySzsJVeR0kEcBBnwiNPa8eKt4rCjIPQ6YwmvOsWak8P4WbzKoy/gGQJf6WA==@vger.kernel.org
+X-Gm-Message-State: APuU4Z+C6xsQ28N2cJoFj3I7ydj0VdoNJ4DbHCz8rrbQNViU4jetXyyM
+	w6yvcoEu81sr0VBeaEIuVchlFLNA6yLr0RZXKaNsnkk7Bhc6F3Uq+tM=
+X-Gm-Gg: AYBFou1iMoZZ8UD9JgpzdthrB/1kLxi/ehNOLgCtYztO0y/UumVACqBfrtMH2uuX3HK
+	oWLgaCrs+LnuMeUAczPjZOeNMSLYfn3wjE6pGYPW9h/1ykL17hflsSgYiawdsmz3tdGCtvpGRlf
+	4CGGvqfNBJJl35JJ3VGc87yji0Ji7rLm2iHG0ydw590bwYTqE9iNRaagfJelC5DSYMRF03uzF55
+	fQmSOSN+ekA4r9q+66BfRWYwc2qK5u8pHuAEW8AlMIsc5Ttvl2pEJPMp5wVm4aKBBzc8ALCEVlE
+	LDdIjw0z7CDQw0H0T8MKbyVFquNSXH9sd7UuN6Ay1XC7gQnw89d4Xi3h10T9Ao57J13YOq62i6z
+	EYGuX2dxFvhGr9pZ/YwelAHQjsC5PYxPVEZZl6qH1rygb692maafSKCiyj1n6k9Q/8QUCADbdmh
+	SlFXDNi4iHfqIRI7ox8qBzo5hc53+LMKlEiaNjJdyguc7tkGfV09BT/rcccsrk1u0WMQPu55Uie
+	qCbgZAbU1NjkazfGgQIlEOWAi3xdoTHnjLq31UtSxDF5dYVitNk+joHGWBvcmtdyJQCgtTVVQ==
+X-Received: by 2002:a05:6000:22c8:b0:48e:4831:ae20 with SMTP id ffacd0b85a97d-48e6e305b92mr23429203f8f.37.1793623737454;
+        Mon, 02 Nov 2026 04:48:57 -0800 (PST)
+Received: from debian.. ([2001:41d0:303:db6b::])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b723bfsm18719736f8f.15.2026.11.02.04.48.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 04:34:31 -0800 (PST)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+        Mon, 02 Nov 2026 04:48:56 -0800 (PST)
+From: Tristan Madani <tristmd@gmail.com>
+To: Jeff Chen <jeff.chen_1@nxp.com>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: [PATCH ath-next] wifi: ath9k_htc: do not fetch the beacon of a finished countdown
-Date: Mon,  2 Nov 2026 13:34:30 +0100
-Message-ID: <20261102123430.1136741-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	Tristan Madani <tristan@talencesecurity.com>,
+	stable@vger.kernel.org
+Subject: [PATCH wireless 1/3] wifi: nxpwifi: validate HE capability TLV length in firmware response
+Date: Mon,  2 Nov 2026 12:48:52 +0000
+Message-ID: <20261102124854.325979-2-tristmd@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261102124854.325979-1-tristmd@gmail.com>
+References: <20261102124854.325979-1-tristmd@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,49 +102,37 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+From: Tristan Madani <tristan@talencesecurity.com>
 
-ath9k_htc_send_beacon() checks the channel switch countdown only after
-ieee80211_beacon_get(). mac80211 replaces the CSA beacon only after the
-channel change, and ath9k_htc_set_channel() re-enables beaconing before
-that, so an SWBA event can fetch the CSA beacon again on the new channel
-and mac80211 reports "beacon TX faster than countdown".
+nxpwifi_ret_11ax_cfg() parses TLV data from firmware without checking
+that each TLV's declared length fits within the remaining buffer. A
+firmware response with an oversized TLV length causes reads past the
+response buffer.
 
-Skip the beacon while the countdown is complete and finish the switch
-from there, as ath9k does for non-EDMA chips. Finishing from the skip
-also covers a count of 2, where the first fetch can complete the
-countdown before csa_vif is set.
+Add a bounds check that the TLV header plus its declared length does
+not exceed the remaining data before processing the TLV contents.
 
-Tested on 6.12 with an AR9271 AP and hostapd chan_switch: the CSA beacon
-was fetched again in 3 of 40 switches with a count of 5 before and in
-none after, and all 60 switches with a count of 2 completed.
-
-Fixes: f0e449627e4a ("ath9k_htc: add support of channel switch")
-Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
+Cc: stable@vger.kernel.org
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/nxp/nxpwifi/11ax.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 81fa7cbad892..2b5bf07511bb 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -214,6 +214,13 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
- 		return;
- 	}
+diff --git a/drivers/net/wireless/nxp/nxpwifi/11ax.c b/drivers/net/wireless/nxp/nxpwifi/11ax.c
+index dc1e747383eca..1006b4a84de73 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/11ax.c
++++ b/drivers/net/wireless/nxp/nxpwifi/11ax.c
+@@ -215,6 +215,9 @@ int nxpwifi_ret_11ax_cfg(struct nxpwifi_private *priv,
+ 		tlv_type = le16_to_cpu(header->type);
+ 		tlv_len = le16_to_cpu(header->len);
  
-+	if (vif->bss_conf.csa_active &&
-+	    ieee80211_beacon_cntdwn_is_complete(vif, 0)) {
-+		spin_unlock_bh(&priv->beacon_lock);
-+		ath9k_htc_csa_is_finished(priv);
-+		return;
-+	}
++		if (sizeof(*header) + tlv_len > left_len)
++			break;
 +
- 	/* Get a new beacon */
- 	beacon = ieee80211_beacon_get(priv->hw, vif, 0);
- 	if (!beacon) {
-
-base-commit: a3ddbb45768717b5c9f923489387cf55c838d1ad
+ 		if (tlv_type == TLV_TYPE_EXTENSION_ID) {
+ 			ext_id = *((u8 *)header + sizeof(*header) + 1);
+ 			if (ext_id == WLAN_EID_EXT_HE_CAPABILITY) {
 -- 
-2.56.0
+2.47.3
 
