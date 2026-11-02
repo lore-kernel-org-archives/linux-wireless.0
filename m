@@ -1,92 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.169
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793571939;
-	b=vwhdpD6lVNf/Z80fU26W4/kicocfwKm7+jpVgVdJ/F2wSC3fbn03H2/6EwZ8yqV+oKO3
-	 Y6Vu2ikavcM/K8IEDvfhtFlELFqi11aJzebNXGcuRKvKLqjjllCxFPeZaDWwfaXwfNw8W
-	 HiI+SHs89DBZNZr/ESHFDO/H6M7nJ50ZlANRhzayuLIC4u5QwlygSl1PDGSR2szKR2gIE
-	 CMSNMRINNl/RRC8vNLswXwhZSSp7xD5srOrGTV50woHxP50zxawzJArCySuCzJggXC8RV
-	 N7ur5XLj5O4i2A8O6msIrJWPKwFYhc3lSrLVqJr5nCbk3tsFIF53P87DgzeRjEklOyw==
+	t=1793580546;
+	b=fF1ZnfazAa4PAvSfd/olqOWDOXqX5+W+pT4CFg27uEvS6SRma/hNoFieSi3xPCKOV/Y7
+	 iXqQgvglzDyT23o6S3en2Z0DYFvXDbgLh9tMRNOepXPVVquCB1PiwgRudIwFNrlodzLvd
+	 sKuLNbCCC/rGQ8mi2zWlz60I35BOUPGA9LDwp5vPSfEObLCYbieomIOH+cdOIBtmF22th
+	 TPvjEKMKgBAfaF3n3AL3TTW1Zb1Z84WTidSCovzJiZrzq1PWqNFoyf+1I/E4pKeUCbRNI
+	 zfRE29E+OHygeh6lfAILMx8KxTI7gTh+AamAji5Sp/RJjag+nMAZpzcKBv3L1172GVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793571939;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=kJOBoJUkoFAEiWtg0dNKy3UlTYdlf7GE/vw5ICcDfv0=;
-	b=wuRXQdBLeBtiN52XD+ChywtiDDIuO0hxCoMuGM5sMLN0FarntKu5VZTQGlG0CN2rAXWD
-	 mn5d/YurWPD4ff1u2u2A5+QdWNS+jreVElK8Uxu4+apJjxUcF+vlkiJMMVLKeDlK6VsDm
-	 dqfHlsZ4OX0Z2ot4eLsFJDHf7qE9raEnaeTdqOeuIjXLW9mw8oKN7jcYnoqDHIEu2yM9/
-	 TscQEdcTJef94fONqqjXXrizR1S2Skr+sUX3yQXjF+lK5bZPgI6N1VtzV5HCcsFN8vBFs
-	 S8NHh8APeN90tAOFaG005asnaEGb8oWigACcdwCVisNV81ypb0NeR1i7a+ttiiDcOug==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793580546;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:
+	 X-Forwarded-Encrypted:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=AxLijxCHhlhY2faPDuw/HBU0+yy89FEV9COVq1aaz44=;
+	b=FiYtnt1cY4Cupks3Cs4KXVA1JzK5BF5qbILOW3r49HcAWTaElYMJy9ueFwzGqW1fzgGA
+	 nLI4jtYpI5hDOxfmbcVS3IZCmjkk4JlYmC0qPAgFpBLTXrMrKptxiiREdBhl1l6SnC/06
+	 2o8Q7+hYW4hDXcQsDbt+mN1R/HF/xok4hKVMZ52U8VGC3CiD19DygO5NpKngas/FCkg8v
+	 Qk2J1o4fChBJE9XhtUz2dRTNuLwDB/Z3RGceq4CI1mlVd78v5UhztGOnbX1+kCzmDBzZM
+	 QxcFYV85Q5QzzESVk79Ue6BcDmlg7HFGb1GPYsKMmMNZKSaH0uoQWM+BXGOKerxNhHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
+	dmarc=none header.from=gompa.dev;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LmEr+VQ1;
-	arc=none smtp.remote-ip=74.125.82.173
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
+	arc=none smtp.remote-ip=209.85.160.169
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B57C460701D1
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2026 22:25:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B57C460701D1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 332B7606A326
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 00:49:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 332B7606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gompa.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LmEr+VQ1
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-3645f0f3fcdso4241565eec.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 14:25:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793571938; x=1794176738; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kJOBoJUkoFAEiWtg0dNKy3UlTYdlf7GE/vw5ICcDfv0=;
-        b=LmEr+VQ1TBDpm8PGMdN8isqSoNjalLY06F83FXsd3LHuMPBaCR3le02S2H3oDV8bDl
-         Hu+Ba/o+5nLxa51WKsanjBYw//9XaQPzbRve/L705NDW9XMvSr0uJC2SkoVPAp4GSTdu
-         QUoy7fwPs2POs9RCz8bl4EMCnC6gFwvy09VY2+EunqEP57j6DGPK9TAtZwUHo+D3Qsfg
-         6pLzal6tYEZaeNQFftE/FesVeLv+KT6G52Pk/CWIE1F5pT6D0tForpzNdOjWuZwMT6rd
-         BGWIhNY7h+yImwTSypUSrI5L4YBdgroybfAoljcyhhmPUfhMctU/2oURCmUk1UfvGdvS
-         Lfag==
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-5365f9a04c5so44142961cf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 16:49:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793571938; x=1794176738;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kJOBoJUkoFAEiWtg0dNKy3UlTYdlf7GE/vw5ICcDfv0=;
-        b=sXkPFdamSFNz0HZ1JOxwLKurjtdkKcrv7Wh9SDNvDh2w9ec5th9U5Z1f4VxR+CJvEj
-         ZbdzrmLgQoG6EX6d9+MC8VTuf0XiTAprg1CzJjGyHQYR3DrUflfhQV/xplateNQv2Mmx
-         y419qQD7+GM+E1qPcJJ8yhtXlXeasWaRyM013Pl8YpnqE5140bcpFeU5vUIBrSVoIiIu
-         IZaqti+uwmpqloXj51aeE27/ohN1usxp6YrO5U9PyPKgATa50/yi2EQRfEX6I271g1cT
-         NE/kKS/EkQFBVHK5yj+SMcqWUFXLFnOquu+ah7aYcaftXmiOlx3VTVmVZXcnvdBEPRLP
-         vHlw==
-X-Gm-Message-State: AFq9FYIjiZHRCggpvTl3wC35kx9DE1wXfAOlTjsU/1FWcYqtwzPKQqsm
-	7BN66JHrPRFTDcZcDWoinL5iyrJHtV4MaXSSIh4RSUEl+NctNjwwrHzsIbJaCg==
-X-Gm-Gg: AYBFou28QmTgyFJbAb5d7Hg1GZN3xz+jOrRMwlsOkMSCMZPk+RU72qoim1+lXpOHw8a
-	vrIhopVQhIb2W/xY35r8OGGbrLBF28+ffDU6k/0JtZfDkNHhMPGJbrARkA24n6v77WrwIXLlbya
-	UbbXW/r2WHX1fBITsZt9wt23lCg0FzOLzMNg7cX7dscOmKcGwoEr6cmeV8DGm5kaneek9ih75B7
-	roi5vDrQz/NaPn3IPySvw/QD/X+1GS4O+etbdsfy1PvfglyzZ9Lax9oUPs4scC44O5wGtQz/hnS
-	Wwr6rWSjczYSSJEhd3dYIbwjbQg8CCj8mqD2zYBVuGmWf4zqtgXRPt5kl776D3v2tJrJ3hFNJUV
-	0p8NXqObtxOe7WadCkGyd4TEczmoAXAo3Zuj97nEYfEwN/fnhb/ygChJIyVilP4BIS48tHxFU+E
-	o2OUVZrYes3Fv4cxg8UoxBwvTvyosFYBDXqbWdTwlqR0FOB0DwlkeBZ1zPQC3O3Xq3As1pTUKGn
-	D+M1NC4Kcu95O2puuWTmL6M0zUVmmNEflrZ5ZxiKcAmC49BtjhnOkEdHErsfMQ2hUKfqIRZ8Gl+
-	k4CtCPdTG9AtHj9SqvtmmgGjY6LUP5ijiFd7JLBt3UK2MzYR3oLP1n55dJmmuv0qesvgPeKZhko
-	6cNQimmXI8JsFD3yaWHlFtkdQnAER9CGs6NwwtAfDaXaMNvL8F4Xb/TwZoEGSJq2OnRZfzzokvY
-	0nqg==
-X-Received: by 2002:a05:693c:87cd:20b0:36a:32de:a239 with SMTP id 5a478bee46e88-36a420643f1mr12848026eec.0.1793571937651;
-        Sun, 01 Nov 2026 14:25:37 -0800 (PST)
-Received: from ryzen.lan ([2601:644:8000:37f::e34])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a42669128sm33089979eec.3.2026.11.01.14.25.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 14:25:37 -0800 (PST)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-	Zong-Zhe Yang <kevin_yang@realtek.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH rtw-next] wifi: rtw89: acpi: check for _DSM function support before evaluating it
-Date: Sun,  1 Nov 2026 14:25:35 -0800
-Message-ID: <20261101222535.34573-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+        d=1e100.net; s=20260707; t=1793580545; x=1794185345;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=AxLijxCHhlhY2faPDuw/HBU0+yy89FEV9COVq1aaz44=;
+        b=CfprApx6CDyc4eO8NbMqMch52XlJYBZWROVOtqKjjhBY9ukR+aZyCK526kEzc608a0
+         oNUJkmFH75qfEWWWnQ1rj2Rye/G6Mh0zs9YWqdEiHoDchSq0vw7N3Hnlj55byLIMm/gF
+         FIPEDbzV5q3J7LSG2VKzYxO1Z9PP3/Rj9hzsvno+h14a4ke/4tfKEZH44bukfjsl6ICd
+         cID9pmUAIWgQPWnnOCfZv3ZUoa9H4nrQTC0R7bmqmUMY48lfwEtzLW5hZGlQMe0EySwR
+         Tjt+Clm4r/UVpmmQQh4DMXfZfYxuuFGxhR2FcTPuaf2eMb9w8hroRSyznAc4WdWHC1YI
+         6opQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzvrNSiPCxf8BJRjJ8P0IgDpl/8+AuLFMWyYuZWhdocCtSJljYwCFPGzm69Jc2zAHrGzpRquJDnEF0+9oEyJQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIiUNOascu6vB3Cl2zooyid78Ft5DpP01nno3B7AiO/R2P4YRDF
+	7tYDgGJwHTFYZ5LSr7nXY8+Cig0Nw+RE++N4l+CRN8DrwjzB/SbVoODZbcfbjo//
+X-Gm-Gg: AYBFou08qsEAUQG2xoeAu+t3vjmfRK1mDEtikTZSBTQ+SswJOAWpF0zXxaadTlis2rT
+	TirxfgkAaiMxvwZ3b4aRvbOFdkS6+X8SPVzkeoBzVfWfQlFkmMU/HkDAb6F863es83W3ZHDoLZa
+	q9CXzPq01Td2etitOpCVwcWVcwdbeBgTlKI4LQ1Qqcj8fOwnDiU3cSevtd3G+xGo9jMihP7YqVx
+	HgIpq6jPy4qDN1p2o6IK26z8SkZFm52DxkotbvdxL7XwW1kGyqm2cQUd/peSQ38I80txJX3bJaZ
+	ULkDBlRq6gIgcjigfYhWzs2FtdrvA8j3BgJXFlPpeaUjSDJHlEgQtLjYp7tQnt0TirqgwpTzHvo
+	qFAOo8mLEbRjurh+2g9GP3xqjCPG532f6Pc5sFQg+vNtaQd8vhUMKb0mFVKGqkAMqbFqETkp2x7
+	e6L7Ur0yuIBFmL/FbESSjeT4jn7KJWFL7xeMol71EGfbkykq4hvfLlUXocRKAA4Z0YTuhRCZzuu
+	fnJc7Me3/H60Es1cc+UBfVfSc7C7gXMe5Dm41voP894nDoYbKPNrOeWueSGUtLSxjy1zOrWFbkM
+	7+jo6DLmF1M25ZDJnGiBYa27WV4yXCpDkc+OlUICkZo0t4+JWbXi/gpCH39DXlReVgKgzxqkGTm
+	JndAizf6cnlPkCJ65dclhtIeRtPbdPvY5xEoEf2dxyQsA27V+nWy7rL4OLfhDG6Xl+krdNQ9lLL
+	tteE9qrH6VqbgF1393zaSY
+X-Received: by 2002:a05:622a:30c:b0:537:af99:b562 with SMTP id d75a77b69052e-542b742ceabmr130301781cf.47.1793580545051;
+        Sun, 01 Nov 2026 16:49:05 -0800 (PST)
+Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com. [209.85.219.46])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-54311f7e5fcsm72679321cf.15.2026.11.01.16.49.04
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 01 Nov 2026 16:49:04 -0800 (PST)
+Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-91c7a0c1617so43062646d6.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 16:49:04 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvBzyLxndxvZLvQ+gaY+tqkVMdc/rSwQu3XhVhbmKOchxovsIN+0WYxCcBMKUo2YuI8pzKyEclSiY4MKC70Vjlw==@vger.kernel.org
+X-Received: by 2002:a05:6830:3e03:b0:814:b62d:3122 with SMTP id
+ 46e09a7af769-85d365b1f81mr6135908a34.22.1793580185285; Sun, 01 Nov 2026
+ 16:43:05 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -96,55 +83,108 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
+In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
+From: Neal Gompa <neal@gompa.dev>
+Date: Sun, 1 Nov 2026 19:42:28 -0500
+X-Gmail-Original-Message-ID: <CAEg-Je918POdPr-=6Dzpdkx_i+Hv4wxv5-8A3MUDEqC8SA59NA@mail.gmail.com>
+X-Gm-Features: AclHuK_r7QD-EGzh5icdkxVPJ8YDU4Pcq4HDNCl7O8hh8I3jnfCORQFhQybBRTw
+Message-ID: <CAEg-Je918POdPr-=6Dzpdkx_i+Hv4wxv5-8A3MUDEqC8SA59NA@mail.gmail.com>
+Subject: Re: [PATCH 00/13] wifi: brcmfmac: Add BCM4388 support
+To: michael.reeves077@gmail.com
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>, 
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>, "Franky Lin (Zhenhui)" <frankyl@broadcom.com>, 
+	Mathy Vanhoef <vanhoefm@gmail.com>, Kalle Valo <kvalo@kernel.org>, Kees Cook <kees@kernel.org>, 
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>, linux-wireless@vger.kernel.org, 
+	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
+	asahi@lists.linux.dev, Hector Martin <marcan@marcan.st>, 
+	Daniel Berlin <dberlin@dberlin.org>, Janne Grunau <j@jannau.net>, linux-kernel@vger.kernel.org, 
+	Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-When the WiFi device has no ACPI companion, or the firmware does not
-implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() calls
-acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
+On Fri, Sep 25, 2026 at 9:49=E2=80=AFAM Michael Reeves via B4 Relay
+<devnull+michael.reeves077.gmail.com@kernel.org> wrote:
+>
+> The Broadcom BCM4388 chipset requires new PCIe initialization and
+> firmware interfaces. Add support for these interfaces to brcmfmac to
+> enable basic station operation.
+>
+> This series adds:
+> - Signed firmware loading and mailbox transport
+> - Fixes for chip identification and firmware capability matching
+> - Versioned scan and join requests, and extended PMK payloads
+> - Updated event mask handling
+>
+> These changes include work by Hector Martin and Daniel Berlin from Asahi
+> Linux, refactored where needed for upstream inclusion.
+>
+> The series provides basic station support only. 6 GHz support is planned
+> for a follow-up patchset after this lands. The driver retains legacy
+> interfaces for older firmware.
+>
+> Tested on an Apple M3 MacBook Air (J613):
+> - Device boot and network scanning
+> - 5 GHz WPA2-PSK association and DHCP
+> - Bidirectional TCP traffic
+>
+> Testing required separate Apple PCIe and devicetree patches, as well as
+> Janne Grunau's port-authorization fix [1].
+>
+> [1] https://lore.kernel.org/linux-wireless/20260915-brcmfmac-4way-handsha=
+ke-offload-authenticated-event-v2-1-fbb9cc7ac177@jannau.net/
+>
+> ---
+> Daniel Berlin (1):
+>       wifi: brcmfmac: Support versioned scan parameter layouts
+>
+> Hector Martin (6):
+>       wifi: brcmfmac: Support newer PCIe core startup and interrupts
+>       wifi: brcmfmac: Negotiate PCIe mailbox transport with firmware
+>       wifi: brcmfmac: Load signed PCIe firmware images
+>       wifi: brcmfmac: Accept newer BSS information versions
+>       wifi: brcmfmac: Support versioned join requests
+>       wifi: brcmfmac: Add BCM4388 support
+>
+> Michael Reeves (6):
+>       wifi: brcmfmac: pcie: Report the detected chip ID to the bus
+>       wifi: brcmfmac: Match complete firmware capability names
+>       wifi: brcmfmac: Fall back to RSSI-only default join preferences
+>       wifi: brcmfmac: Use event_msgs_ext for event masks
+>       wifi: brcmfmac: Handle larger firmware band lists
+>       wifi: brcmfmac: Handle extended PMK command payloads
+>
+>  .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |   1 +
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |   9 +
+>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 368 +++++++-------
+>  .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  36 +-
+>  .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  27 +-
+>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   5 +-
+>  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  18 +
+>  .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 124 ++++-
+>  .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   2 +
+>  .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    | 130 ++++-
+>  .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    |   1 +
+>  .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 141 +++++-
+>  .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |  65 ++-
+>  .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.h  |   9 +-
+>  .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 560 +++++++++++++++=
+++----
+>  .../broadcom/brcm80211/brcmfmac/scan_param.c       | 416 +++++++++++++++
+>  .../broadcom/brcm80211/brcmfmac/scan_param.h       |  13 +
+>  .../broadcom/brcm80211/include/brcm_hw_ids.h       |   2 +
+>  .../broadcom/brcm80211/include/chipcommon.h        |   5 +
+>  19 files changed, 1593 insertions(+), 339 deletions(-)
+> ---
+> base-commit: 42a9fb3382fc2573e92f41d203b095d9a372cfc9
+> change-id: 20260925-brcm4388-submit-5cb8d3e6d6a5
+>
 
-  ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 rev:0 func:10 (0x1001)
-  ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 rev:0 func:6 (0x1001)
+Works for me and looks good.
 
-Here the handle is NULL, and acpi_evaluate_object() returns
-AE_BAD_PARAMETER. All callers already treat failure as "no policy
-provided by the platform", so this is only noise.
+Reviewed-by: Neal Gompa <neal@gompa.dev>
 
-Use acpi_check_dsm() first. It returns false for a NULL handle and for
-functions that are not advertised, so absent functions fail quietly at
-debug level, as rtw89_acpi_evaluate_method() already does.
 
-Seen on an RTL8852BE in a desktop PCIe slot.
-
-Fixes: e897b0bef38a ("wifi: rtw89: introduce realtek ACPI DSM method")
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/realtek/rtw89/acpi.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/acpi.c b/drivers/net/wireless/realtek/rtw89/acpi.c
-index ebb6cf555747..2968918936ac 100644
---- a/drivers/net/wireless/realtek/rtw89/acpi.c
-+++ b/drivers/net/wireless/realtek/rtw89/acpi.c
-@@ -372,11 +372,17 @@ int rtw89_acpi_evaluate_dsm(struct rtw89_dev *rtwdev,
- 			    enum rtw89_acpi_dsm_func func,
- 			    struct rtw89_acpi_dsm_result *res)
- {
-+	acpi_handle handle = ACPI_HANDLE(rtwdev->dev);
- 	union acpi_object *obj;
- 	int ret;
- 
--	obj = acpi_evaluate_dsm(ACPI_HANDLE(rtwdev->dev), &rtw89_guid,
--				0, func, NULL);
-+	if (!acpi_check_dsm(handle, &rtw89_guid, 0, BIT(func))) {
-+		rtw89_debug(rtwdev, RTW89_DBG_ACPI,
-+			    "acpi dsm func %d not supported\n", func);
-+		return -ENOENT;
-+	}
-+
-+	obj = acpi_evaluate_dsm(handle, &rtw89_guid, 0, func, NULL);
- 	if (!obj) {
- 		rtw89_debug(rtwdev, RTW89_DBG_ACPI,
- 			    "acpi dsm fail to evaluate func: %d\n", func);
--- 
-2.56.0
-
+--=20
+=E7=9C=9F=E5=AE=9F=E3=81=AF=E3=81=84=E3=81=A4=E3=82=82=E4=B8=80=E3=81=A4=EF=
+=BC=81/ Always, there's only one truth!
