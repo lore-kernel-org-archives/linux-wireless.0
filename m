@@ -1,96 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793647074;
-	b=5nxXFsUCEQn7evDRvbAaNHFJU0nrK93MDRA9FWRZItGS5vYGTNobBU4tb+sFq/Vu5XDd
-	 Rx8BG6rWBbKK/smdICTGNOKm/gfczu0f3EazgLRsbCBT0BXFwdMJyzih3fLRNYmLK+Idu
-	 J/rXkYcbnnCk6PtIn2j7XS59a8nmBEhJOztgWMdPeFWXC4TPa/6F4oSfVEkge+V7nW/SQ
-	 2tOZvmH2xKKALz/HDzQ+DujFqQaQr/JaPb3TQ0X/r6PkNimkzwICTRVr04SBd8sgGCRSQ
-	 ioJOASueo2mC7ZpMl4mOaXkHF99+/CoDRbgammZs6Vzbh9MlIpmVd1pLFv2LfZ5DrDw==
+	t=1793647083;
+	b=jjLgeQslU+PYVjv++F5yyMeweAbOky4GywthrK/GGtqs1rknFbh1pybSA2O6sfcb/jYw
+	 YElC5WnBQlU5mR7wWxAQkgMN09dphcOHCK3w3ZTVkfGHDpt6cZ5aoAj9Lsi+RZ5N0S2e3
+	 RG4OeK4a8b5ymfqZRfo8gw+P7FMNOZXBEKZ8qzkZcn4NEjEhFXeg3oXeH8aAfxeRTvd33
+	 k/H4vSAePZ0pehJGdQJH+ai1+BSHL12GoC92TYXj1hYNRBD6wlODmHdsaloTTXqwBI8Dr
+	 +A+G7ZtReti4ZPhIObaEt0WWKBrGPogBpxNMvMe9XSabgImYMb+Ug9EDzEmNUtSxyMA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793647074;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793647083;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=aVE8zme1iRyvaHJJXQb1UnPAk3BxoHJBltYK6kSmEUE=;
-	b=QblR0R0WxRh0HVaXd0/5pxMMS2Bo1VDyFmbAUXOEGzYFbOQQU8b5n8VPNDNavxbpDNBf
-	 ulh1E6IsNRBO5ekL8e0MNwcjCK+L+nEKEPMjFQeifvRyzUdspPPk+JBf82VmXgHrXYdmQ
-	 xdiGm/Zn9pj32n9qcY90nh2FCv7Nh/cB4CTd6GDwF/ZAimdPnMoLoP6wIQ+TK8vsPj2x0
-	 ocVRv/FywgP54Twj7PBbkwbdnuAGWxOa8GU+1X6RUS0HkD/uJ06W15gqUGOTi+j+4UFmz
-	 JFiwBjHzCCw9BvB//HuRvJ9dB75eIldCOFvPbIHlPvRnG5ejNQzMArlDdjLSUIgFjUg==
+	bh=FOqLSFlmXa9VNiEma0WSAldud1u92mwnEYoycTmoyt8=;
+	b=Og+u524Enjo/zWqLTvTw2NmNKnCiLI6fUnDHYd8ZDaRDV5KHwAzbEvlfd0SpXWPHlLmm
+	 Y2aQlG9OY7Rvl2v2HghUxP5yCUcPvbnreqZRObfg/T0MIQKTmw6SF7Zg6rDnSZI3Oad5z
+	 BZUE7WAXeSFuDKWycBOH8GVkSaDz4XlOhPbr/FGbaXrdSMRTdMP/iGQxn+Qu1nje4ohBw
+	 pSOP5TGcIrWk1vd7qwQp2SBZbJtyjVrFPv4+Sb6Jhnhwq2+XNSN33EvbAhv8RUiAB5uY3
+	 C9abVlkYs/rObO+zeAYdru5mFNOX+mTcEvyWCCS3Tybj62/Ywn3Z7uAZduZpYeSDxiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=m3pS5Pyk;
-	arc=none smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=PhHLn3xy;
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C10C3606A337
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 19:17:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C10C3606A337
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11757606A324
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 19:18:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11757606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=m3pS5Pyk
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a5177d78c7so34442565e9.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 11:17:53 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=PhHLn3xy
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a2000d5fb1so22512095e9.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 11:18:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793647072; x=1794251872; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793647081; x=1794251881; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aVE8zme1iRyvaHJJXQb1UnPAk3BxoHJBltYK6kSmEUE=;
-        b=m3pS5PykhHodyqYuJX7hbI7UnTabwyROLm/nHosoRh1WH8eaYcpdCffqwnGJZ5vlr6
-         J4m2HnK+qSU46GAGHphS0pQUdIaTe5eS4fHma2m1WlWvOIB15TWZ4hydxRUI/f7DrznN
-         ZD3ekvoY6/ZfUGzRvI8oKEcF2VK6+fwODHyj5o4MPrfie8oWYl8BGgz6HWGrbPV0zwxz
-         sBblv4fRnzBuKs4k71fXjtr0z+ahRidzy6ORUFT4YXW5Eu/yBwItKZe4BhpG/LqE6L1x
-         DdYY3GY731RDK5tnmwm3ZYI9Jxd9jb6cCSH0jaU4WJiQqbg2DBg5iGdCap9sblMd2+Yt
-         4ezQ==
+        bh=FOqLSFlmXa9VNiEma0WSAldud1u92mwnEYoycTmoyt8=;
+        b=PhHLn3xycdnqVLb3UZxNFCI2+foitR+doRurslWo5zWx+ZuP9erhNAZazc5g1O0AA7
+         X3Dj9KyynQ72xjN8X59OjfADJ4n8/IjNB89lhHSMIcWx9E+B06bZJh/zJyZf85Hz7VWi
+         jEN2gJX70m2yjwrEpabO7JETQPqER6gctdfhUkRYvHjGFzm5T9Jl0xuz5CBEgPwNgfQ+
+         PetEMH5SSAwzoMGT0s3FOrcikTWDIo+yHfkifKuKR1f+a0h6P/q/Tun6Q/0rbYobI3rp
+         //3gM2yDju/NXhqa6VVeP0xHKMpS7vEj2KfNgt/mWHDl8M/CYit+OfEsHgX2YTM00UVt
+         c+tA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793647072; x=1794251872;
+        d=1e100.net; s=20260707; t=1793647081; x=1794251881;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=aVE8zme1iRyvaHJJXQb1UnPAk3BxoHJBltYK6kSmEUE=;
-        b=q1iwJaP8jo2xAPa4cxCWgah/gnUPcy5bqJJkrXSD9VjbxTYDbbO1FtzWOc5mtzlzPX
-         Oha0iLbqtRpZKhwj6CR8qaT37UsOVv1CD4I5tpQRwLccZWz70p8oFnlBw33NzocGei2D
-         JsN2jcRJKXlxrSW7V0ClS9DI5njYi4O4/ch78kjiX3K5q/kDkHc6hsMk3OIwE3unzIsQ
-         S3+BzqxjEeAXhZzZwD1mTwKzdgNBUQXnqSeAnU4hwBphCze9FORAPtFU7kTH0u/9ih8W
-         YLI1AQnrYi3K9d3f6AR3+m+EN2PtO83hdtNS2+qVWdwmoInyKTqGaKDcm4nLvlRy98il
-         rLgg==
-X-Forwarded-Encrypted: i=1; AKwUvByyNEXO5ZrDm+Uye9Z4wXgWauebkEpWvGMF1nnlMWjov9byDi/wgYjhsdCmFpaZ1IVaeu+hLQxphL7egQXXJw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIqP6+qPXtki/w0HVBnDnU0DwuqHl91sTJo4SuGyKmCzGDp2QOp
-	wIK57CEcN2OalJKuk/yFAK9ucuQIVFb3jhF6AHP0xMXfx/IeLhY2HNE=
-X-Gm-Gg: AYBFou3Fs2bXfW56w6DD+dUwFYTtqdBf8s1XFVdsqDITSLJklRDRbFZpO+D5KpmDn/H
-	ZwhyMVrMhR5EN2PLaVyzC5qg8mR8E0kRBVeJPTMyDbndv5itGQ90kZvm+AzmRVPVuR4vj03xh1Y
-	Enm04CKpq6TCgwFMfXpTm95KkRzvMS8syspoChimSY7URhirDs/m18D8pFSdqGiy+2SxFXiyG4S
-	yKSu+1WNb2dozhp18QEcULgMTMpjm0ANdjPWSqdfe+Sq1XSt9bwSB596Ce3Q2g1QDyWF5gkhZmS
-	j+7+RbcbBIDZqC/OtrvGfeXj9jdIy8Q70DcCocleOdH2FNtqmPBHmEz3pz6XpvHEzKCLG38nRRx
-	K8KEz2hq+yn3UOKCYKbgkrBVUK+uga7c4vqCLkVXtlafoO1HY0W6Gcl+5PwMWhCtK0kE5A3rzoc
-	shlzLGoJr0rsDuc+FEJkZft7lLdawYgcU18ljsVQl8K2H5AF9O7GvdqGgKyCbvAd00ywNvm3ypx
-	FBXhcHOybb9I5VW8KzXUvXnh88fYKIpKMGfMm0S0nFzRE2yCugqMQFDVaLM7GrpsTec+Na9rB/2
-	CsS3Cy7ZsL0=
-X-Received: by 2002:a05:600c:3b18:b0:4a1:c5eb:b445 with SMTP id 5b1f17b1804b1-4ac1932b542mr261291925e9.35.1793647072092;
-        Mon, 02 Nov 2026 11:17:52 -0800 (PST)
+        bh=FOqLSFlmXa9VNiEma0WSAldud1u92mwnEYoycTmoyt8=;
+        b=ZcGYVz/4OIky1eAgzuOrBuq/AqxyJpYwyMlYxexVtdF2QBVKW0y1Ml/qfdukzLSfD9
+         tH5a3MEL7Lu7ooITMqxlQFmvAYZHKjhxSfEwRAwUUIVB27NXoKQ4Clkd6qoKT+AoxNLe
+         7pDCIcD6h67RXvpbxVcwauW7vG1tM+Vswwx5Oni0cCzOq8aO2XW2saQca5yX6BI0Dyk4
+         8LwqL4Wr5n/bo97pKQQgpqIO/gyJ3Op/HZSpQMGA4RAJJ3uzYtJ+cLjiaE2YZzXLzRkU
+         +YOiwD5xYZ6gfQ7tf4rBgs9vH/R+EsXuV+/PTjOcGEqmzSQIXs40z9Xmlq00GIXMY9oi
+         Ntdw==
+X-Forwarded-Encrypted: i=1; AKwUvBwr0omUVS020Clt4+Ix1+pg/Td2olTj+pK3QJuaWTTIeIW8wSIJf5fE/8h4/RrPf1ezluyekTKpvhEaEW5pgQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIoP+yyKbEZookQ14QQSyNiMD4oEcxIKqSr2V/0g2PELj7HydSB
+	FiMoRr0KGUhs4cvAkfgrdch3FCCDSVoKYr3qcy+aKggJRNFtiyHO0rg=
+X-Gm-Gg: AYBFou35vqMi7rjKqG4SkS6VaeQRR+LMW8F8LFc0ERkyhDUFPNlM7V+DnpO94n+rHyc
+	hRdf/YG+nuAENyRgYKXuVHcDW+6oI5PUT58TJcVD8tTRZLMPwSMB8PsGtBpPeXcbifeKoXGr7At
+	kZtO1qyK6sBYDfBro7SbYhzYHZagjnTPkbLf7A1X40jvTQ9g/NxKWCy17rHjoI9fGbAkTK6waRF
+	aLP5murm2DvPmipvMYZTmO7U9Mhy0TKfH3IgldkR8HjbEnBWE97LtRxOH0LL42uXWWpSqgZU1Gc
+	ZmESwoDu8RHH7APoskg0K9+/4Y8dGVIiFgw6jK/CoVYDGtE8xUiVk5zD1EfXyMsWsfyyIhPhnZb
+	bR77cW/HTRtgO/wPY0b0o+MUxXFpGOTrnvIm8qZV8mDlBf/Xt7piQiGwU/PHWYyRpPgH6btMvUC
+	B/8yO/nmwDs72rt5KR1+VeWcAkift34kq3QSTha1uwCOdworpMYmANTweV0kgmhr6+IDy3rM7or
+	Ws02AdkkzO05X7OCNkIyFJIWz9xnREv0vL4GL0kElmEKuDIU0PS06GXL5PgV/ywNJP9dzIUz7k6
+	nb6Az5Ivwq0yGmO5x33fzS/B2HvMWPQc
+X-Received: by 2002:a05:600c:3554:b0:4a1:e7ce:107b with SMTP id 5b1f17b1804b1-4ac150b20eamr267450095e9.2.1793647081411;
+        Mon, 02 Nov 2026 11:18:01 -0800 (PST)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71a4d4f9sm21801298f8f.2.2026.11.02.11.17.50
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b9b54dsm21054948f8f.47.2026.11.02.11.18.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 11:17:51 -0800 (PST)
+        Mon, 02 Nov 2026 11:18:00 -0800 (PST)
 From: Tristan Madani <tristmd@gmail.com>
 X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
+To: Brian Norris <briannorris@chromium.org>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	Kalle Valo <kvalo@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH wireless] wifi: mt76: mt7615: cancel coredump delayed work on device unregister
-Date: Mon,  2 Nov 2026 19:17:50 +0000
-Message-ID: <20261102191750.2308294-1-tristan@talencesecurity.com>
+Subject: [PATCH wireless] wifi: mwifiex: cancel DFS delayed works before destroying workqueues
+Date: Mon,  2 Nov 2026 19:17:59 +0000
+Message-ID: <20261102191800.2309205-1-tristan@talencesecurity.com>
 X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -103,32 +101,55 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mt7615_unregister_device() calls mt76_free_device() which destroys the
-workqueue without first cancelling the coredump.work delayed work. If a
-firmware coredump is in progress when the driver is unloaded, the pending
-timer can fire after the workqueue has been freed.
+mwifiex_del_virtual_intf() and the error path of
+mwifiex_add_virtual_intf() destroy dfs_cac_workqueue and
+dfs_chan_sw_workqueue without first cancelling the associated
+delayed works. Since destroy_workqueue() does not cancel pending
+delayed work timers, a timer that fires after the workqueue is
+destroyed runs against freed memory.
 
-Add cancel_delayed_work_sync() for coredump.work in
-mt7615_unregister_device() before the mt76_free_device() call.
+Add cancel_delayed_work_sync() for dfs_cac_work and
+dfs_chan_sw_work before each destroy_workqueue() call in both the
+error cleanup and interface removal paths.
 
-Fixes: d2bf7959d9c0 ("mt76: mt7663: introduce coredump support")
+Fixes: 85afb18621be ("mwifiex: add cfg80211 start_radar_detection handler")
+Fixes: 7d652034d1a0 ("mwifiex: channel switch support for mwifiex")
 Cc: stable@vger.kernel.org
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-index a9178e077fd6d..c06b0301a4e4a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-@@ -124,5 +124,6 @@ void mt7615_unregister_device(struct mt7615_dev *dev)
- 	mt7615_dma_cleanup(dev);
- 	tasklet_disable(&dev->mt76.irq_tasklet);
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 936939ea9c472..1fe366b89a2c2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3196,9 +3196,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	return &priv->wdev;
  
-+	cancel_delayed_work_sync(&dev->coredump.work);
- 	mt76_free_device(&dev->mt76);
- }
+ err_reg_netdev:
++	cancel_delayed_work_sync(&priv->dfs_chan_sw_work);
+ 	destroy_workqueue(priv->dfs_chan_sw_workqueue);
+ 	priv->dfs_chan_sw_workqueue = NULL;
+ err_alloc_chsw:
++	cancel_delayed_work_sync(&priv->dfs_cac_work);
+ 	destroy_workqueue(priv->dfs_cac_workqueue);
+ 	priv->dfs_cac_workqueue = NULL;
+ err_alloc_cac:
+@@ -3245,11 +3247,13 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		cfg80211_unregister_netdevice(wdev->netdev);
+ 
+ 	if (priv->dfs_cac_workqueue) {
++		cancel_delayed_work_sync(&priv->dfs_cac_work);
+ 		destroy_workqueue(priv->dfs_cac_workqueue);
+ 		priv->dfs_cac_workqueue = NULL;
+ 	}
+ 
+ 	if (priv->dfs_chan_sw_workqueue) {
++		cancel_delayed_work_sync(&priv->dfs_chan_sw_work);
+ 		destroy_workqueue(priv->dfs_chan_sw_workqueue);
+ 		priv->dfs_chan_sw_workqueue = NULL;
+ 	}
 -- 
 2.47.3
 
