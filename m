@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793657437;
-	b=Ic3WMZaDYw2wL+yRxI8WKiEtKXqYgKOM9AUcIBGeDRENhyu75m1gtSEdqYaiO1IeIUcQ
-	 nBqQ8Fp1rau3XmnsHaptW674HS2dzfGWS4qwpytKEYbK8k4gJ6HffVkk0Nokeh7K7DoPi
-	 Ug8mLYjiGmBdeezDEL/EwMmntFjniRs5QmHgHYPrZ0474fO56vIseQSHkxtbpjtqm/IBY
-	 K33wIj6zvIpGAg5Gffq0heD+ab3xqCtl5g5WjtwDTXxWRscSmre+VcbWIf5t9H9ZaTqwO
-	 Ku8ZvENfgUMf3oDNVajBNFFuuKNr9vfzy24t3c/ZaQgasF4UWimwDfE11iFnXQTy7Qg==
+	t=1793657438;
+	b=Pqg6F2ngXbXrCr5gFkC3yOQtIjwE89sZ+KLHhaVzYg+yE06qYLxIwteF7lh2nPSxoO27
+	 A/3guk0eZy7OSBrjjS0JOqTSPPycxVuTlmD7APeAhXNZ9SvQWmY7qmu7HNknx99MSj6zk
+	 sicmGCO7NI6LeOBfYgleoH99ghalKEVhQ9KR+907Dp75Lt87JXLzi7b98LcRyrzZoNpJs
+	 Buh4vwHARxCFGRvO2ayEgEPBI7JXJKwYpguiX0W0y6HFREq0na18PNcmGAWA/41zH6Fz7
+	 CruncCcbgmhySfuLvqA4CfKMnugIChcqcR/ZXQm1FZLDa/M5W7nLuTKoQJsS6Zc3hHQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793657437;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793657438;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=ZVpbYiAu0QZ5vXz7K1xkwlXiXBLopzw0ghUE+s0G0so=;
-	b=nlQgg5/OLxlUJDQIoUH5FKiLXEUui3/ErOowg9/dobN1IuX55P8eu7LEcPSP2toqFFP2
-	 zPdFNOUk+C1f57g2qMw2gdfkXAa8sCXS7i2R5N4eC30e7UFAwkQgQ19rGfo4nExHGyFoC
-	 IRqqu2C7vbfXm5bp7enCs3bcGQiCZoKV6d6nwkMPeKJzt0F71smdJLvVQwgChlJAUA6s7
-	 Tk1Ayrzjvn65tmsVkrh5zNsoEabcE42Nyv8mFdkjx6SCli7KfddpO/RzJzm+uufUg7s+m
-	 bP9SWca5SdxMUN/U5wBf72NSkBGGWztGI/sA06zycI8YrNHux+kHP8kveTFOBpTFLWw==
+	bh=G9sF6n1JvOBP8pU9dqvE1LpY/nXpuIi8KwQSRByx4g0=;
+	b=hpewmJXnofOpMkHKEAa/mlHfIWrPplVGtwl64jNUhYRUVm86SnImhvkaFOF9nxfozTxj
+	 aU9jnxMxB6j1HbUyDPA2KBKlSi0xunbxikwHA4cL6yGmGjEtL4zo5CcHNXoJoaIIljLxR
+	 MttWJxme/Bas9dJwae5lPKI6COqCpiFiwbofQjrqYtySp86PJKYfRl30cdoffqtLjVoI/
+	 xYDm6cDLzv7JHkmfyZQfgIdIbYSslgqrPFp4lbjmCvTWxroz5rXtip1uk6r4KcA/p1u1I
+	 d8cLNv9L2wNALcSTwRrtfG1q88wgs/pWIjuzcLEJwChzXLWCObC/8Ev2BRZKXwtyO3w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=ISzBpcbG;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b="HRZlpqV/";
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD18606D803
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:10:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD551606D808
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:10:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=ISzBpcbG
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=HRZlpqV/
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=ZVpbYiAu0QZ5vXz7K1xkwlXiXBLopzw0ghUE+s0G0so=;
-	t=1793657436; x=1794867036; b=ISzBpcbGpeDNJTPS2FjbXw5Og5QKwx72ouFYqvBt7umTN9U
-	WUWoNkYGqFhDlYitvb1l7RhHoAPC3twQwzluxv0P7lZKuYA57Fd1Q7G3NJ9oEAJy7hrv3/tckcj0e
-	N5oDVqRY2R0ycmK6L/tTMVhdoTx9ESC/NS1h7sqAPwQkFrhYiqpYXrufLpCZOaVIqTpC6vVHTlHHT
-	NnOvH84gL6sn2IiX0T8p4+cfSqHyf5GamF+lYCuiElrcyJaXi/EeJSBE6jZu/bjmWay7wA7W+dZEM
-	QDCitcQVUYNBShtzK+vHItgEzaeozAlELQsXjP1s0aNj0mQvLHXVSNamp0j6NXMA==;
+	Resent-Cc:Resent-Message-ID; bh=G9sF6n1JvOBP8pU9dqvE1LpY/nXpuIi8KwQSRByx4g0=;
+	t=1793657437; x=1794867037; b=HRZlpqV/KB/hgVzOQ5XD6gzi8nFMNsra1RmfpYqeafS6y1k
+	OQ+CrKopxJtM7RzG4KTp3q8ZqtqaWhIMw3f29q92x2RUgMHPOhgsfXfMVFXP9tgbQHy34iRnxZ7WB
+	9FRyZn+jLBQDtgL0gY5OB0AQgS/S1C1l8ClPPrkgOOFgjft6EjPV5czar6OZNvAeDr1ZC2g+/qhbD
+	LtdjAjGd0y0pwNwngpBI5/mBgcgC+e07YM5dRCniOviLTxe+oBX9bIIZM2v/q2Sd0tGSJ+HIoY2Qw
+	6/K1JmgYCv3pZMvVolCzWuXNCurjhYIjl71FiCJU3MixwmuyTiz+IsgOJ9EgrMzg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xO0Eb-000000022rO-2wsS;
-	Mon, 02 Nov 2026 23:10:33 +0100
+	id 1xO0Ed-000000022rO-0kZG;
+	Mon, 02 Nov 2026 23:10:35 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 3/8] wifi: mac80211: expose MLME functions
-Date: Mon,  2 Nov 2026 23:08:23 +0100
-Message-ID: <20261102231028.0231ae6feb24.I7876ec86fa3375db5695a54128e2988298a099bf@changeid>
+Subject: [PATCH wireless-next 5/8] wifi: mac80211: parse SMD BSS Transition Parameters element
+Date: Mon,  2 Nov 2026 23:08:25 +0100
+Message-ID: <20261102231028.2e53b1ad268e.If340f9b82f7cc02dae09a730d6162436947b3a79@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102221028.1124852-10-johannes@sipsolutions.net>
 References: <20261102221028.1124852-10-johannes@sipsolutions.net>
@@ -68,437 +68,115 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-SMD transition is a large chunk of code that will go
-into its own file. Expose the necessary functionality
-from mlme.c in a new mlme.h (this is because it should
-only be used by the ST code.)
+As previously defined in the header file, this element has a
+different layout depending on the action frame it's carried
+in, so the 'type' is no longer sufficient. Add a new enum
+indicating which 'action_frame' we're parsing to allow for
+this, and parse the element accordingly in SMD Transition
+preparation and execution responses, in preparation for ST
+implementation.
 
-Refactor ieee80211_prep_channel() a bit to have a new
-function that doesn't actually allocate the chanctx,
-which is needed for SMD Transition as well.
-
+Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 193 ++++++++++++++++++++++++++------------------
- net/mac80211/mlme.h |  55 +++++++++++++
- 2 files changed, 169 insertions(+), 79 deletions(-)
- create mode 100644 net/mac80211/mlme.h
+ net/mac80211/ieee80211_i.h | 26 ++++++++++++++++++++++++++
+ net/mac80211/parse.c       | 18 ++++++++++++++++++
+ 2 files changed, 44 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7e8d0a9fe650..bb2063f18b4e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -26,6 +26,7 @@
- #include <linux/unaligned.h>
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index eb31691c89d5..7e6e87ccce08 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1916,6 +1916,8 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_uhr_operation *uhr_operation;
+ 	const struct ieee80211_cip_cap *cip_cap;
+ 	const struct ieee80211_uhr_parameters_update *uhr_param_upd;
++	const struct ieee80211_smd_bss_trans_params_prep_resp *smd_prep_resp;
++	const struct ieee80211_smd_bss_trans_params_exec_resp *smd_exec_resp;
  
- #include "ieee80211_i.h"
-+#include "mlme.h"
- #include "driver-ops.h"
- #include "rate.h"
- #include "led.h"
-@@ -105,8 +106,7 @@ MODULE_PARM_DESC(probe_wait_ms,
-  * has happened -- the work that runs from this timer will
-  * do that.
-  */
--static void run_again(struct ieee80211_sub_if_data *sdata,
--		      unsigned long timeout)
-+void run_again(struct ieee80211_sub_if_data *sdata, unsigned long timeout)
- {
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
-@@ -1505,8 +1505,8 @@ ieee80211_determine_chan_mode(struct ieee80211_sub_if_data *sdata,
- }
- EXPORT_SYMBOL_IF_MAC80211_KUNIT(ieee80211_determine_chan_mode);
- 
--static void ieee80211_send_uhr_omp_req_dbe(struct ieee80211_sub_if_data *sdata,
--					   u16 link_mask, bool initial)
-+void ieee80211_send_uhr_omp_req_dbe(struct ieee80211_sub_if_data *sdata,
-+				    u16 link_mask, bool initial)
- {
- 	struct ieee80211_mle_basic_common_info *common;
- 	struct ieee80211_mle_per_sta_profile *per_sta;
-@@ -2204,7 +2204,6 @@ static size_t ieee80211_add_before_reg_conn(struct sk_buff *skb,
- 	return noffset;
+ 	/* not the order in the psd values is per element, not per chandef */
+ 	struct ieee80211_parsed_tpe tpe;
+@@ -2553,6 +2555,26 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb_tid(sdata, skb, NULL, 7, -1);
  }
  
--#define PRESENT_ELEMS_MAX	8
- #define PRESENT_ELEM_EXT_OFFS	0x100
- 
- static void
-@@ -2214,16 +2213,15 @@ ieee80211_assoc_add_ml_elem(struct ieee80211_sub_if_data *sdata,
- 			    const u16 *present_elems,
- 			    struct ieee80211_mgd_assoc_data *assoc_data);
- 
--static size_t
--ieee80211_add_link_elems(struct ieee80211_sub_if_data *sdata,
--			 struct sk_buff *skb, u16 *capab,
--			 const struct element *ext_capa,
--			 const u8 *extra_elems,
--			 size_t extra_elems_len,
--			 unsigned int link_id,
--			 struct ieee80211_link_data *link,
--			 u16 *present_elems,
--			 struct ieee80211_mgd_assoc_data *assoc_data)
-+size_t ieee80211_add_link_elems(struct ieee80211_sub_if_data *sdata,
-+				struct sk_buff *skb, u16 *capab,
-+				const struct element *ext_capa,
-+				const u8 *extra_elems,
-+				size_t extra_elems_len,
-+				unsigned int link_id,
-+				struct ieee80211_link_data *link,
-+				u16 *present_elems,
-+				struct ieee80211_mgd_assoc_data *assoc_data)
- {
- 	enum nl80211_iftype iftype = ieee80211_vif_type_p2p(&sdata->vif);
- 	struct cfg80211_bss *cbss = assoc_data->link[link_id].bss;
-@@ -2421,9 +2419,9 @@ ieee80211_add_link_elems(struct ieee80211_sub_if_data *sdata,
- 	return offset;
- }
- 
--static void ieee80211_add_non_inheritance_elem(struct sk_buff *skb,
--					       const u16 *outer,
--					       const u16 *inner)
-+void ieee80211_add_non_inheritance_elem(struct sk_buff *skb,
-+					const u16 *outer,
-+					const u16 *inner)
- {
- 	unsigned int skb_len = skb->len;
- 	bool at_extension = false;
-@@ -2595,11 +2593,10 @@ ieee80211_assoc_add_ml_elem(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_fragment_element(skb, ml_elem_len, WLAN_EID_FRAGMENT);
- }
- 
--static int
--ieee80211_link_common_elems_size(struct ieee80211_sub_if_data *sdata,
--				 enum nl80211_iftype iftype,
--				 struct cfg80211_bss *cbss,
--				 size_t elems_len)
-+int ieee80211_link_common_elems_size(struct ieee80211_sub_if_data *sdata,
-+				     enum nl80211_iftype iftype,
-+				     struct cfg80211_bss *cbss,
-+				     size_t elems_len)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	const struct ieee80211_sband_iftype_data *iftd;
-@@ -4399,8 +4396,8 @@ static u64 ieee80211_handle_bss_capability(struct ieee80211_link_data *link,
- 	return changed;
- }
- 
--static u64 ieee80211_link_set_associated(struct ieee80211_link_data *link,
--					 struct cfg80211_bss *cbss)
-+u64 ieee80211_link_set_associated(struct ieee80211_link_data *link,
-+				  struct cfg80211_bss *cbss)
- {
- 	struct ieee80211_sub_if_data *sdata = link->sdata;
- 	struct ieee80211_bss_conf *bss_conf = link->conf;
-@@ -4574,7 +4571,7 @@ static void ieee80211_ml_reconf_reset(struct ieee80211_sub_if_data *sdata)
- 	}
- }
- 
--static u8 ieee80211_mgd_next_dialog_token(struct ieee80211_sub_if_data *sdata)
-+u8 ieee80211_mgd_next_dialog_token(struct ieee80211_sub_if_data *sdata)
- {
- 	sdata->u.mgd.dialog_token_alloc++;
- 
-@@ -4584,7 +4581,7 @@ static u8 ieee80211_mgd_next_dialog_token(struct ieee80211_sub_if_data *sdata)
- 	return sdata->u.mgd.dialog_token_alloc;
- }
- 
--static void ieee80211_mgd_reset_ap_state(struct ieee80211_sub_if_data *sdata)
-+void ieee80211_mgd_reset_ap_state(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct wiphy *wiphy = sdata->local->hw.wiphy;
-@@ -5122,7 +5119,7 @@ static void ieee80211_report_disconnect(struct ieee80211_sub_if_data *sdata,
- 	drv_event_callback(sdata->local, sdata, &event);
- }
- 
--static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
-+void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -6444,9 +6441,9 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 	return ret;
- }
- 
--static int ieee80211_mgd_setup_link_sta(struct ieee80211_link_data *link,
--					struct link_sta_info *link_sta,
--					struct cfg80211_bss *cbss)
-+int ieee80211_mgd_setup_link_sta(struct ieee80211_link_data *link,
-+				 struct link_sta_info *link_sta,
-+				 struct cfg80211_bss *cbss)
- {
- 	struct ieee80211_sub_if_data *sdata = link->sdata;
- 	struct ieee80211_local *local = sdata->local;
-@@ -6601,12 +6598,11 @@ static u8 ieee80211_max_rx_chains(struct ieee80211_link_data *link,
- 	return chains;
- }
- 
--static void
--ieee80211_determine_our_sta_mode(struct ieee80211_sub_if_data *sdata,
--				 struct ieee80211_supported_band *sband,
--				 struct cfg80211_assoc_request *req,
--				 bool wmm_used, int link_id,
--				 struct ieee80211_conn_settings *conn)
-+void ieee80211_determine_our_sta_mode(struct ieee80211_sub_if_data *sdata,
-+				      struct ieee80211_supported_band *sband,
-+				      struct cfg80211_assoc_request *req,
-+				      bool wmm_used, int link_id,
-+				      struct ieee80211_conn_settings *conn)
- {
- 	struct ieee80211_sta_ht_cap sta_ht_cap = sband->ht_cap;
- 	bool is_5ghz = sband->band == NL80211_BAND_5GHZ;
-@@ -6855,37 +6851,34 @@ ieee80211_determine_our_sta_mode_assoc(struct ieee80211_sub_if_data *sdata,
- 			       conn->bw_limit, tmp.bw_limit);
- }
- 
--static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
--				  struct ieee80211_link_data *link,
--				  struct link_sta_info *link_sta,
--				  int link_id,
--				  struct cfg80211_bss *cbss, bool mlo,
--				  struct ieee80211_conn_settings *conn,
--				  unsigned long *userspace_selectors)
-+static int __ieee80211_calc_channel(struct ieee80211_sub_if_data *sdata,
-+				    struct ieee80211_link_data *link,
-+				    struct link_sta_info *link_sta,
-+				    int link_id,
-+				    struct cfg80211_bss *cbss, bool mlo,
-+				    struct ieee80211_conn_settings *conn,
-+				    unsigned long *userspace_selectors,
-+				    struct ieee80211_chan_req *chanreq)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	bool is_6ghz = cbss->channel->band == NL80211_BAND_6GHZ;
--	struct ieee80211_chan_req chanreq = {};
- 	struct cfg80211_chan_def ap_chandef;
- 	struct ieee802_11_elems *elems;
--	int ret;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	rcu_read_lock();
-+	guard(rcu)();
-+
- 	elems = ieee80211_determine_chan_mode(sdata, conn, cbss,
- 					      link_sta, link_id,
--					      &chanreq, &ap_chandef,
-+					      chanreq, &ap_chandef,
- 					      userspace_selectors);
- 
--	if (IS_ERR(elems)) {
--		rcu_read_unlock();
-+	if (IS_ERR(elems))
- 		return PTR_ERR(elems);
--	}
- 
- 	if (mlo && !elems->ml_basic) {
- 		sdata_info(sdata, "Rejecting MLO as it is not supported by AP\n");
--		rcu_read_unlock();
- 		kfree(elems);
- 		return -EINVAL;
- 	}
-@@ -6908,20 +6901,36 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 
- 		link->conf->tpe = elems->tpe;
- 		ieee80211_rearrange_tpe(&link->conf->tpe, &ap_chandef,
--					&chanreq.oper);
-+					&chanreq->oper);
- 	}
--	rcu_read_unlock();
--	/* the element data was RCU protected so no longer valid anyway */
-+
- 	kfree(elems);
--	elems = NULL;
- 
- 	if (!link)
- 		return 0;
- 
--	rcu_read_lock();
- 	link->needed_rx_chains = min(ieee80211_max_rx_chains(link, cbss),
- 				     local->rx_chains);
--	rcu_read_unlock();
-+
-+	return 0;
-+}
-+
-+static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_link_data *link,
-+				  struct link_sta_info *link_sta,
-+				  int link_id,
-+				  struct cfg80211_bss *cbss, bool mlo,
-+				  struct ieee80211_conn_settings *conn,
-+				  unsigned long *userspace_selectors)
-+{
-+	struct ieee80211_chan_req chanreq = {};
-+	int ret;
-+
-+	ret = __ieee80211_calc_channel(sdata, link, link_sta, link_id, cbss,
-+				       mlo, conn, userspace_selectors,
-+				       &chanreq);
-+	if (ret || !link)
-+		return ret;
- 
- 	/*
- 	 * If this fails (possibly due to channel context sharing
-@@ -6945,6 +6954,27 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
-+int ieee80211_calc_channel(struct ieee80211_sub_if_data *sdata,
-+			   struct ieee80211_link_data *link,
-+			   struct link_sta_info *link_sta,
-+			   int link_id,
-+			   struct cfg80211_bss *cbss, bool mlo,
-+			   struct ieee80211_conn_settings *conn,
-+			   unsigned long *userspace_selectors)
-+{
-+	struct ieee80211_chan_req chanreq = {};
-+	int ret;
-+
-+	ret = __ieee80211_calc_channel(sdata, link, link_sta, link_id, cbss,
-+				       mlo, conn, userspace_selectors,
-+				       &chanreq);
-+	if (ret || !link)
-+		return ret;
-+
-+	link->conf->chanreq = chanreq;
-+	return 0;
-+}
-+
- static bool ieee80211_get_dtim(const struct cfg80211_bss_ies *ies,
- 			       u8 *dtim_count, u8 *dtim_period)
- {
-@@ -6979,6 +7009,28 @@ static bool ieee80211_get_dtim(const struct cfg80211_bss_ies *ies,
- 	return true;
- }
- 
-+void ieee80211_mgd_link_beacon_info(struct ieee80211_link_data *link,
-+				    struct cfg80211_bss *cbss)
-+{
-+	if (!link->u.mgd.have_beacon) {
-+		const struct cfg80211_bss_ies *ies;
-+
-+		rcu_read_lock();
-+		ies = rcu_dereference(cbss->beacon_ies);
-+		if (ies)
-+			link->u.mgd.have_beacon = true;
-+		else
-+			ies = rcu_dereference(cbss->ies);
-+		ieee80211_get_dtim(ies,
-+				   &link->conf->sync_dtim_count,
-+				   &link->u.mgd.dtim_period);
-+		link->conf->beacon_int = cbss->beacon_interval;
-+		rcu_read_unlock();
-+	}
-+
-+	link->conf->dtim_period = link->u.mgd.dtim_period ?: 1;
-+}
-+
- static u16 ieee80211_get_ttlm(u8 bm_size, u8 *data)
- {
- 	if (bm_size == 1)
-@@ -7186,23 +7238,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 		if (WARN_ON(!link_sta))
- 			goto out_err;
- 
--		if (!link->u.mgd.have_beacon) {
--			const struct cfg80211_bss_ies *ies;
--
--			rcu_read_lock();
--			ies = rcu_dereference(cbss->beacon_ies);
--			if (ies)
--				link->u.mgd.have_beacon = true;
--			else
--				ies = rcu_dereference(cbss->ies);
--			ieee80211_get_dtim(ies,
--					   &link->conf->sync_dtim_count,
--					   &link->u.mgd.dtim_period);
--			link->conf->beacon_int = cbss->beacon_interval;
--			rcu_read_unlock();
--		}
--
--		link->conf->dtim_period = link->u.mgd.dtim_period ?: 1;
-+		ieee80211_mgd_link_beacon_info(link, cbss);
- 
- 		if (link_id != assoc_data->assoc_link_id) {
- 			link->u.mgd.conn = assoc_data->link[link_id].conn;
-@@ -10345,10 +10381,9 @@ ieee80211_setup_assoc_link(struct ieee80211_sub_if_data *sdata,
- 	}
- }
- 
--static int
--ieee80211_mgd_get_ap_ht_vht_capa(struct ieee80211_sub_if_data *sdata,
--				 struct ieee80211_mgd_assoc_data *assoc_data,
--				 int link_id)
-+int ieee80211_mgd_get_ap_ht_vht_capa(struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_mgd_assoc_data *assoc_data,
-+				     int link_id)
- {
- 	struct cfg80211_bss *cbss = assoc_data->link[link_id].bss;
- 	enum nl80211_band band = cbss->channel->band;
-diff --git a/net/mac80211/mlme.h b/net/mac80211/mlme.h
-new file mode 100644
-index 000000000000..8bf93212d9c9
---- /dev/null
-+++ b/net/mac80211/mlme.h
-@@ -0,0 +1,55 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * MLME declarations.
++/**
++ * enum ieee80211_parse_action_frame - action frame context for element parsing
 + *
-+ * Copyright (C) 2026 Intel Corporation
++ * Some elements reuse the same element ID for different structures depending
++ * on which action frame they appear in. This selects the action frame the
++ * elements came from so the parser can extract the correct variant.
++ *
++ * @IEEE80211_PARSE_ACTION_FRAME_UNSPECIFIED: not one of the action frames that
++ *	need such disambiguation - parse elements normally
++ * @IEEE80211_PARSE_ACTION_FRAME_ST_PREP_RESP: SMD transition preparation
++ *	response
++ * @IEEE80211_PARSE_ACTION_FRAME_ST_EXEC_RESP: SMD transition execution
++ *	response
 + */
-+#ifndef IEEE80211_MLME_H
-+#define IEEE80211_MLME_H
-+#include "ieee80211_i.h"
++enum ieee80211_parse_action_frame {
++	IEEE80211_PARSE_ACTION_FRAME_UNSPECIFIED = 0,
++	IEEE80211_PARSE_ACTION_FRAME_ST_PREP_RESP,
++	IEEE80211_PARSE_ACTION_FRAME_ST_EXEC_RESP,
++};
 +
-+#define PRESENT_ELEMS_MAX	8
+ /**
+  * struct ieee80211_elems_parse_params - element parsing parameters
+  * @mode: connection mode for parsing
+@@ -2572,6 +2594,9 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
+  *	(or re-association) response frame if this is given
+  * @from_ap: frame is received from an AP (currently used only
+  *	for EHT capabilities parsing)
++ * @action_frame: which action frame the elements came from, to
++ *	disambiguate elements that reuse the same element ID across different
++ *	action frames, or %IEEE80211_PARSE_ACTION_FRAME_UNSPECIFIED
+  */
+ struct ieee80211_elems_parse_params {
+ 	enum ieee80211_conn_mode mode;
+@@ -2583,6 +2608,7 @@ struct ieee80211_elems_parse_params {
+ 	struct cfg80211_bss *bss;
+ 	int link_id;
+ 	bool from_ap;
++	enum ieee80211_parse_action_frame action_frame;
+ };
+ 
+ struct ieee802_11_elems *
+diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
+index 22bba5adef26..c392ecf58b0c 100644
+--- a/net/mac80211/parse.c
++++ b/net/mac80211/parse.c
+@@ -236,6 +236,20 @@ ieee80211_parse_extension_element(u32 *crc,
+ 		elems_parse->uhr_param_upd.start = params->start;
+ 		elems_parse->uhr_param_upd.len = params->len;
+ 		break;
++	case WLAN_EID_EXT_BSS_SMD_TRANS_PARAMS:
++		switch (params->action_frame) {
++		case IEEE80211_PARSE_ACTION_FRAME_ST_PREP_RESP:
++			if (ieee80211_smd_prep_resp_size_ok(data, len))
++				elems->smd_prep_resp = data;
++			break;
++		case IEEE80211_PARSE_ACTION_FRAME_ST_EXEC_RESP:
++			if (ieee80211_smd_exec_resp_size_ok(data, len))
++				elems->smd_exec_resp = data;
++			break;
++		default:
++			break;
++		}
++		break;
+ 	}
+ 
+ 	if (crc && calc_crc)
+@@ -351,6 +365,10 @@ _ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params,
+ 		break;
+ 	}
+ 
++	WARN(params->type != (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_ACTION) &&
++	     params->action_frame != IEEE80211_PARSE_ACTION_FRAME_UNSPECIFIED,
++	     "action frame type specified for non-action frame\n");
 +
-+void run_again(struct ieee80211_sub_if_data *sdata, unsigned long timeout);
-+void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata);
-+u8 ieee80211_mgd_next_dialog_token(struct ieee80211_sub_if_data *sdata);
-+size_t ieee80211_add_link_elems(struct ieee80211_sub_if_data *sdata,
-+				struct sk_buff *skb, u16 *capab,
-+				const struct element *ext_capa,
-+				const u8 *extra_elems, size_t extra_elems_len,
-+				unsigned int link_id,
-+				struct ieee80211_link_data *link,
-+				u16 *present_elems,
-+				struct ieee80211_mgd_assoc_data *assoc_data);
-+void ieee80211_add_non_inheritance_elem(struct sk_buff *skb,
-+					const u16 *outer, const u16 *inner);
-+int ieee80211_link_common_elems_size(struct ieee80211_sub_if_data *sdata,
-+				     enum nl80211_iftype iftype,
-+				     struct cfg80211_bss *cbss,
-+				     size_t elems_len);
-+void ieee80211_determine_our_sta_mode(struct ieee80211_sub_if_data *sdata,
-+				      struct ieee80211_supported_band *sband,
-+				      struct cfg80211_assoc_request *req,
-+				      bool wmm_used, int link_id,
-+				      struct ieee80211_conn_settings *conn);
-+int ieee80211_calc_channel(struct ieee80211_sub_if_data *sdata,
-+			   struct ieee80211_link_data *link,
-+			   struct link_sta_info *link_sta, int link_id,
-+			   struct cfg80211_bss *cbss, bool mlo,
-+			   struct ieee80211_conn_settings *conn,
-+			   unsigned long *userspace_selectors);
-+int ieee80211_mgd_get_ap_ht_vht_capa(struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_mgd_assoc_data *assoc_data,
-+				     int link_id);
-+int ieee80211_mgd_setup_link_sta(struct ieee80211_link_data *link,
-+				 struct link_sta_info *link_sta,
-+				 struct cfg80211_bss *cbss);
-+void ieee80211_mgd_link_beacon_info(struct ieee80211_link_data *link,
-+				    struct cfg80211_bss *cbss);
-+u64 ieee80211_link_set_associated(struct ieee80211_link_data *link,
-+				  struct cfg80211_bss *cbss);
-+void ieee80211_send_uhr_omp_req_dbe(struct ieee80211_sub_if_data *sdata,
-+				    u16 link_mask, bool initial);
-+void ieee80211_mgd_reset_ap_state(struct ieee80211_sub_if_data *sdata);
-+
-+#endif /* IEEE80211_MLME_H */
+ 	for_each_element(elem, params->start, params->len) {
+ 		const struct element *subelem;
+ 		u8 elem_parse_failed;
 -- 
 2.56.0
 
