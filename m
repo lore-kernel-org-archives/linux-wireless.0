@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793657956;
-	b=ECUiM3Kt6iXQts7sXhxgZlleQcdSV6jzVhwOHvavsPp9pxH6B4TIzIRRSFQpvPpMz3Jx
-	 uaGyF26QH1sDYJ3cPN/twoBloIaiEaH7C60jUbYhD9ZpVYusXqanJB1SbgH0aTW7JYEYA
-	 r8EC0I1roVhHNlE56Er2uaGeoZ53DtMQ5/vxb3DbSzK6nWeDf2S4haBvp50Xy8egRO7tg
-	 J3SQHUpjv7muxw+pT3oiyMI4dTtK3doEe6BG1TG9th2r7W5jD9mLPHUA18qF1fkfGDXAB
-	 dJCbJ+wsJ23v8d216D9MsYq9fkjq9azRb92eG4unhHbkCb3RS+6TZ8qi+8+eCqZ/yrw==
+	t=1793657990;
+	b=iDMug0wAR1UFLMB3fgRbbVludLTCp2YcGhtpmSvAF24AScX6kHSjmncXqGOsCZkLfrOv
+	 qIi9/ns0nlucf03/mjoN/HzIlm//RZaNvCBHH9nVCU1fV9US9Mr1KKGm+muDCzZvGkz6L
+	 dl/Q+YEA8eOGx91rasSoVCTkChJM1dTltXdxn8uS1F6gt87QW5GQ9jTq952HmjXIVQjdK
+	 ho8LdzsYj05npPiQvjt3VLEwUg0xQgaQ5W/5QY6hUvkSHirhgN4oNbENC6Fepf2heRu/H
+	 MF8rN9dY2W7BN8+4FlvtsMf4AfrSQOadYoYea0ON/Q4Fe6ejHbMe/0Fik8AmCIhi/Zg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793657956;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793657990;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=SY7ZSP6N+KMUR7DTPvFgXpf+Uub7k3VX0YbqsF6A5aQ=;
-	b=LkpvMuJZPCJM9kd3rKgguI49IDd1vW9lP/y+p1sPd1pzYzZIciGwgeI5Fwn9gULIk70s
-	 uXvCbRPxlFiw4QdEbDw7f0L+iCTa7jbyQFV3h7Vym/jUBA4W1GVv632r8vjXGmMKl7H1n
-	 0vy2FCLGzxyiYixMk5mm6DT6XWhH56/BgrjRFSeUefTRq2WUc6rtpFgWbn3SrVU3dMasV
-	 mdWYlgIdidNiU7M9ACVM0ocmD786bD4rP81n6dZA3zwrZzqc61qFiMQLBPqsxWafMNqdF
-	 JcxjgyIeVHH7ewwlB45bfU8tWLVJfc9xQbB56biO2vJ3eNmUS2NcgK6RHw1FefJTNdw==
+	bh=RjTbwBh8REOkHQLtS1u/DaMCtq6pWHvdkgT7EPpND/A=;
+	b=UKSv2AC+Zns4VNr7dmu8WFh/w1Nw6WPMO306w+H7uS/gY4gCf1YooMEMw/vxqxuHoAYs
+	 0iTv52kfNKzEynyLfiIUpZBnQh5EQjuMI7nZfS5Smr7JVRvCRDc0oCAteSfaL5z/zrCe7
+	 W1Fo8mykiggPA0xFU6ixF2LxZEAMnXiXrWI3LbXsH7RwwriE1JgMpE2WQ3fScdr/eDJn2
+	 vNqc7N8grDiDqCj3s7rMs9Ta8skOGl8q4bs/wISQq3UFxjxfgjM4MQ0mkjJ1Qvkis0yG9
+	 dWX/IYp36uZz4PfzECATSRUo8gf8ChiP4tRCnwR5Ib3DcOjE0dTHNH49a5ZUi5lcb3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=t5MfH3Zo;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=ZhUs+E47;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A4C2606A327
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:19:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C17B606A327
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 22:19:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=t5MfH3Zo
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=ZhUs+E47
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
 	Resent-Message-ID:In-Reply-To:References;
-	bh=SY7ZSP6N+KMUR7DTPvFgXpf+Uub7k3VX0YbqsF6A5aQ=; t=1793657956; x=1794867556; 
-	b=t5MfH3ZoOv4KlOqPEuywv0Eb5Pi9lk2+3SXmn3VDUWz3pE9BZworE7Jzlr8k0xACQ/6DF3uGpE8
-	cBbyhBQ0K6LqyKaKNXtI7nyW2ZnjN3yDnYbwmbKZB2AO2alsUbHFvqf6dTG+HFBog5Cvv2ggXnGW8
-	cgxR+9aoJuQwjj0JJWHP2elqlloG16XONNble+0qVET2OZczhvkpVwxVbrTFJMmxOMUwWfrTEWeBn
-	d1THh2d13qJ14G/95NvgpicGvq8fDN9Mr20Sn8NTzbnIq9gVAB3W7Y92QqIdxPi1N575nawVdcrPO
-	2uclwfShp1jnRnaGA7N4DxCL6tzviEZ9l+TQ==;
+	bh=RjTbwBh8REOkHQLtS1u/DaMCtq6pWHvdkgT7EPpND/A=; t=1793657990; x=1794867590; 
+	b=ZhUs+E47ni+i9IFLU/0kCSNUBjAz4pk9mQCt/0rrWhwUwVU6hW2Oa0XvIoM3yKtQq+4bvty8KkP
+	0mY5kmV4c73G4ptg37SjHK4u3Khhtt+plajaTdUEiJpi1DoYeYwDNiiP/5DJ/5dcxAgctISEHaouq
+	i6VQU7lk9vDBid3fi83JeNGUYAaXThA1tE0Tu2Amue5VreqgXP/lt16cminpMarV5ofRa72nOthlG
+	l9DxcNriS3KWyUuGAVOy1X3Xv8s1JbwNILP7VXTMr9snn6kjNDjmxxh4XhjADR5T26h1YFvjg2FGZ
+	skh02ajQIxwtWZXO6pcxn+4NY7EdminDfOgw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xO0Mz-000000023cK-2Ije;
-	Mon, 02 Nov 2026 23:19:13 +0100
+	id 1xO0NX-000000023f8-0XRJ;
+	Mon, 02 Nov 2026 23:19:47 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next] wifi: cfg80211: move valid_links update into link release
-Date: Mon,  2 Nov 2026 23:19:10 +0100
-Message-ID: <20261102231911.c539dba58893.I9518cc50fef2b65eeef04c3f2d25b152522e1d6e@changeid>
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH wireless-next] wifi: mac80211: limit non-MLO STA to EHT
+Date: Mon,  2 Nov 2026 23:19:44 +0100
+Message-ID: <20261102231944.c992a3c398ed.I2cb7d329dd5ec71a255c5fd045735e208a76a6b8@changeid>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -68,41 +68,42 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When releasing links (link BSSes) the valid_links must also be
-updated, so move that into cfg80211_wdev_release_link_bsses().
+EHT already required MLO, but with UHR this got more complex
+and we require the AP to have MLO to connection in UHR mode,
+for EHT we don't enforce it.
 
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+However, if a UHR capable device is used with an old non-MLO
+wpa_supplicant (or other tools), we would attempt to make a
+non-MLO UHR connection to an AP (which has MLO in its beacon)
+only to then find that it's not MLO in the assoc response.
+
+Limit the station itself to EHT for non-MLO connections to
+avoid (potential) this issue.
+
+Fixes: 29eb4dc882d3 ("wifi: mac80211: mlme: allow UHR only with MLO")
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 1 -
- net/wireless/sme.c     | 2 ++
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2fc680382418..d311fd690f50 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -22224,7 +22224,6 @@ void cfg80211_links_removed(struct net_device *dev, u16 link_mask)
- 		return;
- 
- 	cfg80211_wdev_release_link_bsses(wdev, link_mask);
--	wdev->valid_links &= ~link_mask;
- 
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index b481d31dd8cc..eb218d3fd9b0 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -491,6 +491,8 @@ void cfg80211_wdev_release_link_bsses(struct wireless_dev *wdev, u16 link_mask)
- 				 &wdev->links[link].client.current_bss->pub);
- 		wdev->links[link].client.current_bss = NULL;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8eda8154ba3d..9119d094b548 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -6796,6 +6796,12 @@ ieee80211_determine_our_sta_mode(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
  	}
-+
-+	wdev->valid_links &= ~link_mask;
- }
  
- static int cfg80211_sme_get_conn_ies(struct wireless_dev *wdev,
++	if (req && !req->ap_mld_addr) {
++		mlme_link_id_dbg(sdata, link_id,
++				 "UHR requires MLO, limiting to EHT\n");
++		goto out;
++	}
++
+ 	uhr_cap = ieee80211_get_uhr_iftype_cap_vif(sband, &sdata->vif);
+ 	if (!uhr_cap) {
+ 		mlme_link_id_dbg(sdata, link_id,
 -- 
 2.56.0
 
