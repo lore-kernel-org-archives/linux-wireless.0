@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793651937;
-	b=ZYLMKyWS5KtumCqL790r5ICOzjPa21zfl5z4jCwEkiq87NGvEpk5dYEdwqi6sKMUaZGD
-	 7BbWCiCpMaKdByhG3x3tZwp2Uv2xFKmEM22lL/loVjhaGdGeQM+eZQ5N/Nx/NDp81+hRU
-	 bumpikHVNMA5t9cRE0NbfClqrEmgtoNf5E3GVt5E3y4wmgXGETLaLa2vEi//M0D8bVQdL
-	 8fcSLh5QB42nAyqzphAYuaub7C1ov1orTKXrDi+xHzg1j9/FnFkE8RmOK9tCGUzEM+dGM
-	 B0AKZQ+u65i+poYDjots9oWKvl7Yc0T3HuZawHQJWkyDzLoXI4kj0zm7XmrnGexYBkA==
+	t=1793651932;
+	b=UMAcopG+tgce92GQQBVOureALK0pdVWquAJdro0M1uWTAB6Y1+cXI4O71UFJooHvEfhd
+	 oje9Qv/dnxcoc3cNPbHU9QPGA0uv8ETDxDHIW55CRwtXaSlnwsqks24fwS3t4PHfIUqy/
+	 /godDCZ/4WaGP7MyG9Z18Wzx4Dnz4mMw98Z/PTpLr8+tBijU5A75wdrNpYipx81PzkJuB
+	 QejXT+KP7gcFf96btQjgN7wILHZdhkeK+ynFpKGkc/Clf5cxXZKp5GADpDEi+j80tdAvV
+	 Z7ZbDNSyDdKdqMmNsMJ9R1sgUZyPngZkfEbhVH/gm6oatNMabczkaGQLlN2FSMfXQng==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793651937;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793651932;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=8PC97SsfO5hXeVcohwMAM9FWoZe34Gh2RjWwbpvqF+U=;
-	b=wyljumpf6Ty7RuHESIKDQvAgju+JjSaMIjyqJGovvv+vSHAWWm3lFS1zpODcs+GvBDcW
-	 J6ZsmG4ixu9p6SUTApxTqXMeOozj6qRPOIYZBboGy94L9Wg2mOFJyGfpu+VtajEoc/nNi
-	 Le6dxkAz/tc2a02rz7wepHW645sXla81AoTWNAF6eVHJTBLBWB1EpqYmHdh6+ItNjgpsz
-	 QYhStfeANIVvbFaT8kBynny4Sp9YfZ+38xw2lwCglcc3nnMYVhjU1ZBRjc+8x8+mS533K
-	 PiAiNaLDBXcBcYcnN7oaxrALWiJ5Ag2XLCF+JbvDlyKmqWU3pysx3yysVeZ/AQZoEcw==
+	bh=uEtY4djUW1xnN+hZjtOz7Bvak/gO3Vuyy82N5m0TqDw=;
+	b=Ee+LUNien22l2zGFtNb+Wo5vQElrfih4zSQ1dEGdUivVA6e4ptehFYpUS4uA4UxWviLe
+	 wG3dMZoc6/I5NlHMnoF+fyt5L8kJJV+i3aP68C6upRyCzoqWCcDOAsnlmsv1xTzfEyMj8
+	 73lGPyXSM3G5lzCqZ0vXg+aLsbO1HHsyyelBL60ux2D1WVkeyAWdYZAQmvaRFku/swmow
+	 z+ph/KIz0uhwBV1YKSxRXAUOaYVkvWaNHv0piM1We4jQM+ucYsESooMN1zhm5iJqMTEEx
+	 Oq2VDcJvyhs5u0aPFwTvxCXMXCaEIOm8I+kwg1D5h8KM5i/aiOaVpfvKrpApw30JAUQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=eHrQ+ZFB;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=TqPrxmYs;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C18D7606D802
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:38:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA52F606EEAF
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 20:38:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=eHrQ+ZFB
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=TqPrxmYs
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=8PC97SsfO5hXeVcohwMAM9FWoZe34Gh2RjWwbpvqF+U=;
-	t=1793651936; x=1794861536; b=eHrQ+ZFBGLJYY754DO+bwgeRsnNCxs/iqafhXNeDzjtcLUv
-	p+/nsU2dqViLoSBBkL0BBiH/NFnzbDFGm75YNMD3ssiuSXB0kA/E0nnnUp3tDGcbpkbiiCvNzUIcO
-	O66EGYluQeethXrHF0bcirQBu3oDgO5GASuj1hD/X4rlcJ6uu3MV08Y+8BkgXPb0DumxkmH20Mr8W
-	Vt6gqwt2IkbK3/vqZTNs+mcONFv4ZHDR+TUtbcwCUb3NPhKZA4TxMjGeL1PRnkhtmdVhOEqoSZTA5
-	gDON865ZkVLjjyBkzeBhZhQPTvbksty7byqvywhhUJpd83Bm04jc48z/swpR2Tqw==;
+	Resent-Cc:Resent-Message-ID; bh=uEtY4djUW1xnN+hZjtOz7Bvak/gO3Vuyy82N5m0TqDw=;
+	t=1793651931; x=1794861531; b=TqPrxmYseWxlUGnxQGGMNv2opsk9lymi1GuGnXDHf53wGQg
+	fiPLZ1S3HdBCvqZ+vedlLc9/ReLSoo967M5o77o8b3pbw2V6/RiUWWxJwcLFA/+sNa3lokWrIgRLQ
+	1XzkSUJ7mdXhWFmha9gNfr/x0N7mMF+DVAFC5gpaSjsV0s0cix8pjgFeoOqeVf6fu0Nt6lowu3jeQ
+	3Wo7mwcoMgoY6ujWXnmFzeo4+lGG90zqQgzuZMrEq2ATsaOp04czeulZIxSqz46CZY/k2bMcD1wEo
+	ffZ//lxafftjc8kIJ8WysNqz8F3h/K6dG+jtg0HpeoEEmyoj0vRK7xMKlmQp6VRw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xNynu-00000001vzr-1SfC;
-	Mon, 02 Nov 2026 21:38:54 +0100
+	id 1xNyno-00000001vzr-4ByV;
+	Mon, 02 Nov 2026 21:38:49 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 16/30] wifi: mac80211: hold frames for sleeping STAs on TXQs
-Date: Mon,  2 Nov 2026 21:23:06 +0100
-Message-ID: <20261102203831.1058362-48-johannes@sipsolutions.net>
+Subject: [PATCH 14/30] wifi: mac80211: put filtered data frames back on TXQs
+Date: Mon,  2 Nov 2026 21:23:04 +0100
+Message-ID: <20261102203831.1058362-46-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261102203831.1058362-32-johannes@sipsolutions.net>
 References: <20261102203831.1058362-32-johannes@sipsolutions.net>
@@ -69,308 +69,305 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We currently use a separate PS buffer for (data) frames,
-move to putting the PS buffered frames onto TXQs so they
-are released from there by the poll/wakeup handling.
-This will let us remove the extra powersave queue step
-later.
+When a device filters frames because the station went to
+sleep, we put them back on tx_filtered or pending queues.
+This can mix up ordering between TXQs and filtered frames
+when the station wakes up again later.
 
-For now management frames are only there if the driver
-opted in to the management TXQ, that changes later.
+Put filtered frames onto the frags queue of the TXQ they
+came from, fixing the order and simplifying the queueing
+structure in mac80211.
 
 Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h     |  8 ++---
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/rx.c          |  3 ++
- net/mac80211/sta_info.c    | 67 ++++++++++++++++++++++++++++---------
- net/mac80211/sta_info.h    |  1 +
- net/mac80211/tx.c          | 68 +++++++++++++++++++++++++++++++++++++-
- 6 files changed, 128 insertions(+), 21 deletions(-)
+ net/mac80211/ht.c          |  5 ++++
+ net/mac80211/ieee80211_i.h |  5 +++-
+ net/mac80211/sta_info.c    | 52 +++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h    |  4 ++-
+ net/mac80211/status.c      | 54 +++++++++++++++++++++++++++++++++++++-
+ net/mac80211/tx.c          | 37 ++++++++++++++++++++++++++
+ 6 files changed, 153 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1e8f799193dc..6cad76cc7d20 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3764,10 +3764,10 @@ void ieee80211_purge_tx_queue(struct ieee80211_hw *hw,
-  * driver is also notified of powersave transitions by calling its
-  * @sta_notify callback.
-  *
-- * While the station is asleep (or blocked, see below), frames that are
-- * already on its TXQs remain there: the TXQs aren't scheduled, and
-- * ieee80211_tx_dequeue() doesn't return frames from them, except when
-- * they're released as described below.
-+ * While the station is asleep (or blocked, see below), frames for it are
-+ * held on its TXQs: the TXQs aren't scheduled, and ieee80211_tx_dequeue()
-+ * doesn't return frames from them, except when they're released as
-+ * described below.
-  *
-  * When the station is asleep, it has three choices: it can wake up,
-  * it can PS-Poll, or it can possibly start a uAPSD service period.
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index c5c2113fa4f7..e26d12659942 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -372,6 +372,11 @@ void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
+ 			/* Allow only frags to be dequeued */
+ 			set_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+ 
++			/*
++			 * Fragments and filtered frames (which already have a
++			 * sequence number) must be out before aggregation
++			 * starts, otherwise they'd be sent as part of it.
++			 */
+ 			if (!skb_queue_empty(&txqi->frags)) {
+ 				/* Fragmented Tx is ongoing, wait for it to
+ 				 * finish. Reschedule worker to retry later.
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4a9b68022250..ebfa772a6dd8 100644
+index cb947341fee6..4a9b68022250 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -2732,6 +2732,8 @@ struct sk_buff *ieee80211_tx_dequeue_ps_release(struct ieee80211_local *local,
+@@ -987,7 +987,8 @@ enum txq_info_flags {
+  * @tin: contains packets split into multiple flows
+  * @def_cvars: codel vars for the @tin's default_flow
+  * @cstats: code statistics for this queue
+- * @frags: used to keep fragments created after dequeue
++ * @frags: used to keep fragments created after dequeue, and frames that
++ *	were filtered by the device (queued before the fragments)
+  * @schedule_order: used with ieee80211_local->active_txqs
+  * @schedule_round: counter to prevent infinite loops on TXQ scheduling
+  * @flags: TXQ flags from &enum txq_info_flags
+@@ -2731,6 +2732,8 @@ struct sk_buff *ieee80211_tx_dequeue_ps_release(struct ieee80211_local *local,
  						struct txq_info *txqi);
  void ieee80211_txq_ps_backlog_start(struct ieee80211_local *local,
  				    struct txq_info *txqi);
-+unsigned int ieee80211_txq_expire(struct ieee80211_local *local,
-+				  struct txq_info *txqi, unsigned long timeout);
- bool ieee80211_txq_queue_filtered(struct ieee80211_local *local,
- 				  struct txq_info *txqi, struct sk_buff *skb);
++bool ieee80211_txq_queue_filtered(struct ieee80211_local *local,
++				  struct txq_info *txqi, struct sk_buff *skb);
  void ieee80211_txq_purge(struct ieee80211_local *local,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d17e06394142..5f31326a84b1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1699,6 +1699,9 @@ static void sta_ps_start(struct sta_info *sta)
- 	}
- 
- 	sta_info_recalc_tim(sta);
-+
-+	/* expire held frames at a regular interval */
-+	sta_info_schedule_cleanup(local);
- }
- 
- static void sta_ps_end(struct sta_info *sta)
+ 			 struct txq_info *txqi);
+ void ieee80211_purge_sta_txqs(struct sta_info *sta);
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 25cf1929fbfc..1ec59cdd4fa2 100644
+index 8d79e532b109..c536ab759fef 100644
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -1218,33 +1218,41 @@ void sta_info_recalc_tim(struct sta_info *sta)
- 	__sta_info_recalc_tim(sta, false);
+@@ -1231,11 +1231,60 @@ static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
  }
  
--static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
-+static int sta_info_buffer_timeout(struct sta_info *sta)
- {
--	struct ieee80211_tx_info *info;
- 	int timeout;
  
--	if (!skb)
--		return false;
--
--	info = IEEE80211_SKB_CB(skb);
--
- 	/* Timeout: (2 * listen_interval * beacon_int * 1024 / 1000000) sec */
- 	timeout = (sta->listen_interval *
- 		   sta->sdata->vif.bss_conf.beacon_int *
- 		   32 / 15625) * HZ;
- 	if (timeout < STA_TX_BUFFER_EXPIRE)
- 		timeout = STA_TX_BUFFER_EXPIRE;
--	return time_after(jiffies, info->control.jiffies + timeout);
-+	return timeout;
- }
- 
-+static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
++static bool sta_info_cleanup_expire_filtered_txqs(struct ieee80211_local *local,
++						  struct sta_info *sta, int ac)
 +{
-+	struct ieee80211_tx_info *info;
- 
--static bool sta_info_cleanup_expire_filtered_txqs(struct ieee80211_local *local,
--						  struct sta_info *sta, int ac)
-+	if (!skb)
-+		return false;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	return time_after(jiffies,
-+			  info->control.jiffies + sta_info_buffer_timeout(sta));
-+}
-+
-+/* returns whether frames are left on the TXQs that we want to expire */
-+static bool sta_info_cleanup_expire_txqs(struct ieee80211_local *local,
-+					 struct sta_info *sta, int ac)
- {
- 	unsigned long tids = ieee80211_tids_for_ac(ac);
- 	struct sk_buff_head expired;
- 	struct fq *fq = &local->fq;
--	bool have_filtered = false;
-+	bool have_buffered = false;
-+	unsigned int n_expired = 0;
- 	int tid;
- 
- 	__skb_queue_head_init(&expired);
-@@ -1263,7 +1271,7 @@ static bool sta_info_cleanup_expire_filtered_txqs(struct ieee80211_local *local,
- 				break;
- 
- 			if (!sta_info_buffer_expired(sta, skb)) {
--				have_filtered = true;
-+				have_buffered = true;
- 				break;
- 			}
- 
-@@ -1279,7 +1287,27 @@ static bool sta_info_cleanup_expire_filtered_txqs(struct ieee80211_local *local,
- 
- 	ieee80211_purge_tx_queue(&local->hw, &expired);
- 
--	return have_filtered;
-+	if (!test_sta_flag(sta, WLAN_STA_PS_STA) &&
-+	    !test_sta_flag(sta, WLAN_STA_PS_DRIVER))
-+		return have_buffered;
-+
-+	for_each_set_bit(tid, &tids, IEEE80211_NUM_TIDS + 1) {
-+		struct txq_info *txqi = sta_txqi(sta, tid);
-+
-+		if (!txqi)
-+			continue;
-+
-+		n_expired += ieee80211_txq_expire(local, txqi,
-+						  sta_info_buffer_timeout(sta));
-+		if (txq_has_queue(&txqi->txq))
-+			have_buffered = true;
-+	}
-+
-+	if (n_expired)
-+		ps_dbg(sta->sdata, "%u buffered frames expired (STA %pM)\n",
-+		       n_expired, sta->sta.addr);
-+
-+	return have_buffered;
- }
- 
- static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
-@@ -1287,9 +1315,9 @@ static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
- {
- 	unsigned long flags;
- 	struct sk_buff *skb;
--	bool have_filtered;
-+	bool have_buffered;
- 
--	have_filtered = sta_info_cleanup_expire_filtered_txqs(local, sta, ac);
-+	have_buffered = sta_info_cleanup_expire_txqs(local, sta, ac);
- 
- 	/*
- 	 * First check for frames that should expire on the filtered
-@@ -1359,7 +1387,7 @@ static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
- 	 * used to check whether the cleanup timer still needs to run,
- 	 * if there are no frames we don't need to rearm the timer.
- 	 */
--	return have_filtered ||
-+	return have_buffered ||
- 	       !(skb_queue_empty(&sta->ps_tx_buf[ac]) &&
- 		 skb_queue_empty(&sta->tx_filtered[ac]));
- }
-@@ -1737,6 +1765,13 @@ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 	return __sta_info_destroy(sta);
- }
- 
-+void sta_info_schedule_cleanup(struct ieee80211_local *local)
-+{
-+	if (!timer_pending(&local->sta_cleanup))
-+		mod_timer(&local->sta_cleanup,
-+			  round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL));
-+}
-+
- static void sta_info_cleanup(struct timer_list *t)
- {
- 	struct ieee80211_local *local = timer_container_of(local, t,
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ea7ead4b30b5..307c8b76b80f 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -1008,6 +1008,7 @@ void ieee80211_sta_free_link(struct sta_info *sta, unsigned int link_id);
- int ieee80211_sta_activate_link(struct sta_info *sta, unsigned int link_id);
- void ieee80211_sta_remove_link(struct sta_info *sta, unsigned int link_id);
- 
-+void sta_info_schedule_cleanup(struct ieee80211_local *local);
- void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
- unsigned long ieee80211_tids_for_ac(int ac);
- unsigned long ieee80211_sta_txq_buffered_tids(struct sta_info *sta);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6bace6ede373..c29dec9d049d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -462,6 +462,12 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 			return TX_CONTINUE;
- 		}
- 
-+		/* continue and put the frame on the TXQ */
-+		if (sta->uploaded &&
-+		    (ieee80211_is_data_present(hdr->frame_control) ||
-+		     sta->sta.txq[IEEE80211_NUM_TIDS]))
-+			return TX_CONTINUE;
-+
- 		ps_dbg(sta->sdata, "STA %pM aid %d: PS buffer for AC %d\n",
- 		       sta->sta.addr, sta->sta.aid, ac);
- 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
-@@ -1513,8 +1519,10 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
- 	}
- 	spin_unlock_bh(&fq->lock);
- 
--	if (sta)
-+	if (sta) {
- 		sta_info_recalc_tim(sta);
-+		sta_info_schedule_cleanup(local);
-+	}
- }
- 
- bool ieee80211_txq_queue_filtered(struct ieee80211_local *local,
-@@ -1544,6 +1552,64 @@ bool ieee80211_txq_queue_filtered(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+struct ieee80211_txq_expire_data {
-+	codel_time_t now, timeout;
-+};
-+
-+static bool ieee80211_txq_frame_expired(struct sk_buff *skb,
-+					struct ieee80211_txq_expire_data *exp)
-+{
-+	codel_time_t enqueue_time = IEEE80211_SKB_CB(skb)->control.enqueue_time;
-+
-+	return codel_time_after(exp->now, enqueue_time + exp->timeout);
-+}
-+
-+static bool fq_expire_filter_func(struct fq *fq, struct fq_tin *tin,
-+				  struct fq_flow *flow, struct sk_buff *skb,
-+				  void *data)
-+{
-+	return ieee80211_txq_frame_expired(skb, data);
-+}
-+
-+unsigned int ieee80211_txq_expire(struct ieee80211_local *local,
-+				  struct txq_info *txqi, unsigned long timeout)
-+{
-+	struct ieee80211_txq_expire_data exp = {
-+		.now = codel_get_time(),
-+		/* station controls listen interval, avoid too long timeout */
-+		.timeout = min_t(u64, jiffies_to_nsecs(timeout) >> CODEL_SHIFT,
-+				 S32_MAX / 2),
-+	};
++	unsigned long tids = ieee80211_tids_for_ac(ac);
 +	struct sk_buff_head expired;
 +	struct fq *fq = &local->fq;
-+	struct sk_buff *skb, *tmp;
-+	unsigned int n_expired;
++	bool have_filtered = false;
++	int tid;
 +
 +	__skb_queue_head_init(&expired);
 +
 +	spin_lock_bh(&fq->lock);
-+	n_expired = txqi->tin.backlog_packets;
-+	fq_tin_filter(fq, &txqi->tin, fq_expire_filter_func, &exp,
-+		      fq_skb_free_func);
-+	n_expired -= txqi->tin.backlog_packets;
++	for_each_set_bit(tid, &tids, IEEE80211_NUM_TIDS) {
++		struct txq_info *txqi;
++		struct sk_buff *skb;
 +
-+	skb_queue_walk_safe(&txqi->frags, skb, tmp) {
-+		if (!(IEEE80211_SKB_CB(skb)->control.flags &
-+		      IEEE80211_TX_INTCFL_NEED_TXPROCESSING) ||
-+		    !ieee80211_txq_frame_expired(skb, &exp))
++		if (!sta->sta.txq[tid])
 +			continue;
 +
-+		__skb_unlink(skb, &txqi->frags);
-+		__skb_queue_tail(&expired, skb);
++		txqi = to_txq_info(sta->sta.txq[tid]);
++
++		while ((skb = skb_peek(&txqi->frags))) {
++			if (!(IEEE80211_SKB_CB(skb)->flags &
++			      IEEE80211_TX_INTFL_RETRANSMISSION))
++				break;
++
++			if (!sta_info_buffer_expired(sta, skb)) {
++				have_filtered = true;
++				break;
++			}
++
++			__skb_unlink(skb, &txqi->frags);
++			__skb_queue_tail(&expired, skb);
++		}
 +	}
 +	spin_unlock_bh(&fq->lock);
 +
-+	n_expired += skb_queue_len(&expired);
++	if (!skb_queue_empty(&expired))
++		ps_dbg(sta->sdata, "%d filtered frames expired (STA %pM)\n",
++		       skb_queue_len(&expired), sta->sta.addr);
++
 +	ieee80211_purge_tx_queue(&local->hw, &expired);
 +
-+	return n_expired;
++	return have_filtered;
++}
++
+ static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
+ 						struct sta_info *sta, int ac)
+ {
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
++	bool have_filtered;
++
++	have_filtered = sta_info_cleanup_expire_filtered_txqs(local, sta, ac);
+ 
+ 	/*
+ 	 * First check for frames that should expire on the filtered
+@@ -1305,7 +1354,8 @@ static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
+ 	 * used to check whether the cleanup timer still needs to run,
+ 	 * if there are no frames we don't need to rearm the timer.
+ 	 */
+-	return !(skb_queue_empty(&sta->ps_tx_buf[ac]) &&
++	return have_filtered ||
++	       !(skb_queue_empty(&sta->ps_tx_buf[ac]) &&
+ 		 skb_queue_empty(&sta->tx_filtered[ac]));
+ }
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index cd3c89a6a25a..ea7ead4b30b5 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -660,7 +660,9 @@ struct ieee80211_sta_removed_link_stats {
+  * @tx_filtered: buffers (per AC) of frames we already tried to
+  *	transmit but were filtered by hardware due to STA having
+  *	entered power saving state, these are also delivered to
+- *	the station when it leaves powersave or polls for frames
++ *	the station when it leaves powersave or polls for frames.
++ *	Only used for frames not on a TID TXQ, filtered data frames
++ *	are put back onto the frags queue of their TXQ instead.
+  * @driver_buffered_tids: bitmap of TIDs the driver has data buffered on
+  * @ps_release_tids: TIDs for which the driver can dequeue from TXQs during
+  *	during release_buffered_frames(), only non-zero during that
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 414979e2a1d9..6134c37e081b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -47,6 +47,8 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
++	struct txq_info *txqi = NULL;
++	u32 ctrl_flags, flags;
+ 	int ac;
+ 
+ 	if (info->flags & (IEEE80211_TX_CTL_NO_PS_BUFFER |
+@@ -56,6 +58,19 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 		return;
+ 	}
+ 
++	if (ieee80211_is_data_present(hdr->frame_control) && sta->uploaded) {
++		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
++
++		if (sta->sta.txq[tid])
++			txqi = to_txq_info(sta->sta.txq[tid]);
++	}
++
++	/* keep these flags across another trip through the TXQ */
++	ctrl_flags = info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
++	flags = info->flags & IEEE80211_TX_CTL_NO_ACK;
++	if (!(hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)))
++		flags |= IEEE80211_TX_CTL_FIRST_FRAGMENT;
++
+ 	/*
+ 	 * This skb 'survived' a round-trip through the driver, and
+ 	 * hopefully the driver didn't mangle it too badly. However,
+@@ -71,6 +86,10 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	info->flags |= IEEE80211_TX_INTFL_RETRANSMISSION;
+ 	info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
++	if (txqi) {
++		info->control.flags |= ctrl_flags;
++		info->flags |= flags;
++	}
+ 
+ 	sta->deflink.status_stats.filtered++;
+ 
+@@ -142,6 +161,38 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	 *      changes before calling TX status events if ordering can be
+ 	 *	unknown.
+ 	 */
++	if (txqi) {
++		if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
++			if (info->flags & IEEE80211_TX_INTFL_RETRIED)
++				goto drop;
++			info->flags |= IEEE80211_TX_INTFL_RETRIED;
++		}
++
++		if (!ieee80211_txq_queue_filtered(local, txqi, skb))
++			goto drop;
++
++		/*
++		 * ieee80211_sta_ps_deliver_wakeup() either sees the frame
++		 * and wakes the TXQ, or this code sees it awake and does
++		 */
++		smp_mb();
++
++		if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
++			sta_info_recalc_tim(sta);
++
++			if (!timer_pending(&local->sta_cleanup))
++				mod_timer(&local->sta_cleanup,
++					  round_jiffies(jiffies +
++							STA_INFO_CLEANUP_INTERVAL));
++		} else {
++			/* avoid recursive driver calls */
++			ieee80211_schedule_txq(&local->hw, &txqi->txq);
++			set_bit(IEEE80211_TXQ_DIRTY, &txqi->flags);
++			tasklet_schedule(&local->wake_txqs_tasklet);
++		}
++		return;
++	}
++
+ 	if (test_sta_flag(sta, WLAN_STA_PS_STA) &&
+ 	    skb_queue_len(&sta->tx_filtered[ac]) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered[ac], skb);
+@@ -162,9 +213,10 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 		return;
+ 	}
+ 
++drop:
+ 	ps_dbg_ratelimited(sta->sdata,
+ 			   "dropped TX filtered frame, queue_len=%d PS=%d @%lu\n",
+-			   skb_queue_len(&sta->tx_filtered[ac]),
++			   txqi ? -1 : skb_queue_len(&sta->tx_filtered[ac]),
+ 			   !!test_sta_flag(sta, WLAN_STA_PS_STA), jiffies);
+ 	ieee80211_free_txskb(&local->hw, skb);
+ }
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 856018cdb617..cc6996591853 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1515,6 +1515,33 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+ 		sta_info_recalc_tim(sta);
+ }
+ 
++bool ieee80211_txq_queue_filtered(struct ieee80211_local *local,
++				  struct txq_info *txqi, struct sk_buff *skb)
++{
++	struct sk_buff *iter, *pos = (struct sk_buff *)&txqi->frags;
++	unsigned int n_filtered = 0;
++	struct fq *fq = &local->fq;
++	bool ret = false;
++
++	spin_lock_bh(&fq->lock);
++	skb_queue_walk(&txqi->frags, iter) {
++		if (!(IEEE80211_SKB_CB(iter)->flags &
++		      IEEE80211_TX_INTFL_RETRANSMISSION)) {
++			pos = iter;
++			break;
++		}
++		n_filtered++;
++	}
++
++	if (n_filtered < STA_MAX_TX_BUFFER) {
++		__skb_queue_before(&txqi->frags, pos, skb);
++		ret = true;
++	}
++	spin_unlock_bh(&fq->lock);
++
++	return ret;
 +}
 +
  static bool fq_vlan_filter_func(struct fq *fq, struct fq_tin *tin,
  				struct fq_flow *flow, struct sk_buff *skb,
  				void *data)
+@@ -4051,6 +4078,16 @@ static struct sk_buff *__ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 			ieee80211_free_txskb(&local->hw, skb);
+ 			goto begin;
+ 		}
++
++		/*
++		 * First transmitted frame clears filter. The non-atomic check
++		 * is first since it's very unlikely.
++		 */
++		if (unlikely(test_sta_flag(tx.sta, WLAN_STA_CLEAR_PS_FILT)) &&
++		    test_and_clear_sta_flag(tx.sta, WLAN_STA_CLEAR_PS_FILT)) {
++			info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++			ieee80211_check_fast_xmit(tx.sta);
++		}
+ 	}
+ 
+ 	/*
 -- 
 2.56.0
 
