@@ -1,79 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793590114;
-	b=L/qVP68Cptf6zX9LHNpAjU6LWhY+sD24WodcJ9lFpZJ017ociCj1giPUtz+HjKf7MxFW
-	 CFAGMLEXacH/STLk1s9x+WwF0b/P6y67ENRX7rZ0D+s5rv3JiEw5U8YHL1tgGOXuD3HMm
-	 npKEhEZMJVjFjp9r5RNHNdx4RF88bx/eUJO+7KZYzyMDbYYfqXZxa6gPuS51R2n7WWxV0
-	 sP+N+pchAGjnhJnrMqp0tyyY1juTk33fDPaxSMMXA0IKFJu4FCrtiH8OywwK5a7miNKlP
-	 ZFGKyVFrCd5QBtj2FZeYbrYBZLojq5tZOsPCfucObwFCMgqBRXoZwrgULSsAPV5S7BQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793590114;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=AsyZ2rRSDNzE0zB4SNUDz4Q+VubPg3NirSbzcFzF+zQ=;
-	b=cw9ub6V2+om4b3NSmfSZWxGQBNqRAqEFpUHMrqkOf5l1h6FtUcbqAm0pN3y6GBDUwI2W
-	 kFBeHV2E/68PyGWzETywmAu3wHPK8JSw/HpFy0T7lDqwNLteq1wPBQggp4KptJ2+piCJD
-	 93iFhRC0OtwR6vjjb+AW4jQcnM0UEHr+UuC0dcjd19/T2nA8IgPuDaSwjLY81x+WEc/jE
-	 DUcg9rpPe6j9jDy1KEjcl2ABFoerXjR0MCotNLZ26iXMJuiHGyQAzt3bMMvMIQVtFNoBG
-	 a6kzJbITpH77p9R+fsiR99eJZaXn6dxbpuWymXeW91Uvjpmfcc0blVyOf1NN3hn4YPw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=FvBy+aII;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.54
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793590243;
+	b=agLU4p8njRAHbhd4l15omQ+Eh4TU0eqtjbtHnhdqyPy06dAK+JV/ILyK89Qas8WWgCgi
+	 gpOSbPDSvCN7RzZofKyxAsLUw0I6IRCYelV+CqmU0k+9zSvrJrICZVuQlic3XE5+KWmVo
+	 w+rTdkeDKHMRC1XzW7AtadvKxXEt5t6tob/FzFk0IpTODGdPgqado9rPmNkX+M+YtyXxj
+	 vny6xheNxVDw2hUqnjRKw/4BKdta5OYTaKQq4zjq2rfBjpvw3IpyzOo4eZFjuHKp9FVcK
+	 vhiAfDyEUmgC16fx53nTL6Yrc4vk94GHhpo4hn/K+HaAv+VU7aKAOOLRF3bhQ0Rct3g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793590243;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type;
+	bh=eMG3qzj/K1IfjUVt6rPED4KGZ+DREF1ZZtQ65RcHUus=;
+	b=mveu8a4bsmzPpH8OoVaxjtfyZNWogTXWHMmDGrdiF73QC+kABvDoGZQ9QUfphymbn/wt
+	 D/jr7THEcUvTz+dJ8VMubvddinSy0kUHZIyjyzcVZKR6iB3rGqxm+jHYS8OuYlRnyzXTS
+	 2WlwlV9+O772CndM4meCuF8nR9H/OgNzcXsRZ8JPgaNZXyfqTola2XY7KSanZb2o3BoAN
+	 cNytWEy27Jdnvac7DYfg8nifTrnQWuhfBixtgFzBueoJ1i/vAtQOiH9ZGNmI2JFJBRMT2
+	 eG43Q0Gv6/LSBEbPhze7x4oGccePNM3xLgJ7GjG+TYtl24wYtPOPWHdtMxuckoLTXOA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qmlaK9vb;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.54
+Received: from mail-oa1-f54.google.com (mail-oa1-f54.google.com [209.85.160.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4E4606A324;
-	Mon,  2 Nov 2026 03:28:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C4E4606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68BBA606A326
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 03:30:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68BBA606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=FvBy+aII
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A23SQVg81819896, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793590106; bh=AsyZ2rRSDNzE0zB4SNUDz4Q+VubPg3NirSbzcFzF+zQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=FvBy+aIITEiu5MYgGLDhJ+G/7NJhogsuVBBahzwso578UE0Ce1zj3sAXuO8PJ97A0
-	 NSrA4MBU99wxLATDc0Xb33nF98jKSlMUvl8f2NiB8+yGHP0pOmuXWHgUzP0CjO5Vda
-	 0AOpDUMxLOmTPDgsOwsO+A+WRkT0mOd+6aM9oo8U4ftRn/MficKZixBKAUklHodUc4
-	 ZUHiPIRjkRGx2GFgBdj5Km8uY1sIQ17uaGBE7jEo6rjFJxwcG4Cg0BU6F/HCvc7R0p
-	 ad4dZ7hRl6EvLDDjXJr5Zal9TX94vO9VKypd2/2jE6a0jRuVhlWjyz3572WZH/gPpH
-	 y+JS2udgzcHQg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A23SQVg81819896
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 2 Nov 2026 11:28:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Mon, 2 Nov 2026 11:28:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
- 15.02.2562.056; Mon, 2 Nov 2026 11:28:26 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Rosen Penev <rosenp@gmail.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-CC: Zong-Zhe Yang <kevin_yang@realtek.com>, Kalle Valo <kvalo@kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next] wifi: rtw89: acpi: check for _DSM function
- support before evaluating it
-Thread-Topic: [PATCH rtw-next] wifi: rtw89: acpi: check for _DSM function
- support before evaluating it
-Thread-Index: AQHdak/ux0lhlq5WtE+cZkh8fkWQOLcaHI1w
-Date: Mon, 2 Nov 2026 03:28:26 +0000
-Message-ID: <ebd3c83183464c3e9c218337a568b59a@realtek.com>
-References: <20261101222535.34573-1-rosenp@gmail.com>
-In-Reply-To: <20261101222535.34573-1-rosenp@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qmlaK9vb
+Received: by mail-oa1-f54.google.com with SMTP id 586e51a60fabf-475920b9ca2so581955fac.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2026 19:30:43 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793590242; cv=none;
+        d=google.com; s=arc-20260327;
+        b=FV2KaEqIvP2oV1P/82RNi/D4UUBzcZs7sbEok7v+e7plXaihXXK9she3rqRGj7H+7E
+         WzyLM8aTttaUq1NxXwLEC2zMsGJ5nVXbCmptuXpm+HbT5cVpe8Ka4d3RKp47mqumbHXR
+         R8f9Jv/3yaeWsaicnauiY2pUMKS/w6wIS+tR1KGXwBxev/qMkIn99TtItCfacVkibOIe
+         YBG1mLDH9tW93udLF3qy5vr2jQzMiA9ZunzVKQr0ypCRYirt3TofasGcNEvR3PKH9lJP
+         UI/PCl2odK6Hkjxr2VtJF7CKu5Ao2JJKzyh94eS4TtxQKyeM3SBSFaF4VONoZVMbEWcW
+         xgOg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=eMG3qzj/K1IfjUVt6rPED4KGZ+DREF1ZZtQ65RcHUus=;
+        fh=dhkAR/4gOrYl5w4je/lt9cymy6UBUNMw1xPz1LpQXVo=;
+        b=ga0sh14GLKYEEZLK6tz21oZYXuFStMO0EnRj0EoTUQs2l3xBY6btTxwhr0avUir1rX
+         x+r1zqq8JAZCGEpsBPHpxi6Q1/kMemAJ4peaBU9NMjooym7MolgdSs42g9Cywj8gsxTd
+         DxMA36HzQ7s3jXgE43wRiMt+CXbaI3d9ipbtbyYwbDg9bQIgaSEwIhuYboy/UUpbNIa+
+         eIcaQYqx+zXh6UdMjW+8iTqlKAkqDh6Ntmn1KEIg+5hPu9utJsixU4m7xQIitLBNj88v
+         eb2Vv0wknknZ2+bivqthF091gJa///shkT0NIJcxuypI1m1if1cvXgYfze3g+UEEhQrj
+         Y74A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793590242; x=1794195042; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eMG3qzj/K1IfjUVt6rPED4KGZ+DREF1ZZtQ65RcHUus=;
+        b=qmlaK9vbjM2P4NYVJt0RHj55P3y4S+mGZwDeTnQV+XkPuXx+/zuxVCr/MudVzy8qwY
+         1geRWP2CKMdgYrdDvadEBrdD/pYmAg177C2xXxBr0aN+P5pJJ1WRrI1dnT00t3j8CYZK
+         WOzymLofZ2kIh6QZQRbYjq2rW/21BIXTgg6O0js5djEd5me44LtsTRDVZfbvoHS+QerS
+         ZsuX0UIKrp/xWR84IgLg30agIbGoZavQU1zaBCqDjBPcdoPDGck6ABM/CFsYGX8ru7gN
+         /NOq5REmOCUqrw+8M3hs80huMOrvKL+pSVthktEONjAtyIoEqEwbQPb7wF1S9qZRGy8+
+         XXww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793590242; x=1794195042;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=eMG3qzj/K1IfjUVt6rPED4KGZ+DREF1ZZtQ65RcHUus=;
+        b=CtqX1BiE4ULE+6Nmgbl9YkulqDMx+M0PXKvPghRiWP8AuxPR3D0g8ocQ1bFWExBReu
+         ty7uMQ92ibli7x2TITNgOGbx3uja0MwCTnpK6sV/drBolcBUeoLx3k1AHqLiB7uuWK7K
+         t8Tj2tyALZGvEfHnrrABQPEAdJKMSxS1JztG5EOElf3zc/VU6NsPxNF/veRlRnT2+fmt
+         lUEKH2XIMtzgnwuo6520+N8FITcOuhX04wx0NclhCW3IHtFLXZxBO2T/P7xNidLLkiKM
+         ytK3oUSwTCQkADdnPcN9yZkL1dijZdSN//N+ca1Z6hZlck9PgpiRUyvL/rcsbixFCpwn
+         doqw==
+X-Gm-Message-State: APuU4Z+bv89g3YJgLpKYoWkHilKE/pDO0I3x6eQf1TUKtRKrL3Imz6bk
+	hbDSnGuSPXTsPoEY3/uX+41HIEV5onCtf60YCwb00iqq/619eCEduiln4FbJbUGVROg61ksYLyB
+	OLe+pYAFgSdX75YAESed7es5tCaXnnjE=
+X-Gm-Gg: AYBFou1PxgcBDb5+m7d/i52X86HMQda3UFZcbFcjQ1VFUCYM0bbquA7r3MUKKv7F127
+	+v+pwlsN21Yb36Nq0hYw0bJQUL5gW/35FPQ0vXMs2XF5zRVec0IhJ42j67KIpx4IhF+7/7DtzD7
+	6FwiC8pVg0nhUvSmnqSvqqykaF/oVQ6uYXUTExHYqlqazjSqEw20osS1b07JolJybUExmUEO0Yx
+	84I/QhsJlawcBcwP80XfmdbzVQaYzHJkoT7BvjBQzg4i53j2z/t5OZRWClXzQS7F9aNXJCYWOKP
+	Q3l5r2PzQcyI2aiItX6qiJu7tUMXobWs3NJ1F4tONZp5v8RM4E4LZOlicFivBYBp/ccJV9SLUZQ
+	SRXJVvvM3xJw3+9usYi/juHK2COrxizKehYWcIxGUN5R6Ev3i/kmeIzdTdAikvAJVmOdoN6KNBL
+	Key6gLQ+/uVz4BQG9c+Q==
+X-Received: by 2002:a05:6870:bacd:b0:49e:6fbc:cd5b with SMTP id
+ 586e51a60fabf-4a9077a2827mr5613306fac.55.1793590242334; Sun, 01 Nov 2026
+ 19:30:42 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,36 +103,20 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+References: <20261102032425.8249-1-hjf3108@gmail.com>
+In-Reply-To: <20261102032425.8249-1-hjf3108@gmail.com>
+From: Jie Feng <hjf3108@gmail.com>
+Date: Mon, 2 Nov 2026 11:30:05 +0800
+X-Gm-Features: AclHuK9UfW7MVkqaHjMNqDVksfpjO7v2dDScBxd8n0Y1R_iO0ssIBL334H5ZSS8
+Message-ID: <CABOQOSWF25LgAw-ccQtMqhEyguGwGa5XS6JQAVLbo4BRiNjcXg@mail.gmail.com>
+Subject: Re: [PATCH rtw-next v4] wifi: rtw88: usb: don't report the
+ aggregation buffer as a frame
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, Sascha Hauer <s.hauer@pengutronix.de>, 
+	neo_jou <neo_jou@realtek.com>, Hans Ulli Kroll <linux@ulli-kroll.de>, Kalle Valo <kvalo@kernel.org>, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Rosen Penev <rosenp@gmail.com> wrote:
-> When the WiFi device has no ACPI companion, or the firmware does not
-> implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() calls
-> acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
->=20
->   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 r=
-ev:0 func:10 (0x1001)
->   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 r=
-ev:0 func:6 (0x1001)
->=20
-> Here the handle is NULL, and acpi_evaluate_object() returns
-> AE_BAD_PARAMETER. All callers already treat failure as "no policy
-> provided by the platform", so this is only noise.
->=20
-> Use acpi_check_dsm() first. It returns false for a NULL handle and for
-> functions that are not advertised, so absent functions fail quietly at
-> debug level, as rtw89_acpi_evaluate_method() already does.
+Hi,
 
-The acpi_check_dsm() is to evaluate func 0 before actually accessing func.=
-=20
-I'm not sure if all platforms will implement func 0. Do you know that?
-
->=20
-> Seen on an RTL8852BE in a desktop PCIe slot.
->=20
-> Fixes: e897b0bef38a ("wifi: rtw89: introduce realtek ACPI DSM method")
-
-Does it need a Fixes? As I see, this is not a bug.=20
-
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-
-
+Please ignore this v4, I forgot to add the reviewed-by, will resend.
