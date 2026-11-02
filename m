@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1793596451;
-	b=dIrEZcEig4cV0YA0B9DnMq94FYPukGDKjqlfoSSrSKwBHGmtrmezY//VWI21pT2K3V44
-	 NytqEotliiMc2IIuqgVEbeWTBmyvUFTj9wUM5DCJ8nQNsAoVAu7l/6PBVhhVenoR8VStQ
-	 acMP3e0ArUvZUzOdybSgM7X5e7rQ3cR66xhQ9bz2npi8N09R0d1EgSu7mCBpHB0/cN+V/
-	 cOFBaL69lnlz/SsyXQIr9rutQly5/6FwlUtK9Lrnv59tAA/z2fuadbb3F3Ux2bbK3Kf6t
-	 A2ig/ZBBqqqQ9yp69Fbu6Q/1q//fmTgwiYP/bbZibUikirTtFwjjDxTm2UHjIZLOM4Q==
+	b=SxXJUoIRVW8WJ9hv3VfWJqneEtFyN1VmGDfIbvzpisuwvaeUNevn5VvdAQkKlNafxVT+
+	 00VS2hl5C16e+MOf+3Ndc24XX3cuBck58yFlloaryaYNTx0mvt7EiY+ps4C7hSStuV0YG
+	 7nQu635EwvlsYe58EmqN1s3v37FYL2/RSSdTwGE4DYCKdwhqrjm8i5YrL3VbKjHOXMx1j
+	 Yz0xh7tgr0q+mGBW2fhhc+emfw9m8w7dE7MU8kjsjESzYlneUa7LXnmSNy2bz5vrspSgk
+	 akwJ9RePPzVtwxVPE8MaA71JRuKFgo0QaEnJl9P2q7bt1TPz73720O5IIkKEZ9VYD0Q==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793596451;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=XVpNLH2FiGtscLNxG2j1l4l4r0lRErkiBU7Q0Ju5Pww=;
-	b=EXLxZreBtnyjZdfOpyOaDbU0QlvGsIwvMBjmb7uGgJmXmOC8wB3vXSVCXQ+Q4OoB6ITQ
-	 3lNmI9XBJ7ObpzjmQ5UQbwZBlBMG737Cvr07saBzok5xLU5XWGKSXXrA+HrWSAPMKFuaW
-	 s5rR8mFGxT/1qiMsuoYd0lF9rCOXwhXJqd/9aFgXHoWAVIy6GIb3T49Ov8cM4e+0UoRhC
-	 2Y7sMUpqRlwGucsWIljKkghfLjupnBkpL3ydKvpEDyqodSNdmjnx0cFxUzFXIfWqYyJBe
-	 cdrVu7PThPBhbNGZRjOId1J/nBwjM/L49/8KHmbiPwhdLcwGpj/iw9N1SjWnyvlEz7A==
+	bh=b1mZsSOMetU/Ho2p5NPS0yaILwy9cETrZxqZYB3+uRw=;
+	b=zrMi9eyeAvo2buwKczQyjgQR7/38xpuDvIx52CXopOfGAlSpM9oq9WLVeFMZ96DUE12N
+	 U4NIe6C3KoWsgAczreJ0raDuo5lSkWf1i2bahXzU5Vtth7kq5Z1Sw3cNguxRx35CkNaEr
+	 XaSQbodaHDA3lGynob0TztNJ7PqnWl45G7yDp6w9/RU8/wQqui7Nc925fFaIAFWIwI/ok
+	 pCneZh5eJtKmOz2rhmJHiDzYioIqwAIbcEFe1JWyWkkYQY+tluNc42Swc/1gBa+iYKo2b
+	 FI28+/2jKdauRVPAQKMXz1qkXta2+Vz/ZpN+7ZOS0UBLtCu6Q/ly4TUL3rrSoJx+qUQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="m75/0I0P";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HqP57x08;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988E2606A33E;
-	Mon,  2 Nov 2026 05:14:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02747606A331;
+	Mon,  2 Nov 2026 05:14:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m75/0I0P
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HqP57x08
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793596451;
-	b=0GuZFyoX0iSk1sYLZdM4tkNXhp4HJJR5znm/WIeTRO0qv0XRikOO6pXBGEh36ZoCigjA
-	 YehbQ6bgkZbalgPkGC+FAxUe9OY1Mlb6QHC7vgFnYihxpEPEWgnlEgrVWblvC/alq0fhL
-	 aggx2+lScsgLKUxbIIzkLD1lh8o9QXUJO4pgoCvYtjXkJ+L43AyVK4UP4WEZP0Ii+vrd/
-	 jaVAWKvwrrWCkkY3p2jh+lmZD/gCBSe5/Uc5N7Osfwc5IVfYHsATL1vu6cnj0XGg0CAo+
-	 z3btkCKUgpKSjUaEmz9oflkRX5IW3TXRjmrv+BuAobQsDMB3twGhj0qZ2WxvqkJd06Q==
+	t=1793596450;
+	b=SoM6v+SgMq6uLs4sMzY/0mr0PcECPEGOJpSOTFTsjA71ih7oAyFNp1v5lB63j+jHOg1F
+	 3sxsaHDM+Nxq2IDZ3ykRVsxUySQjfCYHbyfHULIGUijTNmzQYeojzqtRvnQIhGueznQea
+	 PDJPQ3Xe8Oc33OQ016Ux56Ul4mtmd6PYB810lKvlQ7pFEsLjBfkcC4n4FOb/XAs4uAtzP
+	 7cCbMoFzVoGwt/fHEv57AwUKQuXt0GBJ3i7orhCa931j/TfENmo0VFYBnon6w7riQtBE9
+	 sB/EVca7+MWMLXrh80gcsVHhjJqFhPgxKkL4dBjisW53NErY41TxkIjLSfqSVhpIxaQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793596451;
+	c=relaxed/relaxed; t=1793596450;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=XVpNLH2FiGtscLNxG2j1l4l4r0lRErkiBU7Q0Ju5Pww=;
-	b=szlP+/cdyvY9nmNQOacHM58VjGmh3FqJzZrDtneXqY8Bv/ujvy7a/YfqT6snfanh9tot
-	 E1rJUOy/Hfvsh0bjPqaGQXW0lwG02KvSf/QNjGH/sM7URtxaju244aTKk9seDSY5dp5Ms
-	 kElXCWetkhOKkWOBHO5TQhBYHPb0sMLZ5RAHXdv2Ncs+bsJaw3gwEEe+auSdHfLig0utP
-	 wUR/fmy3tiXe82Y3OD+5jeZHnEJgmo6DR9BabzoFrnQhTNxf8i+iVbMOmh4TIMp0dE2vy
-	 wgoUwBLRpBgtSpolW03VyV3r2U/ORm2kq4oQUmyMDZXAZG6+Ipgm9bsp3TNOynuE64w==
+	bh=b1mZsSOMetU/Ho2p5NPS0yaILwy9cETrZxqZYB3+uRw=;
+	b=c3SaLZ0KxE89cipnrTrCpGoH9FKDYMjT12wyq1XPbs55qUKxJSAL6W/caCczlWOPH00U
+	 KtZKR6+YTAAqVBV7cT9rcM5qEXBZEcir0tl+2RvpxNi76vUJXrjdDSmrnkm5V6pnpdwft
+	 GW+SpFup8hSzJsmi/i50iuGdfewihy21NIGt99klKEdb0B7oveXuiwXLO+iX7aG9jky2/
+	 HH/25sAc3GJ4/dSi1AhXYpMXpPdJ1GEaaph7Uj3p60BKBEG2zU5/EEbPGx+8bVFl3DAiD
+	 IB4uyPw+AL6pdcGypTccSHohfLLVydbJhEAxqe1zS24R+2H8DoclW1PsIKX/h4wXe7w==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id A80741F00919;
+	by smtp.kernel.org (Postfix) with ESMTPS id A88CA1F0093A;
 	Mon,  2 Nov 2026 05:14:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793596451;
-	bh=XVpNLH2FiGtscLNxG2j1l4l4r0lRErkiBU7Q0Ju5Pww=;
+	s=k20260515; t=1793596450;
+	bh=b1mZsSOMetU/Ho2p5NPS0yaILwy9cETrZxqZYB3+uRw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=m75/0I0PEglcwwJU6K1P0MJCo7Q9sOaU4YeKM1IQand65duGVCPAIzQQruJ7WqKjD
-	 Yh+9uh9BHB89nKPvD95lUjp7xlW67jtrxSra88n+gxtUYmsrg/TDF0Fe4QdTq6rYXW
-	 vHI32SuRGjiyHg7pBvg1DVMZ7yvT+JF6s69v2okMWAgaulXPZskC8y89FHHItilhOr
-	 gv2fiYzwOdck8+ZNZ1Vinb1YQMTHNENZVNVQNdry2OlWUyCH7Q7UQR0QklQ026CsCi
-	 QKp0bmHac1gmGCyb/tVV18o3m/69cxjOudDU3gaGFRdf2GjDB2UV+r6gvy0hcWMs2I
-	 QEE3oXRl9xCNA==
+	b=HqP57x08xXgAV4+IcSNMYiSRhppxzDB2W05ITydjgI7sEpu9HI7kVXxGjC1SpTCiD
+	 d79TT+BmAwSrbToheRxVvP7HepkVwYagY1gKQgk8QhloUxr9mFO7SxmOInTAZObA8k
+	 bdccDXXufuAjE8mHHKhbs/g356J9lEuhuG2sACN+FSgtZxZmG5Q/4XOEda/lk3BF7q
+	 wpKJ6VvpD/YxdH9d7fzo4+7hLBl3TKy6aEDkai2BDqt6rapcPDMi0x+yd3jrD7RxA2
+	 h+Uo6/3hJzvrT5pmCpr7xRYsOhl/vwgvrluanRYgYYWAJBvPJm2I7Ui/2q705y+JMZ
+	 eCrG+pVJ33O1w==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 32EE446386;
+	by lkml.kernel.org (Postfix) with ESMTP id 25ACE46382;
 	Mon,  2 Nov 2026 05:14:09 +0000 (UTC)
 From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Sun, 01 Nov 2026 23:14:11 -0600
-Subject: [PATCH ath-next 3/3] wifi: ath11k: report a monitor frame's MCS
- and NSS only from the PPDU's SIG
+Date: Sun, 01 Nov 2026 23:14:10 -0600
+Subject: [PATCH ath-next 2/3] wifi: ath11k: hold back FCS-failed monitor
+ frames unless asked for
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261101-b8-monitor-frames-v1-3-f0a43d9630e5@gmail.com>
+Message-Id: <20261101-b8-monitor-frames-v1-2-f0a43d9630e5@gmail.com>
 References: <20261101-b8-monitor-frames-v1-0-f0a43d9630e5@gmail.com>
 In-Reply-To: <20261101-b8-monitor-frames-v1-0-f0a43d9630e5@gmail.com>
 To: Jeff Johnson <jjohnson@kernel.org>, 
@@ -103,11 +103,11 @@ Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
  Rajkumar Manoharan <rmanohar@codeaurora.org>, 
  Christopher Griffin <christophergriffin05@gmail.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793596448; l=4679;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793596448; l=3200;
  i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=J4jRf5l59+FWEVGn47cCD/3aF3TptpB1fGEP1KJUXLA=;
- b=bmG75PeLmhL3oUTVAm+ZrW60a0gibEUkuhKP79wvs56n1yY43XiE9zmwYPAl4VwJ4b5VqU79V
- 6hPVtoKyQnUBCed6G7Zy0QidhWv6iD3jnpQ+hKWbuBg3JvKL23gUjT6
+ bh=gW5/j2hiiWOOFjn6ouakRd7VONDoZcdzfhX/IthW4Vo=;
+ b=Unx/VLGUd03Y0E20Qd3syMAamP4RBCNzYP78JySeJPZc2vyvfug+SX7i6SocFG0/VJvLBY9kS
+ TL7D2W2rPNeA+rc3+SuG5IF1Qd6PIFCKu7Phky9JXOCVwHbAaNRY9Il
 X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
  pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
 X-Endpoint-Received: by B4 Relay for
@@ -118,116 +118,86 @@ Content-Transfer-Encoding: 7bit
 
 From: Christopher Griffin <christophergriffin05@gmail.com>
 
-ath11k_update_radiotap() sets an HT, VHT or HE monitor frame's
-rate_idx from ppduinfo->rate. That is the L-SIG rate code, not the MCS
-that the SIG TLV gave (ppduinfo->mcs). ath12k had the same bug, fixed
-by commit 10085a654a4c ("wifi: ath12k: fix incorrect HT/VHT/HE/EHT MCS
-reporting in monitor mode").
+ath11k accepts FIF_FCSFAIL in configure_filter() but never looks at
+the filter: its monitor path hands every MPDU whose FCS failed to
+mac80211, flagged RX_FLAG_FAILED_FCS_CRC. mac80211 passes such a frame
+to every monitor interface, whatever that interface's flags. It leaves
+holding these frames back to the driver unless a monitor asked for them
+with the "fcsfail" flag, which turns on FIF_FCSFAIL. So a monitor made
+without that flag gets them anyway. On an Arista C-360 the QCN9072 scan
+radio's monitor saw a bad FCS on 6 to 10 % of the beacons it heard.
 
-The function also takes the preamble from the PPDU's user stats, which
-can arrive without the SIG TLV. The status of one PPDU can span more
-than one buffer, and since commit 01d2f285e3e5 ("ath11k: decode HE
-status tlv") ppdu_info holds only what the last buffer had. The frame
-then goes up as VHT or HE with MCS 0 and no spatial stream, and
-mac80211 drops it, warning once:
+Drop an FCS-failed MPDU in the monitor path unless FIF_FCSFAIL is set,
+as ath10k does in ath10k_process_rx(). filter_flags is now read outside
+conf_mutex, so write it with WRITE_ONCE().
 
-  Rate marked as a VHT rate but data is invalid: MCS: 0, NSS: 0
-
-An Arista C-360 with monitor interfaces up logs this, and the HE
-equivalent, once per boot. Because the warning is WARN_ONCE(), every
-later such frame is dropped without a message.
-
-Take the MCS from ppduinfo->mcs, adding the stream offset for HT.
-Use the PPDU's HT, VHT or HE rate only when its SIG TLV was seen with a
-valid NSS and MCS. Otherwise keep the rate from the MPDU's rx
-descriptor, and if that names VHT or HE with no stream, report one
-rather than lose the frame.
-
-ath11k_dp_rx_deliver_msdu() sets RX_FLAG_RADIOTAP_HE on the rx_status
-that all skbs of an MPDU share. Clear the HE radiotap flags for each
-skb, so that each skb's flags match the radiotap data pushed onto it.
-
-Fixes: ab0a9ef605cf ("ath11k: translate HE status to radiotap format")
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
 Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.r4-00683-QCAHKSWPL_SILICONZ-1
 
 Assisted-by: Claude:claude-opus-5-5
 Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
 ---
- drivers/net/wireless/ath/ath11k/dp_rx.c | 37 ++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 12 +++++++++++-
+ drivers/net/wireless/ath/ath11k/mac.c   |  3 ++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 7809c92baa325..53d7b19d8807c 100644
+index 4e0b717b6f06d..7809c92baa325 100644
 --- a/drivers/net/wireless/ath/ath11k/dp_rx.c
 +++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -5075,26 +5075,49 @@ static void ath11k_update_radiotap(struct ath11k *ar,
- 	rxs->flag |= RX_FLAG_MACTIME_START;
- 	rxs->signal = ppduinfo->rssi_comb + ath11k_noise_floor(ar, rxs->freq);
+@@ -5115,6 +5115,7 @@ static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
+ 	struct sk_buff *mon_skb, *skb_next, *header;
+ 	struct ieee80211_rx_status *rxs = &dp->rx_status;
+ 	bool fcs_err = false;
++	int ret = 0;
  
-+	/* Each skb of the MPDU carries its own HE radiotap data, if any:
-+	 * drop the flags the last one left, ath11k_dp_rx_deliver_msdu()
-+	 * included.
-+	 */
-+	rxs->flag &= ~(RX_FLAG_RADIOTAP_HE | RX_FLAG_RADIOTAP_HE_MU);
-+
-+	/* An HT, VHT or HE PPDU's MCS and NSS come from its SIG TLV, its
-+	 * preamble type (the *_flags) from its user stats. The status can
-+	 * hold the latter without the former, as when it spans more than
-+	 * one buffer. Keep the rate the MPDU's rx descriptor gave
-+	 * (ath11k_dp_rx_h_ppdu()) then: reporting the preamble with no
-+	 * spatial stream gets the frame dropped by mac80211.
-+	 */
-+	if ((ppduinfo->he_mu_flags || ppduinfo->he_flags ||
-+	     ppduinfo->vht_flags || ppduinfo->ht_flags) &&
-+	    (!ppduinfo->nss || ppduinfo->nss > HAL_RX_MAX_NSS ||
-+	     ppduinfo->mcs > ATH11K_HE_MCS_MAX))
-+		goto out;
-+
- 	if (ppduinfo->nss)
- 		rxs->nss = ppduinfo->nss;
+ 	mon_skb = ath11k_dp_rx_mon_merg_msdus(ar, mac_id, head_msdu,
+ 					      tail_msdu, rxs, &fcs_err);
+@@ -5122,6 +5123,13 @@ static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
+ 	if (!mon_skb)
+ 		goto mon_deliver_fail;
  
-+	/* ppduinfo->rate is the L-SIG rate; an HT, VHT or HE PPDU's MCS is
-+	 * ppduinfo->mcs, as the SIG TLV gives it.
++	/* mac80211 passes a frame whose FCS failed to every monitor
++	 * interface. Holding such frames back unless a monitor asked for
++	 * them (FIF_FCSFAIL) is left to the driver.
 +	 */
- 	if (ppduinfo->he_mu_flags) {
- 		rxs->flag |= RX_FLAG_RADIOTAP_HE_MU;
- 		rxs->encoding = RX_ENC_HE;
- 		ptr = skb_push(mon_skb, sizeof(struct ieee80211_radiotap_he_mu));
- 		ath11k_dp_rx_update_radiotap_he_mu(ppduinfo, ptr);
-+		rxs->rate_idx = ppduinfo->mcs;
- 	} else if (ppduinfo->he_flags) {
- 		rxs->flag |= RX_FLAG_RADIOTAP_HE;
- 		rxs->encoding = RX_ENC_HE;
- 		ptr = skb_push(mon_skb, sizeof(struct ieee80211_radiotap_he));
- 		ath11k_dp_rx_update_radiotap_he(ppduinfo, ptr);
--		rxs->rate_idx = ppduinfo->rate;
-+		rxs->rate_idx = ppduinfo->mcs;
- 	} else if (ppduinfo->vht_flags) {
- 		rxs->encoding = RX_ENC_VHT;
--		rxs->rate_idx = ppduinfo->rate;
-+		rxs->rate_idx = ppduinfo->mcs;
- 	} else if (ppduinfo->ht_flags) {
- 		rxs->encoding = RX_ENC_HT;
--		rxs->rate_idx = ppduinfo->rate;
-+		rxs->rate_idx = ppduinfo->mcs + 8 * (ppduinfo->nss - 1);
- 	} else {
- 		rxs->encoding = RX_ENC_LEGACY;
- 		sband = &ar->mac.sbands[rxs->band];
-@@ -5102,6 +5125,14 @@ static void ath11k_update_radiotap(struct ath11k *ar,
- 							  ppduinfo->cck_flag);
++	if (fcs_err && !(READ_ONCE(ar->filter_flags) & FIF_FCSFAIL))
++		goto mon_drop;
++
+ 	header = mon_skb;
+ 
+ 	rxs->flag = 0;
+@@ -5153,13 +5161,15 @@ static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
+ 	return 0;
+ 
+ mon_deliver_fail:
++	ret = -EINVAL;
++mon_drop:
+ 	mon_skb = head_msdu;
+ 	while (mon_skb) {
+ 		skb_next = mon_skb->next;
+ 		dev_kfree_skb_any(mon_skb);
+ 		mon_skb = skb_next;
  	}
- 
-+out:
-+	/* The descriptor can name VHT or HE with no spatial stream too.
-+	 * Report one rather than lose the frame.
-+	 */
-+	if ((rxs->encoding == RX_ENC_VHT || rxs->encoding == RX_ENC_HE) &&
-+	    !rxs->nss)
-+		rxs->nss = 1;
-+
- 	rxs->mactime = ppduinfo->tsft;
+-	return -EINVAL;
++	return ret;
  }
  
+ /* The destination ring processing is stuck if the destination is not
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index ada0f3a3c8565..0b7371ad808d5 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -7456,7 +7456,8 @@ static void ath11k_mac_op_configure_filter(struct ieee80211_hw *hw,
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	*total_flags &= SUPPORTED_FILTERS;
+-	ar->filter_flags = *total_flags;
++	/* read without the lock in the monitor rx path */
++	WRITE_ONCE(ar->filter_flags, *total_flags);
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+ }
 
 -- 
 2.43.0
