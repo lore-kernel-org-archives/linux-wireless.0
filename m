@@ -1,89 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793639790;
-	b=ImDeM+JcUeeqGZ2Zhbqp92tdfLf8o4bIBwO+ykCqXr1tUYKFswx90QX0RbiJTAUP1A50
-	 6M2GDWuI3VBprscBH9JWCBcrjgWdAfSM5/tm/GPPed2xZ4WT5BattObiNU4lDv+NHsKgJ
-	 uYjJ44ATKxjW4p4SR4pjwLU9xbxStfRG/xi9kHGM5SSweY4s860S824ksW/aFM/pdvm8p
-	 ey/02aiBLNan9mMNTqmv0Jg6/Y65MtV2N8SjhzwnmGMUZiBy/6cqaZOaSSsv3AyBtqiZt
-	 EnRJIJ7GlrE89jjB0KRaPqUn5KIaVDyybu3D9AHsxSWiussQUhwRzaGWWDXhLPh0ClQ==
+	t=1793639792;
+	b=KBhNdYrrfoalbI9Tk0TPQ4AM7PtB9H1BbmJPuz1e5mCfY7vvRhfT09/DKDBu4Xo/BpLW
+	 iZgYkVUZIc7/Ox68eSfONg4M7wd7QZ5W8K4XzkbWcRQgbrReR3OEluCAWDAjRcMrFFcmg
+	 IvCBuhmaP3kDafspjPAPEJ3c7E0fSW1E3PJCDx9U0Oho34I0gs1MKONibeOYLj1mFghos
+	 kfMly+zRbo8DFvLdKHxQWU9FZi+YWSIkO1pP6oA8T8+PZp36pV3Ia+gxjFT5uXWtOZDOM
+	 OjAcqzP0XLlZ9rRk8LbrjDpzoV8wB1IQyFPUu1gpoWME5VqN26gq8spcNqFsngWNVig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793639790;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793639792;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=0+IqcO9AhETeBZJKsJy+A603A0xPkBeTUx1oq9nUAqw=;
-	b=jNCEeu/BLXgjGpodquxjZjY9GsxJupbvOGqbJX8RVNAvoPaf1s6KI6/C6VU7wlwzQ8sq
-	 3ZOQ8KXHH94GM7zkR/l67WWp7++My75bCSvA9yNAk0hGc3NWSniZwbACHQBhZy0Oqoowy
-	 APNcn5li7bvwvI8EIuIy6MuL94w09pW7wiqK4G+CHbBTrNBdhR3fC5JxjemSld+RLmFHs
-	 xbu3bPu9VKBiKGtYUmCKznGob/MI3/LxNaFe73AeGmRup6Nb6gvXCQDDkAYrZefAcI2yn
-	 kYun7MG+5HFUiJjqfxlCFto4DDoUkYqGdgEv1Zn2zqTekzasMmAcKUOts4CFSasdPNg==
+	bh=NR3/tN1V90TozjFG9Rx5B1HVtu90LsgGKeCShgOT7Qg=;
+	b=l8PMnImUYNlIYz4ay2cGgZdcRc4t6oO7hfDhSmgW7nqWzlHnXGFVLA3KKYmk6teHyaxw
+	 CokqaphoGpMaTaPPtwoxDOqVcdHDCuiSINVGckzTohCI+wDn8N7lFTEvHu/lodLR6hlj0
+	 MeEjAWtcXAfvLcAQA1qoQyYExdwpBpTszDQPGWE1iey4PQ5e1phkg1Muj0jMmwLlICXTF
+	 DGmdlhJd7+gPhNcHOioaJxouXJRKspAS6Cuoy2LK2glpy8DfaP6xy47A1/lm0j1QkKPHh
+	 XbFquYy3Nv9dpNkKR5E4yGpJkL/JArDJOAdPjMlL2DSI7How62jYiVEde6f7gbMeqdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MOIgfhKd;
-	arc=none smtp.remote-ip=209.85.221.46
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wdpuALcm;
+	arc=none smtp.remote-ip=209.85.128.53
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9048606A931
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 17:16:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D9048606A931
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 206D96072C4D
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 17:16:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 206D96072C4D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MOIgfhKd
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-48afcd7ba9bso1840121f8f.3
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 09:16:29 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wdpuALcm
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a214c5c4c0so28571445e9.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 09:16:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793639788; x=1794244588; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793639790; x=1794244590; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=0+IqcO9AhETeBZJKsJy+A603A0xPkBeTUx1oq9nUAqw=;
-        b=MOIgfhKd7FD9tehJYzRDFvr+iT+JgR1wbDAOM3Le02gHisuS/0CyQ9ELsqIPZDrwZ1
-         njjSOkzW0VntU4y4pdVJrm79Wswh0beleLwkQwc9HOJCSM6mB39X455gQip0wtrXPXJR
-         nX9qbSY73MfwbeFZ+wg7A78KmVy3W3gQJM+4UTwxHRhwgP13Q9ruIw31wiSI676dQAWV
-         87PVfgONLyLPwshqDs2F0GYYIw1+0MkuECWJHJy3WRAxPz55HWREQT0Vhm2jIUBC+DAJ
-         4oxTdu8pDZN2z/3zAaBE+XdAZX3AeHXzwNnAF2mFIJK9rxAMK3nEUi8aw2RPjy3nb9JT
-         YnuA==
+        bh=NR3/tN1V90TozjFG9Rx5B1HVtu90LsgGKeCShgOT7Qg=;
+        b=wdpuALcmBVDPr79qb46Vd29xoJDhHjCEwAZE3BkIgFhvWgsFpy598eghyLExpQ2jXt
+         k/cKJKBdRGgqFmfdmE6L7T/hye5nnNqww9JYYqwJ3JLmgGNom7Cz7lBcrN1D2J5xkdsO
+         oKTyeNuQDr4eLRiLxkebDctGcmdu+9+SOVx1hB8wavex34EuJF0ndU0qICyOMWi0EptM
+         IrzhDXC+khoYLw2bECiE3Kdz5JstZtq3L24bNUwS1Mi4yeoPTZ2rXE0tcdV/J7ZVpJbD
+         v/lvG1GAx4CZ5vfNGAy7n6fXwfTC6kdvuk7xCOGqJWaWlyGVu3hPFDA0vMD6JREv63TG
+         sgrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793639788; x=1794244588;
+        d=1e100.net; s=20260707; t=1793639790; x=1794244590;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=0+IqcO9AhETeBZJKsJy+A603A0xPkBeTUx1oq9nUAqw=;
-        b=kS7hLXf2B+S0koDqlLTgxKO5Uj1qk2TYdHOZQSre86xCxzvW4yR23EdBuLBwgi+Ka7
-         YMPc866JVk5H9FQObmSrbF4InIsqDYd8dF58QbRWyGymd9Epjj/eIS6HPHLRbuAH0aHt
-         WlN1kjVeOJcLhs/FmInTZSgeWjuF5l6Pa3qajylBsXuVneezpqumRJ68MGjGQVUCopSE
-         Mvbky8wvnytiB3WZsyEBrMS17F2LsjmgNFaaawepGvaKFLbFG0B6NYnfjLQ361MlK+WU
-         nS0mkH3aVfDfdLuwlLNcZycnAskWZxOS4uyfoJc8L6XAuP+4AkMlzAuEqkHCheN/KiSu
-         b9FA==
-X-Gm-Message-State: APuU4Z9EX9bjsSXu6UO3jjj19kW/lWk/eSI1ta4rzkSsRqippJnP8tpw
-	ut5vDBX0O1Dc9yS1wtppgotaJ8xVX78URnXkTsP2Mpmz2jSNGfYlZn0FinOzDei1m9aFFg==
-X-Gm-Gg: AYBFou0zjWrl7SiPv6Ba6kVQdKv85jrVbcAUvKX89tS4R8mzNowHPQdMWJPJ9XAIlcw
-	H1TGfP5YkdY6xGsI+ZHwPYSs3LmJP4ga1dD+UvqFpcf1q28zu8tmHv7jHV8EuAbP7BCoMw+60jB
-	SrkNgNe30/QSg/nKdO1hcxgs/Q+Imham/w9xn+kZzjDT+mZo9G2iUVp3VjwGJdKTs9URmGUa3N9
-	uGtImsCkkP4MJ7wycJeX9rEI+1FzlIxcYcSLMU3R0DfV5rckDz0igWsfgNfleQiumW02wEZvKh2
-	YAgfg8Wk83B0mw9kBs6fpjxW78ceB4O2QegaSRZzi2rssIGhTHHiIF3fV2tx/vB7va8LYeyLnFi
-	kM1xcSRyDug8rkqT6a9gPtM5fKiHjtbrPHSJRJ2sCgPEtkB5HMt3dwzreKRySzjrdCtkvpXnH/n
-	9KTY+LWbqTmW5OIpFIW0hOyYYMXFcdTixWK/5smY6entpy2HOm1n0133xBxa1qv9/GGc8eVDswj
-	xOinA41bJZWasjts9b8bi4Y1/pUouWuJOicBkT8gDz0nGu8Q53s7li15iwLFeKQMzJMP5YP6j2N
-	dHWOU/L/GVUeC4rzStiHSjEmsr3iLSV+y0lTrpqXZmdvLb1rhirYqwajO4/W52U=
-X-Received: by 2002:a05:6000:186c:b0:48e:7a19:7aad with SMTP id ffacd0b85a97d-48e7a197e64mr17551414f8f.6.1793639788299;
-        Mon, 02 Nov 2026 09:16:28 -0800 (PST)
+        bh=NR3/tN1V90TozjFG9Rx5B1HVtu90LsgGKeCShgOT7Qg=;
+        b=popcwuoTBHtHkb82BKBugHvvZKaaHW8LCiJDtA5Dp8VNAC/ybkAhCqYzY8AGMRpdqk
+         YRZnHn+4pkOumHwL7jxVy8mwnnW++pmB2WG07sPPU+v46tRqRZG+B5dPlYrd4zzK226y
+         LY4Aata9zPVY5+3TFkng53te4oPhZvGDXQrv4TD4SN4B6UXLXKqPZ78lqpH5LDb4/G69
+         7LDbfBgL6Bh/s05Jw04S7s2iXDH7Twv8Pn2VJOvPxT9x9PeQFuhgDkXoS7Ns1Je7Zv8H
+         Voa6x/5U9QcP7FGNrIYtDUyUHpK6PGZy0+B70LEPJVlYc3j+OhA3oNHCgB04Jk+uaj2q
+         rtoQ==
+X-Gm-Message-State: AFq9FYLhORizA0vFmPOhpfkkJTiV1ZQUuLOcwLNPWRd8wzAu2PiPOLVO
+	q5X3SRDfg82fAIDikrWHTw++JC691pJoN+7K8U+RE1GqpZj8TqrJYk1q4hr7tRF6vvZzCQ==
+X-Gm-Gg: AYBFou2zXsbl4V9FzrWS813tR4zIvchqDsvHsLt4uWJQvMB0gEDCqLzXOGzrZvS+D9s
+	pabOC8t1gjqOZEaVmAaVkzd14o1T0kapKomDiyMzokxV7GvWQNlopi+tDyUqZS5moBJV/q3cgkN
+	KxF7vQTmWTlFGs8BrNQ/1Z2KCmWHUekg+XIuyxdrpOdNxY/BgIIdpVtz9k4DiJsqJNbexk4qAcn
+	XnjGP9ATZEWAP+4y+Z+CNvdnTGOrx+Bjwt4eh7ZQNaNNncpP8E03jnf9m8TUYptMUTXzAt93MOC
+	44wKQErbGHKkw5AEZOJ7XH3/6WGJ6n1OzU21ltjpy7Wi5EExR885m9BM4Pk7KdHFKkosldhtn/b
+	6skzr8olRssGVCTLAXuriUgfdHawv9euOo+nyN0t6VbAfbGy2kLx+N3k1QxU8DFJYDafWSj1gID
+	1D4M3NkxaEaFM4F8iSK5/H+9EZmKLcvcpLePSzt+j+HtAgbzfvBRrobUxvH4H6Fj2Ipu5sVfwCy
+	/IO1ivYvDFSgD8SU7JaSQrUfkDJId+VsrkXMjZW1fhyoZc6zhX9HM55sSKpGku/X75yyHMqGiER
+	zbdfykkrSeiT5OrtmT7gYlgrnAVfJzq4Z/ce7ZojSo7Pmc36D9mgsFgDc80pK80=
+X-Received: by 2002:a05:600c:638f:b0:4a2:1050:aff with SMTP id 5b1f17b1804b1-4ac17d16a26mr248796895e9.6.1793639790352;
+        Mon, 02 Nov 2026 09:16:30 -0800 (PST)
 Received: from debian (ip-78-137-176-146.broadband.digiweb.ie. [78.137.176.146])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71a4d3e9sm23598760f8f.6.2026.11.02.09.16.27
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71a4d3e9sm23598760f8f.6.2026.11.02.09.16.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 09:16:27 -0800 (PST)
+        Mon, 02 Nov 2026 09:16:29 -0800 (PST)
 From: Pablo Mazzini <pmazzini@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: Pablo Mazzini <pmazzini@gmail.com>,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 2/4] wifi: cw1200: describe the chips in a table
-Date: Mon,  2 Nov 2026 17:16:01 +0000
-Message-ID: <20261102171603.368298-3-pmazzini@gmail.com>
+Subject: [PATCH wireless-next 3/4] wifi: cw1200: handle the XR819 channel switch and join
+Date: Mon,  2 Nov 2026 17:16:02 +0000
+Message-ID: <20261102171603.368298-4-pmazzini@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261102171603.368298-1-pmazzini@gmail.com>
 References: <20261102171603.368298-1-pmazzini@gmail.com>
@@ -98,155 +98,92 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Replace the firmware selection switch with a table keyed by the
-silicon revision, so per-chip properties can be added in one place.
-The SDD path becomes const to take the table's names.
-
-No functional change.
+The XR819, detected as CW1x60, asserts on SWITCH_CHANNEL while idle
+and only joins synchronously, confirming after up to 5 s. Keep the
+channel for scan and join, as the vendor driver does, drop the
+asynchronous join flags, and allow 7 s for the join.
 
 Signed-off-by: Pablo Mazzini <pmazzini@gmail.com>
 ---
- drivers/net/wireless/st/cw1200/cw1200.h |  3 +-
- drivers/net/wireless/st/cw1200/fwio.c   | 67 +++++++++++++++----------
- drivers/net/wireless/st/cw1200/fwio.h   |  6 +++
- drivers/net/wireless/st/cw1200/main.c   |  2 +-
- 4 files changed, 49 insertions(+), 29 deletions(-)
+ drivers/net/wireless/st/cw1200/fwio.c | 2 ++
+ drivers/net/wireless/st/cw1200/fwio.h | 2 ++
+ drivers/net/wireless/st/cw1200/sta.c  | 8 +++++---
+ drivers/net/wireless/st/cw1200/wsm.c  | 3 ++-
+ 4 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/cw1200.h b/drivers/net/wireless/st/cw1200/cw1200.h
-index 48f808cdc1cb..8867b2c94c8d 100644
---- a/drivers/net/wireless/st/cw1200/cw1200.h
-+++ b/drivers/net/wireless/st/cw1200/cw1200.h
-@@ -117,10 +117,11 @@ struct cw1200_common {
- 		CW1200_HW_REV_CUT22 = 22,
- 		CW1X60_HW_REV       = 40,
- 	} hw_revision;
-+	const struct cw1200_chip	*chip;
- 	int                             hw_refclk;
- 	bool				hw_have_5ghz;
- 	const struct firmware		*sdd;
--	char                            *sdd_path;
-+	const char			*sdd_path;
- 
- 	struct cw1200_debug_priv	*debug;
- 
 diff --git a/drivers/net/wireless/st/cw1200/fwio.c b/drivers/net/wireless/st/cw1200/fwio.c
-index 2a03dc533b6a..6601aec1f231 100644
+index 6601aec1f231..1a68ef6ed2fa 100644
 --- a/drivers/net/wireless/st/cw1200/fwio.c
 +++ b/drivers/net/wireless/st/cw1200/fwio.c
-@@ -48,6 +48,41 @@ static int cw1200_get_hw_type(u32 config_reg_val, int *major_revision)
- 	return hw_type;
- }
+@@ -69,6 +69,8 @@ static const struct cw1200_chip cw1200_chips[] = {
+ 		.revision = CW1X60_HW_REV,
+ 		.firmware = FIRMWARE_CW1X60,
+ 		.sdd = SDD_FILE_CW1X60,
++		.sync_join = true,
++		.no_switch_channel = true,
+ 	},
+ };
  
-+static const struct cw1200_chip cw1200_chips[] = {
-+	{
-+		.revision = CW1200_HW_REV_CUT10,
-+		.firmware = FIRMWARE_CUT10,
-+		.sdd = SDD_FILE_10,
-+	}, {
-+		.revision = CW1200_HW_REV_CUT11,
-+		.firmware = FIRMWARE_CUT11,
-+		.sdd = SDD_FILE_11,
-+	}, {
-+		.revision = CW1200_HW_REV_CUT20,
-+		.firmware = FIRMWARE_CUT20,
-+		.sdd = SDD_FILE_20,
-+	}, {
-+		.revision = CW1200_HW_REV_CUT22,
-+		.firmware = FIRMWARE_CUT22,
-+		.sdd = SDD_FILE_22,
-+	}, {
-+		.revision = CW1X60_HW_REV,
-+		.firmware = FIRMWARE_CW1X60,
-+		.sdd = SDD_FILE_CW1X60,
-+	},
-+};
-+
-+static const struct cw1200_chip *cw1200_find_chip(int revision)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(cw1200_chips); i++)
-+		if (cw1200_chips[i].revision == revision)
-+			return &cw1200_chips[i];
-+
-+	return NULL;
-+}
-+
- static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- {
- 	int ret, block, num_blocks;
-@@ -90,36 +125,14 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 			goto exit; \
- 	} while (0)
- 
--	switch (priv->hw_revision) {
--	case CW1200_HW_REV_CUT10:
--		fw_path = FIRMWARE_CUT10;
--		if (!priv->sdd_path)
--			priv->sdd_path = SDD_FILE_10;
--		break;
--	case CW1200_HW_REV_CUT11:
--		fw_path = FIRMWARE_CUT11;
--		if (!priv->sdd_path)
--			priv->sdd_path = SDD_FILE_11;
--		break;
--	case CW1200_HW_REV_CUT20:
--		fw_path = FIRMWARE_CUT20;
--		if (!priv->sdd_path)
--			priv->sdd_path = SDD_FILE_20;
--		break;
--	case CW1200_HW_REV_CUT22:
--		fw_path = FIRMWARE_CUT22;
--		if (!priv->sdd_path)
--			priv->sdd_path = SDD_FILE_22;
--		break;
--	case CW1X60_HW_REV:
--		fw_path = FIRMWARE_CW1X60;
--		if (!priv->sdd_path)
--			priv->sdd_path = SDD_FILE_CW1X60;
--		break;
--	default:
-+	priv->chip = cw1200_find_chip(priv->hw_revision);
-+	if (!priv->chip) {
- 		pr_err("Invalid silicon revision %d.\n", priv->hw_revision);
- 		return -EINVAL;
- 	}
-+	fw_path = priv->chip->firmware;
-+	if (!priv->sdd_path)
-+		priv->sdd_path = priv->chip->sdd;
- 
- 	/* Initialize common registers */
- 	APB_WRITE(DOWNLOAD_IMAGE_SIZE_REG, DOWNLOAD_ARE_YOU_HERE);
 diff --git a/drivers/net/wireless/st/cw1200/fwio.h b/drivers/net/wireless/st/cw1200/fwio.h
-index c287160a492e..e97cbcd54e57 100644
+index e97cbcd54e57..9925d4bcedda 100644
 --- a/drivers/net/wireless/st/cw1200/fwio.h
 +++ b/drivers/net/wireless/st/cw1200/fwio.h
-@@ -26,6 +26,12 @@
- #define SDD_FILE_11		"sdd_11.bin"
- #define SDD_FILE_10		"sdd_10.bin"
+@@ -30,6 +30,8 @@ struct cw1200_chip {
+ 	int revision;
+ 	const char *firmware;
+ 	const char *sdd;
++	bool sync_join;		/* no asynchronous join */
++	bool no_switch_channel;	/* scan and join pass the channel */
+ };
  
-+struct cw1200_chip {
-+	int revision;
-+	const char *firmware;
-+	const char *sdd;
-+};
-+
  int cw1200_load_firmware(struct cw1200_common *priv);
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index f3f31aa52499..eeb2bf56edff 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -349,8 +349,10 @@ int cw1200_config(struct ieee80211_hw *dev, int radio_idx, u32 changed)
+ 		pr_debug("[STA] Freq %d (wsm ch: %d).\n",
+ 			 ch->center_freq, ch->hw_value);
  
- /* SDD definitions */
-diff --git a/drivers/net/wireless/st/cw1200/main.c b/drivers/net/wireless/st/cw1200/main.c
-index 5d569eeb353f..793471acbfb6 100644
---- a/drivers/net/wireless/st/cw1200/main.c
-+++ b/drivers/net/wireless/st/cw1200/main.c
-@@ -541,7 +541,7 @@ int cw1200_core_probe(const struct hwbus_ops *hwbus_ops,
- 	if (cw1200_refclk)
- 		priv->hw_refclk = cw1200_refclk;
+-		/* __cw1200_flush() implicitly locks tx, if successful */
+-		if (!__cw1200_flush(priv, false)) {
++		if (priv->chip->no_switch_channel) {
++			priv->channel = ch;
++		} else if (!__cw1200_flush(priv, false)) {
++			/* __cw1200_flush() implicitly locks tx, if successful */
+ 			if (!wsm_switch_channel(priv, &channel)) {
+ 				ret = wait_event_timeout(priv->channel_switch_done,
+ 							 !priv->channel_switch_in_progress,
+@@ -1304,7 +1306,7 @@ static void cw1200_do_join(struct cw1200_common *priv)
+ 	}
  
--	priv->sdd_path = (char *)sdd_path;
-+	priv->sdd_path = sdd_path;
- 	if (cw1200_sdd_path)
- 		priv->sdd_path = cw1200_sdd_path;
+ 	/* Enable asynchronous join calls */
+-	if (!priv->vif->cfg.ibss_joined) {
++	if (!priv->vif->cfg.ibss_joined && !priv->chip->sync_join) {
+ 		join.flags |= WSM_JOIN_FLAGS_FORCE;
+ 		join.flags |= WSM_JOIN_FLAGS_FORCE_WITH_COMPLETE_IND;
+ 	}
+diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
+index d6529e5b73b2..6b0b333620ee 100644
+--- a/drivers/net/wireless/st/cw1200/wsm.c
++++ b/drivers/net/wireless/st/cw1200/wsm.c
+@@ -20,6 +20,7 @@
+ #include "debug.h"
  
+ #define WSM_CMD_TIMEOUT		(2 * HZ) /* With respect to interrupt loss */
++#define WSM_CMD_JOIN_TIMEOUT	(7 * HZ) /* A synchronous join takes up to 5 s */
+ #define WSM_CMD_START_TIMEOUT	(7 * HZ)
+ #define WSM_CMD_RESET_TIMEOUT	(3 * HZ) /* 2 sec. timeout was observed.   */
+ #define WSM_CMD_MAX_TIMEOUT	(3 * HZ)
+@@ -445,7 +446,7 @@ int wsm_join(struct cw1200_common *priv, struct wsm_join *arg)
+ 
+ 	priv->tx_burst_idx = -1;
+ 	ret = wsm_cmd_send(priv, buf, &resp,
+-			   WSM_JOIN_REQ_ID, WSM_CMD_TIMEOUT);
++			   WSM_JOIN_REQ_ID, WSM_CMD_JOIN_TIMEOUT);
+ 	/* TODO:  Update state based on resp.min|max_power_level */
+ 
+ 	priv->join_complete_status = resp.status;
 -- 
 2.52.0
 
