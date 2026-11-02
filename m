@@ -1,85 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793611683;
-	b=SOU8f/ZLV4S7e8ombqz8aoMszo/GzmY5JcTTgBbRhYHcqVNAeEBcWmLfroDKTMVLTINz
-	 fChLdl/QW89u36qZUiBS6dkWIN6jBmjFJcS3vy6todYeXq7BEhUFikTlBMymaJtxQD3DN
-	 JKNllUcJeOhWwGBq3gbaiXG3drP8+AwH9ddF///w9uuqPBlr/6GrswOSa5mHRNFhVnuf4
-	 Uw3bn+sAPCWoTWY4kmaHIUEX250bpFWHmoceGx+ovrCIC+qUuYKwsj9OJzlqFv4pqwAEN
-	 ebiLEEqJyzkWApuZZ9Y+nYsfcX/x79JkCkT5oi7jmf4UK4G6kaOSMuf/+ioythDIhrQ==
+	t=1793615787;
+	b=tfRWaenmtO5gHlwMdTSbP4c2D/MXGjXcmPgrrfaV/rvCXvhfI53rF/8/wu35zGYzJcT4
+	 iR8wA+DaK7wkM+5OpVCWvHwy4iKvgxoL79PlIFwQWeizJuBOCGbNgwhQv48WAmo9vfQwU
+	 NdQf4csttG6B+XoFAxaVt1sJj1Kuo5rBzfxzbMhV4hMJDfIr801IGn7D3624Hhv0Hvj2B
+	 RWtsBIlgLb5xr4ukFKnoChR0JnGKo485FF0ads8w583JvjAVmSASCVvcUiLfc5oFzOxie
+	 FCUXxnkvlWhrqFwRmT4DhNTP7n9NK+Yy0aQU5YFjuUuFn1suolufQlGLapjDJSGLTcg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793611683;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
-	 X-MS-Has-Attach:x-originating-ip:Content-Type:MIME-Version;
-	bh=wPVAFSBmIV/kgdwRW82oRb48CIpX6KK6+rQQCVihC44=;
-	b=cdnCjmidOvraM14iP6eDbjwJrPIxohpBai3S1JhQ92lRl6mdOA6aBTqn/pWSbbVghh/G
-	 St4Gf/CjrOsznDz+Vc6ZutnucXobYidabBoNO52pgAG2Tg58MqwiSJQbSKBkJrWA7cM9o
-	 EZt8ealLgyzTQN6nwO2eIbXUzKwAumhnb01bCjoJMNbYDL4fAAyHOUgAdORv29JVXDc/Z
-	 19A4yfJV2JjWuv7fccIz5ZRKBmjWxia0lebgvEM/6p8psaj35pqSEoWZ9JdCcKJ/IQYVT
-	 z9GIPPc3pBk4/4Y0pTdKf18o0cxfCZGAubIV3/ZAtwSE5n4HZxhn9H691GJFHGyyA/A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793615787;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=j/h1nzyLwLos+57W9zu2/iGj9UgqL5dXrMfiNd2SNZU=;
+	b=POys1H0dONvYkguD8hgSfV+kGG6Hlom0XKstPvIWYxl8p17qe0fYGPMtyOkm0SWo+2k3
+	 hl9XOvyFcHRgl8SQhHsn0fi0vjUk4/CPI0kTdmVT1Q0qzYF5ylS9aPzWKU1YFroK46u2k
+	 b+jw0ML/4+pWj5jjtH/8pc3v14VaPIEJAI5phvhJ0kyb44S2VUv8zun151vouXVgXm4RC
+	 kuUNu6p3wFAZcPR7GwKC5jylPri9+RqLL2Ko3+EVLbnmDGCUU+on6AOaU/RHYjH0APfy1
+	 wowqcTELdcY8X7MqBO1OMESwfnNkeAByPlxjPfFwrvNigXBw/xlYz/6XtKfkHe2dSlw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=jNLjJgfB;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=dqRMo+cS;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=VGVeLrOd;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A787606A32C
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 09:28:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A787606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E61606A327
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2026 10:36:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E2E61606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=jNLjJgfB
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A29RhGnA2027676, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793611664; bh=wPVAFSBmIV/kgdwRW82oRb48CIpX6KK6+rQQCVihC44=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version;
-	b=jNLjJgfBkw9/z35G8HvDZ45jPxrte/exlognbqvTDojJPn6hWQIKwvI6tnlm+rm9f
-	 SvPzavSwgvkgcG68bajuCUTEM6Jmu1yd3gnsL5ZEwqsUuN1G8zuOwf4TwVMacKzaey
-	 y9s9FqPUQQmMyQKxC9QXsDXXhcpOSTTuF51Id96+P9MeZD/z+Is4e0UmFgyl3QZy6o
-	 yd4l4DN3Sfg+eQ4XhJjl3Ii4zHGwbfsxDa1BqbyR5MA0PVZd3xBIg5coElqqYa7cRy
-	 tSmW1Xh9WigE6eh+nRZVo05Q61UGd4yahvT2fwif9gWLDgHh4mxx71MxyKK27ImdWG
-	 8azLqKvzJWcUg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A29RhGnA2027676
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 2 Nov 2026 17:27:43 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Mon, 2 Nov 2026 17:27:44 +0800
-Received: from RTKEXHMBS05.realtek.com.tw ([fe80::bbab:78ea:8d39:6f1e]) by
- RTKEXHMBS05.realtek.com.tw ([fe80::bbab:78ea:8d39:6f1e%4]) with mapi id
- 15.02.2562.056; Mon, 2 Nov 2026 17:27:44 +0800
-From: Bernie Huang <phhuang@realtek.com>
-To: Robert Beckett <bob.beckett@collabora.com>, Ping-Ke Shih
-	<pkshih@realtek.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "Luka
- Gejak" <luka.gejak@linux.dev>, Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Timlee <timlee@realtek.com>, "matthew.leach@collabora.com"
-	<matthew.leach@collabora.com>, "kernel@collabora.com" <kernel@collabora.com>
-Subject: RE: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted, poisoning
- CCMP replay counter
-Thread-Topic: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted,
- poisoning CCMP replay counter
-Thread-Index: AQHdXaL8zmsOj0CE6U6ENy6Km2GOWLcHlFUQgABIg4CAATP90P//8EsAgBGQSRA=
-Date: Mon, 2 Nov 2026 09:27:43 +0000
-Message-ID: <527f96d6034f43d481c3bbacf0313f3a@realtek.com>
-References: <a615f09bb6f54128b792a13ebcbf8970@realtek.com>
- <20261021190529.3893821-1-bob.beckett@collabora.com>
- <90c40c3223c34562b2c171c52d987c2e@realtek.com>
- <1a163984687.46e4c9841111898.2085291868591283475@collabora.com>
-In-Reply-To: <1a163984687.46e4c9841111898.2085291868591283475@collabora.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: yes
-Content-Type: multipart/mixed;
-	boundary="_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_"
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=dqRMo+cS;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=VGVeLrOd
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A29AQNK2361159
+	for <linux-wireless@vger.kernel.org>; Mon, 2 Nov 2026 10:36:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	j/h1nzyLwLos+57W9zu2/iGj9UgqL5dXrMfiNd2SNZU=; b=dqRMo+cSRMsreCgu
+	/jQKDuUdCRXiqAJDUQ2UirIhyyJWVFsvA8LlMNa0KNYMgtJLXUhwfWytP1BaGd47
+	M5DCeDHRqxfY4DfqHtDCYoVs8G2VZqnQrnKPufVksU+LUk56E+UEu5w0i2pHWkX5
+	uCf8jHzk8sQzqLnRVSL7E9DIMWZZHwJzQgP62+ucqxqvAAlx1G6YNWjFmZnqpwGQ
+	kH4nioi3AmWiJZiS6g6zR9Zi2Bo+5VtnQ8go/0y4XQ3OLCT5cgjYRPWF5LlODaGc
+	GcS+dPi1ZgNGVlykOAXqj39gd9Grf0G6H0CaCILsSF4IJv3jM3jz8h+PMH3opAfj
+	H5LW+w==
+Received: from mail-dl1-f70.google.com (mail-dl1-f70.google.com [74.125.82.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hn8q7xdep-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 10:36:25 +0000 (GMT)
+Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-139b62317d0so5856516c88.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 02:36:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793615785; x=1794220585; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=j/h1nzyLwLos+57W9zu2/iGj9UgqL5dXrMfiNd2SNZU=;
+        b=VGVeLrOd2GvAG844DHWOJb4z9Lof6lYEMcp71dRe6sOzmqbWZGfNW4GvU3btuJY/M9
+         /naAlIOkgwZkwUmFm1Bl8mbnTiiXhly5JFh+Td7fxMM9KYtmYADh2WQnF0D/Eo1lo0wK
+         OXVhYlaermIrag7qWKW0st1FxQFordHgWn73Xc46ImmY7GsL9TKN+cfpie/t6Ppqlcfh
+         phnvvITabs76yq/xAhizPkGumXteCO3wfV8TXfkxkD4q9ke8cfz5F6YyTUHutP6toHRV
+         GYaLMPBPZKxZi0pBrPiL+k9iUaIjbjK8N7FkGwp1xY37E7pn7RdSJ/t1QnMoIMrM0vQh
+         9BxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793615785; x=1794220585;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=j/h1nzyLwLos+57W9zu2/iGj9UgqL5dXrMfiNd2SNZU=;
+        b=G057gSFcy5gHIH4o+LAvWVxKCv2LCcaGh+Gs55dX70WMAJcXXa3ce3hzW5iW4HBotv
+         qyqq9UmKb0HDlkQqvRYC08whXOO+YQp+uxGAY6PhAnalru7ldqoWbanLO2IoamXDgf9k
+         JFUtRnACIg4n6Q1fP/3q17s+7J08goy3kA2L56mW5N2wda0/EcCrs0LvWpmthx7nYgzW
+         x2caNZh7oOBLn2zNhG59GHyMmFfG3Ea9AAF/GWDJ8irMjCfG9R+1BufpOJ4aAZWn3Gkh
+         gI0NkLjExHDNyIC6e6EqR7YF2PUb53060Mv3pj6kiQlNPNjXu4Pml0ceE+D4VFmdFUc+
+         l9wA==
+X-Gm-Message-State: AFq9FYJ+/x4MzlmD2yBv6pmP1qeGYI7bE3t13TBzLh0gGBIGUGjsPKXv
+	GNXcnfThgNdKgAeIxpRmh+t8NloLyT58Re22RisFfnjVIhA/WTnJhFjEI2nCGeRooFP135OgFcV
+	+YFUoO3K7CgUIKwbeLcfMuQQr+GAwDeu/2mXhCu2N6jZTQYYSaaTmrx4y5MVOVoMyTpLVIA==
+X-Gm-Gg: AYBFou0Q3fa0/OCdQ3uHA9rWAGZ7HYbKcAjg3f737Q5Sh8vLCWONkXDUu3QNOWH/9X1
+	87S4yaYxq1e6Pzzn+DBotzCrbsURQp51ALP4+owARgN9RcQ90N2iKpsjcY10sbX2cUZtb7Q7csU
+	jZq46rmZy4o3LergEOT7WuVsJJD/u141XyE8JcXif/LEEZbwYrjmu6oT4J7oalpp4aicsAxAS9w
+	DHKzQkABPRbFR6Le4/MI+H4d8AHgqL10MF/m7NCHvK5zhl4BGx8/q0fsPTa1eL7drLxswhjVQvj
+	zIIa0ZCisi5n2+EAH6UkxKVatiJYhrLX9RffQwOjooCKbs5MCNCsoeYevUeZh5Ys0qVGjej3ZTp
+	/b/7HgDYxRAH8+5lVXAAKQ48LnKt5LPG1cFq44fo0ZudR+V9g15BxmOiujJZ6kgIPLuIeDeqVSX
+	5pZQgvsjAeaViG
+X-Received: by 2002:a05:701b:4244:10b0:188:ed6d:ebc9 with SMTP id a92af1059eb24-1ac5e6f5225mr14728397c88.38.1793615784531;
+        Mon, 02 Nov 2026 02:36:24 -0800 (PST)
+X-Received: by 2002:a05:701b:4244:10b0:188:ed6d:ebc9 with SMTP id a92af1059eb24-1ac5e6f5225mr14728355c88.38.1793615783725;
+        Mon, 02 Nov 2026 02:36:23 -0800 (PST)
+Received: from [10.152.199.23] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac19f4b08bsm38136990c88.16.2026.11.02.02.36.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Nov 2026 02:36:23 -0800 (PST)
+Message-ID: <98f13907-fe0a-4a8c-8ac9-3be40edcaff5@oss.qualcomm.com>
+Date: Mon, 2 Nov 2026 16:06:18 +0530
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -89,172 +113,143 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 1/3] wifi: ath12k: allocate the AFC memory region
+ requested by firmware
+To: Goran Sustek <gsustek@gmail.com>, Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+References: <20261030220824.915760-1-gsustek@gmail.com>
+ <20261030220824.915760-2-gsustek@gmail.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261030220824.915760-2-gsustek@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: MVoFkWMEQHnuNyPkg1Y8vbSZgjsjKsd6
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTAyMDA0MiBTYWx0ZWRfX3IBnkNJJPelu
+ FufrCEsMfdwBlvhUOJKkFm946KTqTyoFHcRzr0N3hbaSGxNCbXcjgb4IY2WlfSeYPD2uDJzyhi0
+ EHAIekpL0O2IMDoX/OJUfb4m30v7fJM=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTAyMDA0MiBTYWx0ZWRfXxRySY3DDgeT6
+ jYDQ/4ehq93sVE2nofVMniSHvhGAtazFgaU25MsEt/ZdXRH2QCz9Js0KcxEpHt1dxhqXyMnxrlw
+ mtiHZNh+5sSVElOjjLLPVo0zN3digCzHOXi2WG0gJcq1TUtFyN6ehHLuzUgnEI+b8ARqHnd00K+
+ QDYeLurPB/599WK8/YaiK+guYD1sZPGrqWEyfgd2t33IAX0A/co5o9H8GbpF0oDrU7pXyswT32z
+ 7DAeHdAMPRvyNw4GOceRpPadHgtYmy6BF8qMqfAheNkwNsXH4EPfgwHWHn/SuH+vunKt9cpsnz0
+ TIYU52Oi9WoCnbhicSahWl0HNKjGdkBJSXgHobHCZD6Gw4rT87wdnEo6B7fAZYY+Xo6fSPKSZIJ
+ zMx0W2noMMOjLkDo/LlAciCF2RLDtKDBeWo+K/b+lFKyYvaHunodcJlX4N7EEDcfz5wk39vEt3R
+ FBT8/ptzqZX3cVmZQhQ==
+X-Proofpoint-GUID: MVoFkWMEQHnuNyPkg1Y8vbSZgjsjKsd6
+X-Authority-Analysis: v=2.4 cv=PucG/AM3 c=1 sm=1 tr=0 ts=6ae867a9 cx=c_pps
+ a=SvEPeNj+VMjHSW//kvnxuw==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=pGLkceISAAAA:8 a=dEvXkhbO6Lc7JD6ITUUA:9 a=QEXdDO2ut3YA:10
+ a=Kq8ClHjjuc5pcCNDwlU0:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-02_03,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 phishscore=0 lowpriorityscore=0 malwarescore=0 bulkscore=0
+ impostorscore=0 spamscore=0 priorityscore=1501 clxscore=1015 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611020042
 
---_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+On 10/31/2026 3:38 AM, Goran Sustek wrote:
+> QCN9274 firmware WLAN.WBE.1.6-01243 requests a target memory segment of
+> type 0xa at every boot. The driver does not know this type, so it logs
+> 
+>    ath12k_wifi7_pci 0000:06:00.0: memory type 10 not supported
+> 
+> and answers the request with a NULL address but the requested size.
+> 
+> Type 0xa is the AFC region: QMI_WLFW_AFC_MEM_V01 = 10 in Qualcomm's
+> wlan_firmware_service_v01.h. The firmware asks for 8 KiB, one 4 KiB
+> slot per radio, where the host places the answer of an Automated
+> Frequency Coordination server for 6 GHz Standard Power operation.
+> 
+> The firmware's handler of the memory response records the reported
+> address and marks the region as provided whenever the size is
+> non-zero; it does not check for a zero address. With the current
 
-Qm9iIEJlY2tldHQgPGJvYi5iZWNrZXR0QGNvbGxhYm9yYS5jb20+IHdyb3RlOg0KPiAgPiA+IE9u
-IFdlZCwgMjEgT2N0IDIwMjYgMDc6MzA6NTggKzAwMDAsIFBpbmctS2UgU2hpaA0KPiA8cGtzaGlo
-QHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gID4gPiA+IEJvYiBCZWNrZXR0IDxib2IuYmVja2V0dEBj
-b2xsYWJvcmEuY29tPiB3cm90ZToNCj4gID4gPiA+ID4NCj4gID4gPiA+ID4gVGhlIEFQJ3Mgb3du
-IFBOIHNlcXVlbmNlIGlzIGNvbnNpc3RlbnQgYmVmb3JlIGFuZCBhZnRlciB0aGUgYmFkDQo+IGZy
-YW1lLCAgPiA+ID4gPiBzbyB0aGUgY29ycnVwdGlvbiBoYXBwZW5zIG9uIHRoZSByZWNlaXZlIHNp
-ZGUuDQo+ICA+ID4gPg0KPiAgPiA+ID4gTWF5YmUgdGhpcyBpcyBhIGhpbnQgdG8gbWFrZSBhIHBh
-dGNoIHRvIGRlZmVyIChkcm9wKSByZXBvcnRpbmcgd2VpcmQNCj4gcGFja2V0LCAgPiA+ID4gYXMg
-THVrYSBoYXMgZml4ZWQgMyBvZiA0IHByb2JsZW1zLg0KPiAgPg0KPiAgPiBJIHF1aWNrbHkgY2hl
-Y2tlZCB0aGUgZGVidWcgcGF0Y2hlcywgd2hpY2ggc2VlbSBub3QgZGV0ZWN0IGlmIFBOIHNlcXVl
-bmNlDQo+IGlzICA+IGNvcnJlY3QgYWZ0ZXIgdGhlIGJhZCBmcmFtZSwgZm9yIGV4YW1wbGUNCj4g
-ID4gICBzZXEgICAgIFBODQo+ICA+ICAgIDEgICAgICAxMDENCj4gID4gICAgMiAgICAgIDk5OTk5
-ICAgLy8gYmFkIGZyYW1lLiBzaG91bGQgYmUgMTAyLg0KPiAgPiAgICAzICAgICAgMTAzICAgICAv
-LyBub3QgZGV0ZWN0IHRoaXMNCj4gID4NCj4gID4gT3IgSSBtaXNzZWQgc29tZXRoaW5nPw0KPiAN
-Cj4gaWYgcG4ganVtcHMsIHJ0d19yeF9wbl9ndWFyZCByZXR1cm5zIGVhcmx5IGJlZm9yZSBsYXRj
-aGluZyBwbiwgc28gdGhlIG5leHQNCj4gY29ycmVjdGVkIHBuIHdvdWxkIGp1c3QgYmUgYSByZWd1
-bGFyIGluY3JlYXNlIGFuZCBub3QgZ2V0IGRyb3BwZWQuDQo+IA0KPiAgPg0KPiAgPiA+ID4gPiA0
-LiBGb3IgY29tcGxldGVuZXNzOiBvbiB0aGVzZSBjaGlwcyBjYW4gUlhCRF9JRFggb3IgdGhlDQo+
-ICA+ID4gPiA+ICAgIGJ1ZmZlci1kZXNjcmlwdG9yIFJYIHRhZyBldmVyIGJlIHVwZGF0ZWQgYmVm
-b3JlIHRoZSBwYWNrZXQgZGF0YQ0KPiBETUENCj4gID4gPiA+ID4gICAgaGFzIGNvbXBsZXRlZCwg
-YXMgZGVzY3JpYmVkIGZvciBXaUZpIDcgaW4gcnR3ODkgMGJjN2QxZDRlNjNjPw0KPiAgPiA+ID4N
-Cj4gID4gPiA+IFRoZSBSWCB0YWcgaW4gcnR3ODggbG9jYXRlZCBvbiBtZW1vcnkgYWxsb2NhdGVk
-IGJ5DQo+IGRtYV9hbGxvY19jb2hlcmVudCgpLCBhbmQgID4gPiA+IHRoZSBSWCB0YWcgbXVzdCBi
-ZSBzZXQgYWZ0ZXIgcGFja2V0IGRhdGENCj4gTUFDIGNvbXBsZXRlZC4NCj4gID4NCj4gID4gKGZp
-eCB0eXBvOiAgICAgICAgICAgICAgICAgICAgICAgICAgLi4uIGRhdGEgRE1BIGNvbXBsZXRlZC4p
-DQo+ICA+DQo+ICA+ID4NCj4gID4gPiBVbmRlcnN0b29kIHRoYXQgdGhpcyBpcyB0aGUgZGVzaWdu
-IGludGVudC4gTXkgcXVlc3Rpb24gd2FzIHdoZXRoZXIgdGhlDQo+IGhvc3QgY2FuICA+ID4gZXZl
-ciBvYnNlcnZlIHRoZSB0YWcgYmVmb3JlIHRoZSBkYXRhLiBkbWFfYWxsb2NfY29oZXJlbnQoKQ0K
-PiBvbmx5IG1ha2VzIHRoZSB0YWcgID4gPiB2aXNpYmxlIHRvIHRoZSBDUFUgd2l0aG91dCBjYWNo
-ZSBtYWludGVuYW5jZTsgdGhlDQo+IHBheWxvYWQgaXMgaW4gYSBzZXBhcmF0ZSAgPiA+IHN0cmVh
-bWluZyBtYXBwaW5nIChhIFNXSU9UTEIgYm91bmNlIGJ1ZmZlciBvbg0KPiB0aGlzIHBsYXRmb3Jt
-KSwgc28gdGhlIG9yZGVyIGluICA+ID4gd2hpY2ggdGhlIGhvc3Qgc2VlcyB0aGVtIGRlcGVuZHMg
-b24gdGhlDQo+IG9yZGVyIG9mIHRoZSBkZXZpY2UncyBQQ0llIHdyaXRlcy4NCj4gID4gPiBSZWxh
-eGVkIE9yZGVyaW5nIGlzIGVuYWJsZWQgb24gdGhlIDg4MjJDRSBoZXJlIChEZXZDdGwgUmx4ZE9y
-ZCspLg0KPiAgPiA+IERvZXMgdGhlIDg4MjJDRSBzZXQgdGhlIFJPIGF0dHJpYnV0ZSBvbiBSWCBE
-TUEgd3JpdGVzLCBpbiBwYXJ0aWN1bGFyIHRoZQ0KPiA+ID4gYnVmZmVyLWRlc2NyaXB0b3IvdGFn
-IHVwZGF0ZT8gSWYgaXQgZG9lcywgdGhlIHRhZyB3cml0ZSBtYXkgcGFzcyB0aGUgcGF5bG9hZA0K
-PiA+ID4gd3JpdGVzLg0KPiAgPiA+DQo+ICA+ID4gV2UgYXJlIGhvcGluZyB0byB0ZXN0IHRoaXMg
-ZGlyZWN0bHkgd2l0aCB0aGUgbmV4dCByb3VuZCBvZiB0ZXN0cy4gdGhlDQo+IHJ4X2RlYnVnICA+
-ID4gb3B0aW9uIHJlLXN5bmNzIGEgc3VzcGVjdCBidWZmZXIgMTAwIHVzIGxhdGVyLCBzbyBsYXRl
-IHBheWxvYWQNCj4gd3JpdGVzIG1pZ2h0ICA+ID4gc2hvdyB1cCBhcyBjaGFuZ2VkIGJ5dGVzLCBh
-bmQgd2UgY2FuIHJlcGVhdCB0aGUgdGVzdCB3aXRoDQo+IFJlbGF4ZWQgT3JkZXJpbmcgID4gPiBk
-aXNhYmxlZC4NCj4gID4NCj4gID4gSSdsbCBjaGVjayB0aGUgYmVoYXZpb3IgaW50ZXJuYWxseSBh
-bmQgZ2V0IGJhY2sgdG8geW91Lg0KPiAgPg0KPiAgPg0KPiAgPg0KPiANCg0KLy8gUGxlYXNlIGln
-bm9yZSB0aGUgcHJldmlvdXMgdHdvIGVtYWlscw0KDQpIaSBCb2IsDQoNCkRvIHlvdSBtaW5kIHRl
-c3RpbmcgdGhpcyBwYXRjaD8NClJlcHJvZHVjZSBhZ2FpbiB3aXRoIHRoZSBzYW1lIGZ0cmFjZSBh
-bmQgc25pZmZlciBsb2dzDQpCeSB0aGUgcmVzdWx0IHdlIGNhbiBkaWZmZXJlbnRpYXRlIHdoaWNo
-IGlzIHRoZSBjYXNlOg0KKDEpIEFQIHNlbmRzIGluY29ycmVjdCBDQ01QIGhlYWRlciAobGVzcyBs
-aWtlbHkpDQooMikgRE1BIGluY29tcGxldGUsIGJ1dCBsYXRlciB0aGUgY29ycmVjdCBkYXRhIGNh
-biBiZSByZXRyaWV2ZWQNCigzKSBETUEgaW5jb21wbGV0ZSwgZGF0YSBuZXZlciByZWNvdmVycw0K
-DQpJSVVDLCBvdXIgaGFyZHdhcmUgd3JpdGVzIHBheWxvYWQgZmlyc3QgdGhlbiB0aGUgdGFnLg0K
-VGhlIFJPIGF0dHJpYnV0ZSBpcyBuZXZlciBzZXQgaW4gb3VyIFRMUCwgc28gZGVzcGl0ZSB0aGUg
-Y29uZmlndXJhdGlvbg0Kc3BhY2Ugc2V0dGluZ3MsIFBDSUUgUkMgc2hvdWxkbid0IGRvIHJlb3Jk
-ZXJpbmcuDQpJIGFtIHdhaXRpbmcgZm9yIHByb3RvY29sIGFuYWx5emVyIHRvIHZlcmlmeSB0aGlz
-LCBhbmQgd2lsbCB1cGRhdGUgDQpsYXRlciB3aGVuIEkgaGF2ZSB0aGUgcmVzdWx0Lg0KSWYgdGhl
-IGJ1ZmZlciBwb2lzb25pbmcgc29tZWhvdyBjaGFuZ2VzIHRoZSB0aW1pbmcsIGFuZCBmYWlsIGJl
-Y29tZXMNCm5vdCByZXByb2R1Y2libGUsIHBsZWFzZSBsZXQgdXMga25vdywgdGhhbmtzIQ0K
+In that case, shouldn't chunk->size be cleared when no memory is 
+allocated, or should the response only contain the chunks that were 
+actually allocated and assigned by host ? (see 
+ath12k_qmi_assign_target_mem_chunk() which updates ab->qmi.mem_seg_count)
 
---_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_
-Content-Type: application/octet-stream;
-	name="0001-wifi-rtw88-test-for-stale-packet.patch"
-Content-Description: 0001-wifi-rtw88-test-for-stale-packet.patch
-Content-Disposition: attachment;
-	filename="0001-wifi-rtw88-test-for-stale-packet.patch"; size=5302;
-	creation-date="Mon, 02 Nov 2026 09:27:27 GMT";
-	modification-date="Mon, 02 Nov 2026 09:27:27 GMT"
-Content-Transfer-Encoding: base64
+Allocating AFC_REGION_TYPE while AFC itself is not supported by the host 
+looks wrong to me.
 
-RnJvbSA0MTE3NWY4ZTU0YTA0NGE1YTBlMjczZTNhYzliOTFlODg2NmZjZGYwIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBQby1IYW8gSHVhbmcgPHBoaHVhbmdAcmVhbHRlay5jb20+CkRh
-dGU6IE1vbiwgMiBOb3YgMjAyNiAxNzoyNjozMSArMDgwMApTdWJqZWN0OiBbUEFUQ0hdIHdpZmk6
-IHJ0dzg4OiB0ZXN0IGZvciBzdGFsZSBwYWNrZXQKCkZlbGxvdyBkZXZlbG9wZXJzIGZvdW5kIGV2
-aWRlbmNlIHRoYXQgRE1BIG9wZXJhdGlvbnMgbWlnaHQKYmUgaW5jb21wbGV0ZSBkdXJpbmcgZGVi
-dWdnaW5nLiBlLmcuIFJ4IHRhZyBpcyBuZXcgYnV0IHRoZQpyZW1haW5pbmcgUnggYnVmZmVyIGlz
-IG9sZCBkYXRhLgpTaW5jZSBwcm90b2NvbCBhbmF5bHplciBpcyBub3QgYXZhaWxhYmxlIGF0IHRo
-ZSBtb21lbnQsCndyaXRlIHRoZSBSeCBidWZmZXIgdG8gYSBtYWdpYyBudW1iZXIgYWZ0ZXIgZWFj
-aCB1c2UsIGFuZCBjaGVjawpmb3IgbW9yZSBjb252aW5jaW5nIGV2aWRlbmNlIGZvciBmdXJ0aGVy
-IHRyb3VibGVzaG9vdGluZy4KClNpZ25lZC1vZmYtYnk6IFBvLUhhbyBIdWFuZyA8cGhodWFuZ0By
-ZWFsdGVrLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5j
-IHwgMTAxICsrKysrKysrKysrKysrKysrKysrKystCiAxIGZpbGUgY2hhbmdlZCwgOTcgaW5zZXJ0
-aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9yZWFsdGVrL3J0dzg4L3BjaS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4
-OC9wY2kuYwppbmRleCA2NmQyZTVmNTE0NDQuLjgxNTA4Nzc4OWI5MyAxMDA2NDQKLS0tIGEvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9wY2kuYworKysgYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5jCkBAIC0xNSw2ICsxNSwxMCBAQAogI2luY2x1ZGUg
-ImRlYnVnLmgiCiAjaW5jbHVkZSAibWFjLmgiCiAKKyNkZWZpbmUgUlRXX1BDSV9SWF9QT0lTT04J
-CTB4REVBREJFRUYKKyNkZWZpbmUgUlRXX1BDSV9SWF9QT0lTT05fTEVOCQkyNTYKKyNkZWZpbmUg
-UlRXX1BDSV9SWF9QT0lTT05fVElNRU9VVAkxMDAKKwogc3RhdGljIGJvb2wgcnR3X2Rpc2FibGVf
-bXNpOwogc3RhdGljIGJvb2wgcnR3X3BjaV9kaXNhYmxlX2FzcG07CiBtb2R1bGVfcGFyYW1fbmFt
-ZWQoZGlzYWJsZV9tc2ksIHJ0d19kaXNhYmxlX21zaSwgYm9vbCwgMDY0NCk7CkBAIC0yMDcsNiAr
-MjExLDk0IEBAIHN0YXRpYyBpbnQgcnR3X3BjaV9pbml0X3R4X3Jpbmcoc3RydWN0IHJ0d19kZXYg
-KnJ0d2RldiwKIAlyZXR1cm4gMDsKIH0KIAorc3RhdGljIHZvaWQgcnR3X3BjaV9yeF9wb2lzb24o
-c3RydWN0IHNrX2J1ZmYgKnNrYikKK3sKKwltZW1zZXQzMigodTMyICopc2tiLT5kYXRhLCBSVFdf
-UENJX1JYX1BPSVNPTiwKKwkJIFJUV19QQ0lfUlhfUE9JU09OX0xFTiAvIDQpOworfQorCitzdGF0
-aWMgYm9vbCBydHdfcGNpX3J4X3JhbmdlX3BvaXNvbmVkKHN0cnVjdCBydHdfZGV2ICpydHdkZXYs
-CisJCQkJICAgICAgc3RydWN0IHNrX2J1ZmYgKnNrYiwgdTMyIHN0YXJ0LCB1MzIgbGVuKQorewor
-CXUzMiAqd29yZCA9ICh1MzIgKilza2ItPmRhdGE7CisJdTMyIGksIGZpcnN0ID0gc3RhcnQgLyA0
-LCBsYXN0ID0gRElWX1JPVU5EX1VQKHN0YXJ0ICsgbGVuLCA0KTsKKworCWlmICghbGVuKQorCQly
-ZXR1cm4gZmFsc2U7CisKKwlmb3IgKGkgPSBmaXJzdDsgaSA8IGxhc3Q7IGkrKykKKwkJaWYgKFJF
-QURfT05DRSh3b3JkW2ldKSA9PSBSVFdfUENJX1JYX1BPSVNPTikgeworCQkJcnR3X3dhcm4ocnR3
-ZGV2LCAicnggYnVmZmVyIHN0aWxsIDB4ZGVhZGJlZWZcbiIpOworCQkJcmV0dXJuIHRydWU7CisJ
-CX0KKworCXJldHVybiBmYWxzZTsKK30KKworc3RhdGljIGJvb2wgcnR3X3BjaV9yeF9zdGFsZShz
-dHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQoreworCXN0cnVjdCBy
-dHdfcnhfZGVzYyAqcnhfZGVzYyA9ICh2b2lkICopc2tiLT5kYXRhOworCXUzMiBkZXNjX3N6ID0g
-cnR3ZGV2LT5jaGlwLT5yeF9wa3RfZGVzY19zejsKKwl1OCBkcnZfaW5mb19zeiwgc2hpZnQsIGVu
-Y190eXBlOworCXN0cnVjdCBpZWVlODAyMTFfaGRyICpoZHI7CisJdTMyIHBrdF9sZW4sIG9mZnNl
-dCwgbGVuOworCWJvb2wgaXNfYzJoOworCV9fbGUxNiBmYzsKKworCWlmIChydHdfcGNpX3J4X3Jh
-bmdlX3BvaXNvbmVkKHJ0d2Rldiwgc2tiLCAwLCBkZXNjX3N6KSkKKwkJcmV0dXJuIHRydWU7CisK
-Kwlwa3RfbGVuID0gbGUzMl9nZXRfYml0cyhyeF9kZXNjLT53MCwgUlRXX1JYX0RFU0NfVzBfUEtU
-X0xFTik7CisJZHJ2X2luZm9fc3ogPSBsZTMyX2dldF9iaXRzKHJ4X2Rlc2MtPncwLCBSVFdfUlhf
-REVTQ19XMF9EUlZfSU5GT19TSVpFKTsKKwlzaGlmdCA9IGxlMzJfZ2V0X2JpdHMocnhfZGVzYy0+
-dzAsIFJUV19SWF9ERVNDX1cwX1NISUZUKTsKKwlvZmZzZXQgPSBkZXNjX3N6ICsgZHJ2X2luZm9f
-c3ogKiA4ICsgc2hpZnQ7CisJaWYgKG9mZnNldCA+PSBSVFdfUENJX1JYX1BPSVNPTl9MRU4pCisJ
-CXJldHVybiBmYWxzZTsKKworCWlzX2MyaCA9IGxlMzJfZ2V0X2JpdHMocnhfZGVzYy0+dzIsIFJU
-V19SWF9ERVNDX1cyX0MySCk7CisJaWYgKGlzX2MyaCkgeworCQlsZW4gPSBtaW5fdCh1MzIsIHBr
-dF9sZW4sIDQpOworCX0gZWxzZSBpZiAocGt0X2xlbiA8IHNpemVvZihmYykpIHsKKwkJbGVuID0g
-cGt0X2xlbjsKKwl9IGVsc2UgeworCQlpZiAocnR3X3BjaV9yeF9yYW5nZV9wb2lzb25lZChydHdk
-ZXYsIHNrYiwgb2Zmc2V0LCBzaXplb2YoZmMpKSkKKwkJCXJldHVybiB0cnVlOworCisJCWhkciA9
-IChzdHJ1Y3QgaWVlZTgwMjExX2hkciAqKShza2ItPmRhdGEgKyBvZmZzZXQpOworCQlmYyA9IGhk
-ci0+ZnJhbWVfY29udHJvbDsKKwkJbGVuID0gaWVlZTgwMjExX2hkcmxlbihmYyk7CisKKwkJZW5j
-X3R5cGUgPSBsZTMyX2dldF9iaXRzKHJ4X2Rlc2MtPncwLCBSVFdfUlhfREVTQ19XMF9FTkNfVFlQ
-RSk7CisJCWlmIChpZWVlODAyMTFfaGFzX3Byb3RlY3RlZChmYykgJiYgZW5jX3R5cGUgPT0gUlhf
-REVTQ19FTkNfQUVTKQorCQkJbGVuICs9IElFRUU4MDIxMV9DQ01QX0hEUl9MRU47CisJCWxlbiA9
-IG1pbihsZW4sIHBrdF9sZW4pOworCX0KKworCWxlbiA9IG1pbihsZW4sIFJUV19QQ0lfUlhfUE9J
-U09OX0xFTiAtIG9mZnNldCk7CisKKwlyZXR1cm4gcnR3X3BjaV9yeF9yYW5nZV9wb2lzb25lZChy
-dHdkZXYsIHNrYiwgb2Zmc2V0LCBsZW4pOworfQorCitzdGF0aWMgdm9pZCBydHdfcGNpX3J4X3N5
-bmNfYW5kX3dhaXRfZnJlc2goc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwKKwkJCQkJICAgc3RydWN0
-IHNrX2J1ZmYgKnNrYiwgZG1hX2FkZHJfdCBkbWEpCit7CisJa3RpbWVfdCBkZWFkbGluZSA9IGt0
-aW1lX2FkZF9tcyhrdGltZV9nZXQoKSwgUlRXX1BDSV9SWF9QT0lTT05fVElNRU9VVCk7CisKKwlk
-bWFfc3luY19zaW5nbGVfZm9yX2NwdShydHdkZXYtPmRldiwgZG1hLCBSVEtfUENJX1JYX0JVRl9T
-SVpFLAorCQkJCURNQV9GUk9NX0RFVklDRSk7CisKKwl3aGlsZSAocnR3X3BjaV9yeF9zdGFsZShy
-dHdkZXYsIHNrYikpIHsKKwkJaWYgKCFrdGltZV9iZWZvcmUoa3RpbWVfZ2V0KCksIGRlYWRsaW5l
-KSkgeworCQkJcnR3X3dhcm4ocnR3ZGV2LCAicnggYnVmZmVyIHN0aWxsIHBvaXNvbmVkIGFmdGVy
-ICVkIG1zXG4iLAorCQkJCSBSVFdfUENJX1JYX1BPSVNPTl9USU1FT1VUKTsKKwkJCXJldHVybjsK
-KwkJfQorCQl1ZGVsYXkoMSk7CisJCWRtYV9zeW5jX3NpbmdsZV9mb3JfY3B1KHJ0d2Rldi0+ZGV2
-LCBkbWEsIFJUS19QQ0lfUlhfQlVGX1NJWkUsCisJCQkJCURNQV9GUk9NX0RFVklDRSk7CisJfQor
-fQorCiBzdGF0aWMgaW50IHJ0d19wY2lfcmVzZXRfcnhfZGVzYyhzdHJ1Y3QgcnR3X2RldiAqcnR3
-ZGV2LCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLAogCQkJCSBzdHJ1Y3QgcnR3X3BjaV9yeF9yaW5nICpy
-eF9yaW5nLAogCQkJCSB1MzIgaWR4LCB1MzIgZGVzY19zeikKQEAgLTIxOSw3ICszMTEsOCBAQCBz
-dGF0aWMgaW50IHJ0d19wY2lfcmVzZXRfcnhfZGVzYyhzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LCBz
-dHJ1Y3Qgc2tfYnVmZiAqc2tiLAogCWlmICghc2tiKQogCQlyZXR1cm4gLUVJTlZBTDsKIAotCWRt
-YSA9IGRtYV9tYXBfc2luZ2xlKCZwZGV2LT5kZXYsIHNrYi0+ZGF0YSwgYnVmX3N6LCBETUFfRlJP
-TV9ERVZJQ0UpOworCXJ0d19wY2lfcnhfcG9pc29uKHNrYik7CisJZG1hID0gZG1hX21hcF9zaW5n
-bGUoJnBkZXYtPmRldiwgc2tiLT5kYXRhLCBidWZfc3osIERNQV9CSURJUkVDVElPTkFMKTsKIAlp
-ZiAoZG1hX21hcHBpbmdfZXJyb3IoJnBkZXYtPmRldiwgZG1hKSkKIAkJcmV0dXJuIC1FQlVTWTsK
-IApAQCAtMjQxLDcgKzMzNCw4IEBAIHN0YXRpYyB2b2lkIHJ0d19wY2lfc3luY19yeF9kZXNjX2Rl
-dmljZShzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LCBkbWFfYWRkcl90IGRtYSwKIAlzdHJ1Y3QgcnR3
-X3BjaV9yeF9idWZmZXJfZGVzYyAqYnVmX2Rlc2M7CiAJaW50IGJ1Zl9zeiA9IFJUS19QQ0lfUlhf
-QlVGX1NJWkU7CiAKLQlkbWFfc3luY19zaW5nbGVfZm9yX2RldmljZShkZXYsIGRtYSwgYnVmX3N6
-LCBETUFfRlJPTV9ERVZJQ0UpOworCXJ0d19wY2lfcnhfcG9pc29uKHJ4X3JpbmctPmJ1ZltpZHhd
-KTsKKwlkbWFfc3luY19zaW5nbGVfZm9yX2RldmljZShkZXYsIGRtYSwgYnVmX3N6LCBETUFfQklE
-SVJFQ1RJT05BTCk7CiAKIAlidWZfZGVzYyA9IChzdHJ1Y3QgcnR3X3BjaV9yeF9idWZmZXJfZGVz
-YyAqKShyeF9yaW5nLT5yLmhlYWQgKwogCQkJCQkJICAgICBpZHggKiBkZXNjX3N6KTsKQEAgLTEw
-NjUsOCArMTE1OSw3IEBAIHN0YXRpYyB1MzIgcnR3X3BjaV9yeF9uYXBpKHN0cnVjdCBydHdfZGV2
-ICpydHdkZXYsIHN0cnVjdCBydHdfcGNpICpydHdwY2ksCiAJCXJ0d19wY2lfZG1hX2NoZWNrKHJ0
-d2RldiwgcmluZywgY3VyX3JwKTsKIAkJc2tiID0gcmluZy0+YnVmW2N1cl9ycF07CiAJCWRtYSA9
-ICooKGRtYV9hZGRyX3QgKilza2ItPmNiKTsKLQkJZG1hX3N5bmNfc2luZ2xlX2Zvcl9jcHUocnR3
-ZGV2LT5kZXYsIGRtYSwgUlRLX1BDSV9SWF9CVUZfU0laRSwKLQkJCQkJRE1BX0ZST01fREVWSUNF
-KTsKKwkJcnR3X3BjaV9yeF9zeW5jX2FuZF93YWl0X2ZyZXNoKHJ0d2Rldiwgc2tiLCBkbWEpOwog
-CQlyeF9kZXNjID0gc2tiLT5kYXRhOwogCQlyZXQgPSBydHdfcnhfcXVlcnlfcnhfZGVzYyhydHdk
-ZXYsIHJ4X2Rlc2MsCiAJCQkJCSAgICZwa3Rfc3RhdCwgJnJ4X3N0YXR1cyk7Ci0tIAoyLjI1LjEK
-Cg==
+> NULL answer the firmware therefore holds a region at bus address 0.
+> This driver never enables AFC and no misbehaviour has been observed,
+> but the firmware state is wrong.
+> 
+> Name the type and allocate it like the other host regions, bounded to
+> two 4 KiB slots. This removes the warning and gives the firmware a
+> valid region. An oversized request keeps today's behaviour with a
+> warning.
+> 
+> Tested as part of the series.
+> 
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+> Signed-off-by: Goran Sustek <gsustek@gmail.com>
+> ---
+>   drivers/net/wireless/ath/ath12k/qmi.c |   17 +++++++++++++++++
+>   drivers/net/wireless/ath/ath12k/qmi.h |    3 +++
+>   2 files changed, 20 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+> index 280e50a1f31d..0679e5d2d4fc 100644
+> --- a/drivers/net/wireless/ath/ath12k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath12k/qmi.c
+> @@ -2707,6 +2707,23 @@ static int ath12k_qmi_alloc_target_mem_chunk(struct ath12k_base *ab)
+>   			if (ret)
+>   				goto err;
+>   			break;
+> +		case AFC_REGION_TYPE:
+> +			/* Firmware requests the AFC region at every boot, even
+> +			 * when the 6 GHz radio does not use Standard Power. It
+> +			 * treats a non-zero size as a provided region, so hand
+> +			 * it real memory instead of a NULL address.
+> +			 */
+> +			if (chunk->size > ATH12K_QMI_AFC_MEM_SIZE) {
+> +				ath12k_warn(ab, "AFC memory request of %u B exceeds %u B, not allocated\n",
+> +					    chunk->size, ATH12K_QMI_AFC_MEM_SIZE);
+> +				chunk->paddr = 0;
+> +				chunk->v.addr = NULL;
+> +				break;
+> +			}
+> +			ret = ath12k_qmi_alloc_chunk(ab, chunk);
+> +			if (ret)
+> +				goto err;
+> +			break;
+>   		case MLO_GLOBAL_MEM_REGION_TYPE:
+>   			mlo_size += chunk->size;
+>   			if (ag->mlo_mem.mlo_mem_size &&
+> diff --git a/drivers/net/wireless/ath/ath12k/qmi.h b/drivers/net/wireless/ath/ath12k/qmi.h
+> index 6da10f3cb597..c438ef6c7680 100644
+> --- a/drivers/net/wireless/ath/ath12k/qmi.h
+> +++ b/drivers/net/wireless/ath/ath12k/qmi.h
+> @@ -26,6 +26,8 @@
+>   #define ATH12K_QMI_BDF_EXT_STR_LENGTH		0x20
+>   #define ATH12K_QMI_WLFW_MAX_DEV_MEM_NUM_V01 4
+>   #define ATH12K_QMI_DEVMEM_CMEM_INDEX	0
+> +/* AFC region: one 4 KiB slot per radio, at most two radios */
+> +#define ATH12K_QMI_AFC_MEM_SIZE		(2 * 0x1000)
+>   
+>   #define QMI_WLFW_REQUEST_MEM_IND_V01		0x0035
+>   #define QMI_WLFW_FW_MEM_READY_IND_V01		0x0037
+> @@ -173,6 +175,7 @@ enum ath12k_qmi_target_mem {
+>   	CALDB_MEM_REGION_TYPE = 0x4,
+>   	MLO_GLOBAL_MEM_REGION_TYPE = 0x8,
+>   	PAGEABLE_MEM_REGION_TYPE = 0x9,
+> +	AFC_REGION_TYPE = 0xa,
+>   	LPASS_SHARED_V01_REGION_TYPE = 0xb,
+>   };
+>   
+> --
+> 2.47.0
+> 
 
---_002_527f96d6034f43d481c3bbacf0313f3arealtekcom_--
+
+-- 
+Ramesh
