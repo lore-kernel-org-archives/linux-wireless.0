@@ -1,75 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793692413;
-	b=XcqN0Fo63bV7KYCiGk4dCAtepZH1RrzNcJqeWtVVNy8G2cP2HUoMw0i6qti/fmGwiRBl
-	 JZ5wBsAfnQDYGEotPdR7ynVWt5oXiBKPGhbEPXLdA230SRcKXy1ASlmtr3Kp//Be/mQVq
-	 0shD/pj92UVsxY7keZ289Dg4yHckQvCLef9ida5kB1cMfAHMhfBxkaHxjpKIkK0CPm8iA
-	 NRqUYMYtPg9VzhV6pzfNFsHWXUTcsTPax317k0bCr4XEg2XTvAP+wVZlT2CYHZmZi8gBi
-	 VJByTyBUsiHmYMshbU1qgR/rHPQ5ctSJmvpkBmIVnXSzedx8IgU8c0MWPae+iMuBwaA==
+	t=1793697001;
+	b=skydbfh91sZiiMkK2ZDCizoTvCX65BIc2Atth/kJPaWZ2gQ2DPf7qhVK50kanOxISoA6
+	 /dBns0tPihqiiooqEPbyTzov32JrI+OKbaMloicRJgtG6DCd7R9YZ0xntVHK8vJBeyTMG
+	 Fp4rIr8m/fwUZI+tnSdrNI10sgSFQfZ6XfeD4VOqac+JAg8HQYH5qn2MkjVIRQm0V0YSD
+	 iWm8zi8xgOgxwQ3xsXPJapbINaKkZiglHATfub///n1NI2H/xl49AjlRzUX/oNcqVdlX4
+	 WA9b8dGmHEg8PARMKaQ0YNERDu2XFlKljXRk8hWpdrJPX9p2zJ60Mt9I5DMcVZyDWLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793692413;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793697001;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
 	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
-	 Content-Type;
-	bh=n8bobHCEOxmTBV7IVD6M4PdGuWNv6M0HC6fay/DLDEo=;
-	b=ZTDbWNabrghHOtN58xdIy4mrWvTufDYRxHjqZx81QJrWc9U/AxQtZHdRN7wYNcDaR4th
-	 nMPCdrXDe7QYiXVBKECdqjwJEMFWVeIEF+Xxl8oKa7R/scmg8s/+YHgF+BvYscgnRwqly
-	 HFD+LId7Lej8zOH4cj+wPScpkP3JTVSOHURJrvX9irnLuZr4k4/OoBGYYmBY/7xuFTD2k
-	 +C6ZqeUX9BUNW4tZkcGv11dgPYFkEJ6SVUaQBgMvkhx1cqOWn9PYGPdKwWPjdjkNTzLco
-	 Pza3KPX2+2HW8SRBLJ3LVUyJLu5JC3etHmWUKozA8xc0n8iWJeX1dnwowzxcguzIESQ==
+	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-MTK;
+	bh=v/FpDG427viY8CwqO1g7Q3Hr8Tb4FHtEPxku2gNFaSQ=;
+	b=WuqKkq8R+zPEHGvPhpV6o0T9McWUGXfj9511vxtrKwXa4teQP1Ll5vRTWtqGQztnt9GB
+	 mjYktxRj+VbBggVFGnXpCLkuV7d10Y0xI4QzRx0CIZwZZmwsAOExddwY2wc50oDnIfdYl
+	 3qDhWuchcgGHZyuu+M9FZJ9AMxzjxchAP+d28n1/RTHjwx6LNlCehGGdo8uLMBD+nh6SS
+	 C2xN1tCp9OniXJFofFI+b0znKZ6fx2oahG/1AV8aBuXRCLoUmIP822JeusJiiWkMMzbjh
+	 Skx3R4E/qPwA9wYgFBvmsmIg77xY8wy1y1mTI7pj58se0ezIp4aQpPk7s7don6ZyWVA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=nBIhlqHK;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=TIkHMe7e;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB21606A324
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 07:53:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FB21606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B620606A327
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 09:10:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B620606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=nBIhlqHK
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A37rUyJ52864339, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793692410; bh=n8bobHCEOxmTBV7IVD6M4PdGuWNv6M0HC6fay/DLDEo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=nBIhlqHKBl0ozPzDm6M5kU+ZN3mvp0eYRAxPa0dQRcT4+kWERr7DOwLuGsEHtmcaI
-	 VY/fB6GSFhxYOUyA8xUfg/crlSZfU6I4uR00yxPDBVk2EUr+9p9I2tNp9oczJVZd6h
-	 vXrm4EZxESLJxZyub2JqVhkLB8F2UwfqIYIhvtrrtxoSeVhwbFN0HX54eb9FcSkTpF
-	 JxnX+A9GVfSZVYJ9Aje2ktuCANlc6O6rRrwBho2+fFq4Y5hLRMdtRCPNRM02PvB96s
-	 u1um5Hq+OizUEZegSylfUk75G+TCkYMrsJjyMkin4ELSeIdLA3xrKOdyBze+DoSAyE
-	 gW26Fz3oytrOw==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A37rUyJ52864339
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Tue, 3 Nov 2026 15:53:30 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=TIkHMe7e
+X-UUID: 56875d66d76611f18dc8c9802ae25ab1-20261103
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=v/FpDG427viY8CwqO1g7Q3Hr8Tb4FHtEPxku2gNFaSQ=;
+	b=TIkHMe7e1JyNHMiLNxf4HSA9Y2qRZz5K07u9sGMV54isw22v1sFjv9yErRMkG/JXcS8E+6jSlioYDkJOvm6d5fO+rryopPkc9q/rjTx8Kw7OwjHWy+xgJc0XaJ4ZYYajm0OFNTj+yjivYu8ItMHqsRvvtix57v9/DcIWJLlaxGA=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:24f3a8e0-f44c-458b-9252-3399bc780c11,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:07a00cee-6961-456c-adce-6d277e14e6ad,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 56875d66d76611f18dc8c9802ae25ab1-20261103
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 777112873; Tue, 03 Nov 2026 17:09:56 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 15:53:30 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 15:53:29 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
- Transport; Tue, 3 Nov 2026 15:53:29 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <timlee@realtek.com>
-Subject: [PATCH rtw-next 2/2] wifi: rtw89: avoid premature power save entry for buffered traffic
-Date: Tue, 3 Nov 2026 15:52:55 +0800
-Message-ID: <20261103075255.56487-3-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20261103075255.56487-1-pkshih@realtek.com>
-References: <20261103075255.56487-1-pkshih@realtek.com>
+ 15.2.2562.29; Tue, 3 Nov 2026 17:09:55 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Tue, 3 Nov 2026 17:09:55 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <johannes@sipsolutions.net>
+CC: <nbd@nbd.name>, <lorenzo@kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, <Sean.Wang@mediatek.com>,
+	<jb.tsai@mediatek.com>, <Evan-ym.Li@mediatek.com>, Yin-Ming Li
+	<evan-ym.li@mediatek.com>, Sean Wang <sean.wang@mediatek.com>
+Subject: [PATCH] wifi: mac80211: drain TXQ wake tasklet before freeing hardware
+Date: Tue, 3 Nov 2026 17:09:53 +0800
+Message-ID: <20261103090953.1148722-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -81,128 +83,41 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
+X-MTK: N
 
-From: Chin-Yen Lee <timlee@realtek.com>
+From: Yin-Ming Li <evan-ym.li@mediatek.com>
 
-Configure two LPS parameters to prevent premature entry into power
-save mode and improving the delivery of real-time traffic. Enable
-MART_PS_DTIM_RX to transmit a Null Data frame to synchronize the
-power save state with the AP after waking up when buffered traffic
-is indicated by the beacon TIM. Enable TRX_EXT_MODE to keep the device
-awake for the remainder of the current TBTT interval when the AP has
-buffered packets.
+Driver queue wakeups schedule wake_txqs_tasklet asynchronously. Stopping
+the driver work that issued a wakeup does not wait for this tasklet, and
+ieee80211_unregister_hw() does not drain it.
 
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Drain the tasklet in ieee80211_free_hw(), before destroying the local
+mutex and releasing the hardware allocation. Drivers must stop their
+asynchronous producers before calling ieee80211_free_hw(); this drain
+waits for a tasklet those producers have already scheduled. Using the
+final free boundary also covers deferred wakeups scheduled while the
+driver finishes bus teardown after ieee80211_unregister_hw() returns.
+
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Yin-Ming Li <evan-ym.li@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 40 +++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/fw.h | 15 ++++++++++
- drivers/net/wireless/realtek/rtw89/ps.c |  1 +
- 3 files changed, 56 insertions(+)
+ net/mac80211/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index ea7dba077f5d..5ba265e0eeed 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -3525,6 +3525,46 @@ int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
- 	return ret;
- }
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f996e15e3d9e35cacddedf482a34c40c587d3e52..086b9ca3485398b4ef2ff60c3f9387dd909a8008 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1755,6 +1755,9 @@ void ieee80211_free_hw(struct ieee80211_hw *hw)
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	enum nl80211_band band;
  
-+int rtw89_fw_h2c_lps_adv_param(struct rtw89_dev *rtwdev,
-+			       struct rtw89_vif_link *rtwvif_link)
-+{
-+	struct rtw89_h2c_lps_adv_parm *h2c;
-+	u32 len = sizeof(*h2c);
-+	struct sk_buff *skb;
-+	int ret;
++	/* Driver callbacks have stopped; drain their deferred TXQ wakeups. */
++	tasklet_kill(&local->wake_txqs_tasklet);
 +
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
-+	if (!skb) {
-+		rtw89_err(rtwdev, "failed to alloc skb for h2c lps adv parm\n");
-+		return -ENOMEM;
-+	}
-+	skb_put(skb, len);
-+	h2c = (struct rtw89_h2c_lps_adv_parm *)skb->data;
-+
-+	h2c->w0 = le32_encode_bits(rtwvif_link->mac_id, RTW89_H2C_PS_ADV_PARM_W0_MACID) |
-+		  le32_encode_bits(1, RTW89_H2C_PS_ADV_PARM_W0_EN_SMART_PS_DTIM_RX) |
-+		  le32_encode_bits(1, RTW89_H2C_PS_ADV_PARM_W0_EN_TRX_EXT_MODE);
-+
-+	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
-+			      H2C_CAT_MAC,
-+			      H2C_CL_MAC_PS,
-+			      H2C_FUNC_MAC_PS_ADVANCE_PARM, 0, 1,
-+			      len);
-+
-+	ret = rtw89_h2c_tx(rtwdev, skb, false);
-+	if (ret) {
-+		rtw89_err(rtwdev, "failed to send h2c\n");
-+		goto fail;
-+	}
-+
-+	return 0;
-+
-+fail:
-+	dev_kfree_skb_any(skb);
-+
-+	return ret;
-+}
-+
- int rtw89_fw_h2c_lps_ch_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
- {
- 	const struct rtw89_chip_info *chip = rtwdev->chip;
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index e4d3331fc18f..ba4813b9230f 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -2338,6 +2338,18 @@ struct rtw89_h2c_wow_payload_cam_update {
- 	__le32 w8;
- } __packed;
+ 	mutex_destroy(&local->iflist_mtx);
  
-+struct rtw89_h2c_lps_adv_parm {
-+	__le32 w0;
-+	__le32 w1;
-+} __packed;
-+
-+#define RTW89_H2C_PS_ADV_PARM_W0_MACID GENMASK(7, 0)
-+#define RTW89_H2C_PS_ADV_PARM_W0_TRX_TIMEOUT_TIME_SET GENMASK(9, 8)
-+#define RTW89_H2C_PS_ADV_PARM_W0_EN_SMART_PS_DTIM_RX BIT(10)
-+#define RTW89_H2C_PS_ADV_PARM_W0_EN_TRX_EXT_MODE BIT(11)
-+#define RTW89_H2C_PS_ADV_PARM_W1_TRX_TIMEOUT_TIME_VAL GENMASK(7, 0)
-+#define RTW89_H2C_PS_ADV_PARM_W1_EXTNUM GENMASK(15, 8)
-+
- #define RTW89_H2C_WOW_PLD_CAM_UPD_W0_R_W BIT(0)
- #define RTW89_H2C_WOW_PLD_CAM_UPD_W0_IDX GENMASK(7, 1)
- #define RTW89_H2C_WOW_PLD_CAM_UPD_WKFM0 GENMASK(31, 0)
-@@ -4800,6 +4812,7 @@ enum rtw89_ps_h2c_func {
- 	H2C_FUNC_MAC_LPS_PARM		= 0x0,
- 	H2C_FUNC_P2P_ACT		= 0x1,
- 	H2C_FUNC_IPS_CFG		= 0x3,
-+	H2C_FUNC_MAC_PS_ADVANCE_PARM	= 0x4,
- 	H2C_FUNC_PS_POWER_LEVEL		= 0x7,
- 	H2C_FUNC_TBTT_TUNING		= 0xA,
- 
-@@ -5636,6 +5649,8 @@ int rtw89_fw_h2c_init_ba_cam_users(struct rtw89_dev *rtwdev, u8 users,
- 
- int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
- 			  struct rtw89_lps_parm *lps_param);
-+int rtw89_fw_h2c_lps_adv_param(struct rtw89_dev *rtwdev,
-+			       struct rtw89_vif_link *rtwvif_link);
- int rtw89_fw_h2c_lps_ch_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif);
- int rtw89_fw_h2c_lps_ml_cmn_info(struct rtw89_dev *rtwdev,
- 				 struct rtw89_vif *rtwvif);
-diff --git a/drivers/net/wireless/realtek/rtw89/ps.c b/drivers/net/wireless/realtek/rtw89/ps.c
-index 3639292eba7a..40bac65dd8ed 100644
---- a/drivers/net/wireless/realtek/rtw89/ps.c
-+++ b/drivers/net/wireless/realtek/rtw89/ps.c
-@@ -138,6 +138,7 @@ static void __rtw89_enter_lps_link(struct rtw89_dev *rtwdev,
- 
- 	rtw89_btc_ntfy_radio_state(rtwdev, BTC_RFCTRL_FW_CTRL);
- 	rtw89_fw_h2c_lps_parm(rtwdev, &lps_param);
-+	rtw89_fw_h2c_lps_adv_param(rtwdev, rtwvif_link);
- 
- 	if (RTW89_CHK_FW_FEATURE(BEACON_TRACKING, &rtwdev->fw))
- 		rtw89_fw_h2c_pwr_lvl(rtwdev, rtwvif_link);
+ 	idr_for_each(&local->ack_status_frames,
 -- 
-2.25.1
-
+2.43.0
