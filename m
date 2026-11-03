@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793723049;
-	b=zKFO8G8+w3TtgAKvqZSlRNjGW+kOdY/A1W6znrA+fpSiYQ/mZdVR5YVgZF4+rXEKGa4Q
-	 gXXPSKnQ0WcLaEwMWCkfU7l6kPsW5vm2d0LNr3sMwmOmMFNl+ZljgJoRZ5pAaoS0fQMAi
-	 gfuLpSlsROtietT9WnOLSs8uv6mkoNiTav/Rsd/qnOf7P02W3UQHLOEM5BMigGusPGu08
-	 3vvxsxIA2B8KmesKs1drsRYL73G4qQTyM+OYT8D3AkqVXYEYaF8hfM2I49qJD5HathkFx
-	 xO5oFNdLIdonPNqsYlA0FyLOjzUrAAIHy/Pmn048YgEviRU5Xc9+ukiOZQ3DpclYmfQ==
+	b=l/kczSKcphrf3Eml4inNvkQnwSUhkhpuXPVILDptINuzSxt8bDqzsdYWTCEN1jct/iCT
+	 bX8tQG/Vsj0jAJwN0H8j3LlPGkj166CHK1pJhaFo4sXqVj53bKMQ8RTp/Ve7LVOOMTbn8
+	 sXYpd2/4iPpWRRPJwMSmjlwt8UH7jf8f6ncYE0UH6b81CBQHhjTNWDM5wyBmOx5nK1Jgc
+	 hHADxnEo+8m3x7m/OmMEpU/D2bNUDKDpmARMXem/sUcJ99qW2/ygV0fkmltf/IyZPeKsf
+	 OVN347tOHMw3hA5uUZhAz8CEwwFElVC3iYquYN+52HF/siQcvuHb+ZU6ilFIY/JaoiA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793723049;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=fz/97brDSe2AUMycTTv1RGMexBq/up2YItI0JuSlkAE=;
-	b=2uxCFsDx5nUdjMeEEhWGOJ1jKWAJW081B9qD2vmPA0R0vx2WGlUkoYp5+YPbyykokWXu
-	 m72CFb6Vtm/hlNQFROt7PQpxvuClTqUNnaOJxAKkpd4h8PtIoMaqiZG1IfoBXUtLg4pPq
-	 btbGhfO2gKfC/49vOfugvJ5tzIT2k8K9yINbcANYNiQUOxMMhn/Ulkr0ZtlvIOoRU8tho
-	 KDzTMQnoMkxmLwN75pa/vQocaWReUtBJ0lXn12OI+p6owAO3CAfPd/3e1ecfj9okHozSl
-	 Sp8WxPIKM9mgZ+ExhBEr5mE36moT5ifgaa9FGqezDo99EsIbos2cP5siJAKrWcIs2tg==
+	bh=YONAzz7gfQUeanKTI/fJPuBHz1iNkIkxTU6BRLU3gqo=;
+	b=X16DiUprfpnkghlGTPp+9OCFvqayzbwHVyhX6p5HcFNLfHzeG+Cga5WJu9wSH9E/0cOI
+	 xtLMYr978ssNOS7ns50I6uQ8pYNwryFrFSgLsy27SSP/Y68+S75h89jLTrORW6t1O1tx3
+	 U7DTYyYQuJ26Hi/YkVXSzQbp++6yTF+7VMqS9TFt9EEgTHZf7fg2NOcFDWz1JxdbbVhd/
+	 mdEuDaFKyY22XIjMajwEnk0BE7MCFEh2iOcSCTkTKxiKWbd5AzmxCt3P6JPSsL86+E8YL
+	 oy904xv9gl65btCzKr/qpolHGln0Weqt3F9svdA2t8S8qblhBLEqqcBUCXMGfonsj0g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nbd.name;
 	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=SnZr3GDu;
+	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b="Rtf76V//";
 	arc=none smtp.remote-ip=46.4.11.11
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 225DC606D835
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:24:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 225DC606D835
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C8D606D81B
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:24:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 54C8D606D81B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=SnZr3GDu
+	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=Rtf76V//
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=fz/97brDSe2AUMycTTv1RGMexBq/up2YItI0JuSlkAE=; b=SnZr3GDuSYoZX/bCoyQa8AcDQv
-	O/rEXYmZWobYH/N6yn06+5QSd3uEcMOce8Jl5v152UJnswnFGh+Y+wLCNydhTPu9dpKx90wpS+/r6
-	/oB90yqqSdQ9qHMyH7Af1JqGCUiqmvAzfzjcopSyc4mzbfjqPD1OCe9pPxZbSaB90m/s=;
+	bh=YONAzz7gfQUeanKTI/fJPuBHz1iNkIkxTU6BRLU3gqo=; b=Rtf76V//OOWZpHXlYznWSLIfHa
+	3Ka9KbmCkZPRkKnlqlNu08z2fIilKxqXUyUuHWghaTjmcb+QXogj96TQqAlH3omeUpOfWqTzy0lXs
+	nRebC8+jC7Uucnuyf4ljLUdesnqTijPpvqWASKRWsiQj8nuC9Iz4YF5Zs6RuSfXwNYuA=;
 Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xOHIo-00FDFp-1H;
-	Tue, 03 Nov 2026 17:24:02 +0100
+	id 1xOHIn-00FDFp-1D;
+	Tue, 03 Nov 2026 17:24:01 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless-next 18/18] wifi: mac80211: keep learned MSCS entries of offloaded flows
-Date: Tue,  3 Nov 2026 17:23:51 +0100
-Message-ID: <d58722c6dd68211f443251df4b82f58014208213.1793722802.git-series.nbd@nbd.name>
+Subject: [PATCH wireless-next 13/18] wifi: mac80211: add the sta_set_scs driver op
+Date: Tue,  3 Nov 2026 17:23:46 +0100
+Message-ID: <8dd882fa6ee0b64df5f55830847d8ebe83da5308.1793722802.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.118d7c7b799f8ed35de51dc2aefef460bf69727b.1793722802.git-series.nbd@nbd.name>
 References: <cover.118d7c7b799f8ed35de51dc2aefef460bf69727b.1793722802.git-series.nbd@nbd.name>
@@ -68,123 +68,95 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A learned entry expires when no uplink frame of the flow reached
-mac80211 for the stream timeout. Once the uplink is offloaded, its
-frames no longer reach the CPU, so an active flow looks idle and its
-entry is dropped, while the hardware keeps forwarding the downlink
-with the learned priority. The standard allows an AP to keep a learned
-value past the stream timeout.
+Pass the SCS descriptors of a request to the driver and let it answer
+each of them. This is the only path by which the QoS Characteristics
+element reaches a driver.
 
-Add a driver op that reports when the hardware last forwarded a frame
-of a flow, like the lastused value of a flow_cls_offload stats request.
-Before an entry expires, ask the driver and refresh the entry from the
-answer, so that it lives as long as the hardware forwards the flow.
-
-An MSCS mirrors the user priority that the station uses, and the
-station can change it for a flow at any time. While the uplink stays
-offloaded, mac80211 does not see the change, and the downlink keeps the
-old priority. When the hardware keeps an entry alive, also drop the
-flow from the hardware, so that its next uplink frames reach mac80211.
-A changed priority is thus learned within one stream timeout. When an
-offloaded entry expires, drop the flow from the hardware as well, since
-its hardware entries still carry the learned priority.
-
-The first user, flow offload with mtk_eth_soc on mt7996, follows in a
-separate series.
+The classifier runs in software whatever the driver answers, but only
+the driver can schedule a stream according to its traffic description.
+A driver therefore declines a descriptor only when it cannot serve the
+traffic description. Without the op, or before the station is uploaded,
+mac80211 declines every descriptor that carries a traffic description.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/mac80211.h    | 28 +++++++++++++++++++++++++++-
- net/mac80211/driver-ops.h | 29 +++++++++++++++++++++++++++++
- net/mac80211/scs.c        | 39 ++++++++++++++++++++++++++++++++++++++-
- net/mac80211/trace.h      |  7 +++++++
- 4 files changed, 101 insertions(+), 2 deletions(-)
+ include/net/mac80211.h     | 29 +++++++++++++++++++++-
+ net/mac80211/driver-ops.h  | 26 +++++++++++++++++++-
+ net/mac80211/ieee80211_i.h |  1 +-
+ net/mac80211/scs.c         | 54 +++++++++++++++++++++++++++++++++++++--
+ net/mac80211/trace.h       | 27 ++++++++++++++++++++-
+ net/mac80211/util.c        |  2 +-
+ 6 files changed, 137 insertions(+), 2 deletions(-)
 
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a719b688e170..4d0b4a63acd8 100644
+index 0f1969c48646..9ed50c6fe679 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -4109,6 +4109,16 @@ struct ieee80211_flow_match {
- };
- 
- /**
-+ * struct ieee80211_flow_stats - activity of an offloaded flow
-+ *
-+ * @lastused: jiffies of the last frame of the flow that the hardware
-+ *	forwarded, in either direction
-+ */
-+struct ieee80211_flow_stats {
-+	unsigned long lastused;
-+};
-+
-+/**
-  * struct ieee80211_ops - callbacks from mac80211 to the driver
-  *
-  * This structure contains various callbacks that the driver may
-@@ -5179,7 +5189,9 @@ struct ieee80211_ops {
- 	 * its interface changed, or after the learned MSCS priority of one
- 	 * flow changed. Any priority that
- 	 * ieee80211_sta_flow_prio() returned before is stale, so the driver
--	 * must drop the hardware flow entries that use it. With a %NULL
-+	 * must drop the hardware flow entries that use it. Also called for a
-+	 * flow whose learned MSCS entry @flow_offload_stats kept alive or let
-+	 * expire, so that its frames reach mac80211 again. With a %NULL
- 	 * @match, every entry of the station is stale, otherwise only the
- 	 * entries that @match selects. The entries in the direction from the
- 	 * station are dropped as well, since mac80211 learns an MSCS priority
-@@ -5192,6 +5204,20 @@ struct ieee80211_ops {
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_sta *sta,
- 				   const struct ieee80211_flow_match *match);
+@@ -5129,6 +5129,35 @@ struct ieee80211_ops {
+ 			  struct cfg80211_pmsr_request *request);
+ 	void (*abort_pmsr)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			   struct cfg80211_pmsr_request *request);
 +	/**
-+	 * @flow_offload_stats:
-+	 * Report the activity of the hardware flow entries that @match
-+	 * selects, in @stats. With more than one matching entry, report the
-+	 * most recent use. Return 0, or -ENOENT when no entry matches.
-+	 * Optional, only needed by drivers that use ieee80211_sta_flow_prio().
++	 * @sta_set_scs:
++	 * Called with the SCS descriptors that a station requested, after
++	 * cfg80211 validated them. Optional, only reached when the wiphy
++	 * advertises %NL80211_EXT_FEATURE_SCS. Without it, every descriptor
++	 * with a QoS Characteristics element is declined.
++	 *
++	 * - The @status entries arrive zeroed, which means accepted. Write
++	 *   only refusals, as IEEE status codes, at the index of the
++	 *   descriptor.
++	 * - Decline a descriptor only when its traffic description cannot
++	 *   be served. mac80211 classifies frames in software either way.
++	 * - A declined add or change keeps the previous descriptor of that
++	 *   SCSID. An accepted add or change without a traffic description
++	 *   ends the device stream of that SCSID.
++	 * - A removal only drops driver state, the status is ignored. A
++	 *   station going away drops its rules without a call.
++	 * - After a hardware restart every stored rule is passed again as
++	 *   an add, one per call, and the status is ignored.
++	 * - A negative return fails the whole request and leaves the rule
++	 *   set unchanged, so the driver must leave the device as it was.
++	 * - The descriptors belong to the MLD, not to one link.
 +	 *
 +	 * Called with the wiphy mutex held. This callback may sleep.
 +	 */
-+	int (*flow_offload_stats)(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_sta *sta,
-+				  const struct ieee80211_flow_match *match,
-+				  struct ieee80211_flow_stats *stats);
++	int (*sta_set_scs)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct cfg80211_scs_desc * const *desc,
++			   u16 *status, u8 n_desc);
  	int (*set_tid_config)(struct ieee80211_hw *hw,
  			      struct ieee80211_vif *vif,
  			      struct ieee80211_sta *sta,
 diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index ff3c856b5e29..c1a12d3876f2 100644
+index 78230779e7fb..004e21ff334e 100644
 --- a/net/mac80211/driver-ops.h
 +++ b/net/mac80211/driver-ops.h
-@@ -1589,6 +1589,35 @@ drv_flow_offload_flush(struct ieee80211_local *local,
+@@ -1543,6 +1543,32 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
  	trace_drv_return_void(local);
  }
  
-+static inline int
-+drv_flow_offload_stats(struct ieee80211_local *local,
-+		       struct ieee80211_sub_if_data *sdata, struct sta_info *sta,
-+		       const struct ieee80211_flow_match *match,
-+		       struct ieee80211_flow_stats *stats)
++static inline int drv_sta_set_scs(struct ieee80211_local *local,
++				  struct ieee80211_sub_if_data *sdata,
++				  struct sta_info *sta,
++				  struct cfg80211_scs_desc * const *desc,
++				  u16 *status, u8 n_desc)
 +{
 +	int ret;
 +
 +	might_sleep();
 +	lockdep_assert_wiphy(local->hw.wiphy);
 +
-+	if (!local->ops->flow_offload_stats)
-+		return -EOPNOTSUPP;
-+
-+	if (!sta->uploaded)
-+		return -ENOENT;
++	if (!local->ops->sta_set_scs || !sta->uploaded)
++		return 0;
 +
 +	sdata = get_bss_sdata(sdata);
 +	if (!check_sdata_in_driver(sdata))
 +		return -EIO;
 +
-+	trace_drv_flow_offload_stats(local, sdata, &sta->sta);
-+	ret = local->ops->flow_offload_stats(&local->hw, &sdata->vif, &sta->sta,
-+					     match, stats);
++	trace_drv_sta_set_scs(local, sdata, &sta->sta, n_desc);
++	ret = local->ops->sta_set_scs(&local->hw, &sdata->vif, &sta->sta, desc,
++				      status, n_desc);
 +	trace_drv_return_int(local, ret);
 +
 +	return ret;
@@ -193,89 +165,175 @@ index ff3c856b5e29..c1a12d3876f2 100644
  static inline int drv_set_tid_config(struct ieee80211_local *local,
  				     struct ieee80211_sub_if_data *sdata,
  				     struct ieee80211_sta *sta,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c52dcf2a28ba..41518764ee12 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2270,6 +2270,7 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
+ 		      u16 *status, u8 n_desc);
+ int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
+ 		       const u8 *peer, struct cfg80211_mscs_desc *desc);
++void ieee80211_sta_scs_reconfig(struct sta_info *sta);
+ void ieee80211_sta_scs_free(struct sta_info *sta);
+ bool ieee80211_flow_classify(struct sta_info *sta, struct sk_buff *skb);
+ void ieee80211_flow_learn(struct ieee80211_rx_data *rx);
 diff --git a/net/mac80211/scs.c b/net/mac80211/scs.c
-index d3b120770a83..a02bd7c90b1f 100644
+index 13560cdf5dd8..00c58eaa3057 100644
 --- a/net/mac80211/scs.c
 +++ b/net/mac80211/scs.c
-@@ -275,8 +275,41 @@ ieee80211_flow_expired_find(struct ieee80211_mscs_sta *mscs)
- 	return NULL;
+@@ -6,6 +6,7 @@
+  */
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
++#include "driver-ops.h"
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
+ 
+@@ -40,6 +41,8 @@ static void *ieee80211_scs_rule_copy(const struct cfg80211_scs_desc *src,
+ 	struct cfg80211_scs_desc *dst = pos;
+ 
+ 	memcpy(dst, src, len);
++	/* A restart replays the stored rule to the driver as an add */
++	dst->req_type = NL80211_SCS_REQ_ADD;
+ 	pos += len;
+ 
+ 	if (src->qos_char_len) {
+@@ -474,6 +477,7 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
+ 	struct sta_info *sta;
+ 	unsigned int n_alloc;
+ 	u8 i, n_rules = 0;
++	int ret;
+ 
+ 	lockdep_assert_wiphy(wiphy);
+ 
+@@ -498,8 +502,20 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
+ 	scs = kvzalloc(ieee80211_scs_sta_size(old, desc, n_desc, n_alloc),
+ 		       GFP_KERNEL);
+ 	if (!scs) {
+-		kfree(rule);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto free;
++	}
++
++	if (sdata->local->ops->sta_set_scs && sta->uploaded) {
++		ret = drv_sta_set_scs(sdata->local, sdata, sta, desc, status,
++				      n_desc);
++		if (ret)
++			goto free;
++	} else {
++		/* Without a driver, no traffic description can be served */
++		for (i = 0; i < n_desc; i++)
++			if (desc[i]->qos_char)
++				status[i] = WLAN_STATUS_REQUEST_DECLINED;
+ 	}
+ 
+ 	if (old) {
+@@ -520,6 +536,9 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
+ 			continue;
+ 		}
+ 
++		if (status[i] != WLAN_STATUS_SUCCESS)
++			continue;
++
+ 		if (at < n_rules)
+ 			rule[at] = desc[i];
+ 		else
+@@ -540,6 +559,12 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
+ 		kvfree_rcu(old, rcu_head);
+ 
+ 	return 0;
++
++free:
++	kvfree(scs);
++	kfree(rule);
++
++	return ret;
+ }
+ 
+ static struct ieee80211_mscs_sta *
+@@ -642,6 +667,31 @@ int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
  
 +/*
-+ * An expired entry survives while the hardware still forwards its flow. The
-+ * offloaded uplink frames do not reach the learn path, so the flow is dropped
-+ * from the hardware, and a changed priority is learned from its next frames.
-+ * An entry that does expire is dropped as well, since it carries the learned
-+ * priority.
++ * A restarted device lost every stream, so program them again. A refusal
++ * changes nothing here: the rule stays and mac80211 keeps classifying for it.
 + */
-+static bool ieee80211_flow_entry_refresh(struct ieee80211_sub_if_data *sdata,
-+					 struct sta_info *sta,
-+					 struct ieee80211_mscs_sta *mscs,
-+					 struct ieee80211_flow_entry *entry)
++void ieee80211_sta_scs_reconfig(struct sta_info *sta)
 +{
-+	struct ieee80211_flow_match match = {
-+		.key = &entry->hkey.key,
-+		.fields = mscs->layout,
-+	};
-+	struct ieee80211_flow_stats stats = {};
-+	int err;
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_scs_sta *scs;
++	u8 i;
 +
-+	err = drv_flow_offload_stats(sdata->local, sta->sdata, sta, &match,
-+				     &stats);
-+	if (err != -ENOENT)
-+		drv_flow_offload_flush(sdata->local, sta->sdata, sta, &match);
++	lockdep_assert_wiphy(local->hw.wiphy);
 +
-+	if (err || time_after_eq(jiffies, stats.lastused + mscs->timeout))
-+		return false;
++	scs = wiphy_dereference(local->hw.wiphy, sta->scs);
++	if (!scs)
++		return;
 +
-+	WRITE_ONCE(entry->last_update, stats.lastused);
++	/* One rule per call, so no status array has to be allocated */
++	for (i = 0; i < scs->n_rules; i++) {
++		u16 status = 0;
 +
-+	return true;
++		drv_sta_set_scs(local, sta->sdata, sta, &scs->rule[i], &status,
++				1);
++	}
 +}
 +
- /* Return the time until the next entry expires, zero when none is left */
- static unsigned long ieee80211_flow_gc_mscs(struct ieee80211_sub_if_data *sdata,
-+					    struct sta_info *sta,
- 					    struct ieee80211_mscs_sta *mscs)
+ void ieee80211_sta_scs_free(struct sta_info *sta)
  {
- 	struct ieee80211_flow_entry *entry;
-@@ -294,6 +327,9 @@ static unsigned long ieee80211_flow_gc_mscs(struct ieee80211_sub_if_data *sdata,
- 		if (!entry)
- 			break;
- 
-+		if (ieee80211_flow_entry_refresh(sdata, sta, mscs, entry))
-+			continue;
-+
- 		spin_lock_bh(&mscs->lock);
- 		ieee80211_flow_entry_free(&sdata->u.ap, entry);
- 		mscs->n_entries--;
-@@ -326,7 +362,8 @@ static unsigned long ieee80211_flow_gc_sta(struct ieee80211_sub_if_data *sdata,
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
- 	list_for_each_entry(mscs, &sta->mscs, list) {
--		unsigned long mscs_delay = ieee80211_flow_gc_mscs(sdata, mscs);
-+		unsigned long mscs_delay = ieee80211_flow_gc_mscs(sdata, sta,
-+								  mscs);
- 
- 		if (mscs_delay && (!delay || mscs_delay < delay))
- 			delay = mscs_delay;
+ 	struct ieee80211_mscs_sta *mscs, *tmp;
 diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index a3262182aae7..063fb5722369 100644
+index ea46c3cca21a..4720ea912e5c 100644
 --- a/net/mac80211/trace.h
 +++ b/net/mac80211/trace.h
-@@ -1057,6 +1057,13 @@ DEFINE_EVENT(sta_event, drv_flow_offload_flush,
- 	TP_ARGS(local, sdata, sta)
+@@ -1023,6 +1023,33 @@ DECLARE_EVENT_CLASS(sta_event,
+ 	)
  );
  
-+DEFINE_EVENT(sta_event, drv_flow_offload_stats,
++TRACE_EVENT(drv_sta_set_scs,
 +	TP_PROTO(struct ieee80211_local *local,
 +		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_sta *sta),
-+	TP_ARGS(local, sdata, sta)
++		 struct ieee80211_sta *sta, u8 n_desc),
++
++	TP_ARGS(local, sdata, sta, n_desc),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u8, n_desc)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->n_desc = n_desc;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " %d descriptors",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->n_desc
++	)
 +);
 +
  DEFINE_EVENT(sta_event, drv_sta_statistics,
  	TP_PROTO(struct ieee80211_local *local,
  		 struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 44feb80274c6..7a9ff3a3d2e3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1766,6 +1766,8 @@ static void ieee80211_reconfig_stations(struct ieee80211_sub_if_data *sdata)
+ 		     state < sta->sta_state; state++)
+ 			WARN_ON(drv_sta_state(local, sta->sdata, sta, state,
+ 					      state + 1));
++
++		ieee80211_sta_scs_reconfig(sta);
+ 	}
+ }
+ 
 -- 
 git-series 0.9.1
