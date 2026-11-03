@@ -1,57 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.120
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793709223;
-	b=x+V9GHIkbE9FEmRqgwiig1b9K0nuCKrFrymXv4Z5r0cW0RV5CIDDRkj3MfmpHOfTL3ZD
-	 nLWQtSotf+tpkohKYNawDtDTSrsJztdhhb1DOIzonEjvmu9Ix5R0Bs8Mre2MOIWq0Lhhp
-	 MAMlRbhxqGzWrFwN0qf110xogsJCES+1JPUnCI7LVl855RegaO5fcoKL9ehXmH7vn4Byr
-	 KfysqwFjjsDNB2lT6dKbIc0GZn5eVZYDOWovaO/yZsA5z5K+X8ucxTh6aZENHyzb14IvW
-	 0Mx3qayp72xpSOjh2ZYDfc+GDRy6auoYPrDf/pAZYL4rKMeQ1DvIPhclobIqHWwbKVw==
+	t=1793712933;
+	b=AlYVKka6qqRWrs+JFtPiJREnQ6Md9R2CMHG7eDHqv1/yn/yH4/XenvExAA0d29fOfCmF
+	 Ocq3ou3Wuchf0hMPnxsvJyi3Rz0tn9cdTASJtRhuFIhJkpEo+/J3c0P4l6GApCLfzEu7W
+	 QeTcJ40FDRTF0YLASpxXpDEd7tj3DFB0SVRd6Q5NWtoWgDJonduq6KJbi9cCvl6D50rKg
+	 28Q5U+ZEY7a5D/a7fVyjNzEggH+N3ZURGY4dXKaMbli6mdrqjcD5GVwW4uMmpqxq3AEdT
+	 lnZ9lAaaeKwOgBEAj+eM78mnxRwst7kP7VwBOzKzERTkLSaiTAWJc6v6G5Me+vt5Msw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793709223;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793712933;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=HUat9nsOmLCyAsqZk4Bi3Mhnvn0vqy2uZqBBdAs07do=;
-	b=lAjgfwIbN8y6ZPEaxbc8BAsUFL9G4EK3zxOzG9hRSYo3MV5jcAJAjQHjnx/7A1c8UbNC
-	 y2dtlGwJVuNbN2etDSvIxT4qGTtZX2iYiQpt4XCGSkHIQVchZpGyEyes8+CDnOz3Uhl7i
-	 ZJzkN+oPhRLthQWpYJftnfTNW4/kSkkEcPY4LBzKyZ4rXNUcczYJ8BBEJw/C26PdCBeWH
-	 0ejuF+QyhtFUjo868lGE+TpuvGnGISWLeWRI17Tgleb2VZYAJAL7rHUDYjmfvRWZhodEJ
-	 UKv1P4gst7RmXHgbjhKcmEoP1KrCCKFA/+PDedFZkGTuNQwo2PDValQp2gn0q4xYTyw==
+	bh=zqqqt1bQikgmsTno5raObEPlIaVtYNiSxU2NrfmKzh8=;
+	b=C7qspG/YFb4aVJwkg5JpGa90itMbma5CFcPRsWAXU5qQG6EcE53Vhx8BYkXCYIv3gO7l
+	 x7kCdQ4ZAg21Ytu8+Yo1STRO4J63WN5aYqHiHEOFerU0pIBtGyr2fp0KPBguNSpXGGUj9
+	 OxYRJOYch5xMbSdkSUC9P5G15vqRoUBcoAF63U0TYBqyetClEtXy4qat+f8qMrJ4SORk/
+	 lt2hxQR/qnQ/vaKvRHwxHGu1vHOcU/IwUxFZvbBxSvVyhvqHTz2Mytup6CP8U/5rXrov2
+	 +cvWm/p0Njjbs0jkLu0zip8ja6bgHe+RwAp3VhehtDzHhL3H731SCuH9TAKauLDUQnQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=proton.me;
-	spf=pass smtp.mailfrom=proton.me;
-	dkim=pass header.d=proton.me header.i=@proton.me header.a=rsa-sha256 header.s=protonmail2 header.b=d2Pdlbqf;
-	arc=none smtp.remote-ip=79.135.106.120
-Received: from mail-106120.protonmail.ch (mail-106120.protonmail.ch [79.135.106.120])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZmIombpa;
+	arc=none smtp.remote-ip=209.85.221.54
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA351606D83B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 12:33:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EA351606D83B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EFF2606A32E
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 13:35:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0EFF2606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=proton.me header.i=@proton.me header.a=rsa-sha256 header.s=protonmail2 header.b=d2Pdlbqf
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail2; t=1793709219; x=1793968419;
-	bh=HUat9nsOmLCyAsqZk4Bi3Mhnvn0vqy2uZqBBdAs07do=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=d2PdlbqfW+pSqZri23MJnTYsM+Pf0m8yVVNyaLn5SLB0C1p5/jka6+LP3nv484RkW
-	 +WGp8evzLMV2N8+592thWrhtF4WcHcWXeXM+fpEBHE1jNmv7IDOPKhLmhi/+5eh6p1
-	 5uRcF5cb2dOKH+uB1Hh8ErhSowQwTWKR4ewwhTNC4o8HDqHfG5V2OUa8AyI5IC28gs
-	 zwiDYHRncApeUTbzzJksO/8b79SXx7xycjgA9dTabARMrrXf1c+oAwjtq/Hf3f8s0v
-	 B9h6uy3SQvixGJu4rpD+Yp4vG5/FKn5K2pg+WbqOp/pYDidEyVvlm8XnDzRRgFL/Ji
-	 VI8kqC7nMHEMg==
-Date: Tue, 03 Nov 2026 12:33:34 +0000
-To: Johannes Berg <johannes@sipsolutions.net>
-From: Paolo Bertinetti <paolobertinetti200f4@proton.me>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+56f5119a6b206041a6b7@syzkaller.appspotmail.com, syzkaller-bugs@googlegroups.com
-Subject: [PATCH wireless] wifi: cfg80211: check name length before rfkill copies it
-Message-ID: <20261103123332.707584-1-paolobertinetti200f4@proton.me>
-Feedback-ID: 117280896:user:proton
-X-Pm-Message-ID: e589bd1a2c632ba1c3ccdf9684c7105d7ddb54d7
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZmIombpa
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-48e0d1da913so582047f8f.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 05:35:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793712931; x=1794317731; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=zqqqt1bQikgmsTno5raObEPlIaVtYNiSxU2NrfmKzh8=;
+        b=ZmIombpa+vjIFomYPhSt7J+C3mIU2PimU68TMd3aqil20orO3pB047VhwxX/hMMleZ
+         2OHBWhLWzVGW+cFSTuBIzTdRhcJHtnCH+V3fR3I4HPrIo18S2o50aVIzBPW3XsQwuqXd
+         61OZe3wSLrkE4hdeCh/lz7Ql5hM8yjhVpjVWlB/3Key+jLNue6gjGkRLk/l7XM2BSr9B
+         MFP3Kpd2TeXNAp4oHg02YdhgUQ6QtLPm1fnjQf9QtEvZdFGTnRhHJVezOW57SgCrus+3
+         Zd5E+Pvvx2uNHCQRCFYCOeLSoO109TzZMMT9HfRRLc+u5VaNfHyK7Tg/HBZSfDEkhIEU
+         k2FA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793712931; x=1794317731;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=zqqqt1bQikgmsTno5raObEPlIaVtYNiSxU2NrfmKzh8=;
+        b=gUNpAwazZQPpUTTrqGWzAsz2BZmAux8ney/bexRFz+Gzu/Ke5OG6faP53rlQgVlOIb
+         EI4tgbYdbpT0nZYU76/mzCb/0xvJEOIAlGD8J3YpecGQM215D+9nMfWLq5HIouSmXfLJ
+         UwDpx9laglJjv7uzn40TAYMWEGedLzKz5THb4bdMOwv4rEZVA8255taW9pVV8XtLpNCq
+         bMfiGI24k6svZWuH/s8Ysv4UiGLamv0gqrB2XqVSQ0u+0PMP7Lzh37ZZdWb32DruJLbm
+         qbEV87DT+sJ4RWTA8RRBu2HmhmboVINBGf0443kOoQyGhozOhM79Sfa+MSHVQWnVe4Sv
+         473Q==
+X-Forwarded-Encrypted: i=1; AKwUvByob/SFj/e7VPTXJRLDV7H/Zt1FEUBzveP50hHclk7d4yYN0dzVL3naw5FdS8SvvmsJ3mTM9WtFH1iqx0Gm6Q==@vger.kernel.org
+X-Gm-Message-State: APuU4Z8rRV/Mwrzc+5XrUBeAMpFzVI9hAkV1Yo3bSRfmRYJFIVU1Ve3v
+	Q48qXI5eHsQY3IXZOcpY2b6+dDiPpJ3B1SXdXzRUL5tn1PBZFzLTB9/U
+X-Gm-Gg: AYBFou3RIWkZS55Fn0p+AeNQ4NgNl/i9h2zg5hEZZy69mcTdvSLTT0pKPDJ8u03pAE1
+	nbgaTbz46m/s3KH7501iZO03NbnX0jIeTCCO0BpeOG6jYmALHWCGMEZZjVnqHGjcrA2k5jbLOKP
+	Oe1O21U4m2NrPe0jspwZcvd7vHQoW2ni4+t2xoVSMHG2Lq9xk4E9nNhqN8n/xkjbGeWtkqEobht
+	kHS1jhqnLPsBWjG79Sf0XuzVNom6mKQaep4xuzPOZ9/11z6dEud3Gij0aWFHstconJnXb9dLZAc
+	wVUxx8JBqIInqxGzPdlyI2SJ0Y6yioFPOFVTyyW22bTXmClxV2f62Yhw6kQplDGWqtjhVFJDS0i
+	YHUZ2x7AVW2TV+UIVecggymdZU/V+/g/ATbc5IRt+YWitHEX+wFUXridNEhwbj2bCD4SQltDLXK
+	54QFNpMzJOlstNapMJFYxdvqdX6eXHL4e3E84GL6qcARm/tLr4KMKz+Y/rMYsAKt3pr9pKYgAzJ
+	jB7OlPciuVwVlRSIdKtVTaQZd3u515NOikqLA1ZyTYBfj6T9soHwuDx/uJNvo7aHH2ylKL8c2Il
+	oNE9MFUn4f+QU+J6Fx0511HEYHoHw1HW4e1RJdd5VCwQYrP9ryY3p7MlhGpzILKaA0an9AtPyRg
+	9dkgz+TTTTZJdVzk+bYLXsPagkA83Ov/QPmZVv1JcfEF61qdp7wYHNnHSF2NAo606ug9VdkW01I
+	Cgass+aMWMV+zC5sPEzgIf6uIAwHemBcSDBX8kJo2Y+Qpgp3dYwHVHOw==
+X-Received: by 2002:a05:6000:250a:b0:48e:643e:de82 with SMTP id ffacd0b85a97d-48e6e2cb652mr30505104f8f.11.1793712931006;
+        Tue, 03 Nov 2026 05:35:31 -0800 (PST)
+Received: from localhost.localdomain (dynamic-2a00-1028-8388-a84e-d09e-6586-7547-87ae.ipv6.o2.cz. [2a00:1028:8388:a84e:d09e:6586:7547:87ae])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b80eb1sm26661746f8f.34.2026.11.03.05.35.29
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 03 Nov 2026 05:35:30 -0800 (PST)
+From: Josef Schlehofer <pepe.schlehofer@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+	JB Tsai <jb.tsai@mediatek.com>,
+	Allan Wang <allan.wang@mediatek.com>,
+	Quan Zhou <quan.zhou@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 0/2] wifi: mt76: mt7925: LED support for USB adapters
+Date: Tue,  3 Nov 2026 14:35:26 +0100
+Message-ID: <20261103133528.53197-1-pepe.schlehofer@gmail.com>
+X-Mailer: git-send-email 2.54.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -61,67 +108,42 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-syzbot reports a WARN when mac80211_hwsim creates a radio with a
-very long name:
+MT7925 USB adapters such as the NETGEAR A9000 have a status LED on
+GPIO 8 of the chip. MediaTek's Windows driver asks the firmware to
+switch it with UNI command 0x2a, but the firmware in linux-firmware
+does not act on that command [1].
 
-  add_uevent_var: buffer size too small
-  WARNING: lib/kobject_uevent.c:688 at add_uevent_var+0x2db/0x460
-  Call Trace:
-   rfkill_dev_uevent+0x2f/0x1f0
-   rfkill_register+0x170/0x9b0
-   wiphy_register+0x2a5f/0x3290
-   ieee80211_register_hw+0x3d72/0x4b30
-   mac80211_hwsim_new_radio+0x32f1/0x5990
+This series drives the pin from the host instead. The layout of the
+CBTOP GPIO block comes from the coda headers in MediaTek's gen4m driver
+for MT6639, which uses the same CBTOP register map as MT7925. The first
+patch lets the mt76 core register an LED that only provides
+brightness_set_blocking, which a USB driver needs. The second patch
+adds the LED to mt7925.
 
-Since commit b6c27cf5fe5d ("wifi: cfg80211: check wiphy name in
-wiphy_register()"), the name is only checked there, but wiphy_new_nm()
-already passes it to rfkill_alloc(), which copies it. A name longer
-than NL80211_WIPHY_NAME_MAXLEN thus ends up in the rfkill uevent,
-which is what the limit was added to prevent.
+Tested on a Turris Omnia with an A9000 and firmware 20231227 over
+several days. The LED follows the throughput trigger and manual
+brightness changes, and turns off when the radio goes down.
 
-The length check depends only on the name and cannot race, so do it
-in wiphy_new_nm() before rfkill_alloc().
+Sean, JB, is it fine to drive these GPIO registers from the host, or
+does the firmware rely on GPIO 8 staying in its default function?
 
-Fixes: b6c27cf5fe5d ("wifi: cfg80211: check wiphy name in wiphy_register()"=
-)
-Reported-by: syzbot+56f5119a6b206041a6b7@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=3D56f5119a6b206041a6b7
-Assisted-by: LLM
-Signed-off-by: Paolo Bertinetti <paolobertinetti200f4@proton.me>
----
+[1] https://lore.kernel.org/linux-wireless/20261012125310.13917-1-pepe.schlehofer@gmail.com/
 
-Notes:
-    Tested in QEMU on v7.4-rc1: a 6000 byte hwsim name no longer WARNs
-    and the rfkill gets the phy%d name of the wiphy. cfg80211/mac80211
-    KUnit tests pass.
-   =20
-    Duplicate or phy<N> names still reach rfkill unchanged. That is
-    cosmetic, and fixing it needs rfkill allocated later or renamed.
-   =20
-    Based on v7.4-rc1, wireless.git doesn't have b6c27cf5fe5d yet.
+Josef Schlehofer (2):
+  wifi: mt76: allow LEDs with only brightness_set_blocking
+  wifi: mt76: mt7925: add LED support for USB adapters
 
- net/wireless/core.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 12 ++++-
+ .../net/wireless/mediatek/mt76/mt7925/init.c  | 51 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  2 +
+ .../net/wireless/mediatek/mt76/mt7925/regs.h  |  8 +++
+ drivers/net/wireless/mediatek/mt76/mt792x.h   |  2 +
+ 5 files changed, 73 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f4153c249599..d2868e57a030 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -662,6 +662,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *o=
-ps, int sizeof_priv,
-=20
- =09/* remember the name, used/checked during registration */
- =09if (!requested_name || !requested_name[0] ||
-+=09    strlen(requested_name) > NL80211_WIPHY_NAME_MAXLEN ||
- =09    dev_set_name(&rdev->wiphy.dev, "%s", requested_name)) {
- =09=09int rv;
-=20
 
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
---=20
-2.53.0
-
+base-commit: 991a73f4909f1348ffb4b38765cdb522a775e4c2
+-- 
+2.54.0 (Apple Git-157)
 
