@@ -1,49 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793701749;
-	b=qqiO8BcsP8a6ma4l6hY1AQTwknFXB8vCAU/ketQefTMxnrpmcSOrUQl8syaGaEOFzkAJ
-	 oVlJkHeJZOy0JiHc6g9GcP2SD9KPjtPvibHH92Ja9O4E4OupNFUej94Zd9Q3i1AskH8JX
-	 9/+WAl0YhNV5UCzKz1lJ3wlMgUlWUXGhl935hSfie2IkPg+eMTFNkPiVmE2TSu3PahC8R
-	 SjwcRr8l4G8PxRtAVuRQImqswdu86Zcb8K1oXTksdpMhTfjwCDcWkI6PHilWRXSO8RCwt
-	 Ls4U5mxeSnEhK3bMAhgWzm4aCtTHxrU07X5zEKr5Zlsw/h3XBWlUWaT236xVjC09E+Q==
+	t=1793702459;
+	b=YdL3mXuZa9obfzCvx6FhimxWq5iiNwH8s1MfYKNd1zfHgWY2qBmOcRL1yRmDxg4BZG07
+	 c3kN48LTyrbDuoCLUEbyaJJkLE7ihDmmU9dwHGlao2QEYMYq8L6+sPqOG0JL37RiDj+4N
+	 eRScWaws8SZ500dtweKgpFbgKKBISRERMkCevR8Nc4oaW5ZkPFoc+oeNNugNmDF0be8a4
+	 Np+guoRQtmM8nm5mIFKEzp2gKoNqPds80TpOYqsxVXFhcKrxV2BmDi5nFJCNzOOfkKkck
+	 sGAhjGcrWBNgC4BeCwhsbVjr15o2+78RBMxYymcR+lAtB6TTrG0MXpfd4msouFPC/ng==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793701749;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=lS8HPnWp/ZiXusc6VF2DVeURTql02ont/sKJfBhomm8=;
-	b=ShsbazpuKHZraVXLIsZ/8iVKDbdwT9504lizvLRrlB0rvsSgP8EmYrVY/vL90lr5FH+g
-	 6syk+ITbqd0Cz/hvWgJ1KPLvWUSHPuK+eSrwHkC5GAQkDNhJGZf+cUF+DsGau/FK+02ki
-	 543Q4qcm9bYIw6IPI2KXQuDb1AVr5NTwbRzFy38Dw64GbgM5wGPU7u9vrD7G9C04i/ua7
-	 vyOPwjbYfcav2NnT3yOP3m9nJ8EpX0sDQR+hTMC3vahUX+Rb5EMlYz5B8mqjqTn4+0GMk
-	 JaETgi88+QAaDJppZrDcVM4r4wxnTDqohR2qpHDCRNx1DrslBsuBYh3p7kIYjMgzR1A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793702459;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=iD8MUsnfG+gwEr4piWPtvFiUZsvtNz+QmKslAm5U2v0=;
+	b=EZSFyYJiqkhafHw9tydVE1C8UcFzpvfIKxdD6rUIR2gUieqqcFaV39K6PvsjBu3HPKoZ
+	 0QWc8ZOd7OxD6Yh6nnGxXQ19AAm4VITRY5w2ScwnBkVhtkU3U+TRyYAcLIzPeHrzd8igJ
+	 OQL/HZhGcVWMJN6JBD3i6kxctqCqmDRbEPkN9wcoRuOqk3hq7brH7XjQw/BpYLU0qXa5T
+	 6SzVDatsLshSY2Q4ZXBpc+4GhV1dtBceO3kiiobMqcV5RRMZ7Xu6uieY20+16i49It6N7
+	 xj2SoWZSr1fD4/EWU9jUKTt1wPEElgbm5zvek2ZuW4tSYv6FoIp7Qm8cQ1HqhK8nsEw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=iscas.ac.cn;
-	spf=pass smtp.mailfrom=iscas.ac.cn;
-	arc=none smtp.remote-ip=159.226.251.81
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hf7vFOQQ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AE86078499;
-	Tue,  3 Nov 2026 10:29:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0AE86078499
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-03 (Coremail) with SMTP id rQCowACXoZJyt+lqWao7AA--.3025S2;
-	Tue, 03 Nov 2026 18:29:06 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Wentao Liang <vulab@iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH RESEND] wifi: ath11k: release the rproc reference on teardown
-Date: Tue,  3 Nov 2026 10:29:15 +0000
-Message-Id: <20261103102915.1341148-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E4F60784B4;
+	Tue,  3 Nov 2026 10:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hf7vFOQQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 963081F0093A;
+	Tue,  3 Nov 2026 10:40:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793702459;
+	bh=iD8MUsnfG+gwEr4piWPtvFiUZsvtNz+QmKslAm5U2v0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hf7vFOQQ/d3CxJjXaTd4dJWmgKR9Frd7SHMnNvxpReYxf0Ps3shQxk644fYm8rMoO
+	 W8NgG25Rkve1DLxCJce8dJ3GHJP/kb4s/3mqBlPeRLZZ55XAoSDL2zNYlrhM/hqrtS
+	 RJcEpQU82Aoht3jeSs391paDKABAC+cCPDb6R+ecIYpL50V/bRXujKeXANOFamrggD
+	 8O2SIZtAqSLyTDXC82D7vWkVg4L7I/RKOYVV0lFUZr07m0v3H108gbU9sLouBZJPF/
+	 EOyVyBzFJatdVMU9z1S4JhhrN6GHGaSm081XBTgnlLvtTY4x5AvIW2niCMdYlvX8t7
+	 vV1z6OSPFZalw==
+Date: Tue, 3 Nov 2026 11:40:56 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Wentao Liang <vulab@iscas.ac.cn>
+Cc: stable@vger.kernel.org, Jeff Johnson <jjohnson@kernel.org>, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ath11k@lists.infradead.org
+Subject: Re: [PATCH RESEND] wifi: ath11k: release the rproc reference on
+ teardown
+Message-ID: <20261103-tidy-mustard-moth-d5c3bd@quoll>
+References: <20261103102915.1341148-1-vulab@iscas.ac.cn>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -53,83 +57,73 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowACXoZJyt+lqWao7AA--.3025S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7CrW8XF43Cw17Xr4rJr45Awb_yoW8trW7pF
-	Z7W3yDKFZ8Ca1xtw4kXr48Z3WxZ3W3t3y3WrW3K3s3ZwnxJFyUt3W5XFyjqryYkry8GF1a
-	vFWay3yUuFyqy3DanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv014x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26F4UJVW0owAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
-	6r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
-	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26ryj6F1UMIIF0xvE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWx
-	JVW8Jr1lIxAIcVC2z280aVCY1x0267AKxVWxJr0_GcJvcSsGvfC2KfnxnUUI43ZEXa7VU1
-	SksDUUUUU==
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwYAA2rpnO5vkQABsM
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261103102915.1341148-1-vulab@iscas.ac.cn>
 
-ath11k_core_get_rproc() looks up the target remoteproc with
-rproc_get_by_phandle(), which takes a device reference and a reference on
-the remoteproc driver's module.  The resulting pointer is stored in
-ab_ahb->tgt_rproc and never released: ath11k_ahb_free_resources() only
-tears down the firmware resources, and the probe error paths after the
-lookup jump to err_core_free without dropping the reference either.
-rproc_shutdown() does not release it, it only drops the power reference.
 
-Release the reference when the AHB resources are freed and on the probe
-error path, so that repeated bind/unbind cycles no longer accumulate
-remoteproc references and the remoteproc module can be unloaded again.
+On Tue, 03 Nov 2026 10:29:15 +0000, Wentao Liang wrote:
+> ath11k_core_get_rproc() looks up the target remoteproc with
+> rproc_get_by_phandle(), which takes a device reference and a reference on
+> the remoteproc driver's module.  The resulting pointer is stored in
+> ab_ahb->tgt_rproc and never released: ath11k_ahb_free_resources() only
+> tears down the firmware resources, and the probe error paths after the
+> lookup jump to err_core_free without dropping the reference either.
+> rproc_shutdown() does not release it, it only drops the power reference.
+> 
+> Release the reference when the AHB resources are freed and on the probe
+> error path, so that repeated bind/unbind cycles no longer accumulate
+> remoteproc references and the remoteproc module can be unloaded again.
+> 
+> Fixes: ba929d6fe31a ("ath11k: Remove rproc references from common core layer")
+> Cc: stable@vger.kernel.org
+> Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+> ---
+>  drivers/net/wireless/ath/ath11k/ahb.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
 
-Fixes: ba929d6fe31a ("ath11k: Remove rproc references from common core layer")
-Cc: stable@vger.kernel.org
-Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
----
- drivers/net/wireless/ath/ath11k/ahb.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 27d01411b6e9..cc93ca22d3ff 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -852,6 +852,16 @@ static int ath11k_core_get_rproc(struct ath11k_base *ab)
- 	return 0;
- }
- 
-+static void ath11k_core_put_rproc(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+
-+	if (ab_ahb->tgt_rproc) {
-+		rproc_put(ab_ahb->tgt_rproc);
-+		ab_ahb->tgt_rproc = NULL;
-+	}
-+}
-+
- static int ath11k_ahb_setup_msi_resources(struct ath11k_base *ab)
- {
- 	struct platform_device *pdev = ab->pdev;
-@@ -1262,6 +1272,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	ath11k_ahb_ce_unmap(ab);
- 
- err_core_free:
-+	ath11k_core_put_rproc(ab);
- 	ath11k_core_free(ab);
- 	platform_set_drvdata(pdev, NULL);
- 
-@@ -1295,6 +1306,7 @@ static void ath11k_ahb_free_resources(struct ath11k_base *ab)
- 	ath11k_ce_free_pipes(ab);
- 	ath11k_ahb_ce_unmap(ab);
- 
-+	ath11k_core_put_rproc(ab);
- 	ath11k_core_free(ab);
- 	platform_set_drvdata(pdev, NULL);
- }
--- 
-2.34.1
+
+Multiple things here:
+1. Your team ignored completely previous feedback. Multiple times.
+
+2. You use multiple identities with this email address, thus I doubt that we
+   speak with an actual person.
+
+3. Your bot does not even bother running checkpatch, right?
+
+4. Nothing of this was reproduced nor tested.
+
+5. Finally, the same feedback:
+You sent multiple independent patches, to multiple independent
+subsystems. The amount of these patches clearly suggest this was
+AI generated and most likely not tested.
+
+More importantly, you sent all this work without properly organizing
+relevant patches into patchsets. This makes reviewing difficult
+and might cause multiple reviewers to address the same issue.
+Replying to the entire set is impossible and requires handling each
+patch independently, instead of applying or discarding the set.
+Maintainers also won't see the bigger picture of your work. Quite
+worrying.
+
+This is on the verge of hostile patch: bomb us with so many
+contributions, we won't be able to handle them in efficient manner,
+like responding ONCE to ask you to slow down.  Considering all this
+is untested and LLM generated, I have even more doubts whether this
+should be considered for review.
+
+Please read kernel documentation BEFORE posting more work. It will
+explain you how to identify subsystems, how to organize your work per
+subsystem (so a patchset grouping multiple patches with a short cover
+letter), how to document the issue discovery method and what was
+or was not tested.
+
+Best regards,
+Krzysztof
+
+
+
 
