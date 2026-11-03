@@ -1,93 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.158.101
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793748414;
-	b=XymkUAQoGhLPOC/9lUazpt0kJBzs4DecwhkyuIK1Xh5pH/DK2EdtU5a8apnT0TYqlCOi
-	 FeURZtBDEhdl5om6emWgc403vKbwfaUyItNf3JNhvsS9FyDJuoivRamh34xMMtIjUoiYS
-	 Tw5R7OMKj/1l0sLSWvcsof0EsD4e+tCWVK/HuLSwbOlXnI7AJDc59muaMkSBDUaSgD1nx
-	 a76qmEBQikWCe0tsf8LT2IKLb2WKlt8GCNIshXyj37S2k1iKwbefhRirzWr5szSVIktOE
-	 7VZCMKpwKKDL94U6cf+bHksjvPCiYc9XDVpURRDDl7JIhR3W4HrYJMCvkjkBGzQYULw==
+	t=1793748669;
+	b=ufx3TD+Lv8bvrTsnVhVnLdfXTJFQtUpmDDmux+nwg9LAz0G+i3WX5x62cbHSbCXezCsv
+	 4oDaB2dOb9RKdkR1AR34rr7/S435oJC5thNJgVLcdkHVKxjgSgDn0N/xOuzL6tt+keZ2R
+	 Fur54rjm1ZTfqbvRtl7u1Hjs46PNwrZchpfqKynr4c7eyv9Y17NQzGk3lMPW87Cs/9AgQ
+	 LT46F9sjGLc/nSyZEt1h5qDYyHarOaKNJBuaktG1z50tvtwVoJWAnsDlSaOLLvUzEkke7
+	 d96osTj4XnWXN2C2qszxx7TKahiIfs+W/Qfzdzhm1WyXrTkgiNfWiykyii3YiePKNrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793748414;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=6GC1/D8rCTZG76ZRBb6JFA+whGRoK5mBSHc05PTJ2Kk=;
-	b=fYIl9C9l8BWFTIw6grLw3XMCoptY3lnrQbolZv+yVSgHEhfSzeclT5QdpOreUFyVBcWb
-	 xlaHRCxHWCF3uWyuGhAQn7SNRRzfEmUkfyxg3jzZUBbbYrd7AIPJgwt5UEsM3LJhdNG16
-	 SmDC6W/buwmAn/CVqTQN4RoaW4HZ1Ka7TzId4KV9XYB1vCE6yOm+bALBIUR48wBYrpoNT
-	 6BfWhhGOg/TRMeIPiV4IQfIIXrNUdzULRpweEvZFlcPQpkn81hWsvwuImATi+tKBt05tQ
-	 yL7T35cdra2rDSr4/BFCtNnVdHHQSo1/zaPtj/HwZ25pwVcD4iVeS0U0KVARWYvRiQQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793748669;
+	h=DMARC-Filter:Received:DKIM-Signature:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
+	 In-Reply-To:To:Cc:X-Mailer:X-CMAE-Envelope;
+	bh=/1t78VH49OICnCMyo1z5frvTtIlLEj9iqkcrMPmsj/E=;
+	b=IhjYZ430apW7aW4R8MJfuWbJCOQb9O8mfZ1IoC9KehIozaj5lftFeMJe8himpaIK+Xiv
+	 57MFc5FQnkQL8oHZ+IxRUpB5rTrQskPNXmERLgbPfLg2CcTg55fO5P/9M2MAI8aceL74I
+	 6DoItEEhXEzG0HFYs1GaxkIOB3aK4huDZnSjXMU78elqYraIemdzvryW1xONwOq8FsClH
+	 icdyAxrk3dmRz9fam3v2WMPe82aMKuIQDtYw1ZeQJVX69Q4UFW4th1uAwN8RYmh4cimD1
+	 oBUO+G2JyiuLX/YvoXcDS1aZ0/cPB2gLgFdrKq2gIpkxmIPniZqLbHGgZWMIsVksmCA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O9Nn3YTE;
-	arc=none smtp.remote-ip=209.85.128.51
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=mythread.it;
+	spf=pass smtp.mailfrom=mythread.it;
+	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b="n/7q6u22";
+	arc=none smtp.remote-ip=62.149.158.101
+Received: from smtpcmd02101.aruba.it (smtpcmd02101.aruba.it [62.149.158.101])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39917606A326
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 23:26:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 39917606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29238606A329
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 23:31:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29238606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O9Nn3YTE
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4a5b2be99a8so408295e9.2
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 15:26:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793748411; x=1794353211; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=6GC1/D8rCTZG76ZRBb6JFA+whGRoK5mBSHc05PTJ2Kk=;
-        b=O9Nn3YTE8dyOZfeNiT5qpPNlfOm3EpYECrP3B0GPokTicn25MDq/RklC3lk/43H4o2
-         YwK5z7zAxc+yq5rl3ajLofqGchDVxhiHP4kdq85jIj5F70xyhoRXzXtkg2lW02UV/BF/
-         0XtglXYfHNqnVdECtu8K0Y4rNO9WiqaDuopEEZCCIVpGbHrAY1EgS3Z4YZBYhlxmFVAv
-         RKqPEJcilYuUi2qnG7qmEw7L9cNB3HppLx17T4mXPAvR49XenhXqZgIMr9MtTrfMk57w
-         pj4Syrncp0XCTySp4/9eonuhN307DFVRjQIccB1QOecqL76g28Zlbl1dUvm7fhW8LcG8
-         UTLA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793748411; x=1794353211;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6GC1/D8rCTZG76ZRBb6JFA+whGRoK5mBSHc05PTJ2Kk=;
-        b=L09jz9fSwe01iXFpYqiEcv6UbFPdppuT2MJ8YW/52ErEPIn2fiuzKp6hTkicbkY05F
-         9r9hhdHrq7WVOFZ9k+g8qm0ZoAs72s0XvNJIzCyqAmHNVd2e5Xi7fJiXjR68md7Ccj7w
-         /4P5bQkuJJlKCPRDXfgo0takeUBhrTDc+IUY9P98hQPpfTdMGayWHxIF15dOlvkeUSF7
-         hsFquUzTfptTFM5PntDgwgVHtCxKAN87tvyvzr020yWTxEgY3rDAxFFZZ7HptAU03pNt
-         /AhD8M+MXkJugYAiXDa+sMtY+LgQhuQMr4pEe0msPfx2RrfP5oe6ZiV7jK9G3b/en57R
-         kgHQ==
-X-Forwarded-Encrypted: i=1; AKwUvBw2v0fy1unfqBNmZTqhiJyMa/af+0KmNic4mRAcnduVKD8Kuh5updHGHABq7TOHQm1dfchlZsOEuBaAsZfj3A==@vger.kernel.org
-X-Gm-Message-State: APuU4Z+CxKSkZ/y3Fovz8xCYmb+YlK5sc0bJY3MGVEpiqqwkjjtgNarB
-	hLZMCTyWiylbgFLvI3lK1jBcI5El/DKCV6j8SZyWh5dGpDT9iWi1WOI=
-X-Gm-Gg: AYBFou1YjyUqs++NuxLRFP0UDG2IONhN4xA+DWsLMloq1q/vbp71TARDozgwSwEPhE6
-	xq+9N481XcYL8MfCinJdnOsNjWwyQVBbvf7O91R1XHIilUpk2W58hjUS+bZRPQR0wzaijTKebf0
-	ZlErWAEKszZujJOyfQs469BH5cr86G/eIa5ufLsTQorrr9LSumFBCL4FvUg5Lkl9tlrOj2DduM3
-	gGukjGvgY0mNPsthIjRfAxbEJXlqMWVBfO4LZQj1xWXqdFL9X3+C6WQsHzeWmsKwhFJjDypvMPz
-	OEdF0LfVlYQBg9spHM7qYTf0GujyUMAqfhi2ydFNFMZwD5d8d4OI68qz4p7NQxy+A7d+B2FAn6/
-	iw/bgDXg+1qwq2jxFs9iF8kbYx6UzWHLiAmn7ySOe5RxTbk0jVC9XI6anujnrqjeiwtSDU5EOtZ
-	SBM4B5TFJOl+suRK7X9yNDTGD4rHBgAn7hPcML9V0bvaVQUAGHMhbIG01/GRPKbcypjougtgKnU
-	lLTn8WV3Eks+mMstGwTliXRqhJ7WhW6W92O1VJCBEyijT4WqOvmx6ENk2xs00gZsWk/tbuL+NFa
-	3s0V9Ghql0imyXXk1V0=
-X-Received: by 2002:a05:600c:83c5:b0:4a1:78c5:79f5 with SMTP id 5b1f17b1804b1-4ac1970b976mr282294535e9.33.1793748411490;
-        Tue, 03 Nov 2026 15:26:51 -0800 (PST)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b43c17ecdasm13822005e9.5.2026.11.03.15.26.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 15:26:50 -0800 (PST)
-From: Tristan Madani <tristmd@gmail.com>
-To: =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= <jerome.pouiller@silabs.com>,
-	linux-wireless@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH wireless] wifi: wfx: validate num_tx_confs against message length
-Date: Tue,  3 Nov 2026 23:26:50 +0000
-Message-ID: <20261103232650.13350-1-tristmd@gmail.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=n/7q6u22
+Received: from [192.168.1.237] ([94.34.125.0])
+	by Aruba SMTP with ESMTPSA
+	id ONxyxz48a7fl5ONxzxPx9u; Wed, 04 Nov 2026 00:30:59 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1793748659; bh=WRkBwj9Lh4y4B90qy4T7LLf3UBUQstNlJd97j2Qv8fA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=n/7q6u225h+0SYOHAB3KQakjVvV9yICT5JyroEtMnt2tewKaMFrIvXhNAahojnvFO
+	 Tpvq1BBUb12sSgHQ6OFwa+y84bxJZFMxyX/mzuYKQjSPhcYylBJ+E+IL8SlEmMaaRJ
+	 6oit6w6zMogA8ySLiB1M5SyxIY8Cxgx0EJVeXZ3IOcqafzAFeilG8aRrz1t1VIpSM3
+	 eJ0B7BAor273NwgaXMeUIdr+dvS8hI34YOXI3mZ7Ug9ImoRExBjsPHooYE+LM7j2Ux
+	 BT43a8XSQrL3sCgZnYrZwqtkvPygfV01dR/mk7zUTwKmAH0oMAY1WSZY7xvFlr1XOH
+	 OeulKHLsoD06w==
+From: Alessio Ferri <alessio.ferri@mythread.it>
+Date: Wed, 04 Nov 2026 00:30:58 +0100
+Subject: [PATCH v3 2/5] bcma: scan: support big-endian backplanes
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -97,45 +57,85 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261104-bcm6362-wlan-v3-2-e46562b2ac12@mythread.it>
+References: <20261104-bcm6362-wlan-v3-0-e46562b2ac12@mythread.it>
+In-Reply-To: <20261104-bcm6362-wlan-v3-0-e46562b2ac12@mythread.it>
+To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, 
+ Florian Fainelli <florian.fainelli@broadcom.com>, 
+ Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+ Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+ Jonas Gorski <jonas.gorski@gmail.com>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org, 
+ Alessio Ferri <alessio.ferri@mythread.it>
+X-Mailer: b4 0.14.3
+X-CMAE-Envelope: MS4xfCGfJlQk5zHd5tl9/+3/t67H4T9ssLhpKRSdEehXV6IsMyUJNHfeWsrfsRrgaWaCIaRrPYMb0/3MTJjBvq3OjUoxhSct3m9JtfRO6926Rp24KaQdId/M
+ bWjr8Nen32TawHDiBbg8e6LcWMVnppCynapVC58RxzsY1eIIyQmcjnxQ4w75AAOMvVvB65qMw1VMsw8uFUNA6aiixDcmljJ0imJJp3tUh1Up0VHmhLTGNtTl
+ AqhiqJmjmd5yJEmLr2upiyejlHqrSq7tnqTfjgPHxNHwLzJ3ef3n3yoTDDA1SXpU27D250ztwRCFusVvakoX0Gg39Gm/XVVvKF7/EwEYEt+qs6CVa6dL++BW
+ ++5vRgpx5CTxUK8QYx3Eex5r/RdCkd2McjdFHWsutX1pXmQ4ArMJsXnntA9iF3YtcadtUTOQCeXDhvgElXifMYMpG/kghcZ0T15uy9qctbSRPgcTcC2rgSnT
+ kM6QpSpcJtnpbWmdYHjYgP75YpanYkw6Dvrflog8Zs27Kz7Gndxy1FJVs/bmVWca1HRoQjFlI3rigDUc001ddm+N8cUEBdjLsqxpJAx6tMwpRQkS3L4LvrOO
+ NnyL2XfWfOhgH/r1vvyVZ+7vPV/rA+ikJLiXsd5ZQTB/YYauvSTk8ynqAgGKaZsyTKjdy+mTwzFcV9s+T/ohEnqCfprfXEzlJtAvrZCTa4DWYw==
 
-From: Tristan Madani <tristan@talencesecurity.com>
+On some SoCs the bcma backplane is a big-endian peripheral, so the
+ChipCommon ID/EROM pointer registers and the EROM itself read wrong
+ with readl().
 
-wfx_hif_multi_tx_confirm() iterates over the tx_conf_payload flexible
-array based on body->num_tx_confs, but does not check that the message
-is actually large enough to contain that many entries. Add a check
-comparing num_tx_confs against the available message payload before
-iterating.
+Add a big_endian flag to struct bcma_bus, set by the host driver
+before bcma_init_bus(), and use ioread32be() for scan-time accesses
+when it is set. Core register accesses after the scan already go
+through the host ops, which the host driver provides with the right
+endianness.
 
-Fixes: 9bca45f3d692 ("staging: wfx: allow to send 802.11 frames")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+Nothing changes for other devices.
+
+Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/silabs/wfx/hif_rx.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/bcma/scan.c       | 4 +++-
+ include/linux/bcma/bcma.h | 3 +++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/silabs/wfx/hif_rx.c b/drivers/net/wireless/silabs/wfx/hif_rx.c
-index 64ca8acb8e4f2..42417db66c128 100644
---- a/drivers/net/wireless/silabs/wfx/hif_rx.c
-+++ b/drivers/net/wireless/silabs/wfx/hif_rx.c
-@@ -62,8 +62,17 @@ static int wfx_hif_multi_tx_confirm(struct wfx_dev *wdev,
- 				    const struct wfx_hif_msg *hif, const void *buf)
- {
- 	const struct wfx_hif_cnf_multi_transmit *body = buf;
-+	size_t needed;
- 	int i;
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 84742408a59c..983a62ddeebb 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -143,6 +143,8 @@ static const char *bcma_device_name(const struct bcma_device_id *id)
  
-+	needed = sizeof(*body) +
-+		 body->num_tx_confs * sizeof(body->tx_conf_payload[0]);
-+	if (le16_to_cpu(hif->len) < sizeof(*hif) + needed) {
-+		dev_warn(wdev->dev, "invalid num_tx_confs %d for msg length %d\n",
-+			 body->num_tx_confs, le16_to_cpu(hif->len));
-+		return -EINVAL;
-+	}
+ static u32 bcma_scan_read32(struct bcma_bus *bus, u16 offset)
+ {
++	if (bus->big_endian)
++		return ioread32be(bus->mmio + offset);
+ 	return readl(bus->mmio + offset);
+ }
+ 
+@@ -155,7 +157,7 @@ static void bcma_scan_switch_core(struct bcma_bus *bus, u32 addr)
+ 
+ static u32 bcma_erom_get_ent(struct bcma_bus *bus, u32 __iomem **eromptr)
+ {
+-	u32 ent = readl(*eromptr);
++	u32 ent = bus->big_endian ? ioread32be(*eromptr) : readl(*eromptr);
+ 	(*eromptr)++;
+ 	return ent;
+ }
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 17fc50190014..7ab2b21e7238 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -362,6 +362,9 @@ struct bcma_bus {
+ 	/* We decided to share SPROM struct with SSB as long as we do not need
+ 	 * any hacks for BCMA. This simplifies drivers code. */
+ 	struct ssb_sprom sprom;
 +
- 	WARN(body->num_tx_confs <= 0, "corrupted message");
- 	for (i = 0; i < body->num_tx_confs; i++)
- 		wfx_tx_confirm_cb(wdev, &body->tx_conf_payload[i]);
++	/* Backplane registers, EROM included, are big-endian */
++	bool big_endian;
+ };
+ 
+ static inline u32 bcma_read8(struct bcma_device *core, u16 offset)
+
 -- 
-2.47.3
+2.56.0
 
