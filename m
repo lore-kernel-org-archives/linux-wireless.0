@@ -1,52 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793704258;
-	b=4m0eQsoj5r3yp32mH3ckxp/nLOk8AYoE53xEQOe76XOqyjdl/xK3qieDpzcjWtoOsFou
-	 wjL5AyYJnNXwnBPwLqu9ZdTDk9r3JUSiJAa/NMaBXj73Lkz0IsUSqTkyfGv0ta/wjpBD1
-	 LSatm8B71bUll/wteshk107lIbSGWUd1R/REHC564im3SVZKJU783GqTrMmaOWMOjMhHa
-	 LmILExSqUckDlzB6h9oM8RUu5z58BFBFkaJbAnn+MYCUg0Cri4zmG6GkMTzS6SDmrTydJ
-	 Sgc1K6WxTyojvW7YzNuOL18cnhCJY7WbKLIletkLpGivFSqvTI+8bq0zw+ahWwXSHkg==
+	t=1793704261;
+	b=jJ65WYOxRSC6ozjZHfkWMWtXaX2N6S2Nex3hJTOI2VTfGcZ/pTxIqY+VQKuhi5hohfAj
+	 8hrzuX1ksxqOtQiX60DCyRrQ83cSz3066HgAoWfY9oe2PUuiuNYWyc/11xNCyNu3yulmJ
+	 WU4X/v4A7ot+7xabEaCdjTioY+4OkxO8j9EJM+KaX4QoCPcWUXXfBYtUCPuXaAIL3wTak
+	 vG49fbWIrC3rpXfeZ9daqw9xM5ObO9l5Rkp9qm5tMP7AAsBebxI64PAcMl8owHjiT/bLg
+	 xbEVPYHhZwKRbMkknVlz1tHno27aIAyp0uWaa0VuveOWG73pItepx8vtqiuyxC/5Ypw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793704258;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793704261;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=RE+aXXA/wR6GIKDSc8AVIfNk5ebi+YmfdsADPRUWcYE=;
-	b=1Khaw4luxXTSMvnEwf2r3vaSJSf7KwZ+RsuDRXf1cFs7VMkj+rtE7rXNC6lwdJ43oOPX
-	 VHXq0e63v7MDK+4uqEF9Ev9fVCqGRbyfQkZSCICK3IafDysU73tmWw+haMhmV9xEQIe1U
-	 0JhpBKrNQoMxwnY4yT78osespmUsLIo3fx0k52t/AjlRUpkg6jYVy24jIrhYZIxeTwYXP
-	 bN2lQEWGEPqsAX1rHyqxZ/dBdfV9hMfvYQokiTAi8DeM6miU6a8P1azdBHvveODXSZm9s
-	 ZNcX0ZNJw0276lAcwSOzU1gS+AH3MWMXgM0qKqqhWTKAxtv/SXkiyDCsBDRLfsFtDJw==
+	bh=z0OPz57SZV2MJ4n6b+XxBbFka1xgskYRthtK4/qQk+Q=;
+	b=fKyiHm8uMZL6lkUZKEDEzjGtcX6QdgWhY/NfckeL4xjSNPt96VsuLn8oL73DJsqZLwS8
+	 +fXcmEr8zRROLz4Nw8Fj89z5FXxjNf2uHbdkrHWSbh6fYOlUegE5ktinLWblUW5awaO/t
+	 Gz+22yzxXDlkVYWaqDGEFhoE5xfccyr4m+UTLQdNve2zn6zegU7PStO1cr/Sc+0/PAbIj
+	 7lQ/ank5onKybTl7NIp8iMy5Y+iFVS/fm54wNSaImkKPetbIfVgCLHlNLj04SS7fhC0nw
+	 dvoLhkBEFQ6Xw1YUaoQTHIGwryKNoC0FO0kWSNZdjlSqqtnuk5WA30gNHAGwvxW8SJQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TyY1VKm5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TI53Nr+W;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E137160A2631;
-	Tue,  3 Nov 2026 11:10:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0991B606F7D9;
+	Tue,  3 Nov 2026 11:11:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TyY1VKm5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 358551F000C1;
-	Tue,  3 Nov 2026 11:10:56 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TI53Nr+W
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCE981F000C1;
+	Tue,  3 Nov 2026 11:10:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793704257;
-	bh=RE+aXXA/wR6GIKDSc8AVIfNk5ebi+YmfdsADPRUWcYE=;
+	s=k20260515; t=1793704260;
+	bh=z0OPz57SZV2MJ4n6b+XxBbFka1xgskYRthtK4/qQk+Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TyY1VKm5LDVr7ikDYq/sAXeBKjInzslwl3OqClwWZLEtUKaGaTM+gS4jKHd6YyPD+
-	 17+WL1VaVBEmTDRkAgw9I6zELadqi0r2ra6bq26qzSU/YMP1HrDwvvXsTccp2gQ8bn
-	 r3kUWrhQdlXaGJM2I0VKtX5ORv3u2gHNefDlhAYM1BP0q4sJ9j0YlQfJL2075xI8nx
-	 1VlrP/HrqNi4AlpA6A3QzJiIqqE1t/YEkcDak/uQUMqA+HGqB2VD1yoPgj9mJrkNX7
-	 Ntiud5HCEEL7FOqucqBAOjnsZhII/TFr3p5fg/IXazOs3i7KyFgLW15Xsgl7ciL7n7
-	 eeqy6uKH3JJYg==
-Date: Tue, 3 Nov 2026 12:10:55 +0100
+	b=TI53Nr+WHijMPta1Xv6mUlNk3ID7Fg/LOppo0oNDOKFrTpaHwp7nOk31bq6oCTXAG
+	 3s3c6ev5vp3PH04aHsPRbIXQV4CEu1OdvYqADgIlbcy5zmc+mnZuETUCWdMweFg/lq
+	 avTCuK2ay7VjS4cFQdIXxnzZ3fVbnnbAxWmVmOOXu8i6fqY/kWniDwsQySi5AmPJen
+	 rPXKqS+aC36unFKLfuHVjYEKH7e2KKiy/Uyb/2KJv5HoY4SUCMSwhSeID6BOiBWzaT
+	 BErOr+H20HDhgv3OCxkqIesZVbTmOP+9X2IBe8KcRcgFRPI51mzvEKxsW26SJAlpOC
+	 2H4A4xitkwD0Q==
+Date: Tue, 3 Nov 2026 12:10:58 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Wentao Liang <vulab@iscas.ac.cn>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath6kl: free the ath6kl core on USB disconnect
-Message-ID: <20261103-unbreakable-chinchilla-of-aurora-d98dcc@quoll>
-References: <20261103102901.1340914-1-vulab@iscas.ac.cn>
+Cc: wcn36xx@lists.infradead.org, 
+	Loic Poulain <loic.poulain@oss.qualcomm.com>, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: wcn36xx: drop the SMSM state references on probe
+ error
+Message-ID: <20261103-wooden-interesting-crab-d7eaeb@quoll>
+References: <20261103102902.1340936-1-vulab@iscas.ac.cn>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -58,28 +60,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261103102901.1340914-1-vulab@iscas.ac.cn>
+In-Reply-To: <20261103102902.1340936-1-vulab@iscas.ac.cn>
 
 
-On Tue, 03 Nov 2026 10:29:01 +0000, Wentao Liang wrote:
-> ath6kl_usb_probe() creates the core with ath6kl_core_create(), which
-> allocates the wiphy and the per-station aggregation state in
-> ath6kl_cfg80211_create(). These are released by ath6kl_core_destroy()
-> only. ath6kl_usb_device_detached() calls ath6kl_core_cleanup() and then
-> frees the HIF private data with ath6kl_usb_destroy(), so the allocation
-> made at probe time is never released when the USB device is detached.
+On Tue, 03 Nov 2026 10:29:02 +0000, Wentao Liang wrote:
+> wcn36xx_platform_get_resources() acquires two SMSM state handles with
+> qcom_smem_state_get(). Each successful call returns a reference that the
+> caller has to release with qcom_smem_state_put(), which is only done by
+> wcn36xx_remove() for a device that probed successfully.
 > 
-> The SDIO counterpart, ath6kl_sdio_remove(), already calls
-> ath6kl_core_destroy() right after ath6kl_core_cleanup(). Do the same in
-> the USB detach path.
+> Several error paths in between return without dropping the references
+> already taken: failing to get the "tx-rings-empty" handle leaks the
+> "tx-enable" one, and failing to look up the qcom,mmio phandle or to map
+> one of the mmio regions leaks both of them. A probe that fails after the
+> first successful acquisition therefore leaks the SMSM state references
+> for good.
 > 
-> Fixes: 241b128b6b69 ("ath6kl: add back beginnings of USB support")
+> Make these paths unwind through the existing label chain and put the
+> handles there.
+> 
+> Fixes: f303a9311065 ("wcn36xx: Transition driver to SMD client")
 > Cc: stable@vger.kernel.org
 > Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
 > Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 > ---
->  drivers/net/wireless/ath/ath6kl/usb.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/net/wireless/ath/wcn36xx/main.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
 
 Multiple things here:
