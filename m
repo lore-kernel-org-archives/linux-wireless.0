@@ -1,69 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.183
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793719810;
-	b=DiZuBN6FiAGL6EPtznTEXSrxzSKMu1zEAkEtQ1QHpODTuM7mMfzesAcCVS93DOXn2TMd
-	 aYBb4NcJSb/NCIOY0Gw9pivtivyTZD6Hg4blyttPKqEvZSpPlB0E8zxSgrjLBmfEuPDFO
-	 Fh/YiH0ymyh7qqEdiQ3PBuNUFOCXnHtk1IeJVYPqBKB6PlGVgyXE/JxM8jbsFhtPlqwkj
-	 A++azpBPR0AbAftM29v34ZaGE9QZp81gJ/w2Dc/Z6um66Rhx2gEOhJkzsfQ4NzkBqby8M
-	 urlynTGfEpKx9c9pNpgyV8b0C8E7INSRIPm8ZAHsXFhxqvloZWf5ZDA9rFzZMnSLgtQ==
+	t=1793720617;
+	b=DswncGOpPXDVCTEJnjbn5D1JekGtdLtXSFCPYxVZEIm4DaoJFILXK2WuiRiE/G7x4vcE
+	 QaE4GM0ELf4J3e7zK/r3luEfYD1yZw5nGLtXYB471saPKXHNev39bNoMS//5yXp6HtioA
+	 GSEYmXYt2dI2CgaVZo3lrzbYo8wq+7M3ZBrZY7TcQdU7wUOeS62bvYjnhef9eWy4zGzs+
+	 GutDlLw8ETDxMTnx5Ruxd+pC40lzWHErBNaJfYSp/FJCB5JV6dls/DMFFzrkCRLmqMjPM
+	 /Fu07nAmqwhzK8bKprA8r/GqwFFgOQ0hGEPiAQx7fqlZS+qI50woFmwdBixFuUoQENw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793719810;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=ogEItddFGy1dfxgZ8OsDI8k93istC1hjwjvkHUUW+Zc=;
-	b=1TkbTDyGAo7Oy1CIjBx8CZJlpohvqyuxg9nD3EV2aAVT1irt6U9KkohFEgxv3MgmgKb6
-	 2iKSmhD61J58QdhmILV2Is9BzsuZPFBTgDp1JppqKfw4ChQ3mR7+mnqVaV2GSRYAzIqKP
-	 j1ahNr8FdXQyaXwgl5DifnV6JjTHMLorXjVW2ppw0rPM2U81XjHb6lsWpPZmeSRSl8ezO
-	 FyYlto3c47AiCjIK9NLUs09MGlRgRS27yBA/vyyc+LPj00gdwUkdDrPVZ3CK5nTuzO0R5
-	 ZSqMdYJNFGqBKOWX14/b/+3JZh2KvvprKpMN/HfniqERHTSxhkcNrw5k8/wGD5rZZhQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793720617;
+	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=XWMpHil3tUiWoM/gXqxyfKt6bv1Q3LCVwmL1mluvAhA=;
+	b=BbXXpm88JoAotW4RBuv3Gm9drvKtgAhbYmduxvoFWthXJIfSUOIGABMTkG4oF8k7qqnx
+	 Bl3ehik6k4ofDRNNvos9HTqlBkfTYy9/gwuhCe2W7MIKlK/7BJxDzJizMrnldF2KWxBX8
+	 BozK2AgsiQP8FRIZ4qMhOKxfRPgZNQa7G5rikrLyEyivdcoTPfuw20l+5kOgqrQAp41n0
+	 S2lZqR5gVZBsbg+CKTI37SZhrrMohQu43mjHfpdVMDddYLfUJUzEDh/iU6s8+rRBtv7nT
+	 8Qh41SBJESODkqhqZTDhBGKyRxJWVEIMg01EsISQYeGo6cClqGHfGzIYMpzILzu+nQQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=justthetip.ca;
-	spf=pass smtp.mailfrom=justthetip.ca;
-	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=bbN3l48F;
-	arc=none smtp.remote-ip=95.215.58.183
-Received: from mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=permerror header.from=sipsolutions.net;
+	spf=pass smtp.mailfrom=sipsolutions.net;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=rKAYCtRJ;
+	arc=none smtp.remote-ip=168.119.38.16
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90557606A337
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 15:30:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90557606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1151D606A33B
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 15:43:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=bbN3l48F
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=En0uQiOngjLZ1HAaEA3BeDftVVy9jafInzYJ6k+h4uQ=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793719802; v=1; x=1794324602;
- b=bbN3l48FgduD3jch1SlWYQFE1KrzrMmZCVScgQVcTA5/2Vbi4BlfeQHIUUfRPh7MV0w59fxe
- e151FLhixxAZzdHz1mu/XVE1+isE4YQZE1OldTcSRjh1VHrfbLmniMO8rHsqp5I0+damhKJDkHr
- Tx9EDGMqcJtaJSkz6sY3xcnDsaSyim27fb+0qKKixbTedx8WK9EQM4Vu9vLzXcF2RbUabG8h/m0
- JGwioMnXETy1d8XkLBQfOvoQqnR6YVsFaQc0W7ElK5cI1huBds2YVgS3DGa0Cj4RGglZampVmjE
- t2X7QxrxRFF+EVj/JYnBqOKV11ydgC8J0ahFnJan3XOYA==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 71056d8b7d6406ef;
-	Tue, 03 Nov 2026 15:30:01 +0000
-X-Mizu-Trace-ID: 71056d8b7d6406ef
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Aaron Beckendorf <albecken@mtu.edu>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] wifi: mt76: connac: honour injected HT/VHT rate and bandwidth
-Date: Tue,  3 Nov 2026 08:29:54 -0700
-Message-ID: <20261103152954.8781-1-lucid_duck@justthetip.ca>
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=rKAYCtRJ
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=XWMpHil3tUiWoM/gXqxyfKt6bv1Q3LCVwmL1mluvAhA=; t=1793720616; x=1794930216; 
+	b=rKAYCtRJj+HwPtU7oGQPbvQV/Im0SyBhqfB/n9MDxLEPlIH0cy/dNXd552YwAOaGoxaa7joWtWG
+	qm1vpOG4NfnUByRLmMJfxyLxFeDXqmWN4mK4ZNWN7Ks1bMqz+VvHODyGASjnUWH9HYGSDCfuniMnB
+	6XyP0yYWEyeSNQGlIK5xVSC3HUNSXxxN3XLmpZJk1CHQ8S2AdJiW7ddzlrJ5ze1NOAP8rjEBQ2IMv
+	5lJ/mkexrbnsSE5G0thnng03ONF+V6OXOHK9PH12fyaoor9Om5W1/tMJS+0tMUOSGLT8c78jAtroy
+	fWVIuNdiyMqIcGpdSGgIPcNihj0aBfsMrYAg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xOGfe-00000003fYd-0CUT;
+	Tue, 03 Nov 2026 16:43:34 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: toke@toke.dk,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH wireless-next] wifi: ath9k: uninline ar9003_paprd_create_curve() helpers
+Date: Tue,  3 Nov 2026 16:43:31 +0100
+Message-ID: <20261103164331.d661e4447139.I759358de0d74f858b9410a5db6918cd7e12dd877@changeid>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261101202727.392683-1-albecken@mtu.edu>
-References: <20261101202727.392683-1-albecken@mtu.edu>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -73,31 +64,48 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On Sun, Nov 01, 2026 at 03:27:27PM -0500, Aaron Beckendorf wrote:
-> This makes 20/40/80 MHz HT/VHT injection work on mt7921u/mt7925u.
+From: Johannes Berg <johannes.berg@intel.com>
 
-mt7925 builds its own TX descriptor, so this never runs there. An
-MT7925U injects at 6 Mbit/s with or without the patch.
+ar9003_paprd_create_curve() calls the two helpers, but
+if they get inlined the stack can exceed 1k with clang,
+causing warnings/errors. Mark the two helpers to not be
+inlined due to stack ("noinline_for_stack") to fix that.
 
-> +				mcs = tr->idx & 0x7;
-> +				nss = tr->idx >> 3;
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-The rate field wants the whole HT MCS index here, which is what mt7615
-passes, so the mask loses the second stream. With the whole index each
-HT and VHT rate below goes out as asked. MT7921AU injecting, MT7922
-capturing, 100 frames per case:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 83d993fff695..15945689c089 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -416,7 +416,8 @@ static inline int find_proper_scale(int expn, int N)
+ 
+ #define NUM_BIN 23
+ 
+-static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
++static noinline_for_stack bool
++create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
+ {
+ 	unsigned int thresh_accum_cnt;
+ 	int x_est[NUM_BIN + 1], Y[NUM_BIN + 1], theta[NUM_BIN + 1];
+@@ -817,9 +818,10 @@ void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
+ }
+ EXPORT_SYMBOL(ar9003_paprd_setup_gain_table);
+ 
+-static bool ar9003_paprd_retrain_pa_in(struct ath_hw *ah,
+-				       struct ath9k_hw_cal_data *caldata,
+-				       int chain)
++static noinline_for_stack bool
++ar9003_paprd_retrain_pa_in(struct ath_hw *ah,
++			   struct ath9k_hw_cal_data *caldata,
++			   int chain)
+ {
+ 	u32 *pa_in = caldata->pa_table[chain];
+ 	int capdiv_offset, quick_drop_offset;
+-- 
+2.56.0
 
-  requested                 as posted       without the mask
-  HT MCS 0 (20), 7 (20/40)  as requested    as requested
-  HT MCS 8 (20)             HT MCS 0        HT MCS 8
-  HT MCS 15 (20/40)         HT MCS 7        HT MCS 15
-  VHT MCS 0 (80), 9 (40/80) as requested    as requested
-  VHT MCS 7 x 2 (80)        as requested    as requested
-
-Thanks for this. Without it every injected frame goes out at 6 Mbit/s
-on these cards. I'll run v2 through the same test.
-
-Devin
