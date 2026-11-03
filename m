@@ -1,86 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793723787;
-	b=svte/SKTvIY95JHpM7y5T0SZtLwVS5EO4w/QzDPqPeUX5fB1lT8fkTenRxEZanMVVRdb
-	 FfZdTdXTkxJ8G7KqZ0o8Q2TTZTUNnx8bxAlyTo01b29SK+uh0j+h6srfbbnflS0OheW5u
-	 eUz7/Y03jlC3G5boby6FR//d+cPsAHHacgWzkNkBe5pTDTYTboE3bSM219j2pxGpOso+4
-	 390J4BaHIdN5kWlP1vKyIZCx3uyKGJ9FMJgV1/bLOKfR+2sluS0Ln5tb3IvtlieP5JbiH
-	 PGvGwZ4MzEdOXCjzjrNx8jwaxwzjN5xBYYgf3zIStJb/GVMvfRQU0X1UpRj+CfOVvew==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793723787;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.46
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793724280;
+	b=HrS+HC0x1z9uWZL3PgksgM8oHxapQ/gKYrji3dFOFoILdqVBVdyIjIXG459JbTD06dkF
+	 P3dFKOWqlNJ8mnIvsKH5YENMVrdE/jWAu+bEz28MsGvEmBuFuIfzADYnN4jqFmYS6inyw
+	 3WtkuA1q6ymCCqF47Q0i/jhxHeP2f0fDQ028eQcelOg06Sh6f2tVQeR0PYCm8ZcXnP9E9
+	 INksGjtbBecN69mWuV5kK9I/iFDgjG6ZYUaBc8dj3AyExUflJIZPJ4jqXCOTEPzZNCoVd
+	 SsVnm386h4defa0a1QVKBBwRSBtXx8sjQVVtyHv2PsoYGOkFQKkdXnpAsm0D5hra5dw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793724280;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:References:Content-Language:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=8Ejv8GVvQd5owGxqcqoZOElpKPNmDNBalD0J5dSHWPY=;
-	b=nn+ZU9oJkKmsBfpEd2MKht0HDw0dMnDk0DJs1g3gv2u8hNDcyxecww8dZNgQH8Pn0npY
-	 nU5poJtI5ZtvouDkMSL8BXnyYz4NM4dcew1UbjhtuiSFx4HJtO+ODqc8O9c1f/bE+EgcW
-	 wxChpJUkGJSIxzR1gOmjUov7Fhpr4lcoynT200WnETK50ol8Qg5HWd6XU4SHNfMEbEYHt
-	 PaDu9ILl8LiJKZ2oCvJe3AOZ9+XkQCWQdsGNqvcrHJQxkmaR2mNCgywWGb8uRooCd6DY3
-	 eUKLplnlhQy4wQzlcnZcjTwV+QbLKI5Z7J5LKEPnv1hVLsFpRhRbKyMHrhYNmDEFQOQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VcdfYzzB;
-	arc=none smtp.remote-ip=209.85.128.52
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=Un7Sh/vOuUsV6xn2dwiqUFHaUUkNjRn1fxqbgvpHoaU=;
+	b=SYdOSa5pTiCNPzVEUqDZaESchk5qGXHy7PS2jW8MOz4fp80KXTzDNj/VuY7cXzPbf+on
+	 VWupI3ktBWLXESSijfqc93bUNxc163cL1hgldirJF9Wf/iQJCkCYv3DaP2F32zts3lb1B
+	 LU9uicTbKe1K+pAkRUPQepozF3ZJRdXIIblEgBjKDxJXbaPzEloE0yRz1lJP4zpnLTbss
+	 5e4Bq7mzFI6FQKrqP7krs3myKdWtHgTtWA4lcC6tGnbNSxT38vm2B0dWbaLWD1J2d2GFk
+	 e4Mdz5ENbYjJIW4YkJ4kwmAgh4dilPePDcObtRW4ZK775opbawphi/goGNK2WY1yHMg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nagashi.ma;
+	spf=pass smtp.mailfrom=nagashi.ma;
+	dkim=pass header.d=nagashi.ma header.i=@nagashi.ma header.a=rsa-sha256 header.s=ggle-ngsma header.b=OKQYqAhI;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.46
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B3DE606A324
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:36:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B3DE606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F16966082BE1
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:44:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F16966082BE1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nagashi.ma
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nagashi.ma
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VcdfYzzB
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so11911555e9.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 08:36:27 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=nagashi.ma header.i=@nagashi.ma header.a=rsa-sha256 header.s=ggle-ngsma header.b=OKQYqAhI
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-c315869241fso627817466b.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 08:44:34 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793724273; cv=none;
+        d=google.com; s=arc-20260327;
+        b=aC3pU3AwVpec1Fvx33HupxS0DbFwl71YJ5ODCC/HKka650FtIGvQrx2nfn75pGyNRK
+         YtvAtYj/nVNgH3zaymt3ffMta4L3/g7xQwLK+nA5JZ4BWSGHpR1QdWPJqFY+HU3TfZKW
+         nCON6Dfp8o2YSMHdroSITE73h+NPHJ+Ftq1jNRamqct/5EjzAf1cimp/Q+WnzO4JNRQn
+         Nmkycckj5wDWpxdbK77MGkjQzV9ZKepP1L1632tfn5Qhf+Zmq7uJa/QLRpgROPnr08Q5
+         IEs48/kARLD+AqiRcA9JaMyD6ubrqlsVozan1vWHqiOne86lj3oGdV1BSJ9Ity2rXd/N
+         fPwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=Un7Sh/vOuUsV6xn2dwiqUFHaUUkNjRn1fxqbgvpHoaU=;
+        fh=7rD/GRoD6wInycTGKmsDAb0uPgwpS0YasA3tE+yhqzA=;
+        b=IyhIx/9RoPjgQwQVJHR1KJ50lYj3wGrp609or9ZwYp05JKy4Bx2lmngTisSSbxu1xr
+         W1puzTr3Cf7CPuxIkFj2VIXXqdvUhkNb/ApHwWNlpMO/x3yDy41HGcYpjztexdmxisKX
+         uWc3wHPXFZ7T4+AkIStB6srbxDmS8MstI9dr96Y7UZXXQnhKS0Z1//HmLyzIhRFTiRRo
+         oTli9o5SwWytnOlaHuKJYBPIeKFzeb/ZdDGsptEPHcPBirNoJZwL0BERoDSsRIvpD4Uv
+         EROCD5CuQG/2Y76IIhXPodJB8CyR2cSUmbT2rzL7uUqbnW5WibdHNbPwS0yh5qeF1qcY
+         b+8w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793723786; x=1794328586; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8Ejv8GVvQd5owGxqcqoZOElpKPNmDNBalD0J5dSHWPY=;
-        b=VcdfYzzB0aWEHxMJhWG6Rqs7pDEB6PpdaFlLSzBDIIzXPC4696e0qLG9Cqi8kHCSQr
-         mNb/rWUJlJwJVAA70cV9cdkjyK7NXOWAiCuZIjIh2DXHYQQPhFm1UD4EKE6T/zKePp4u
-         /+nN+plADEXxS3Xl66a8jHFrtrzjQmKpb/xY1OS7LwbmJ8YKe5b6iC+PeArPnBtmrdDd
-         z3IONmpJajUK42pw80yknTSobJj976cn/LmePGEMBuT5fE8IJAdHtRhl5az5X66Csp9y
-         67+an66QIAiN7UvfPC694Pm8DH0onrBsOw9uPqj/NhJUlwXrkWwfSmNbEZn6yAICZgIL
-         omOw==
+        d=nagashi.ma; s=ggle-ngsma; t=1793724273; x=1794329073; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Un7Sh/vOuUsV6xn2dwiqUFHaUUkNjRn1fxqbgvpHoaU=;
+        b=OKQYqAhI8ZC0gkujkJ8+ll9rX4dVBYsezwiyOeNdZJMMtMfdkTmR2Mr3m7tuXk4xmR
+         2MRRIlKgS+QpLwX5Ce46ZiNnQSyZ4npabPiff0xvhMksrOqCN8dSDSDm5i/OL1d7J8wS
+         PFSUDshK+0ER2pplNS217hIQALKwf0s1owd3uA17EqdLk6XC+PLaNE3sdWptm08SvxQg
+         14CEoD9VEu99sTmHt4Q16JT076NTYzZYpUNuylCxPLtfyXlbC1TMf0Bc1PaznmqsdEOJ
+         dOMY9OhTUD97CvaPH3UEV9CXKYLsgaiv2bWPQKaMbe2pNveEWJdC269k8MstNbPm7QQk
+         NCfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793723786; x=1794328586;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=8Ejv8GVvQd5owGxqcqoZOElpKPNmDNBalD0J5dSHWPY=;
-        b=QQpZ/81YZxXL7aSgKqx9C1eholdPSriQaAFyMdDL6bnjvBlnjux6WsbZbps9Nl9KNC
-         YmMiGKuaX5K8igwxX8HbPTex/Fr11WvHaemYVISBC80LoHpOGu/4h6nV1gJd25o5z3tA
-         7Uu54sw2Ygl8v/Hb9nUFMRs6LK1zEFYPrl/oj+NWGhJ5SKV7P+0ZnDJgvTTTRlJaQd6e
-         DYwkX/QnYJ+58Al6eJq/ZO1yxCALvyYRhPnV8AeHHSM0Nm3G6CN5FxhP3npBPjOL/wqD
-         kASvO+CX9+GhFGpAuzoNz+iAM4ftjZSCwQ3hE9tUqfjGgaUeCBgP58v77JAnXMOEZ0bi
-         z6ew==
-X-Gm-Message-State: APuU4Z/5w1+eS5yQLPwjylgFvAeCsiI1oQh/7vtHIQQvS42FybtD79Rt
-	s9ya1ftuHExvlg+gK/FVDkJPgHrL6m+MdX++ojeEC2GDKvajFaHcFH1eHGxmknlc
-X-Gm-Gg: AYBFou3ge1UXfLKKAexcy7XMNtspsmvyyH2C5jXRPEGYw0/HUWaH1frBxUPQcljYyoS
-	NuEOzuMnVD6sY0VAErgGuzmcR23P2AVsPhje/onSxZ3va0ymiUngT3dTDbZ67KTOiBcIUGQwAds
-	fILWqRU5LUS+1hnLxvpTZFp3Uo8y2oEBwRB+iLuEw6EyD7kv80S43FyWHndT/iANSHb7FCIPAxv
-	E0latIl2eybo+6aO9MRyPo2mA6WzR+hZHKd6vyNi6eUZJoGXyjxXHLcworZRcLPggM6i3zLJ3B3
-	a8LkYqz+uz5ak/oaF4LW+UsNSmwgrDAApeHWZs6EYUTCLor1/hi3KW/sm4VvxO96YnQZmB3WTDw
-	7xROoh/W0ZdZVf5PwiaUNzRCkDF8c4MI5p4AsZMWx9sj6QmpRJW0FFZdOmS60K6ohAg6KqHHbKU
-	O/tEZhiy/C+DxkhFu62wk9kqGbfG+pJjEY6C1oh+M9IUp7cZpD0twQPatIRQnosv/VVypuIabkP
-	Szab7uV7lW3Spj0UMWgZTf+4ESpKmOc67tbCFMoHNWXhrU3sWeqX0TXJFJGYWU25tJVh7vZ0J39
-	iOEAmXWR/kip3WTjXp2sPQuJ9cG22/PFqIA=
-X-Received: by 2002:a05:600c:8b48:b0:4a8:a341:2377 with SMTP id 5b1f17b1804b1-4ac16acd9d1mr333375815e9.3.1793723785561;
-        Tue, 03 Nov 2026 08:36:25 -0800 (PST)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abebe33e79sm259476635e9.2.2026.11.03.08.36.24
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Nov 2026 08:36:25 -0800 (PST)
-Message-ID: <b0ced272-5016-4060-a58b-23a3f4550d1c@gmail.com>
-Date: Tue, 3 Nov 2026 18:36:23 +0200
+        d=1e100.net; s=20260707; t=1793724273; x=1794329073;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=Un7Sh/vOuUsV6xn2dwiqUFHaUUkNjRn1fxqbgvpHoaU=;
+        b=iiu8dyfcH51RiVd2iS5X7dhN87Fy+WE7ZTUs08q2ccGSIwIMGmPT6QprZp7b7lDXRr
+         QA43xc1yILjpcV7WzVnXxnmiWsOgDky0YFl+I7ftceZUwAtBwzNfDq+wAZ4GRz0c4iuT
+         ErKhq5bxyBW9YjcZa69zJvwYqyjyuSe+W4dYyRgP0Wqw1BUrnPyocHNH8M/Y621SBvbW
+         mqxQFWMyNDGOqs/qdYTtBeJLbNx3ZqpIBjJv6+Ly0hLT4M3pAokK2ukj0zjjcEvJX8XE
+         sWWNHCF1n5YyrvMr7NI3hfK5ARC2GXwtCi+/HbKev59yOgPCiLGEwWHAOFaK7EUgd0/f
+         TTRg==
+X-Forwarded-Encrypted: i=1; AKwUvByNtGhS1Ch3Xc2nvsPxoyLPiktsC3xZ7sAPNHYvDsJJoZ5IhvKiLcBkWDeOL8VGdzOmds/re/RkR6/zYoMyxw==@vger.kernel.org
+X-Gm-Message-State: APuU4Z8e4OCo3vxanQa9HG/0MlGHaNszLO3hbzo60NMbnD/OvzyL9LmM
+	RQ+aSKaCQmkk3jPYyizF+HTYU3Ipnnq4FdjDXGMdP6TefeZQ5TOR4YGMBTQCl/+xvDUEKwon7oh
+	71f5Kq7dgJzXz9h7cU3F7GdV5W2Lnpy6puGJMVr9R
+X-Gm-Gg: AYBFou2JSzpzo5NLxLMBJVJjDvKS7Cp8DwwdCvIBfHIbD+5EYR/IUiZYlO5nSLj1Qyx
+	hDmHb2un6qXxYH8bZrn78ohlKrk9VV+FH4v0HlUn783XAEMsIW+Sx96IMrjDsOWg7u/HLFJYsbX
+	eJHdj0QRBKKMPWe8H1ekiMlzHPyQ33KVE/c7NRnMityzBSk4ZxaQXMlDiJl0CxpcSI3jSPju7n0
+	1fFYRb+vVbfMusN4T8jS42CQ8k9hA62sWi5AV20QjChckoeGNnxebe+oDv2p+VPW3hQ3Tk6Ixrn
+	XxU54xnJiAQyzgEK4GmoLXt3cJ51p7sL9ENlcq4Y02IXt4fRSIQDwqwsrMTiE7YrfKy371HnDcp
+	g/NLqjpbEd1bI39yfMFkx1Tz5IgWB0VFNKoBw4Rt4FXl2a5FHtZkGzLGKSOPcxYSeVYEVxsgaES
+	iXoIhnESarVSXu5VgYEogHrwYLcTxUjix0jH/IHegB3Bq5SBpAI/yDg3iY
+X-Received: by 2002:a17:907:2d8e:b0:c42:102f:15df with SMTP id
+ a640c23a62f3a-c4ca7a0dc8cmr1250439166b.8.1793724272776; Tue, 03 Nov 2026
+ 08:44:32 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -90,271 +104,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH rtw-next v2 2/7] wifi: rtw88: 88xxa: receive VHT SU
- beamformed transmissions
-To: linux-wireless@vger.kernel.org
-References: <20261031070950.425176-1-hjf3108@gmail.com>
- <20261031070950.425176-3-hjf3108@gmail.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20261031070950.425176-3-hjf3108@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
+ <20261016-ath10k-series-v1-send-v1-1-c847697b3558@nagashi.ma>
+ <CAFEp6-2xY_gM=FRUp3R30TZ-NgT=-eYnyz_BPE0vxEenv+202w@mail.gmail.com>
+ <CACB3TCKq--tdL6j+uGR_dxGdy-gHxQhY8p0h6xxqi_4Fd3VEOQ@mail.gmail.com>
+ <c45bdcae-63da-4552-9e35-59ec6a71621a@gmail.com> <CAFEp6-36Fc15uDWSR=v+xCMhERbkhggZOBoEFTF7pAcRLz_vFw@mail.gmail.com>
+ <CACB3TC+NVYPbNKeOu9aAnRaCUTTon4PAO+kp_QbLqL6qd37aeA@mail.gmail.com> <CAFEp6-0AJ3uGn0pR7y7+PLhjf6AMYb2aBvPpq9J3QFRk9XJv1Q@mail.gmail.com>
+In-Reply-To: <CAFEp6-0AJ3uGn0pR7y7+PLhjf6AMYb2aBvPpq9J3QFRk9XJv1Q@mail.gmail.com>
+From: "Nagashima, Shunsuke" <shunsuke@nagashi.ma>
+Date: Wed, 4 Nov 2026 01:44:06 +0900
+X-Gm-Features: AclHuK97lyxSBpGOAJS72d3gT5RDULXKKysd-w5qBGIFB_PFqSCBaZ_ICIFvFWc
+Message-ID: <CACB3TCKw=BCtRpJQ6N=moO+qpVu-Zd+J8LfV6S8pX1JiKS5+7w@mail.gmail.com>
+Subject: Re: [PATCH ath-next 1/3] wifi: ath10k: set the PMF peer flag on WCN3990
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: "Conn O'Griofa" <connogriofa@gmail.com>, Jeff Johnson <jjohnson@kernel.org>, 
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, David Heidelberg <david@ixit.cz>, 
+	Fabricio Akio <fabricioakio@gmail.com>, Aleksei Kharlamov <aleksei.kharlamov@gmx.de>
+Content-Type: text/plain; charset="UTF-8"
 
-On 31/10/2026 09:09, Ho Jie Feng wrote:
-> Implement beamformee support for 88xxa since they have
-> support for it.
-> 
-> Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/bf.h       |  2 +
->  drivers/net/wireless/realtek/rtw88/reg.h      |  1 +
->  drivers/net/wireless/realtek/rtw88/rtw8812a.c |  3 +-
->  drivers/net/wireless/realtek/rtw88/rtw8814a.c | 36 ++++++++++-
->  drivers/net/wireless/realtek/rtw88/rtw8821a.c |  3 +-
->  drivers/net/wireless/realtek/rtw88/rtw88xxa.c | 62 +++++++++++++++++++
->  drivers/net/wireless/realtek/rtw88/rtw88xxa.h |  2 +
->  7 files changed, 104 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/bf.h b/drivers/net/wireless/realtek/rtw88/bf.h
-> index a5d3010e6be6ef776b1c604207f68d6331721feb..0aa78fb6a7e64435e4d5fc18f3e9c70a01d73135 100644
-> --- a/drivers/net/wireless/realtek/rtw88/bf.h
-> +++ b/drivers/net/wireless/realtek/rtw88/bf.h
-> @@ -12,6 +12,8 @@
->  #define REG_ASSOCIATED_BFMER0_INFO	0x06E4
->  #define REG_ASSOCIATED_BFMER1_INFO	0x06EC
->  #define REG_TX_CSI_RPT_PARAM_BW20	0x06F4
-> +#define REG_TX_CSI_RPT_PARAM_BW40	0x06F8
-> +#define REG_TX_CSI_RPT_PARAM_BW80	0x06FC
->  #define REG_SND_PTCL_CTRL		0x0718
->  #define BIT_DIS_CHK_VHTSIGB_CRC		BIT(6)
->  #define BIT_DIS_CHK_VHTSIGA_CRC		BIT(5)
-> diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-> index afcdb66fdb9a11a44bf52c790aea2cc69aeb851c..f8ec1e2931f63a06a72626bf3168256728ed933b 100644
-> --- a/drivers/net/wireless/realtek/rtw88/reg.h
-> +++ b/drivers/net/wireless/realtek/rtw88/reg.h
-> @@ -671,6 +671,7 @@
->  #define REG_IQK_COM96		0x0984
->  
->  #define REG_FAS			0x09a4
-> +#define REG_CSI_CONTENT_VALUE	0x09b4
->  #define REG_RXSB		0x0a00
->  #define BIT_RXSB_ANA_DIV	BIT(15)
->  #define REG_CCK_RX		0x0a04
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8812a.c b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-> index 55f1d3d3240be24580bdc4a7b3456b8ff8340e70..5d58dff4fcee7c4b3194794266cb48cd472014f9 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-> @@ -931,7 +931,7 @@ static const struct rtw_chip_ops rtw8812a_ops = {
->  	.phy_calibration	= rtw8812a_phy_calibration,
->  	.cck_pd_set		= rtw_phy_cck_pd_set,
->  	.pwr_track		= rtw8812a_pwr_track,
-> -	.config_bfee		= NULL,
-> +	.config_bfee		= rtw88xxa_bf_config_bfee,
->  	.set_gid_table		= NULL,
->  	.cfg_csi_rate		= NULL,
->  	.led_set		= rtw8812a_led_set,
-> @@ -1084,6 +1084,7 @@ const struct rtw_chip_info rtw8812a_hw_spec = {
->  	.old_datarate_fb_limit = true,
->  	.usb_tx_agg_desc_num = 1,
->  	.iqk_threshold = 8,
-> +	.bfer_su_max_num = 2,
->  	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
->  	.max_scan_ie_len = IEEE80211_MAX_DATA_LEN,
->  
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8814a.c b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
-> index 5bb55606f14a126806acb354658c150150ae0cce..2db05a83766d65123edc95f50a40d3f93bfb1dba 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8814a.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
-> @@ -4,6 +4,7 @@
->  
->  #include <linux/usb.h>
->  #include "main.h"
-> +#include "bf.h"
->  #include "coex.h"
->  #include "tx.h"
->  #include "phy.h"
-> @@ -115,10 +116,13 @@ static void rtw8814a_init_hwcap(struct rtw_dev *rtwdev)
->  			   BIT(RTW_CHANNEL_WIDTH_80);
->  	efuse->hw_cap.ptcl = EFUSE_HW_CAP_PTCL_VHT;
->  
-> -	if (hal->rf_type == RF_3T3R)
-> +	if (hal->rf_type == RF_3T3R) {
->  		efuse->hw_cap.nss = 3;
-> -	else
-> +		hal->bfee_sts_cap = 2;
-> +	} else {
->  		efuse->hw_cap.nss = 2;
-> +		hal->bfee_sts_cap = 1;
-> +	}
->  
->  	rtw_dbg(rtwdev, RTW_DBG_EFUSE,
->  		"hw cap: hci=0x%02x, bw=0x%02x, ptcl=0x%02x, ant_num=%d, nss=%d\n",
-> @@ -2039,6 +2043,31 @@ static void rtw8814a_led_set(struct led_classdev *led,
->  	rtw_write32(rtwdev, REG_GPIO_PIN_CTRL_2, led_gpio_cfg);
->  }
->  
-> +#define RTW_NDP_RX_STANDBY_TIME_8814A	0x40
-> +#define RTW_SND_CTRL_SOUNDING_8814A	0xDB
-> +
-> +static void rtw8814a_bf_enable_bfee_su(struct rtw_dev *rtwdev,
-> +				       struct rtw_vif *vif,
-> +				       struct rtw_bfee *bfee)
-> +{
-> +	rtw_bf_enable_bfee_su(rtwdev, vif, bfee);
-> +
-> +	rtw_write16(rtwdev, REG_SND_PTCL_CTRL + 1, 0x0202);
-> +	rtw_write8(rtwdev, REG_SND_PTCL_CTRL, RTW_SND_CTRL_SOUNDING_8814A);
-> +	rtw_write8(rtwdev, REG_SND_PTCL_CTRL + 3,
-> +		   RTW_NDP_RX_STANDBY_TIME_8814A);
-> +}
-> +
-> +static void rtw8814a_bf_config_bfee(struct rtw_dev *rtwdev,
-> +				    struct rtw_vif *vif,
-> +				    struct rtw_bfee *bfee, bool enable)
-> +{
-> +	if (enable)
-> +		rtw8814a_bf_enable_bfee_su(rtwdev, vif, bfee);
-> +	else
-> +		rtw_bf_remove_bfee_su(rtwdev, bfee);
-> +}
-> +
->  static void rtw8814a_fill_txdesc_checksum(struct rtw_dev *rtwdev,
->  					  struct rtw_tx_pkt_info *pkt_info,
->  					  u8 *txdesc)
-> @@ -2068,7 +2097,7 @@ static const struct rtw_chip_ops rtw8814a_ops = {
->  	.phy_calibration	= rtw8814a_phy_calibration,
->  	.cck_pd_set		= rtw8814a_phy_cck_pd_set,
->  	.pwr_track		= rtw8814a_pwr_track,
-> -	.config_bfee		= NULL,
-> +	.config_bfee		= rtw8814a_bf_config_bfee,
->  	.set_gid_table		= NULL,
->  	.cfg_csi_rate		= NULL,
->  	.led_set		= rtw8814a_led_set,
-> @@ -2231,6 +2260,7 @@ const struct rtw_chip_info rtw8814a_hw_spec = {
->  	.rfe_defs = rtw8814a_rfe_defs,
->  	.rfe_defs_size = ARRAY_SIZE(rtw8814a_rfe_defs),
->  	.iqk_threshold = 8,
-> +	.bfer_su_max_num = 2,
->  	.max_scan_ie_len = IEEE80211_MAX_DATA_LEN,
->  
->  	.coex_para_ver = 0,
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821a.c b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-> index 6096d3b8e41bee6cdc2d05500d2fbeb9e097430e..6d106ae70d9142b45337057311dc423158e7dabc 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-> @@ -877,7 +877,7 @@ static const struct rtw_chip_ops rtw8821a_ops = {
->  	.phy_calibration	= rtw8821a_phy_calibration,
->  	.cck_pd_set		= rtw_phy_cck_pd_set,
->  	.pwr_track		= rtw8821a_pwr_track,
-> -	.config_bfee		= NULL,
-> +	.config_bfee		= rtw88xxa_bf_config_bfee,
->  	.set_gid_table		= NULL,
->  	.cfg_csi_rate		= NULL,
->  	.led_set		= rtw8821a_led_set,
-> @@ -1188,6 +1188,7 @@ const struct rtw_chip_info rtw8821a_hw_spec = {
->  	.old_datarate_fb_limit = true,
->  	.usb_tx_agg_desc_num = 6,
->  	.iqk_threshold = 8,
-> +	.bfer_su_max_num = 2,
->  	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
->  	.max_scan_ie_len = IEEE80211_MAX_DATA_LEN,
->  
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
-> index c298fa0fb2a6b94118527a297affa5e6e8ab633d..87253fffe78cd6f5b58a325eef42b58b968e2d46 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
-> @@ -138,6 +138,7 @@ static void rtw88xxa_read_usb_type(struct rtw_dev *rtwdev)
->  		efuse->hw_cap.nss = 1;
->  	else
->  		efuse->hw_cap.nss = 2;
-> +	rtwdev->hal.bfee_sts_cap = 1;
->  
->  	if (rtwdev->chip->id == RTW_CHIP_TYPE_8821A)
->  		goto print_hw_cap;
-> @@ -197,6 +198,67 @@ static void rtw88xxa_read_usb_type(struct rtw_dev *rtwdev)
->  		efuse->hw_cap.ant_num, efuse->hw_cap.nss);
->  }
->  
-> +#define RTW_NDP_RX_STANDBY_TIME_88XXA	0x50
-> +#define RTW_SND_CTRL_REMOVE_88XXA	0xC8
-> +#define RTW_SND_CTRL_SOUNDING_88XXA	0xCB
-> +
-> +void rtw88xxa_bf_config_bfee(struct rtw_dev *rtwdev, struct rtw_vif *vif,
-> +			     struct rtw_bfee *bfee, bool enable)
-> +{
-> +	static const u32 csi_rpt_regs[] = {
-> +		REG_TX_CSI_RPT_PARAM_BW20,
-> +		REG_TX_CSI_RPT_PARAM_BW40,
-> +		REG_TX_CSI_RPT_PARAM_BW80,
-> +	};
-> +	struct rtw_bf_info *bf_info = &rtwdev->bf_info;
-> +	u8 slot = bfee->su_reg_index;
-> +	u32 addr_bfer_info;
-> +	u32 csi_param;
-> +	int i;
-> +
-> +	if (bfee->role != RTW_BFEE_SU || slot >= 2)
-> +		return;
-> +
-> +	addr_bfer_info = slot ? REG_ASSOCIATED_BFMER1_INFO :
-> +				      REG_ASSOCIATED_BFMER0_INFO;
-> +
-> +	rtw_dbg(rtwdev, RTW_DBG_BF, "chip %d SU beamformee %s slot %u\n",
-> +		rtwdev->chip->id, enable ? "enable" : "disable", slot);
-> +
+Hi Loic,
 
-By the way, you don't need to print the chip ID because this message is
-automatically prefixed with the module name (rtw88_8812au or rtw88_8821au).
+On Tue, Nov 3, 2026 at 2:46 PM Loic Poulain wrote:
+> If Linux-firmware ships 01387, someone will need to confirm that the
+> MFP capability addition works with that specific firmware version. For
+> QCM2290, I can probably test it myself and provide a Tested-by tag if
+> you can describe the expected testing procedure.
+>
+> Yes, to Jeff.
 
-> +	if (!enable) {
-> +		rtw_write32(rtwdev, addr_bfer_info, 0);
-> +		rtw_write16(rtwdev, addr_bfer_info + 4, 0);
-> +
-> +		clear_bit(slot, bf_info->bfer_su_reg_maping);
-> +		bfee->su_reg_index = 0xff;
-> +
-> +		if (!bf_info->bfer_su_cnt)
-> +			rtw_write8(rtwdev, REG_SND_PTCL_CTRL,
-> +				   RTW_SND_CTRL_REMOVE_88XXA);
-> +		return;
-> +	}
-> +
-> +	if (hweight8(rtwdev->hal.antenna_rx) == 2) {
-> +		rtw_write32(rtwdev, REG_CSI_CONTENT_VALUE, 0);
-> +		csi_param = 0x01090109;
-> +	} else {
-> +		rtw_write32(rtwdev, REG_CSI_CONTENT_VALUE, 0x01081008);
-> +		csi_param = 0x01080108;
-> +	}
-> +
-> +	rtw_write8(rtwdev, REG_SND_PTCL_CTRL,
-> +		   RTW_SND_CTRL_SOUNDING_88XXA);
-> +	for (i = 0; i < ETH_ALEN; i++)
-> +		rtw_write8(rtwdev, addr_bfer_info + i, bfee->mac_addr[i]);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(csi_rpt_regs); i++)
-> +		rtw_write32(rtwdev, csi_rpt_regs[i], csi_param);
-> +
-> +	rtw_write8(rtwdev, REG_SND_PTCL_CTRL + 3,
-> +		   RTW_NDP_RX_STANDBY_TIME_88XXA);
-> +}
-> +EXPORT_SYMBOL(rtw88xxa_bf_config_bfee);
-> +
->  int rtw88xxa_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
->  {
->  	const struct rtw_chip_info *chip = rtwdev->chip;
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
-> index d9c8db58909cad07b06ab993a08b246b1a9bf74d..0aaf7aa4aafdd396bff25a8fcd880a5514e589ba 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
-> @@ -170,5 +170,7 @@ bool rtw88xxa_iqk_finish(int average, int threshold,
->  void rtw88xxa_phy_pwrtrack(struct rtw_dev *rtwdev,
->  			   void (*do_lck)(struct rtw_dev *rtwdev),
->  			   void (*do_iqk)(struct rtw_dev *rtwdev));
-> +void rtw88xxa_bf_config_bfee(struct rtw_dev *rtwdev, struct rtw_vif *vif,
-> +			     struct rtw_bfee *bfee, bool enable);
->  
->  #endif
+Thanks. Then I'll start with the qcm2290 file only, and leave the
+shared 01387 file until someone can test it on a db845c or an axolotl.
+Note that qrb4210/firmware-5.bin is a link to the qcm2290 file, so the
+change covers both.
 
+Test procedure:
+
+1. With the current file, dmesg shows these features (crc32 a79c5b24):
+     wowlan,mgmt-tx-by-reference,non-bmi,single-chan-info-per-channel
+   Connect to a 5 GHz WPA3-SAE AP (PMF on) and run iperf3 to a wired
+   host, up and down (-R). Do the same with WPA2 on the same AP.
+
+2. Make the new file (qca-swiss-army-knife ath10k-fwencoder):
+  F=wowlan,mgmt-tx-by-ref,non-bmi,single-chan-info-per-channel,mfp-support
+  cp firmware-5.bin firmware-5.mfp.bin
+  ath10k-fwencoder --modify --timestamp=1706616060 \
+      --features=$F firmware-5.mfp.bin
+   md5sum: 58982403c9c56a4b888fe0ab3104d7de. Only one byte changes
+   (offset 33, 0x00 -> 0x10). Without --timestamp the tool writes the
+   current time and the md5sum changes.
+
+3. Put it in place of ath10k/WCN3990/hw1.0/qcm2290/firmware-5.bin and
+   reboot (ath10k reads the features only at probe). dmesg should show
+   these features (crc32 f9e8f071):
+     wowlan,mfp,mgmt-tx-by-reference,non-bmi,single-chan-info-per-channel
+
+4. Repeat the iperf3 runs. Also disconnect and reconnect to the WPA3 AP
+   about 10 times, note how long each reconnect takes, and check dmesg
+   for "firmware crashed".
+
+On my comma four (WLAN.HL.2.0.c10-00459), adding only this bit to
+its firmware-5.bin, with the kernel unchanged, took WPA3 from 22.6-31.6
+Mbit/s up and 21.6-21.7 down to 273.8-287.7 up and 242.5-243.7 down,
+close to WPA2. Without the bit, ADDBA Requests went out unprotected and
+no Block Ack was set up, and with one AP a reconnect took about 24 s;
+with the bit it took 1-5 s.
+
+A failure would be an association failure or a firmware crash. If WPA3
+is already close to WPA2 with the current file, please tell me too:
+then this firmware may not need the bit, and the test only shows that
+it does no harm. A monitor-mode capture is optional; with the new file
+the ADDBA Request frames should be protected.
+
+If it works, I'll send the file to the ath10k list, to Jeff with you
+in CC, with your Tested-by.
+
+I worked through this with Claude (AI). English is hard for me, so AI
+helped write the English. I ran all the device tests myself on my comma
+four.
+
+Thanks,
+Shunsuke Nagashima <shunsuke@nagashi.ma>
