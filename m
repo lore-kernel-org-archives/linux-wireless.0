@@ -1,80 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793742016;
-	b=nHH6TnvvlS63/AyoXIng3ey2vv6HhaH8E97rQio8eSIVYYVZncgaj/GQVumPp6jWRJFw
-	 2H3GORHPyaSLP51OLGxnWBHYkviVx30MVDnxHAU+km58aAjP7odtW0FEQfK3oNsVEz5DG
-	 uGkmoSveFxfcLzSmSMebaqLcB8MtBwPczARUc4hf/vSKVyOpIrvZnPNiL1aDvd41LApBx
-	 9eUAnD9PWnBDJCulMuozb9AxvOa3cGJ2mWI7khvOmL33mo6KpFdYsKMkKP2JPlMoghVzO
-	 +Ml4noaI50sv7XoRNPavxy4qDcyZwKVEx1QXrE7A9zUi/Wfi9IreLSRWcNlZesjUg/w==
+	t=1793742960;
+	b=jHA8I9gF88KnzTg/y1yj9AhIpSY/OPGdUoDyEU3TwksSuIFFNJ/zHJgX+l39taE5qAu8
+	 lVVMNxFmEGGk4v8XUmkJPrqgjVpx5Dw/Hiy8owcEsuUVqxUE6AaomDCXZkuqSNw0cVzQQ
+	 N4eAqW2OvwU0SzUeK1FD4Kph572Yn589QuwcAofQY87Q33wCw3Kp3WvPbNw+zfLv9vL48
+	 RyGfYbVWhuSlttnm4QBRJSidl/0vidFBisGE/rrIkCqTKux58y2imxOFzLVxoL4aVSvCY
+	 WCo8TkbOEw8ljtUdxNMgLIXvJSY9jJBiDpoeEHthwX3UHxq009nXveVMWZkBAFBIPjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793742016;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=7qdQAQlhYSGkSsru5xzM4l+rz4yEEX16znLOL4Dtw9Y=;
-	b=srfPICHkwIqykWkIsWqDbea3XWZMx0M2D9XmBPVl1kJ79GZNyKyB3RQWVJJQd1GpbNbf
-	 k8WzBsjxI4k0MaB2A++sYlo6lfH4I2K18n7j9jBlXdQLhebwFq0DPlAhNridDb+5zcO7y
-	 +S3KXtxBIvdR5QZyyaxRP5fXVSuVI9vmlAnDh6Tt95hOiP6/y4QkpiLfGkOnZPV+1FPuu
-	 XEYKYAH/zl5T8+EQQ820Kel1NbDFUrxWSKiW/Gr/O34iDpJjtQSMj6UPxuEtzE8MFN9rf
-	 ZV5z9uNisXa/xdfYYlOpb/8PR6vQYoJ627fLXgHnO6243ZNsaYBSAmUSdvVIcFiGRCA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793742960;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=s3fU+uIBacPNU5dcYXXxOIdYe2LuItJu7S++G+cSYLw=;
+	b=s/S/ZG1KYbrCxmUCJO0+DV+Csc0Xbiwds6Z0UoU66X42MtpwRuoCX3rChhpYe0Xi69kU
+	 IRRCOe5c7Qo/Goq70s6C1W+dplOLw0WZE0DP64twynbyFsFmqs1MQa5sZfDl2xrJVqhvB
+	 uplBDVcXzWuJrwbYxWZmfGBqRtxeHZhVUxMomk+2W+NpcIwe2sXOsbYtlhCSl8XnC+sD+
+	 ZCgndvWjhuFMQ/f89Fc6Cpw1xwzUkRluOgIv1JwX3kEsIyA7IwlYlo9kGeQaN3kvsRwKD
+	 lN/7i5QGi4UEiVsppaU6ucpQMvLZM2rvk/04BZsX5Gnv6Mo1N2+ri27LtzBlEGde+Gw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VkDiXNTv;
-	arc=none smtp.remote-ip=192.198.163.16
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WsfbYW2Z;
+	arc=none smtp.remote-ip=209.85.215.181
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F0B2606EE90
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 21:40:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0F0B2606EE90
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 004D2606A31B
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 21:55:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 004D2606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VkDiXNTv
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793742015; x=1825278015;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=y4YAlZY0RXJwYh3PhGqq/Qx+nx2lAG04O5fFb22NsvQ=;
-  b=VkDiXNTv4bmjJxZuoDXJ0duzOxwcf7Cm/+iZA4QLne2WY0/5odQi8tCY
-   kiQ4Can+xqM0160wB8ey4sgxIW7J8Q0ywwY/wODmMPvQ9s7w2FFSSVO6q
-   878a2KeTX5NqUfCblBizwLkMaXpIxgA3QTYKwjk0q6YvQLS9ZNJnAbs/p
-   STNnRxuA/DXPKsArXs/wSIRgQ9RNPfXrCcjPsZUdkMhFLkJUUwGYwIYhE
-   uZ6tQjCuxlju7HBkNkoD+zwnyu2vyuJXzmsB0Nmv/s+SAR1I40P/DZigf
-   AxezEjaWY22uRHEmtE480N2Jt2o/0JZ5pu59MWeASSshY3df7rsPyQ6CF
-   A==;
-X-CSE-ConnectionGUID: J/20QGfNRbuey3tFzKT9nw==
-X-CSE-MsgGUID: Wb2Is4IsSlG7/i30LWY9FA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11955"; a="2497421"
-X-IronPort-AV: E=Sophos;i="6.27,194,1787036400"; 
-   d="scan'208";a="2497421"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 13:40:15 -0800
-X-CSE-ConnectionGUID: 3q/bqUoxQEGnjFOxkImdGQ==
-X-CSE-MsgGUID: Khhneg+CRO2GVgsbFxh4LQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,194,1787036400"; 
-   d="scan'208";a="6362809"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 03 Nov 2026 13:40:13 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xOMEk-00000000jMR-2J7L;
-	Tue, 03 Nov 2026 21:40:10 +0000
-Date: Wed, 4 Nov 2026 05:40:00 +0800
-From: kernel test robot <lkp@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: Re: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links
- in for_each_sta_active_link()
-Message-ID: <202611040513.kvvNKVDo-lkp@intel.com>
-References: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WsfbYW2Z
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc4aa18f9afso39378a12.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 13:55:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793742959; x=1794347759; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=s3fU+uIBacPNU5dcYXXxOIdYe2LuItJu7S++G+cSYLw=;
+        b=WsfbYW2ZnE3D8XrxZ2f5xlSnVCKbXaiCxJTYTHnq3f51CAcUf6YOaN+IvPYAbSvn2c
+         L2djqS9YTEJByI/BIJRM1dvld7GHrEDPop8XK1JpkemEBdlNxKHTZMG+T6qdrfC0yDUK
+         mFAx8sQ3tNPZQxtrAR9Z6YayVQWAGwyqXrDxnx11R4TBS1LDrdxTQqwxJuURltQPf1xY
+         YGRk4Kpg40ZMLjJeJDY1fvO29slp+GVVSpm3mMWXqeVNrs+oTaIwZbx2BxX30gQFi9Co
+         JqognmRJatCnyg26E8eajiq2d8xoHLoYN1X6vQZl1R41qwh/yS5HjsUY026ICCWICtH1
+         DuXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793742959; x=1794347759;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=s3fU+uIBacPNU5dcYXXxOIdYe2LuItJu7S++G+cSYLw=;
+        b=PLIXwu6ncp95qz2gyIYKn3LoLXWdYMmCQH0vT6JYZtWsPt0agduFiCiSuk6qMjP8BA
+         HFyjOLalU9feQpfMdD/hwQm7+OP8c8QXao/6EcJZRCkGoGXj8QR5pKCqcVxAFGzHVVi2
+         z4voMtTTvb05W2oo0UWLzXqNWHslKAEgf75IRYpXfphurQhFftVMZv5DhPM31Z4xdMOx
+         QarroCmyDmjFVuq4snOBtO5RA1DUahxy7aOhj5RCQLJT5k3RD76U+MVe8+08zt8quihF
+         n700O++D7HblYnNWhhE3r0OEodtoCNJXgwDOSJ8qYsf3jNs/islInnM5h8zI5nFZDhKj
+         /xjg==
+X-Gm-Message-State: APuU4Z9MwTjY3WqKuPBABOfBqnvIkkpJqS1Fab7pe0vd4aYe5yL6wD73
+	UsD62bIcJ+MHekOO7E2kpoLO+T9z0T/cads8zct/3GP4v6fw96+3qDJ9YXL3rA==
+X-Gm-Gg: AYBFou1GOQv4PpnRh3U0ZKkM09ye9DkGfpHVpQvJ/726n02XDQ5oXk0K+cKzfqMJYSk
+	QxTPoo49ByaFQ0RAtNgwuoX4WnTpFQhD5NPCPfsplg1fS04KB5bEJLQqH7spjUjLOedy7qvrDOg
+	88d5Tussa4Afcg/6tOrLvKbLEB8Ce7DRF86KzxLwRSz5krZjC84iIQe6ItbQv3bf9CikdCACSAY
+	8AgH7tWlkd8+MkZ56w+XeOL/p/qCQqFEFuFhn+i9M0R+PnPMEIScHKuNINL+bafzjA5qQyBk/4t
+	rhGBn8bSUKn5SaO72rp7zICE24CqbWkBXgpdeKoDz0CtN0XRSyGL2oTDnPW3JFrHgASXsqfSYe7
+	COl16iBP0CsZu9BgKflHE2M+8q20NhYBBXTShoic1JFP0dCBr7fMlsQ9nOHEpj0qJ6BAE4hIy8+
+	sNiIl4FBWNKYxeV7t5XMd55fXBnYqvhSfOyQ0gXS1vNNgJywhusEg5iZWnMUU92u4Jz42GMEEDC
+	+byJJ3rTHr2+380G/i03BxcPNT0vyk5By3U6SZR3N5H6asvarVhQ1ftPBp8EK9KFmTOppq21spg
+	wW0eoOqiRj3ldktCm9vt3qmkM5H2CSMnz02CyTJdRDwDraDbNtC0D29ONHz2+MX7TndO0eVQ/M1
+	NSnKBPq4rPdUkwHjzNSGR1nlX887cMIofxomyPxYg2sDSU0lXtbkhgXD1Cdqavxa8O48doSqRv0
+	zl/ANfuH04c3vgqdAtjWDarTc=
+X-Received: by 2002:a17:90b:4f88:b0:3ac:b185:fa16 with SMTP id 98e67ed59e1d1-3ae898185bamr11970368a91.43.1793742959303;
+        Tue, 03 Nov 2026 13:55:59 -0800 (PST)
+Received: from ryzen.lan ([2601:644:8000:37f::e34])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0944ea360sm830523a91.14.2026.11.03.13.55.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Nov 2026 13:55:58 -0800 (PST)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH rtw-next v2] wifi: rtw89: acpi: check for _DSM function support before evaluating it
+Date: Tue,  3 Nov 2026 13:55:57 -0800
+Message-ID: <20261103215557.183459-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,74 +94,61 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
+Content-Transfer-Encoding: 8bit
 
-Hi Johannes,
+When the WiFi device has no ACPI companion, or the firmware does not
+implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() calls
+acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
 
-kernel test robot noticed the following build errors:
+  ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 rev:0 func:10 (0x1001)
+  ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 rev:0 func:6 (0x1001)
 
-[auto build test ERROR on wireless-next/main]
+Here the handle is NULL, and acpi_evaluate_object() returns
+AE_BAD_PARAMETER. All callers already treat failure as "no policy
+provided by the platform", so this is only noise.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Johannes-Berg/wifi-mac80211-clarify-station-link-handling/20261102-224238
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba%40changeid
-patch subject: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links in for_each_sta_active_link()
-config: arc-allyesconfig (https://download.01.org/0day-ci/archive/20261104/202611040513.kvvNKVDo-lkp@intel.com/config)
-compiler: arc-linux-gcc (GCC) 16.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261104/202611040513.kvvNKVDo-lkp@intel.com/reproduce)
+Bail out early when there is no ACPI handle, as acpi_check_dsm() would
+otherwise hit the same warning while querying function 0. Then use
+acpi_check_dsm() so that functions the firmware does not advertise fail
+quietly at debug level, as rtw89_acpi_evaluate_method() already does.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611040513.kvvNKVDo-lkp@intel.com/
+Seen on an RTL8852BE in a desktop PCIe slot.
 
-All errors (new ones prefixed by >>):
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v2: check handle separately. Remove Fixes.
+ drivers/net/wireless/realtek/rtw89/acpi.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-   drivers/net/wireless/intel/iwlwifi/mld/sta.c: In function 'iwl_mld_remove_sta':
->> drivers/net/wireless/intel/iwlwifi/mld/sta.c:913:21: error: 'vif' undeclared (first use in this function)
-     913 |                 if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
-         |                     ^~~
-   drivers/net/wireless/intel/iwlwifi/mld/sta.c:913:21: note: each undeclared identifier is reported only once for each function it appears in
+diff --git a/drivers/net/wireless/realtek/rtw89/acpi.c b/drivers/net/wireless/realtek/rtw89/acpi.c
+index ebb6cf555747..3396d42594b3 100644
+--- a/drivers/net/wireless/realtek/rtw89/acpi.c
++++ b/drivers/net/wireless/realtek/rtw89/acpi.c
+@@ -372,11 +372,22 @@ int rtw89_acpi_evaluate_dsm(struct rtw89_dev *rtwdev,
+ 			    enum rtw89_acpi_dsm_func func,
+ 			    struct rtw89_acpi_dsm_result *res)
+ {
++	acpi_handle handle = ACPI_HANDLE(rtwdev->dev);
+ 	union acpi_object *obj;
+ 	int ret;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(rtwdev->dev), &rtw89_guid,
+-				0, func, NULL);
++	if (!handle) {
++		rtw89_debug(rtwdev, RTW89_DBG_ACPI, "acpi dsm no handle\n");
++		return -ENODEV;
++	}
++
++	if (!acpi_check_dsm(handle, &rtw89_guid, 0, BIT(func))) {
++		rtw89_debug(rtwdev, RTW89_DBG_ACPI,
++			    "acpi dsm func %d not supported\n", func);
++		return -ENOENT;
++	}
++
++	obj = acpi_evaluate_dsm(handle, &rtw89_guid, 0, func, NULL);
+ 	if (!obj) {
+ 		rtw89_debug(rtwdev, RTW89_DBG_ACPI,
+ 			    "acpi dsm fail to evaluate func: %d\n", func);
+-- 
+2.56.0
 
-
-vim +/vif +913 drivers/net/wireless/intel/iwlwifi/mld/sta.c
-
-d1e879ec600f9b Miri Korenblit 2025-02-16  890  
-d1e879ec600f9b Miri Korenblit 2025-02-16  891  void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta)
-d1e879ec600f9b Miri Korenblit 2025-02-16  892  {
-d1e879ec600f9b Miri Korenblit 2025-02-16  893  	struct ieee80211_link_sta *link_sta;
-d1e879ec600f9b Miri Korenblit 2025-02-16  894  	u8 link_id;
-d1e879ec600f9b Miri Korenblit 2025-02-16  895  
-d1e879ec600f9b Miri Korenblit 2025-02-16  896  	lockdep_assert_wiphy(mld->wiphy);
-d1e879ec600f9b Miri Korenblit 2025-02-16  897  
-d1e879ec600f9b Miri Korenblit 2025-02-16  898  	/* Tell the HW to flush the queues */
-d1e879ec600f9b Miri Korenblit 2025-02-16  899  	iwl_mld_flush_sta_txqs(mld, sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  900  
-d1e879ec600f9b Miri Korenblit 2025-02-16  901  	/* Wait for trans to empty its queues */
-d1e879ec600f9b Miri Korenblit 2025-02-16  902  	iwl_mld_wait_sta_txqs_empty(mld, sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  903  
-d1e879ec600f9b Miri Korenblit 2025-02-16  904  	/* Now we can remove the queues */
-d1e879ec600f9b Miri Korenblit 2025-02-16  905  	for (int i = 0; i < ARRAY_SIZE(sta->txq); i++)
-d1e879ec600f9b Miri Korenblit 2025-02-16  906  		iwl_mld_remove_txq(mld, sta->txq[i]);
-d1e879ec600f9b Miri Korenblit 2025-02-16  907  
-83b0c8b2692d39 Johannes Berg  2026-11-02  908  	for_each_sta_active_link(sta, link_sta, link_id) {
-d1e879ec600f9b Miri Korenblit 2025-02-16  909  		/* Mac8011 will remove the groupwise keys after the sta is
-d1e879ec600f9b Miri Korenblit 2025-02-16  910  		 * removed, but FW expects all the keys to be removed before
-d1e879ec600f9b Miri Korenblit 2025-02-16  911  		 * the STA is, so remove them all here.
-d1e879ec600f9b Miri Korenblit 2025-02-16  912  		 */
-67128af05c6419 Johannes Berg  2025-03-09 @913  		if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
-d1e879ec600f9b Miri Korenblit 2025-02-16  914  			iwl_mld_remove_ap_keys(mld, vif, sta, link_id);
-d1e879ec600f9b Miri Korenblit 2025-02-16  915  
-d1e879ec600f9b Miri Korenblit 2025-02-16  916  		/* Remove the link_sta */
-d1e879ec600f9b Miri Korenblit 2025-02-16  917  		iwl_mld_remove_link_sta(mld, link_sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  918  	}
-d1e879ec600f9b Miri Korenblit 2025-02-16  919  
-d1e879ec600f9b Miri Korenblit 2025-02-16  920  	iwl_mld_destroy_sta(sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  921  }
-d1e879ec600f9b Miri Korenblit 2025-02-16  922  
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
