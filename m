@@ -1,123 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793702480;
-	b=Y6sVxyjNgVrBI7kd4jAEPWbhNHjOyzSEgat4FpacCmt6C15746gx51CLeSol/lG32avR
-	 Jp5TzNkKbo0HdIQGt2bFwuH/Gz90Z3TbeAu1C3yH6BQxPYYOf8j4KBzkrX1TWayR/B47c
-	 qREyQ63/5JU+irVF03n6KPL8pmHZUmTdg1LuE2Qvf74YOiPrwSOjbaae5P+itI4MGbDfG
-	 wRe6upAmJCaYkmPd9W4KgSDk2qYqhhP8qQA77JVJPtVJSrHzUyy/bZSjmKKP6+EcKWQo/
-	 Vm3HMuddx5yTSkX5a09BbTz897oTslXYp6hNC5UwVdSePsJk9OUJ42/brZDG55LKJyQ==
+	t=1793702557;
+	b=hr+xRhcR3+hZDt0Tf79z+zAE90WbxZD+TYvEBGycm75Fb45dg9iBKF8SBOTHGByCNfZi
+	 tfEdZuqGirVn0YY9F/gbQDPrR0SgVRMGvnkciqWV7/3Qz0hst25V6XyLLfWD6ZsBtQTqY
+	 AQC4a38nV9KFKhMROwcvZKfSXfq3E6eveRJDM+cZAxEfOMyXpFQ+vFJBqWDbvp9YN4DkR
+	 dynrGbXotIsHF4PRlHkeABOu+mK1iZeXlbKerE5C4gic9tHKbCcRmaiNWQ7OYcGwXKCzN
+	 xuknZFv7feXOXr0mPxgKpO7EWHPcoRWMb1xx6cmFxodv38E0vlBV6Ysn3M4A89yyoCw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793702480;
-	h=DMARC-Filter:Received:Received:Received:Date:Message-ID:From:To:Cc:
-	 Subject:In-Reply-To:References:User-Agent:MIME-Version:Content-Type:
-	 X-Rspamd-Pre-Result:X-Rspamd-Queue-Id:X-Rspamd-Pre-Result:
-	 X-Rspamd-Action:X-Rspamd-Server:X-Spam-Level:X-Spamd-Result:
-	 X-Spam-Flag:X-Spam-Score;
-	bh=n3928gBIWqHxVcE0Q0TQTSHKUQ5+JmJrD1oVco54lEw=;
-	b=SsNNhpNjGYW2vCZtMkflse9ue8YHNtR8+zbGG5fBevd4SYsJ2hVgVPVNH3P4hJ68/df6
-	 pJzUlpQCJkZaDvEKSRGrzteXSeBQenr0ZuEbFckUlTvj1mSY7SiUpQHhtJzfTgqBUtZnX
-	 KGPfx4asqIUjRtWhnSjU4CUWRold3ESi4aGFeWei6yh4oWfgxf10HOQGcthEPH5dIfr9A
-	 fSlITyTca7dNoYNjL+GB7dS6JUM466ks8zqr/C5aLdfQlu+4/Yvz1dG6dh8xowYtyLQE5
-	 nAeYjPv+WK6PboMtJ5JCCWvkviDiVOw6D4DSVf6DVdmuB4kuC/bcd4rs6cfcivrhikQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793702557;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=nKqX9luvgkH2YEYGSeE2+wJBSMv9stNPEQFCJdXsfmM=;
+	b=NtGm0k6tvWXIOYp0qFLrvd4v/T/Qsjw96/FmzKA0604CsvJNxTVVYFP1ezx7x9kcg7x8
+	 Uyc3cdTUx6j0LgcCh0llqBRT5+VvUrcpVfdEO4scyAy6pZxPRSJnKlsfetbgR6xG9+ZpX
+	 HjlQ9KF+NQ8vLfnCgrF3zyWvJ2LMjGj4koMVR/l6B07uoPPTV9j4XLDNsEzCAjdKFrQ3z
+	 w1WXcD0s4Z2GsidBam/EFYfueL8wPVbGGvtAbYxXm4DWp2XeA4nxiBfhQqTWw5twfjY+g
+	 mfu0TbpzUK2wY79eQkP6Q7ThoHKQqe4yOBpMVyt8OP2Uuf7nIMvf2Tt/5jUl86u5r1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.81
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34065606A81D;
-	Tue,  3 Nov 2026 10:41:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 34065606A81D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 87A641FF84;
-	Tue,  3 Nov 2026 10:41:18 +0000 (UTC)
-Authentication-Results: smtp-out2.suse.de;
-	none
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A98D41350A;
-	Tue,  3 Nov 2026 10:41:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fPJkIE266WqxEgAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Tue, 03 Nov 2026 10:41:17 +0000
-Date: Tue, 03 Nov 2026 11:41:09 +0100
-Message-ID: <87ik2exkmy.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71978606EE98;
+	Tue,  3 Nov 2026 10:42:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 71978606EE98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowADn8JGXuulqnsg7AA--.2916S2;
+	Tue, 03 Nov 2026 18:42:31 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: Mark Greer <mgreer@animalcreek.com>,
+	David Heidelberg <david@ixit.cz>
+Cc: linux-wireless@vger.kernel.org,
+	oe-linux-nfc@lists.linux.dev,
 	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	Chuck Lever <cel@kernel.org>,
+	Wentao Liang <vulab@iscas.ac.cn>,
 	stable@vger.kernel.org
-Subject: Re: [PATCH RFC 09/38] ALSA: info: don't write past the end of a data entry
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
-	<20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
+Subject: [PATCH] nfc: trf7970a: release runtime PM reference on RF-on errors
+Date: Tue,  3 Nov 2026 10:42:40 +0000
+Message-Id: <20261103104240.1373772-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -126,64 +53,85 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Queue-Id: 87A641FF84
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.00 / 50.00];
-	REPLY(-4.00)[]
-X-Spam-Flag: NO
-X-Spam-Score: -4.00
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowADn8JGXuulqnsg7AA--.2916S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFW8uw4rZr4DtF48Xr4xWFg_yoW8CF1xpF
+	WIgr4Ykry5Ar47Jr1DAr4kXa4Yk3yrtrW7Cayrua4xAa1rJa1Iy34DGa42vF1jyrZ5JF1U
+	trWIva17CFyjvrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9mb7Iv0xC_KF4lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
+	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
+	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xII
+	jxv20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwV
+	C2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWrXVW3AwAv7VC2z280aVAFwI0_Cr1j6r
+	xdMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VAI37AI020EjII2
+	zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026x
+	CaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_
+	JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r
+	yj6F1UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0
+	rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8Jr0_Cr1UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdYxBIdaVFxhVjvjDU0xZFpf9x07jFApnUUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwUAA2rpnO54xwAAsP
 
-On Mon, 02 Nov 2026 15:21:24 +0100,
-Christian Brauner wrote:
-> 
-> snd_info_entry_write() clamps the count to what is left of the entry
-> by computing entry->size - pos as a size_t. For a position past the end
-> that wraps and the write goes to the driver unclamped, for opl4 into
-> sample memory outside of what the entry covers. At the end of the entry
-> the driver gets a count of 0 and vmalloc(0) warns. Before the clamp
-> moved into the common code the driver ignored such writes. Fail them
-> with -ENOSPC instead, like a block device does at the end of the
-> device. Returning 0 would make writers that use stdio retry forever.
-> 
-> Fixes: d97e1b78239c ("ALSA: info - Check file position validity in common layer")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+trf7970a_switch_rf_on() bumps the runtime PM usage counter before
+validating the state and before initialising the chip.  Neither the
+incorrect-state path nor the trf7970a_init() failure path drops that
+reference, and none of the three callers balance it either, so the
+usage counter stays elevated.
 
-Reviewed-by: Takashi Iwai <tiwai@suse.de>
+Use pm_runtime_resume_and_get() so that a failed resume does not leave
+the counter incremented, and release the reference with the same
+mark-last-busy/put-autosuspend pair that trf7970a_switch_rf_off() uses
+when either of the subsequent steps fails.
 
+Fixes: e6403b7c756f ("NFC: trf7970a: Add pm_runtime support")
+Cc: stable@vger.kernel.org
+Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/nfc/trf7970a.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-thanks,
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index ddfc58c29964..7de590485657 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1150,23 +1150,31 @@ static int trf7970a_switch_rf_on(struct trf7970a *trf)
+ 
+ 	dev_dbg(trf->dev, "Switching rf on\n");
+ 
+-	pm_runtime_get_sync(trf->dev);
++	ret = pm_runtime_resume_and_get(trf->dev);
++	if (ret)
++		return ret;
+ 
+ 	if (trf->state != TRF7970A_ST_RF_OFF) {	/* Power on, RF off */
+ 		dev_err(trf->dev, "%s - Incorrect state: %d\n", __func__,
+ 			trf->state);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto err_put;
+ 	}
+ 
+ 	ret = trf7970a_init(trf);
+ 	if (ret) {
+ 		dev_err(trf->dev, "%s - Can't initialize: %d\n", __func__, ret);
+-		return ret;
++		goto err_put;
+ 	}
+ 
+ 	trf->state = TRF7970A_ST_IDLE;
+ 
+ 	return 0;
++
++err_put:
++	pm_runtime_mark_last_busy(trf->dev);
++	pm_runtime_put_autosuspend(trf->dev);
++	return ret;
+ }
+ 
+ static int trf7970a_switch_rf(struct nfc_digital_dev *ddev, bool on)
+-- 
+2.34.1
 
-Takashi
-
-> ---
->  sound/core/info.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/sound/core/info.c b/sound/core/info.c
-> index c4d57d0809ad..982087bc8575 100644
-> --- a/sound/core/info.c
-> +++ b/sound/core/info.c
-> @@ -171,6 +171,8 @@ static ssize_t snd_info_entry_write(struct file *file, const char __user *buffer
->  	pos = *offset;
->  	if (!valid_pos(pos, count))
->  		return -EIO;
-> +	if (pos >= entry->size)
-> +		return count ? -ENOSPC : 0;
->  	if (count > 0) {
->  		size_t maxsize = entry->size - pos;
->  		count = min(count, maxsize);
-> 
-> -- 
-> 2.53.0
-> 
