@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793723049;
-	b=l/kczSKcphrf3Eml4inNvkQnwSUhkhpuXPVILDptINuzSxt8bDqzsdYWTCEN1jct/iCT
-	 bX8tQG/Vsj0jAJwN0H8j3LlPGkj166CHK1pJhaFo4sXqVj53bKMQ8RTp/Ve7LVOOMTbn8
-	 sXYpd2/4iPpWRRPJwMSmjlwt8UH7jf8f6ncYE0UH6b81CBQHhjTNWDM5wyBmOx5nK1Jgc
-	 hHADxnEo+8m3x7m/OmMEpU/D2bNUDKDpmARMXem/sUcJ99qW2/ygV0fkmltf/IyZPeKsf
-	 OVN347tOHMw3hA5uUZhAz8CEwwFElVC3iYquYN+52HF/siQcvuHb+ZU6ilFIY/JaoiA==
+	t=1793723048;
+	b=aAfaLI+29dkLqiLs170y2O6W45bdHy0RjUWElRBOaHhnIqpE7ygGr8pLbyJMrRKX9JjP
+	 1QNCNKnRHQl+vVqnN0bHO2I4RueA+kWp6oycj6RjLoZYIji0deT+duEyeMuBCkE21Mdcm
+	 5N396sO1pBedRqMoeeH4fzx5f6lzNhc+KKy0Rdi/rorwACPKlJruCvmBSceEGb9gY3FiS
+	 IPd9zILg26WassvItKvGyeDmp43ojohTnocobAlqijq0b2p8ANJrVo07aygKdbNXNJmyC
+	 4TbKGZp/4dGq6r/eB/vvKzT64cUQDUAbm6JMgHa9NNaLjXyREj56mODtoTce5MonHRg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793723049;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793723048;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=YONAzz7gfQUeanKTI/fJPuBHz1iNkIkxTU6BRLU3gqo=;
-	b=X16DiUprfpnkghlGTPp+9OCFvqayzbwHVyhX6p5HcFNLfHzeG+Cga5WJu9wSH9E/0cOI
-	 xtLMYr978ssNOS7ns50I6uQ8pYNwryFrFSgLsy27SSP/Y68+S75h89jLTrORW6t1O1tx3
-	 U7DTYyYQuJ26Hi/YkVXSzQbp++6yTF+7VMqS9TFt9EEgTHZf7fg2NOcFDWz1JxdbbVhd/
-	 mdEuDaFKyY22XIjMajwEnk0BE7MCFEh2iOcSCTkTKxiKWbd5AzmxCt3P6JPSsL86+E8YL
-	 oy904xv9gl65btCzKr/qpolHGln0Weqt3F9svdA2t8S8qblhBLEqqcBUCXMGfonsj0g==
+	bh=sViWAvq8fJy6svB9FvzX9naFNDuKXQysa+ZQkFDooII=;
+	b=ZovShtk+mgBCUtUnZHmZRo2OtyArKpEUXaW20kC8J84/mxQn2at3vWWR+tW54zASAgjk
+	 8KGrFcHc+4iJhpUHATrB9Ya9kcGrvTZsoBw2dSaqDtxoVCf+mO1sOd/y55VJ/MlOYOav1
+	 1dGTG4FH+NsE8RYFzUhdgqmpN8ZUbxmM9ppOaSw26pd0YMR4xyWeedMEUehPiAE67mtPC
+	 sp4MVjlVEgefwe24DTzppY9hFcmsb6fAGnrxvuzgc2ZARXS2CXPGtr5ies+v772n2VnHr
+	 Z3sjQZI4i0dFXzYczd201p5ecPz+IrSniPmzno57fwPwmhDgARhwr9kL8llwVNYgx1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nbd.name;
 	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b="Rtf76V//";
+	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=h5h6tLUE;
 	arc=none smtp.remote-ip=46.4.11.11
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C8D606D81B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:24:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 54C8D606D81B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D89A606A33B
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:24:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D89A606A33B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=Rtf76V//
+	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=h5h6tLUE
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=YONAzz7gfQUeanKTI/fJPuBHz1iNkIkxTU6BRLU3gqo=; b=Rtf76V//OOWZpHXlYznWSLIfHa
-	3Ka9KbmCkZPRkKnlqlNu08z2fIilKxqXUyUuHWghaTjmcb+QXogj96TQqAlH3omeUpOfWqTzy0lXs
-	nRebC8+jC7Uucnuyf4ljLUdesnqTijPpvqWASKRWsiQj8nuC9Iz4YF5Zs6RuSfXwNYuA=;
+	bh=sViWAvq8fJy6svB9FvzX9naFNDuKXQysa+ZQkFDooII=; b=h5h6tLUERPPuu/VcESZKoH4rYd
+	6GVcqNxQXHugx9Y2s6P8dyBecGSCOg5cLUzt06R8uiojhlPJ1X756JG4ZERwvk3LqkNLiDI9jVTsO
+	GLFCX60qX9vztx1SR/CJLAGcf+80uyibK68ozOpaO2MsvoYJQbWkWFjpVPgZr+FrW5aE=;
 Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xOHIn-00FDFp-1D;
-	Tue, 03 Nov 2026 17:24:01 +0100
+	id 1xOHIl-00FDFp-1a;
+	Tue, 03 Nov 2026 17:23:59 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless-next 13/18] wifi: mac80211: add the sta_set_scs driver op
-Date: Tue,  3 Nov 2026 17:23:46 +0100
-Message-ID: <8dd882fa6ee0b64df5f55830847d8ebe83da5308.1793722802.git-series.nbd@nbd.name>
+Subject: [PATCH wireless-next 03/18] wifi: cfg80211: add the SCS evaluator
+Date: Tue,  3 Nov 2026 17:23:36 +0100
+Message-ID: <c8db19a443a4cd2dbdb68a7aaa41304d2aad6899.1793722802.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.118d7c7b799f8ed35de51dc2aefef460bf69727b.1793722802.git-series.nbd@nbd.name>
 References: <cover.118d7c7b799f8ed35de51dc2aefef460bf69727b.1793722802.git-series.nbd@nbd.name>
@@ -68,272 +68,350 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Pass the SCS descriptors of a request to the driver and let it answer
-each of them. This is the only path by which the QoS Characteristics
-element reaches a driver.
+Add cfg80211_scs_evaluate(), which walks the active SCS descriptors of
+a peer and returns the user priority of the descriptor that matches an
+MSDU. When several descriptors match, the one that requires the most
+classifier parameters wins.
 
-The classifier runs in software whatever the driver answers, but only
-the driver can schedule a stream according to its traffic description.
-A driver therefore declines a descriptor only when it cannot serve the
-traffic description. Without the op, or before the station is uploaded,
-mac80211 declines every descriptor that carries a traffic description.
+A filter classifier cannot be answered from the flow key, so it reads
+the frame again.
+
+A descriptor can name a client, a host behind a 4-address peer. It then
+only matches an MSDU whose destination address is that client.
+
+The verdict also reports a descriptor that did not match only because
+the MSDU lacks a parameter that it selects, if that descriptor would
+take precedence over the result. A caller that evaluates a flow instead
+of a frame must not derive a flow rule from such a verdict.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/mac80211.h     | 29 +++++++++++++++++++++-
- net/mac80211/driver-ops.h  | 26 +++++++++++++++++++-
- net/mac80211/ieee80211_i.h |  1 +-
- net/mac80211/scs.c         | 54 +++++++++++++++++++++++++++++++++++++--
- net/mac80211/trace.h       | 27 ++++++++++++++++++++-
- net/mac80211/util.c        |  2 +-
- 6 files changed, 137 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h |  44 +++++++-
+ net/wireless/scs.c     | 260 ++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 304 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0f1969c48646..9ed50c6fe679 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5129,6 +5129,35 @@ struct ieee80211_ops {
- 			  struct cfg80211_pmsr_request *request);
- 	void (*abort_pmsr)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			   struct cfg80211_pmsr_request *request);
-+	/**
-+	 * @sta_set_scs:
-+	 * Called with the SCS descriptors that a station requested, after
-+	 * cfg80211 validated them. Optional, only reached when the wiphy
-+	 * advertises %NL80211_EXT_FEATURE_SCS. Without it, every descriptor
-+	 * with a QoS Characteristics element is declined.
-+	 *
-+	 * - The @status entries arrive zeroed, which means accepted. Write
-+	 *   only refusals, as IEEE status codes, at the index of the
-+	 *   descriptor.
-+	 * - Decline a descriptor only when its traffic description cannot
-+	 *   be served. mac80211 classifies frames in software either way.
-+	 * - A declined add or change keeps the previous descriptor of that
-+	 *   SCSID. An accepted add or change without a traffic description
-+	 *   ends the device stream of that SCSID.
-+	 * - A removal only drops driver state, the status is ignored. A
-+	 *   station going away drops its rules without a call.
-+	 * - After a hardware restart every stored rule is passed again as
-+	 *   an add, one per call, and the status is ignored.
-+	 * - A negative return fails the whole request and leaves the rule
-+	 *   set unchanged, so the driver must leave the device as it was.
-+	 * - The descriptors belong to the MLD, not to one link.
-+	 *
-+	 * Called with the wiphy mutex held. This callback may sleep.
-+	 */
-+	int (*sta_set_scs)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta,
-+			   struct cfg80211_scs_desc * const *desc,
-+			   u16 *status, u8 n_desc);
- 	int (*set_tid_config)(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      struct ieee80211_sta *sta,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 78230779e7fb..004e21ff334e 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1543,6 +1543,32 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index bb7b122e5020..e2aaf80dbf7c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4257,6 +4257,50 @@ bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
+ 			     struct cfg80211_flow_key *key);
  
-+static inline int drv_sta_set_scs(struct ieee80211_local *local,
-+				  struct ieee80211_sub_if_data *sdata,
-+				  struct sta_info *sta,
-+				  struct cfg80211_scs_desc * const *desc,
-+				  u16 *status, u8 n_desc)
+ /**
++ * struct cfg80211_scs_desc - one SCS descriptor
++ *
++ * @tclas_processing: how the elements of @tclas relate
++ * @id: SCSID, 1 to 255
++ * @up: user priority to assign to a matching MSDU
++ * @client: the host behind a 4-address peer that the descriptor applies
++ *	to, matched against the destination address of an MSDU. All zero
++ *	for every MSDU sent to the peer. The client does not scope @id,
++ *	which names one descriptor among all descriptors of the peer.
++ * @n_tclas: number of entries in @tclas
++ * @tclas: the classifier
++ */
++struct cfg80211_scs_desc {
++	enum cfg80211_tclas_processing tclas_processing;
++	u8 id;
++	u8 up;
++	u8 client[ETH_ALEN];
++	u8 n_tclas;
++	struct cfg80211_tclas tclas[] __counted_by(n_tclas);
++};
++
++/**
++ * struct cfg80211_scs_verdict - result of an SCS evaluation
++ *
++ * @match: an SCS descriptor matched the MSDU
++ * @undecided: a descriptor that would take precedence over the result
++ *	matches every parameter that the MSDU carries, but selects one that
++ *	it lacks. A caller that evaluates a flow instead of a frame must not
++ *	derive a flow rule from this verdict.
++ * @scsid: identifier of the matching descriptor
++ * @up: user priority to assign
++ */
++struct cfg80211_scs_verdict {
++	bool match;
++	bool undecided;
++	u8 scsid;
++	u8 up;
++};
++
++void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
++			   const struct cfg80211_flow_info *info,
++			   struct cfg80211_scs_verdict *verdict);
++
++/**
+  * DOC: Neighbor Awareness Networking (NAN)
+  *
+  * NAN uses two interface types:
+diff --git a/net/wireless/scs.c b/net/wireless/scs.c
+index e8e3b5501b39..1418cb130638 100644
+--- a/net/wireless/scs.c
++++ b/net/wireless/scs.c
+@@ -697,3 +697,263 @@ bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
+ 	return true;
+ }
+ EXPORT_SYMBOL(cfg80211_flow_key_build);
++
++static bool tclas_filter_offset(const struct cfg80211_flow_info *info,
++				const struct cfg80211_tclas_filter *f,
++				unsigned int *off)
 +{
-+	int ret;
++	struct ipv6hdr ip6h_buf, *ip6h;
++	unsigned int pos = info->l3_off;
++	unsigned int hdrs = 0;
++	u8 instance = 0;
++	u8 nexthdr;
 +
-+	might_sleep();
-+	lockdep_assert_wiphy(local->hw.wiphy);
++	if (info->key.ip_version == 4) {
++		struct iphdr iph_buf, *iph;
 +
-+	if (!local->ops->sta_set_scs || !sta->uploaded)
-+		return 0;
++		iph = skb_header_pointer(info->skb, pos, sizeof(*iph),
++					 &iph_buf);
++		if (!iph || iph->ihl < 5 || iph->frag_off & htons(IP_OFFSET))
++			return false;
 +
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
++		pos += iph->ihl * 4;
++		if (iph->protocol == f->protocol && instance++ == f->instance) {
++			*off = pos;
 +
-+	trace_drv_sta_set_scs(local, sdata, &sta->sta, n_desc);
-+	ret = local->ops->sta_set_scs(&local->hw, &sdata->vif, &sta->sta, desc,
-+				      status, n_desc);
-+	trace_drv_return_int(local, ret);
++			return true;
++		}
++
++		/* IPv6 inside IPv4 continues the chain (9.4.2.29) */
++		if (iph->protocol != IPPROTO_IPV6)
++			return false;
++	} else if (info->key.ip_version != 6) {
++		return false;
++	}
++
++	ip6h = skb_header_pointer(info->skb, pos, sizeof(*ip6h), &ip6h_buf);
++	if (!ip6h || ip6h->version != 6)
++		return false;
++
++	nexthdr = ip6h->nexthdr;
++	pos += sizeof(*ip6h);
++
++	while (hdrs++ < 8) {
++		struct ipv6_opt_hdr hdr_buf, *hdr;
++
++		if (nexthdr == f->protocol && instance++ == f->instance) {
++			*off = pos;
++
++			return true;
++		}
++
++		if (!ipv6_ext_hdr(nexthdr) || nexthdr == NEXTHDR_NONE)
++			return false;
++
++		if (nexthdr == NEXTHDR_FRAGMENT) {
++			struct frag_hdr fh_buf, *fh;
++
++			/* A later fragment has none of the headers behind this */
++			fh = skb_header_pointer(info->skb, pos, sizeof(*fh),
++						&fh_buf);
++			if (!fh || fh->frag_off & htons(IP6_OFFSET))
++				return false;
++
++			nexthdr = fh->nexthdr;
++			pos += sizeof(*fh);
++			continue;
++		}
++
++		hdr = skb_header_pointer(info->skb, pos, sizeof(*hdr),
++					 &hdr_buf);
++		if (!hdr)
++			return false;
++
++		if (nexthdr == NEXTHDR_AUTH)
++			pos += ipv6_authlen(hdr);
++		else
++			pos += ipv6_optlen(hdr);
++
++		nexthdr = hdr->nexthdr;
++	}
++
++	return false;
++}
++
++enum scs_match {
++	SCS_MATCH_NO,
++	SCS_MATCH_YES,
++	SCS_MATCH_UNDECIDED,
++};
++
++static enum scs_match tclas_filter_match(const struct cfg80211_tclas *t,
++					 const struct cfg80211_flow_info *info)
++{
++	const struct cfg80211_tclas_filter *f = &t->filter;
++	u8 buf[CFG80211_TCLAS_FILTER_LEN], *p;
++	unsigned int i, off;
++
++	if (!info->skb)
++		return SCS_MATCH_UNDECIDED;
++
++	if (!tclas_filter_offset(info, f, &off))
++		return SCS_MATCH_NO;
++
++	p = skb_header_pointer(info->skb, off, f->len, buf);
++	if (!p)
++		return SCS_MATCH_NO;
++
++	for (i = 0; i < f->len; i++)
++		if ((p[i] ^ f->value[i]) & f->mask[i])
++			return SCS_MATCH_NO;
++
++	return SCS_MATCH_YES;
++}
++
++static enum scs_match tclas_match(const struct cfg80211_tclas *t,
++				  const struct cfg80211_flow_info *info)
++{
++	u32 fields = t->fields & info->present;
++	struct cfg80211_flow_key key, want;
++
++	if (t->type == CFG80211_TCLAS_FILTER)
++		return tclas_filter_match(t, info);
++
++	flow_key_select(&info->key, fields, &key);
++	flow_key_select(&t->key, fields, &want);
++	if (memcmp(&key, &want, sizeof(key)))
++		return SCS_MATCH_NO;
++
++	/* A parameter that @info does not carry could still differ */
++	if (fields != t->fields)
++		return SCS_MATCH_UNDECIDED;
++
++	return SCS_MATCH_YES;
++}
++
++/* Number of classifier parameters required for a match, see 11.25.2 */
++static u16 tclas_param_count(const struct cfg80211_tclas *t)
++{
++	if (t->type == CFG80211_TCLAS_FILTER)
++		return 1;
++
++	if (t->type == CFG80211_TCLAS_VLAN)
++		return 3;
++
++	return hweight32(t->fields & ~FLOW_F(IP_VERSION));
++}
++
++static enum scs_match
++scs_desc_client_match(const struct cfg80211_scs_desc *desc,
++		      const struct cfg80211_flow_info *info)
++{
++	if (is_zero_ether_addr(desc->client))
++		return SCS_MATCH_YES;
++
++	if (!(info->present & FLOW_F(ETH_DA)))
++		return SCS_MATCH_UNDECIDED;
++
++	if (!ether_addr_equal(desc->client, info->key.da))
++		return SCS_MATCH_NO;
++
++	return SCS_MATCH_YES;
++}
++
++/* A definite result of one element decides over an undecided one */
++static enum scs_match scs_desc_match(const struct cfg80211_scs_desc *desc,
++				     const struct cfg80211_flow_info *info)
++{
++	bool all = desc->tclas_processing == CFG80211_TCLAS_PROCESSING_ALL;
++	enum scs_match ret = all ? SCS_MATCH_YES : SCS_MATCH_NO;
++	enum scs_match client;
++	unsigned int i;
++
++	client = scs_desc_client_match(desc, info);
++	if (client == SCS_MATCH_NO)
++		return SCS_MATCH_NO;
++
++	for (i = 0; i < desc->n_tclas; i++) {
++		enum scs_match m = tclas_match(&desc->tclas[i], info);
++
++		if (m == SCS_MATCH_UNDECIDED)
++			ret = SCS_MATCH_UNDECIDED;
++		else if (all && m == SCS_MATCH_NO)
++			return SCS_MATCH_NO;
++		else if (!all && m == SCS_MATCH_YES)
++			return client;
++	}
++
++	if (ret == SCS_MATCH_YES)
++		return client;
 +
 +	return ret;
 +}
 +
- static inline int drv_set_tid_config(struct ieee80211_local *local,
- 				     struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_sta *sta,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c52dcf2a28ba..41518764ee12 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2270,6 +2270,7 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
- 		      u16 *status, u8 n_desc);
- int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
- 		       const u8 *peer, struct cfg80211_mscs_desc *desc);
-+void ieee80211_sta_scs_reconfig(struct sta_info *sta);
- void ieee80211_sta_scs_free(struct sta_info *sta);
- bool ieee80211_flow_classify(struct sta_info *sta, struct sk_buff *skb);
- void ieee80211_flow_learn(struct ieee80211_rx_data *rx);
-diff --git a/net/mac80211/scs.c b/net/mac80211/scs.c
-index 13560cdf5dd8..00c58eaa3057 100644
---- a/net/mac80211/scs.c
-+++ b/net/mac80211/scs.c
-@@ -6,6 +6,7 @@
-  */
- #include <linux/ieee80211.h>
- #include <net/cfg80211.h>
-+#include "driver-ops.h"
- #include "ieee80211_i.h"
- #include "sta_info.h"
- 
-@@ -40,6 +41,8 @@ static void *ieee80211_scs_rule_copy(const struct cfg80211_scs_desc *src,
- 	struct cfg80211_scs_desc *dst = pos;
- 
- 	memcpy(dst, src, len);
-+	/* A restart replays the stored rule to the driver as an add */
-+	dst->req_type = NL80211_SCS_REQ_ADD;
- 	pos += len;
- 
- 	if (src->qos_char_len) {
-@@ -474,6 +477,7 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
- 	struct sta_info *sta;
- 	unsigned int n_alloc;
- 	u8 i, n_rules = 0;
-+	int ret;
- 
- 	lockdep_assert_wiphy(wiphy);
- 
-@@ -498,8 +502,20 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
- 	scs = kvzalloc(ieee80211_scs_sta_size(old, desc, n_desc, n_alloc),
- 		       GFP_KERNEL);
- 	if (!scs) {
--		kfree(rule);
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+		goto free;
++static u16 scs_desc_param_count(const struct cfg80211_scs_desc *desc)
++{
++	unsigned int i;
++	u16 count;
++
++	if (desc->tclas_processing != CFG80211_TCLAS_PROCESSING_ALL) {
++		count = U16_MAX;
++		for (i = 0; i < desc->n_tclas; i++)
++			count = min(count, tclas_param_count(&desc->tclas[i]));
++
++		return count == U16_MAX ? 0 : count;
 +	}
 +
-+	if (sdata->local->ops->sta_set_scs && sta->uploaded) {
-+		ret = drv_sta_set_scs(sdata->local, sdata, sta, desc, status,
-+				      n_desc);
-+		if (ret)
-+			goto free;
-+	} else {
-+		/* Without a driver, no traffic description can be served */
-+		for (i = 0; i < n_desc; i++)
-+			if (desc[i]->qos_char)
-+				status[i] = WLAN_STATUS_REQUEST_DECLINED;
- 	}
- 
- 	if (old) {
-@@ -520,6 +536,9 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
- 			continue;
- 		}
- 
-+		if (status[i] != WLAN_STATUS_SUCCESS)
++	count = 0;
++	for (i = 0; i < desc->n_tclas; i++)
++		count += tclas_param_count(&desc->tclas[i]);
++
++	return count;
++}
++
++/**
++ * cfg80211_scs_evaluate - pick the SCS descriptor that matches a flow
++ *
++ * @desc: the active descriptors of one peer
++ * @n_desc: number of entries in @desc
++ * @info: the frame or flow to classify
++ * @verdict: receives the result
++ *
++ * When several descriptors match, the one with the most classifier parameters
++ * wins. An equal count keeps the first. A descriptor with a client only
++ * matches an MSDU addressed to that client.
++ */
++void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
++			   const struct cfg80211_flow_info *info,
++			   struct cfg80211_scs_verdict *verdict)
++{
++	unsigned int i, best_idx = 0;
++	int best = -1;
++
++	memset(verdict, 0, sizeof(*verdict));
++
++	for (i = 0; i < n_desc; i++) {
++		u16 count = scs_desc_param_count(desc[i]);
++
++		if (count <= best ||
++		    scs_desc_match(desc[i], info) != SCS_MATCH_YES)
 +			continue;
 +
- 		if (at < n_rules)
- 			rule[at] = desc[i];
- 		else
-@@ -540,6 +559,12 @@ int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
- 		kvfree_rcu(old, rcu_head);
- 
- 	return 0;
++		best = count;
++		best_idx = i;
++		verdict->match = true;
++		verdict->scsid = desc[i]->id;
++		verdict->up = desc[i]->up;
++	}
 +
-+free:
-+	kvfree(scs);
-+	kfree(rule);
++	/* Only a descriptor that could beat the match leaves it undecided */
++	for (i = 0; i < n_desc; i++) {
++		int count = scs_desc_param_count(desc[i]);
 +
-+	return ret;
- }
- 
- static struct ieee80211_mscs_sta *
-@@ -642,6 +667,31 @@ int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+/*
-+ * A restarted device lost every stream, so program them again. A refusal
-+ * changes nothing here: the rule stays and mac80211 keeps classifying for it.
-+ */
-+void ieee80211_sta_scs_reconfig(struct sta_info *sta)
-+{
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_scs_sta *scs;
-+	u8 i;
++		if (count < best || (count == best && i >= best_idx))
++			continue;
 +
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	scs = wiphy_dereference(local->hw.wiphy, sta->scs);
-+	if (!scs)
-+		return;
-+
-+	/* One rule per call, so no status array has to be allocated */
-+	for (i = 0; i < scs->n_rules; i++) {
-+		u16 status = 0;
-+
-+		drv_sta_set_scs(local, sta->sdata, sta, &scs->rule[i], &status,
-+				1);
++		if (scs_desc_match(desc[i], info) == SCS_MATCH_UNDECIDED) {
++			verdict->undecided = true;
++			break;
++		}
 +	}
 +}
-+
- void ieee80211_sta_scs_free(struct sta_info *sta)
- {
- 	struct ieee80211_mscs_sta *mscs, *tmp;
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index ea46c3cca21a..4720ea912e5c 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1023,6 +1023,33 @@ DECLARE_EVENT_CLASS(sta_event,
- 	)
- );
- 
-+TRACE_EVENT(drv_sta_set_scs,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_sta *sta, u8 n_desc),
-+
-+	TP_ARGS(local, sdata, sta, n_desc),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		STA_ENTRY
-+		__field(u8, n_desc)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->n_desc = n_desc;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " %d descriptors",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->n_desc
-+	)
-+);
-+
- DEFINE_EVENT(sta_event, drv_sta_statistics,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 44feb80274c6..7a9ff3a3d2e3 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1766,6 +1766,8 @@ static void ieee80211_reconfig_stations(struct ieee80211_sub_if_data *sdata)
- 		     state < sta->sta_state; state++)
- 			WARN_ON(drv_sta_state(local, sta->sdata, sta, state,
- 					      state + 1));
-+
-+		ieee80211_sta_scs_reconfig(sta);
- 	}
- }
- 
++EXPORT_SYMBOL(cfg80211_scs_evaluate);
 -- 
 git-series 0.9.1
