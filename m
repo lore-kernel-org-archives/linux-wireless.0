@@ -1,79 +1,124 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793697020;
-	b=HM8dy7rjNyusw6kbfShLLadmkZR2sU3RVgkqNEf1PAnkt7QQX45lmeKUeE87oNER30Nb
-	 1dCYUvSiYX92XwHpPzuXKxPWOXosJ871JGyp7KJ+9YpHAH8qsWuEwK9gANyEJ8dS0Cvi0
-	 JfAWEOmDQWW2qNnWCRNycGFqf7/4EfoYrTZFTXn59glHqMve5b1VVo/GJ4C2J1vayGWOk
-	 ALk96Pa9ZWiLwy4aQH5VxuK2ZpcgReVPo2GXOe2J9sJD2T1G1+WW/qeSndSWszMTfkgk9
-	 lUkzYB3UeGiiB8f9eYcJiOkMYqOuw8M9hk8q5/efG0loCfRE0Mjq6kBLgMov27z2mhA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793697020;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
-	 Content-Type:X-MTK;
-	bh=IAyt+7Jp+OiNOSTQqb1S4a5PlLbQsLrrTmnRawmEWOI=;
-	b=UZoieU2EqpQKCDNmfrsBf9T2VrLCseuu93GtMjXRstax6IsQKCAmd7dFkgHqCKMv4SJF
-	 GQD5bOk5AS131KZdFakVMzn62KYzbnRiOdjZvT7txKOSm9dBaB10IUNh/qNprTcIZKNQI
-	 alQgUr8URXiGpEZyYgqEu7ilJCHXDexNUkf/kgJzMYL1Ti6Lylt93ZbiNZrleCYm+KDoY
-	 tlnytir4c4141X/EYdm7CzzFSikJhRL9tFK1Cc2ikcdG5RIzEbFGphFIbiyHm+jmHehw+
-	 H+liNW8vqTVsptVRSorqdrc0L7oDJwcEUZT0ipHfv0x54+AUpZUvmeNSQ8mOWIK2tPg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=L4KyoAkD;
-	arc=none smtp.remote-ip=210.61.82.184
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.168.131
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793697654;
+	b=h4ryFxHoSVgfhYiEpmAKc7685rsgKa69UQTj1nw+618Gvs2KsxuklpluXMGxKIBU7rW6
+	 WTSzpPUTHDfBsDacou8i0rc0qQk1ghz2s2lOlk1kfzEymaDnadjpzw2v3lNIQ+pq2puz6
+	 hRoa1Quif2+S+K+0QXlkVBgsrn5Qjzx191SYfKZZP7w7OJp22G4a8V2o6lOo7BscsFt8e
+	 VRq0HujvfeLhLjj1TzkVJD5lYD3tsst6DNsAyKnOhHNhMVrQUlzvLGorqjad92GsLs0H6
+	 oLTmQ8HTPl1zy2nBWcHRclr/KgkYdT5dN58DlpE7iiqx4mnjQrCXTyotaxTbnicKeEA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793697654;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:MIME-Version:
+	 References:In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:
+	 Cc:Content-Type:Content-Transfer-Encoding:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=KUBbiIfZu+24bweR1re7NXjlbwlpg2p+g1Gnk+3cVK0=;
+	b=mWiwhj0W7n0XsUupyxGxSp0mrC40gWclu+VmClauHP5l0Mq/tUvOPnCGKZ5L48zEuRdp
+	 oQnefhvr1MjHBW3ZwFhZ8bGg+TuFSlxUzgjRr4k5KM1MQbOW+klVb6fZRQ/R+4YaYDCtp
+	 U9s2UqHl+pGCo/O6b/q0i8YH7sCrWKFCRJC+ItTDsgURumAxVdqzDLzNF6rw0QSj82/hA
+	 iYga3Qk53PSTM/VA266OScqA1KrFPPWTAxlRzvXSqvbeE/Ff0NX+onSeURHOpo+hXoiCF
+	 ZpKdDutU0/RoDQGT5HJ4eTm3pFt3O3O9Qc17x/V1LmCoTKDXWYH5jlxzXeNO71XxbkQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jR4khUt7;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b="Tg9IKvD/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C839F606D801
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 09:10:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C839F606D801
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44C56606A324
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 09:20:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44C56606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=L4KyoAkD
-X-UUID: 60545998d76611f18dc8c9802ae25ab1-20261103
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=IAyt+7Jp+OiNOSTQqb1S4a5PlLbQsLrrTmnRawmEWOI=;
-	b=L4KyoAkDtpD04n3ITGXgE20PeaP8SkXCBetFFj7GQLHLT2v4pne0GTVHlQfcHDQE0PfodVFEX6vSyd1J81CN1iuDLHQ6iJaKiDD/UrWmWK+4yj9tS1KrYfKhSKHVJingKDGH7klpKvk2sDafSuYKA7AIMHTrDtcZC1F7s5zHU5o=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:319c1b78-2985-4d43-ae34-250c2aaaeed9,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:b0318ac,CLOUDID:f2fb56bb-4006-44bb-949c-6e25a7b8dad4,B
-	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
-	0|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0
-	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 60545998d76611f18dc8c9802ae25ab1-20261103
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
-	(envelope-from <jb.tsai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 2111038246; Tue, 03 Nov 2026 17:10:12 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Tue, 3 Nov 2026 17:10:12 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Tue, 3 Nov 2026 17:10:12 +0800
-From: JB Tsai <jb.tsai@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<Sean.Wang@mediatek.com>, <Evan-ym.Li@mediatek.com>, <jb.tsai@mediatek.com>,
-	Yin-Ming Li <evan-ym.li@mediatek.com>, Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 2/3] wifi: mt76: mt7921: drain PCIe activity before freeing queues
-Date: Tue, 3 Nov 2026 17:10:09 +0800
-Message-ID: <20261103091010.1148974-2-jb.tsai@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20261103091010.1148974-1-jb.tsai@mediatek.com>
-References: <20261103091010.1148974-1-jb.tsai@mediatek.com>
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jR4khUt7;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Tg9IKvD/
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A39KoeO2715393
+	for <linux-wireless@vger.kernel.org>; Tue, 3 Nov 2026 09:20:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	KUBbiIfZu+24bweR1re7NXjlbwlpg2p+g1Gnk+3cVK0=; b=jR4khUt7auVF2cTs
+	+zE1das89MxlX4ly8zfcOrManLqiiQhL486a7PFc00bj1PPUpwccm31TQKNOoyHI
+	AVAUs/O4hZ11F31TXS6ZRbJE8KN8pFS51HYtVDbtdJfaqI3Kx08A/17DodSlik5w
+	vDpRIYy8JZNVfd++OdET2A0fnw7JxO9zAqlcntMsTT5N0ME5LkwebEcl4BmebNdg
+	QDKiWkfzy5XMLuzZaz99k5Aqngvrm1nQBnwiVZsHHpx26CMr77kFgGp0Sz5PAQF3
+	8g+YTwsflDwMKT79yPcRN6H9JEdVhcKtZCfPvRQ3BLu4A0Yq8TiuMIELtxMSL6Hs
+	WFm76Q==
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hq76d9cwp-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 09:20:53 +0000 (GMT)
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-9308eafb465so480383085a.2
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 01:20:53 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793697652; cv=none;
+        d=google.com; s=arc-20260327;
+        b=WbuudALVBAGUS2Kdr0d28IbDI3iOOVYwqLnNfFt+q2/bdTkMIlR2iuKaUFq9GglWzP
+         IkzvBhqA3WVpLw4pcamWhrBr2dYJu3zZShdmvy62U5JYGs2l2ETxMzzaYmn4LJBnBvWa
+         mV937GnPsKvPS1m4dQVZJAHNWiWFn/88PsR+o0mSAEiaW3xZRo+07dM6iaoJ6N6304CI
+         /oWwr5Gr6AxXMhofaAfufY8OJMUGG82WVN0IlAKePnu6FPFht+8ZsIViXUa+WzkWKzbQ
+         sNkNQHENQBspCg/I0bFp6rDjkfutR79+OoIIe/FlKG06m/35x4PafwEsZEuojWiYmpLw
+         h2OA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=KUBbiIfZu+24bweR1re7NXjlbwlpg2p+g1Gnk+3cVK0=;
+        fh=LPGkdmuT9qJEKJH2dnFGyzPpGxBFBZ2HfCsSqGt0U2s=;
+        b=XQm2kCQbNKMb+7PHMwwhz6r5Uf/XgYHfeEa0GgbNvrl66CZjfGrOo+znMYCYNyQfCv
+         b7MaPzg4GFz+KuGg1Uic84Dgfg0yrjJhYuYcv0LgURhsT4X/2y7qYN0btIKeO2ZvXHYr
+         HuwHcsSSmtFFnk8jBMzO3a+/FrmzpJnV9QreFI1pO6JyTiwsHFfFEM0qhzDKE0X3mE1b
+         wxtmcbhvUd3x86ul3PwDADSIw4zKBan0mvi1AQmZXEwT6mtCl2fOwW6WvZXTFWRzAeVo
+         7rMB2nzKy4x+buG9jmVmyo0AYrAvB1iA7iD1qGIqP/8iC1n0qAaYyLogpzqz43vzIwET
+         OAWw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793697652; x=1794302452; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=KUBbiIfZu+24bweR1re7NXjlbwlpg2p+g1Gnk+3cVK0=;
+        b=Tg9IKvD/Hy/byn9eQO4Xf7uRMQ08K2y+9cn+A1H/SYfAyUPpnWpQfU2mCAtiM9GIRE
+         KJxpLQnqSXGWt5C0vXZcVzA52ZuPyVVtN4bOqqXkDaVIEnUo1/CkgJtCz+EccggT5bHG
+         9CwIu3G7cCdLEXhoOn7VQIM1RDRRU3XR5VTSljyUKPFrOJuWF+PDHw1pmpOonj6IK4x+
+         xpqVBcw8n+SGOHHGRfS+0+o4U9Js93gm/5ZTIgx2fDVqGVD+xbjaeYGovkOP/LBrpMIB
+         oa9w8ny4CIHw7E652l6bmIjzq2EM8ByYPMLgKpTYSQ5cXzfStcbxHOq/dg04V+w4sNl9
+         swpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793697652; x=1794302452;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=KUBbiIfZu+24bweR1re7NXjlbwlpg2p+g1Gnk+3cVK0=;
+        b=cWocJA6OmN7BKJrlLsebzQS6zAMV5aHzRsbYYBHoIBy3Cg21ZovUoL2dPt4ZHDFzWJ
+         W5mWd+MvFGov2AWezJVPbTCi0cTEhrs2/JkrLgzbUzmfKTy9acRiJK3bF3TbsJGCxBjP
+         wxdNR20avju+t3WzF+bcaSBsbBk1keBswjRc3Mk2n/LqkSEOg15JAa4JNoUQH+KHYOp/
+         3TYxPu6pSuJsAe4ri5ncFrBqi0Zea7bI6T1Ik6507nqB79EFyFqEliikUPNZGGi3Trl/
+         lsAqi6eQeK4v3gg/fy3pfrHZtn4uac29N0eDITEJ6jT0K7BoxvzHe0r0Qm+Dv/o9rTyP
+         ofwg==
+X-Forwarded-Encrypted: i=1; AKwUvBxXo51AhGlXfAm9j3LDJWxXH0zwkVryN8aKSDKz+UeD9eDX6ojfskDe9xWL93MoktLNYmjprXruNb2QH+DDXw==@vger.kernel.org
+X-Gm-Message-State: APuU4Z/R8RB3VHNgO+eKnEwyClUOjeIeZWJd8naZOVKIJYZzy6aPyBiU
+	dpgiIFoEh2nosEZQwUR/KoVUcwffzYsdy1hXeO3PTa9QSpsnB3DXERyAwErfPQKmvC93QUOmcrh
+	a0TK7oSHEnMVsyIfo4v+NJGH6IZpO6gElslAZon2HW9dy6UnJWo7qJdZfFs4ay6J7Wg4ZetWugH
+	8e9NhzgEqJUja7zj0Czu9PK5DVRd/zpSh//1s+Lf5UYBLO
+X-Gm-Gg: AYBFou0BW2VBlHy5s50iDYJ4RsVRXJoInM1KllPmSyAmOwibUMIa08pjcEkCoX8VpY9
+	UklDBxet5Bl74cYDvNyGxIC0RrEBruZqnhgyL2h19cWzAy3MeGTQF9/EvciFPcKkC4jteie8IlU
+	/RCP7Xi+bgRJ1DVq75x7Q5JxsG50UWnGDt/vEYJOffRC0Rw1ahW7i3a415TH1+f79+C4atsDq+V
+	YGQP8GK1+cssTxy4KeAc068obgtDl6Q0jqcXgY//SZVbgYWfD13Tc45bcQU45B5h+Ko7f0+bLc=
+X-Received: by 2002:a05:620a:2b44:b0:93e:bcbf:4ad with SMTP id af79cd13be357-944216855c9mr2096034985a.33.1793697652216;
+        Tue, 03 Nov 2026 01:20:52 -0800 (PST)
+X-Received: by 2002:a05:620a:2b44:b0:93e:bcbf:4ad with SMTP id
+ af79cd13be357-944216855c9mr2096030885a.33.1793697651561; Tue, 03 Nov 2026
+ 01:20:51 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,139 +128,111 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+References: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
+ <20261016-ath10k-series-v1-send-v1-1-c847697b3558@nagashi.ma>
+ <CAFEp6-2xY_gM=FRUp3R30TZ-NgT=-eYnyz_BPE0vxEenv+202w@mail.gmail.com>
+ <CACB3TCKq--tdL6j+uGR_dxGdy-gHxQhY8p0h6xxqi_4Fd3VEOQ@mail.gmail.com> <c45bdcae-63da-4552-9e35-59ec6a71621a@gmail.com>
+In-Reply-To: <c45bdcae-63da-4552-9e35-59ec6a71621a@gmail.com>
+From: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Date: Tue, 3 Nov 2026 10:20:40 +0100
+X-Gm-Features: AclHuK9oFUU-GohF-bJ9l6vtg0lo68CrWTs2ZXBEs1Vyyp-LhH1J9qLG4HKSIt8
+Message-ID: <CAFEp6-36Fc15uDWSR=v+xCMhERbkhggZOBoEFTF7pAcRLz_vFw@mail.gmail.com>
+Subject: Re: [PATCH ath-next 1/3] wifi: ath10k: set the PMF peer flag on WCN3990
+To: "Conn O'Griofa" <connogriofa@gmail.com>
+Cc: "Nagashima, Shunsuke" <shunsuke@nagashi.ma>,
+        Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-kernel@vger.kernel.org,
+        David Heidelberg <david@ixit.cz>,
+        Fabricio Akio <fabricioakio@gmail.com>,
+        Aleksei Kharlamov <aleksei.kharlamov@gmx.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Authority-Analysis: v=2.4 cv=KJTPn1Fo c=1 sm=1 tr=0 ts=6ae9a775 cx=c_pps
+ a=50t2pK5VMbmlHzFWWp8p/g==:117 a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=Um2Pa8k9VHT-vaBCBUpS:22 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
+ a=3iNpH_K7wzUH7o6TWwkA:9 a=QEXdDO2ut3YA:10 a=IoWCM6iH3mJn3m4BftBB:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTAzMDAzNyBTYWx0ZWRfX8Z30+gjE1j/E
+ 7y3SmbhtZJmPrKAc4ORrM/1wqYO832h4AFL4S+OK5iWKBvLeaOJYgmR7xkt0e3CW/pIg97PuYBN
+ bmmgqDHElnyXav942uGNixPEahgMoyY=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTAzMDAzNyBTYWx0ZWRfX4MLZZnBtlTMR
+ NmCjfzm4ADN0WP6+Wwt1enoPNTiRKsgarvRgQ0tqxL7v67FEjuoAYfxhXv/cwOM5uKEQPYqVD9s
+ CbY6Fdzq9b57JMdiKDwVn7kATqSOldXo18SirQICuHwMw1PXYt7xHFTb2WNrv3tzxDCkwmZqOf5
+ ZKvGtn9Sf0gM7jQQG95GO5CqmOgT8yUCDqv2GKLL+sftPf4X+mukDkV5mM5vNhItzMdwCyPtz6n
+ Q8fTf/1y4MEmZpfs5KE6u16rJfVJbB5sksG735a7qXm3iFIe6HETmpSByTrVGSbLQ2R2YyZ1oWx
+ Jx44p9J2wpFf0y0/HkLlPp4Bp/q9TKjNJzawssGXvhUm91k45epXxfEB+M8xcVagci+UGhsWEn1
+ +XDO8mNpKA9xRzmwmRirk6LM2jHnZU/zomAAnA2szb1bqzD/wv1soo9NlLQ0tA3PDZi8TPUh8va
+ sxP1TZG4uqjdTQ7VAOw==
+X-Proofpoint-GUID: X9R8fUAnOAKhbXM6Uefg7yajM6FTIiRT
+X-Proofpoint-ORIG-GUID: X9R8fUAnOAKhbXM6Uefg7yajM6FTIiRT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-03_01,2026-11-02_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 priorityscore=1501 bulkscore=0
+ lowpriorityscore=0 adultscore=0 malwarescore=0 phishscore=0 spamscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
+ definitions=main-2611030037
 
-From: Yin-Ming Li <evan-ym.li@mediatek.com>
+Hi Conn, Shunsuke,
 
-The PCIe remove path sets MT76_REMOVED before unregistering mac80211,
-making the IRQ handler return without servicing MCU responses. It also
-disables the IRQ tasklet only after DMA cleanup, so a previously scheduled
-tasklet can run while queues are being torn down.
+On Tue, Nov 3, 2026 at 12:57=E2=80=AFAM Conn O'Griofa <connogriofa@gmail.co=
+m> wrote:
+>
+> On 02/11/2026 22:51, Nagashima, Shunsuke wrote:
+>
+> > Aleksei, Conn: a firmware file update only helps devices that load that
+> > file. If you have time, could you make the same change to the
+> > firmware-N.bin your device loads, test it, and send it to
+> > linux-firmware?
+>
+>
+> I can confirm that the unmodified driver with a patched firmware fixes
+> the issue on QCA9377 as well. I appended the mfp-support flag to the
+> existing flags for both firmware variants that are relevant to my device:
+>
+> ./ath10k-fwencoder --modify --features=3Dignore-otp-result,mfp-support
+> firmware-5.bin
+> ./ath10k-fwencoder --modify
+> --features=3Dwowlan,ignore-otp-result,mfp-support firmware-6.bin
+>
+> Testing each firmware individually confirms the flag is now present, and
+> both firmware versions can now reach 300Mbps.
+>
+> ath10k_pci 0000:02:00.0: firmware ver WLAN.TF.1.0-00002-QCATFSWPZ-5 api
+> 5 features ignore-otp,mfpcrc32 18db2397
+> ath10k_pci 0000:02:00.0: firmware ver WLAN.TF.2.1-00021-QCARMSWP-1 api 6
+> features wowlan,ignore-otp,mfpcrc32 02bceae2
+>
+> I would be happy to submit the modified firmware, but I am skeptical
+> that it would be accepted? I'm not sure if I've ever observed
+> unofficial/modified wifi firmware to ever have been accepted into
+> linux-firmware (which seems completely understandable, given the risks).
 
-Use the common work-quiescing helper while IRQs, NAPI and the MCU command
-queues remain available. Delay publishing REMOVED until mac80211
-unregistration returns, so the IRQ handler remains available during
-teardown even when individual MCU commands fail.
+I think having this defined directly in firmware-5.bin makes more
+sense, as the feature is primarily tied to a specific firmware
+implementation rather than the driver itself. If PMF support was
+introduced at some point in the WCN3990 firmware distributed through
+linux-firmware, then advertising that capability through the
+corresponding firmware-5.bin entry seems like the right place to do
+it.
 
-Mask both device interrupt sources and flush the write before publishing
-REMOVED. Synchronize the IRQ, disable its tasklet, and disable and delete
-RX NAPI before releasing TX tokens. Let common DMA cleanup skip an
-already-deleted RX NAPI context to avoid disabling it twice.
+Compared to enabling it unconditionally in the driver, this also
+prevents older firmware packages that may not implement the feature
+from being incorrectly treated as PMF-capable. In other words, the PMF
+capability should follow the firmware version, not the driver. As a
+result, hardware using the same firmware image would naturally expose
+the same PMF capability, while older firmware revisions would continue
+to behave correctly without requiring any special handling in the
+driver.
 
-After DMA cleanup has also stopped TX NAPI, drain the tasklet that its
-last poll might have scheduled. Add a REMOVED guard so this final tasklet
-cannot access freed queues. Purge scan and coredump state after stopping
-their producers and before freeing the device.
+For change request I think the best for this is probably to follow
+board like change:
+https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath10k/boardfil=
+es.html
 
-Co-developed-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Yin-Ming Li <evan-ym.li@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/dma.c        |  4 ++-
- drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 40 ++++++++++++++++++-------
- drivers/net/wireless/mediatek/mt76/mt792x_dma.c |  3 ++
- 3 files changed, 35 insertions(+), 12 deletions(-)
+Please, keep me in CC.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index f695a14596062c4cd5445913f014907a421b2c22..25d4640f09eea7335c422b36b9c3ef52fe388830 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -1217,7 +1217,9 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
- 	mt76_for_each_q_rx(dev, i) {
- 		struct mt76_queue *q = &dev->q_rx[i];
- 
--		if (!mt76_queue_is_wed_rro(q)) {
-+		/* A driver may have removed RX NAPI before releasing TX tokens. */
-+		if (!mt76_queue_is_wed_rro(q) &&
-+		    test_bit(NAPI_STATE_LISTED, &dev->napi[i].state)) {
- 			napi_disable(&dev->napi[i]);
- 			netif_napi_del(&dev->napi[i]);
- 		}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 5180597aed757777dc3d5c287f2bbdee39ce243d..2e05dbaf8b2805522410609e90f422b348826e43 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -43,28 +43,47 @@ static int mt7921e_init_reset(struct mt792x_dev *dev)
- 
- static void mt7921e_unregister_device(struct mt792x_dev *dev)
- {
- 	int i;
--	struct mt76_connac_pm *pm = &dev->pm;
-+	struct pci_dev *pdev = to_pci_dev(dev->mt76.dev);
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 
- 	if (dev->phy.chip_cap & MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN)
- 		wiphy_rfkill_stop_polling(hw->wiphy);
- 
--	cancel_work_sync(&dev->init_work);
--	mt76_unregister_device(&dev->mt76);
--	mt76_for_each_q_rx(&dev->mt76, i)
-+	mt7921_unregister_device(dev);
-+
-+	/*
-+	 * Mask device interrupts before MT76_REMOVED makes the handler return
-+	 * IRQ_NONE. Drain the IRQ and tasklet before tearing down the queues.
-+	 */
-+	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
-+	mt76_wr(dev, dev->pcie_reg->imask, 0);
-+	mt76_rr(dev, dev->pcie_reg->imask);
-+	set_bit(MT76_REMOVED, &dev->mphy.state);
-+	synchronize_irq(pdev->irq);
-+	tasklet_disable(&dev->mt76.irq_tasklet);
-+
-+	mt76_for_each_q_rx(&dev->mt76, i) {
- 		napi_disable(&dev->mt76.napi[i]);
--	cancel_delayed_work_sync(&pm->ps_work);
--	cancel_work_sync(&pm->wake_work);
--	cancel_work_sync(&dev->reset_work);
-+		netif_napi_del(&dev->mt76.napi[i]);
-+	}
-+	skb_queue_purge(&dev->phy.scan_event_list);
-+	cancel_delayed_work_sync(&dev->coredump.work);
-+	skb_queue_purge(&dev->coredump.msg_list);
- 
- 	mt76_connac2_tx_token_put(&dev->mt76);
--	__mt792x_mcu_drv_pmctrl(dev);
- 	mt792x_dma_cleanup(dev);
-+
-+	/*
-+	 * TX NAPI is now disabled too; drain a tasklet queued by its last poll.
-+	 * MT76_REMOVED makes that tasklet return without touching freed queues.
-+	 */
-+	tasklet_enable(&dev->mt76.irq_tasklet);
-+	tasklet_kill(&dev->mt76.irq_tasklet);
-+	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
-+
- 	mt792x_wfsys_reset(dev);
- 	skb_queue_purge(&dev->mt76.mcu.res_q);
--
--	tasklet_disable(&dev->mt76.irq_tasklet);
- }
- 
- static u32 __mt7921_reg_addr(struct mt792x_dev *dev, u32 addr)
-@@ -458,7 +477,6 @@ static void mt7921_pci_remove(struct pci_dev *pdev)
- 	if (of_property_read_bool(dev->mt76.dev->of_node, "wakeup-source"))
- 		device_init_wakeup(dev->mt76.dev, false);
- 
--	set_bit(MT76_REMOVED, &mdev->phy.state);
- 	mt7921e_unregister_device(dev);
- 	devm_free_irq(&pdev->dev, pdev->irq, dev);
- 	mt76_free_device(&dev->mt76);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-index 8ad94fa583405d561429a1c5d212e9f83d616328..06877816640f51829b50205ab93126385d26f16a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-@@ -31,6 +31,9 @@ void mt792x_irq_tasklet(unsigned long data)
- 	const struct mt792x_irq_map *irq_map = dev->irq_map;
- 	u32 intr, mask = 0;
- 
-+	if (test_bit(MT76_REMOVED, &dev->mphy.state))
-+		return;
-+
- 	mt76_wr(dev, irq_map->host_irq_enable, 0);
- 
- 	intr = mt76_rr(dev, MT_WFDMA0_HOST_INT_STA);
--- 
-2.43.0
+Regards,
+Loic
