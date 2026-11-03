@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793719636;
-	b=Dj/AN4WlGkySq00EflXL7We+mkeaUPuPmGLgWepr9dMhAWQuJhw78N2JidLx0gDIFrmc
-	 nxgNEKBBh7PUfJdj5AaE8QGYOKTHx200Bm67zvjEexHbEaWgd9gCsws1olXjl0y7svpW0
-	 W+gHZIEzsbZ1/Dcc77D7rsHpylWC2ErQyFBOvqDe3vhsILot+eLI0ZispIxaUxVHR1LR4
-	 lVxRA6fQkYVQ84QTgp7qI3a2mRD7jlDyE9IDP0Gm49RjQv3k+hhq6Y5qwCAyCJgmr8J71
-	 OlZAHDoouJXxbbcQ8V8DNOMDfgRK7DRBOGvbYDj6pVxJVqgBR+EYqSHePXOhmygP9gw==
+	t=1793719766;
+	b=YpahzD6Lk9oMQm4GV3UTZYSx0Q/zmZTvl4Y6bQvSPb1vn1z39i0v9IkQmdx1Vqa3tJ/J
+	 6YHRtEkW8t5X1Ls/5IdzCYR1VbLDhaYOhzFr4CTgEERNd2gH2OiDhyspL8EVDKbnFqzHi
+	 6ls+lKJk78Kk8stkfypTzLZL/s6ejQdk8KapIIqS9Bh1IpNMqxp6hPd5bcqQee6G4BeWc
+	 foK7JRyE4D97dIPS88r7VzeKXsXKTfaAA8jU7GcSgKKtAZinaNph4W9xkTf0ZZeTjYPsq
+	 CV0NZzMA6gEIxyUQzEUBdyayPB7TzsaPxeY92lzNbFZPq+pBmOg5p7ZDJzij2BAlxWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793719636;
-	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793719766;
+	h=DKIM-Signature:Received:From:To:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=k7xqzXhCMgTfhld78oEw33LqY/63UKOJOAEByeA2VjI=;
-	b=Pkp8wzaLikx2jZ1/Ih67ehJEvv480AsOIVClNwl8QsaH3vqhWU9R0ejRkvzyZgacjaU8
-	 wRql87GbESnU2w/xNjd/J/e2yLoxRFunQfzvedYeI15eu5LquR4+kij+dTYLDMpSSpOwp
-	 gfyUOj3spNfkHasX5WoPzkwH9JUDTElLHmmOmeuuUNcoAI9pkGxBnZidai05dm7RorrRM
-	 Q3UN8Zwc+yl4K76A6hJgrPhyRTZvShFzqw7uO0NX1KPWsXFsBHJkn1eANVVyZp2lCX18W
-	 rKaUyAHpyPL5mWxh+nMJGkAh01luynW68sAhIyzoV7RW9u+lLqp+Am4CPapXW6dxQQQ==
+	bh=6EORodUkxfdkTCz/xzEQnfBa/K/Q7cbSsb1m0o63AvA=;
+	b=pZ6yfJEfx3N7NZdtvXJWXY7mwP8r2WNXmxVDp+bgn4xT7T1iIM3S+7kfiN2qMPo0iRPV
+	 0s4KB4hjy3NuC2bZA+ex8QoAObvwUiDQC2PDxHVzDrG1i1rrY7VdyjUSIuQTDl8ZJrWJe
+	 2cQgKC79oUBM0gYseT1FdPIW2cbn45dln9b0uft1gQssJ1/YL7U1oes51/IksPsvYL4J0
+	 0PeLt/7gyiIrXbYrEnNqGCl4QNnYo9jl5JkBkxpqkyzbFhgWq17Qj54gGJAKiCzoFDIm2
+	 nFMjJq/i6Atxkm86wgAG6zeZSjmCuc5ZiNkaSSVif7ztIV5T64Optu8A7OPpzGXZAwA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=W4OGcM5Z;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=labljQOn;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082DA606A328
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 15:27:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3760C606A326
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 15:29:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=W4OGcM5Z
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=labljQOn
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
 	Resent-Message-ID:In-Reply-To:References;
-	bh=k7xqzXhCMgTfhld78oEw33LqY/63UKOJOAEByeA2VjI=; t=1793719635; x=1794929235; 
-	b=W4OGcM5ZXB8dKaID7dKJ9CTJw3dmOqCcYlK1xQ4phJaLPgISb3pOrfG5u2LWnbgq0AF653PJfBk
-	T1Ta4j2fSBIWxnKSALLSdDnmNmzlfWVe9DqnZLsgRaFBLyo6GihR3iztwbk8fNCcVAY800suczECw
-	YFA9aCngDChvjZ1zj0ltKumYDd4EEyOL6NvX8OKTpkvNKgkqpl6AR+VaEUPCnwBMz50kfnPx5ffKm
-	yOn9/2rFRrZ11YmZyr9qIjUGO+MGKuYTxZ/GFWqHKss+TeH8l1O5UVorC6PN4XRuexFrd+6qEZ0Qd
-	v+zw2RwPCVXtErvHncG/wbWV9/X7o/IC+djA==;
+	bh=6EORodUkxfdkTCz/xzEQnfBa/K/Q7cbSsb1m0o63AvA=; t=1793719765; x=1794929365; 
+	b=labljQOnDhj+ALQ3/Mp+XEUw/A8h2Ae9YI+lVhiMptzXPmeAWQ4cDo/5tPpjPg9KuJL6W59ItQs
+	yNhUnsLnhB/CtTfmn3AetQJ0drG15MRiP/+zTVAEIb4jbB1r9Nc2Jg070qqaeI7R0Fnosjaznt8z/
+	9Sg0evLgOafbfzTiglRbPHLoW6ZNgvXkog3was/s9+d41IChDSaKyPJwvkoVhWn/KUwJnf3pfIRXe
+	83FLkXvpba7bQgH94vpSq1HK7Mj6RRU96khI0n7NpA+O4V7Mnxp1ZVHbwIhfCBG3Kr9ciWzV8dtXc
+	Cluq+S21F7EE8o6XEqrhHbJuUdEQ1lk+c90g==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xOGPo-00000003eNu-1o7C;
-	Tue, 03 Nov 2026 16:27:12 +0100
+	id 1xOGRv-00000003eXZ-0NTJ
+	for linux-wireless@vger.kernel.org;
+	Tue, 03 Nov 2026 16:29:23 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: brcmsmac: remove unused wlc_info_dbg variable
-Date: Tue,  3 Nov 2026 16:27:10 +0100
-Message-ID: <20261103162709.8a0da8a7970c.Ic047db7b9f9a30522a8d0756c70b446003aec915@changeid>
+Subject: [PATCH wireless-next 0/4] wifi: enable context analysis
+Date: Tue,  3 Nov 2026 16:29:12 +0100
+Message-ID: <20261103152920.294873-6-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -65,43 +65,11 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+With recent rework in the kernel we lost sparse context tracking,
+but gain it back by supporting it with clang 23. Do that.
 
-clang complains this is unused, and it really shouldn't
-exist as a global anyway. Remove it.
+Since clang can't evaluate "IS_ERR()" in the condition for locks,
+this requires some refactoring in nl80211.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 9 ---------
- 1 file changed, 9 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-index ec3aeaa7bab9..7d000a2d033b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-@@ -313,11 +313,6 @@ static const char * const fifo_names[] = {
- static const char fifo_names[6][1];
- #endif
- 
--#ifdef DEBUG
--/* pointer to most recently allocated wl/wlc */
--static struct brcms_c_info *wlc_info_dbg = (struct brcms_c_info *) (NULL);
--#endif
--
- /* Mapping of ieee80211 AC numbers to tx fifos */
- static const u8 ac_to_fifo_mapping[IEEE80211_NUM_ACS] = {
- 	[IEEE80211_AC_VO]	= TX_AC_VO_FIFO,
-@@ -7875,10 +7870,6 @@ brcms_c_attach(struct brcms_info *wl, struct bcma_device *core, uint unit,
- 	wlc->wiphy = wl->wiphy;
- 	pub = wlc->pub;
- 
--#if defined(DEBUG)
--	wlc_info_dbg = wlc;
--#endif
--
- 	wlc->band = wlc->bandstate[0];
- 	wlc->core = wlc->corestate;
- 	wlc->wl = wl;
--- 
-2.56.0
+johannes
 
