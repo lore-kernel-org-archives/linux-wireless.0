@@ -1,72 +1,72 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793692411;
-	b=O84dXqQtg3ddF2ND6VdrwChPZQv7KLW20TAbgo/UMwdcukGBaSMcZNP/kw5XqFam/zQ7
-	 WqdIqDWEYSL1kBxr0KNSbYyw7Gehf8QKx2A0CcB0LOjNASkgYtFwAkN/0jlIOvmjIonGy
-	 DVhXH1geo3OVtyf/7FzR0tDoxasQ6UXv/DPke5vuZYI3kFYo5yOlgqlTl4HNGpCjsEi7B
-	 xik/dEbLEa3fMBcgWrjvteHqmm0SaFYeBVjKxzs9FivE2iQ94trDFeONB79xap381vHck
-	 pejbP0eo8PBIkVaSOiy97J403ncYqNctc9vj4kW/PuFvUIYnYU/a6U72uu59z1IXP0w==
+	t=1793692413;
+	b=XcqN0Fo63bV7KYCiGk4dCAtepZH1RrzNcJqeWtVVNy8G2cP2HUoMw0i6qti/fmGwiRBl
+	 JZ5wBsAfnQDYGEotPdR7ynVWt5oXiBKPGhbEPXLdA230SRcKXy1ASlmtr3Kp//Be/mQVq
+	 0shD/pj92UVsxY7keZ289Dg4yHckQvCLef9ida5kB1cMfAHMhfBxkaHxjpKIkK0CPm8iA
+	 NRqUYMYtPg9VzhV6pzfNFsHWXUTcsTPax317k0bCr4XEg2XTvAP+wVZlT2CYHZmZi8gBi
+	 VJByTyBUsiHmYMshbU1qgR/rHPQ5ctSJmvpkBmIVnXSzedx8IgU8c0MWPae+iMuBwaA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793692411;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793692413;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
 	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
 	 Content-Type;
-	bh=ifu4Rtu9IC2haBk8gc42Y10vAOTIm0Fs4UZIYKsOyTM=;
-	b=A3cd+zdCJtFiWnwXWn9q/acuO0xTfK5JGPwX8HhGUMPnPKbfrqVYg334R+o1GfAQm4U/
-	 0hDNaQXPrw39MU8TpWHN5QtDlAA3Szlu8t6FvNN8UO92zjAG5S0fVWKyo6zoKTTwOmpdv
-	 gOmo/OEpTrzEn2Tc8Srsyn7dr8poL80ux63jqmEYG6DVuYpl2UHV/YQDIv5TnuruUWEgB
-	 3qRdpBgEaGbAOn62B2allKCqpOW7LfwP71yIOpRuFwit8CI4yMRq8Xoq10afkBbqMrPC3
-	 dmLHvwU2djudZeqagKsaeXlW1W/DfXfd970CBpTrkflkMOzjeT6E5GGGISr74i/3MOQ==
+	bh=n8bobHCEOxmTBV7IVD6M4PdGuWNv6M0HC6fay/DLDEo=;
+	b=ZTDbWNabrghHOtN58xdIy4mrWvTufDYRxHjqZx81QJrWc9U/AxQtZHdRN7wYNcDaR4th
+	 nMPCdrXDe7QYiXVBKECdqjwJEMFWVeIEF+Xxl8oKa7R/scmg8s/+YHgF+BvYscgnRwqly
+	 HFD+LId7Lej8zOH4cj+wPScpkP3JTVSOHURJrvX9irnLuZr4k4/OoBGYYmBY/7xuFTD2k
+	 +C6ZqeUX9BUNW4tZkcGv11dgPYFkEJ6SVUaQBgMvkhx1cqOWn9PYGPdKwWPjdjkNTzLco
+	 Pza3KPX2+2HW8SRBLJ3LVUyJLu5JC3etHmWUKozA8xc0n8iWJeX1dnwowzxcguzIESQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=dbsE5RGi;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=nBIhlqHK;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43599606A324
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 07:53:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43599606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB21606A324
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 07:53:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FB21606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=dbsE5RGi
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A37rRppD2864310, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=nBIhlqHK
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A37rUyJ52864339, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793692408; bh=ifu4Rtu9IC2haBk8gc42Y10vAOTIm0Fs4UZIYKsOyTM=;
+	t=1793692410; bh=n8bobHCEOxmTBV7IVD6M4PdGuWNv6M0HC6fay/DLDEo=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=dbsE5RGiXprQ+XiRxws++NyB9STJfyapJXxuFe/16IlIpRTfFCB+s27BY9XKs67FJ
-	 Zkb1etQIBnkHAMRpJkW84qT1BGyWWfHFFVq+CbfTRhOA7HejoIzGr5COxDtiNhhdUD
-	 MbQXpiE39pFLOivAfFbknkCTknthHkh/6RXoks/Xd/B0tUls+Sbl+dpG60lSNx10dS
-	 VXqsygnAl7AwtryVTYnE4he/pOKAmMCYwiWeUa+pHPRL5AT4fnVfT5dEcESr/KG7cF
-	 6K76LiY0QTPO+Ecnak+pn8uTJb/v9C+hrXJ6PhOCeLdT260MRugG6E67ivCtPaV9no
-	 DItryCeQk6Grw==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A37rRppD2864310
+	b=nBIhlqHKBl0ozPzDm6M5kU+ZN3mvp0eYRAxPa0dQRcT4+kWERr7DOwLuGsEHtmcaI
+	 VY/fB6GSFhxYOUyA8xUfg/crlSZfU6I4uR00yxPDBVk2EUr+9p9I2tNp9oczJVZd6h
+	 vXrm4EZxESLJxZyub2JqVhkLB8F2UwfqIYIhvtrrtxoSeVhwbFN0HX54eb9FcSkTpF
+	 JxnX+A9GVfSZVYJ9Aje2ktuCANlc6O6rRrwBho2+fFq4Y5hLRMdtRCPNRM02PvB96s
+	 u1um5Hq+OizUEZegSylfUk75G+TCkYMrsJjyMkin4ELSeIdLA3xrKOdyBze+DoSAyE
+	 gW26Fz3oytrOw==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A37rUyJ52864339
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Tue, 3 Nov 2026 15:53:28 +0800
+	for <linux-wireless@vger.kernel.org>; Tue, 3 Nov 2026 15:53:30 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 15:53:25 +0800
+ 15.2.2562.56; Tue, 3 Nov 2026 15:53:30 +0800
 Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
  RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 15:53:24 +0800
+ 15.2.2562.56; Tue, 3 Nov 2026 15:53:29 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
  (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
- Transport; Tue, 3 Nov 2026 15:53:24 +0800
+ Transport; Tue, 3 Nov 2026 15:53:29 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <timlee@realtek.com>
-Subject: [PATCH rtw-next 1/2] wifi: rtw89: enable low-latency power-save optimization for RTL8852B/RTL8852BT
-Date: Tue, 3 Nov 2026 15:52:54 +0800
-Message-ID: <20261103075255.56487-2-pkshih@realtek.com>
+Subject: [PATCH rtw-next 2/2] wifi: rtw89: avoid premature power save entry for buffered traffic
+Date: Tue, 3 Nov 2026 15:52:55 +0800
+Message-ID: <20261103075255.56487-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20261103075255.56487-1-pkshih@realtek.com>
 References: <20261103075255.56487-1-pkshih@realtek.com>
@@ -84,140 +84,125 @@ Content-Type: text/plain
 
 From: Chin-Yen Lee <timlee@realtek.com>
 
-The low-latency power-save optimization (LPS) was originally
-introduced specifically for RTL8852A to improve interactive
-application performance by exiting power-save during packet
-bursts.
-
-To extend this feature to RTL8852B and RTL8852BT, introduce
-a new flag "support_low_latency_lps" in chip info instead of
-hardcoding chip ID checks. Enable this capability for RTL8852A,
-RTL8852B, and RTL8852BT while explicitly disabling it for other
-supported chips.
+Configure two LPS parameters to prevent premature entry into power
+save mode and improving the delivery of real-time traffic. Enable
+MART_PS_DTIM_RX to transmit a Null Data frame to synchronize the
+power save state with the AP after waking up when buffered traffic
+is indicated by the beacon TIM. Enable TRX_EXT_MODE to keep the device
+awake for the remainder of the current TBTT interval when the AP has
+buffered packets.
 
 Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c      | 2 +-
- drivers/net/wireless/realtek/rtw89/core.h      | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8851b.c  | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852a.c  | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c  | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852bt.c | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c  | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8922a.c  | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8922d.c  | 1 +
- 9 files changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/fw.c | 40 +++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/fw.h | 15 ++++++++++
+ drivers/net/wireless/realtek/rtw89/ps.c |  1 +
+ 3 files changed, 56 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 58ee5efc3b5e..bfa31d365bef 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -3006,7 +3006,7 @@ static bool rtw89_core_proto_stats_can_lps(struct rtw89_dev *rtwdev,
- 					   struct rtw89_vif *rtwvif,
- 					   enum rtw89_tfc_interval interval)
- {
--	if (rtwdev->chip->chip_id != RTL8852A)
-+	if (!rtwdev->chip->support_low_latency_lps)
- 		return true;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index ea7dba077f5d..5ba265e0eeed 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -3525,6 +3525,46 @@ int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
+ 	return ret;
+ }
  
- 	if (rtwvif->burst_active)
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 0d893b992a4a..cce2c2e48080 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5837,6 +5837,7 @@ struct rtw89_chip_info {
- 	bool support_sar_by_ant;
- 	bool support_noise;
- 	bool support_fw_cmd_ofld;
-+	bool support_low_latency_lps;
- 	bool ul_tb_waveform_ctrl;
- 	bool ul_tb_pwr_diff;
- 	bool rx_freq_from_ie;
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b.c b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-index 272f4f4e1fb9..a7facfe96884 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-@@ -2647,6 +2647,7 @@ const struct rtw89_chip_info rtw8851b_chip_info = {
- 	.support_sar_by_ant	= false,
- 	.support_noise		= false,
- 	.support_fw_cmd_ofld	= false,
-+	.support_low_latency_lps = false,
- 	.ul_tb_waveform_ctrl	= true,
- 	.ul_tb_pwr_diff		= false,
- 	.rx_freq_from_ie	= true,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 5207df4f9cd5..3b5e3c178440 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -2418,6 +2418,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
- 	.support_sar_by_ant	= false,
- 	.support_noise		= true,
- 	.support_fw_cmd_ofld	= false,
-+	.support_low_latency_lps = true,
- 	.ul_tb_waveform_ctrl	= false,
- 	.ul_tb_pwr_diff		= false,
- 	.rx_freq_from_ie	= true,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index d19388b86aca..138f499af677 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -1025,6 +1025,7 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
- 	.support_sar_by_ant	= true,
- 	.support_noise		= false,
- 	.support_fw_cmd_ofld	= false,
-+	.support_low_latency_lps = true,
- 	.ul_tb_waveform_ctrl	= true,
- 	.ul_tb_pwr_diff		= false,
- 	.rx_freq_from_ie	= true,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852bt.c b/drivers/net/wireless/realtek/rtw89/rtw8852bt.c
-index 23ad02d1fcd4..7306ae7db096 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852bt.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852bt.c
-@@ -866,6 +866,7 @@ const struct rtw89_chip_info rtw8852bt_chip_info = {
- 	.support_sar_by_ant	= true,
- 	.support_noise		= false,
- 	.support_fw_cmd_ofld	= false,
-+	.support_low_latency_lps = true,
- 	.ul_tb_waveform_ctrl	= true,
- 	.ul_tb_pwr_diff		= false,
- 	.rx_freq_from_ie	= true,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index e556ba0c14a7..bdcce2e94f99 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -3222,6 +3222,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.support_sar_by_ant	= true,
- 	.support_noise		= false,
- 	.support_fw_cmd_ofld	= true,
-+	.support_low_latency_lps = false,
- 	.ul_tb_waveform_ctrl	= false,
- 	.ul_tb_pwr_diff		= true,
- 	.rx_freq_from_ie	= false,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922a.c b/drivers/net/wireless/realtek/rtw89/rtw8922a.c
-index e48300287697..a3b5da979768 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922a.c
-@@ -3270,6 +3270,7 @@ const struct rtw89_chip_info rtw8922a_chip_info = {
- 	.support_sar_by_ant	= true,
- 	.support_noise		= false,
- 	.support_fw_cmd_ofld	= false,
-+	.support_low_latency_lps = false,
- 	.ul_tb_waveform_ctrl	= false,
- 	.ul_tb_pwr_diff		= false,
- 	.rx_freq_from_ie	= false,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922d.c b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-index bdf9bcf2cf22..43d9df619260 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-@@ -3791,6 +3791,7 @@ const struct rtw89_chip_info rtw8922d_chip_info = {
- 	.support_sar_by_ant	= true,
- 	.support_noise		= false,
- 	.support_fw_cmd_ofld	= false,
-+	.support_low_latency_lps = false,
- 	.ul_tb_waveform_ctrl	= false,
- 	.ul_tb_pwr_diff		= false,
- 	.rx_freq_from_ie	= false,
++int rtw89_fw_h2c_lps_adv_param(struct rtw89_dev *rtwdev,
++			       struct rtw89_vif_link *rtwvif_link)
++{
++	struct rtw89_h2c_lps_adv_parm *h2c;
++	u32 len = sizeof(*h2c);
++	struct sk_buff *skb;
++	int ret;
++
++	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
++	if (!skb) {
++		rtw89_err(rtwdev, "failed to alloc skb for h2c lps adv parm\n");
++		return -ENOMEM;
++	}
++	skb_put(skb, len);
++	h2c = (struct rtw89_h2c_lps_adv_parm *)skb->data;
++
++	h2c->w0 = le32_encode_bits(rtwvif_link->mac_id, RTW89_H2C_PS_ADV_PARM_W0_MACID) |
++		  le32_encode_bits(1, RTW89_H2C_PS_ADV_PARM_W0_EN_SMART_PS_DTIM_RX) |
++		  le32_encode_bits(1, RTW89_H2C_PS_ADV_PARM_W0_EN_TRX_EXT_MODE);
++
++	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
++			      H2C_CAT_MAC,
++			      H2C_CL_MAC_PS,
++			      H2C_FUNC_MAC_PS_ADVANCE_PARM, 0, 1,
++			      len);
++
++	ret = rtw89_h2c_tx(rtwdev, skb, false);
++	if (ret) {
++		rtw89_err(rtwdev, "failed to send h2c\n");
++		goto fail;
++	}
++
++	return 0;
++
++fail:
++	dev_kfree_skb_any(skb);
++
++	return ret;
++}
++
+ int rtw89_fw_h2c_lps_ch_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index e4d3331fc18f..ba4813b9230f 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -2338,6 +2338,18 @@ struct rtw89_h2c_wow_payload_cam_update {
+ 	__le32 w8;
+ } __packed;
+ 
++struct rtw89_h2c_lps_adv_parm {
++	__le32 w0;
++	__le32 w1;
++} __packed;
++
++#define RTW89_H2C_PS_ADV_PARM_W0_MACID GENMASK(7, 0)
++#define RTW89_H2C_PS_ADV_PARM_W0_TRX_TIMEOUT_TIME_SET GENMASK(9, 8)
++#define RTW89_H2C_PS_ADV_PARM_W0_EN_SMART_PS_DTIM_RX BIT(10)
++#define RTW89_H2C_PS_ADV_PARM_W0_EN_TRX_EXT_MODE BIT(11)
++#define RTW89_H2C_PS_ADV_PARM_W1_TRX_TIMEOUT_TIME_VAL GENMASK(7, 0)
++#define RTW89_H2C_PS_ADV_PARM_W1_EXTNUM GENMASK(15, 8)
++
+ #define RTW89_H2C_WOW_PLD_CAM_UPD_W0_R_W BIT(0)
+ #define RTW89_H2C_WOW_PLD_CAM_UPD_W0_IDX GENMASK(7, 1)
+ #define RTW89_H2C_WOW_PLD_CAM_UPD_WKFM0 GENMASK(31, 0)
+@@ -4800,6 +4812,7 @@ enum rtw89_ps_h2c_func {
+ 	H2C_FUNC_MAC_LPS_PARM		= 0x0,
+ 	H2C_FUNC_P2P_ACT		= 0x1,
+ 	H2C_FUNC_IPS_CFG		= 0x3,
++	H2C_FUNC_MAC_PS_ADVANCE_PARM	= 0x4,
+ 	H2C_FUNC_PS_POWER_LEVEL		= 0x7,
+ 	H2C_FUNC_TBTT_TUNING		= 0xA,
+ 
+@@ -5636,6 +5649,8 @@ int rtw89_fw_h2c_init_ba_cam_users(struct rtw89_dev *rtwdev, u8 users,
+ 
+ int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
+ 			  struct rtw89_lps_parm *lps_param);
++int rtw89_fw_h2c_lps_adv_param(struct rtw89_dev *rtwdev,
++			       struct rtw89_vif_link *rtwvif_link);
+ int rtw89_fw_h2c_lps_ch_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif);
+ int rtw89_fw_h2c_lps_ml_cmn_info(struct rtw89_dev *rtwdev,
+ 				 struct rtw89_vif *rtwvif);
+diff --git a/drivers/net/wireless/realtek/rtw89/ps.c b/drivers/net/wireless/realtek/rtw89/ps.c
+index 3639292eba7a..40bac65dd8ed 100644
+--- a/drivers/net/wireless/realtek/rtw89/ps.c
++++ b/drivers/net/wireless/realtek/rtw89/ps.c
+@@ -138,6 +138,7 @@ static void __rtw89_enter_lps_link(struct rtw89_dev *rtwdev,
+ 
+ 	rtw89_btc_ntfy_radio_state(rtwdev, BTC_RFCTRL_FW_CTRL);
+ 	rtw89_fw_h2c_lps_parm(rtwdev, &lps_param);
++	rtw89_fw_h2c_lps_adv_param(rtwdev, rtwvif_link);
+ 
+ 	if (RTW89_CHK_FW_FEATURE(BEACON_TRACKING, &rtwdev->fw))
+ 		rtw89_fw_h2c_pwr_lvl(rtwdev, rtwvif_link);
 -- 
 2.25.1
 
