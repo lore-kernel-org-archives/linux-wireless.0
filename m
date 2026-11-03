@@ -1,47 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793688876;
-	b=hzgqnxm3zgzuf0aUiAo+TwbFOHepCXmvsaus4+O16k1bbnO3tlMmS7GNAK/SQbdP73Wx
-	 xzOwuyw17pzLskYehOZKR01L4HyqMkAwrhloAtnQYaLWRgX5Rs/yrtIHrweYslhVn6IcK
-	 5eqreAaTkJs7AG6hEGnM44Bx1G2OzTfXuk+OMdgcjYlJEbhMEwrN+GEiyDeuvQrQThuPC
-	 Ouk0Qu8+orBy7D4vdsbuDAohgoazM3TDZGQOq89zItMIirS0tNttMsfXc/Dh5VDgdO4mg
-	 13lD5Y/t/jfmnd6XcL+jeZEx6/Imiv0ZTsk8HzaRaTu+LUKiTj28eRMK++TurW7lIWQ==
+	t=1793689952;
+	b=tlldoHkuBajhOYVJkAqKU7Ll/hshPbzIIcUfix7vlXXRsJtAvP3bMMvLPMRVeHoXIjaH
+	 rOSlv1XmPORO1QdUcLXR1Ypk+WCcRNNcAGhDhn5ip9uOTgh74NQ7lvbbGdwKZ6C93IV7m
+	 nbMwMTVOYR0WcXlIzFGGkitKiotG4g+wyHAlxYFhjtHSwUH3ekGaBkQP9+g3aerXmbah+
+	 lSszZ+SofMAeVJL0p6r3uv/W/Wo6/PZKPlDz/tNPMtdo1UbzBwWywtKYL1XGwETIAuTiV
+	 JdWfc3wzDySAGAlM6xtMk3QKBy99ZBxzdbIiPe+U0puDAotNewVq3ZW3yHKOTJ4zbFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793688876;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=pI+R0vssS3+rBEwGlEmrhAJtAWwC+K6R2fL7Q2wxluc=;
-	b=kHpHcYPZNySrVpcXOaZLKz7xVjV1Av85dZ82VFATW6ctQdNLvHkXM8xPm8vTEwpgtxuC
-	 PzvUVZcMmuK4xW9wuQUrRhISAEDM/i2eLIbmqaHah1ydPBfvqtdCLKxILkTz/bClasLEb
-	 02/LAN95Mz+aVP9ZIR9IYM7nDdFt7t1Zl+JJIuoupoibtIcnfINE5AVg7WrJGidH1jGI4
-	 829cycOww4c4If2fp9RJAZeSjSVW50H8YBv7rAHGwNexqAYmGBxmtJ1E4ZwXseO87faFy
-	 jrFAKpILH896Zgxs8XETeVpx2YPPDQbndp4cA+JCgBmecLIy2XG4qj3v57PsvEJEw6g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793689952;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=AqKxs5uUt1YSeqbBR/C8gR3VaWJED/4MoRfLDJact7I=;
+	b=apZRwuMLliAixIdJovwNBuwXC0nBny7qp4gNqfQek8q9LrOmeBwD8wMVOLuEqjiACpoI
+	 BG12Mb8Qw4eMlDkZL5Z7/vR7wtRkLV3i1vIy2FDiKphK4ZYbobHP24ttc59czau4h14Iq
+	 BuvHX+CwRzm7UBS3ekyQdVVXp0LcA/uP45Q1fkRGiPDBoCK5W/4GHxSf6LM58KABilG8P
+	 XlHO4owsNLS3sisFkhFSP5akz7HD4ZfSJlFERxB0fCfd6+0DhJW56kndjvwljSUY9f86p
+	 5bn7oVc30yo5KIh1VgF7jw0l2+lrc1o/MZLSwLX8S5Ie8QyVWZPMAn5TJkgKlvWIQCQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HVwwGpgK;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=remarkable.no;
+	spf=pass smtp.mailfrom=remarkable.no;
+	dkim=pass header.d=remarkable.no header.i=@remarkable.no header.a=rsa-sha256 header.s=google header.b=ZRIUOhY1;
+	arc=none smtp.remote-ip=209.85.208.44
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3EAD606A334;
-	Tue,  3 Nov 2026 06:54:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748CD606A324
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 07:12:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 748CD606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=remarkable.no
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=remarkable.no
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HVwwGpgK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57D471F000C1;
-	Tue,  3 Nov 2026 06:54:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793688875;
-	bh=pI+R0vssS3+rBEwGlEmrhAJtAWwC+K6R2fL7Q2wxluc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=HVwwGpgKph2PTCR3kNBpzgeJl9Fiv96ILTSVlqr7otzEN5KOe+3Oq36TZyy3FWiTn
-	 B5JC9rU3ADl82tq64bDRGFlV2NLyjhAO9fPnLejhbwzeG1Z9dc6ee0GVq9fDWJMr9G
-	 uEn9b1MhNhFVniqfmxfA0bqOs/QBhcC6kPjZ8hJFtdA34IHlyTNGGcCj68Y62ICtjk
-	 Ouq+kpEpWGx9PHR9MkFKZswgqiZXimSJHDR7+eldSuTYGotHgFLXgZCx0dKYEpIAcw
-	 6pYXyTE/pVVs21IvMkWqyQ4k+6ZNZ7Rqbrs3FA5NB7/Klj97W0Huza14rR1CDkHC3E
-	 tLDaFtIRr3wRA==
-Message-ID: <a0736b1b-707e-4f24-8249-c7363c673a43@kernel.org>
-Date: Tue, 3 Nov 2026 07:54:21 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=remarkable.no header.i=@remarkable.no header.a=rsa-sha256 header.s=google header.b=ZRIUOhY1
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-6af9a9451daso6111933a12.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 23:12:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=remarkable.no; s=google; t=1793689951; x=1794294751; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=AqKxs5uUt1YSeqbBR/C8gR3VaWJED/4MoRfLDJact7I=;
+        b=ZRIUOhY1hytSyfv3BuM36boJvBvWuRAd0KZMGEbjxGbl9T732kCHYid1rpCfCYXCQl
+         7bUu4IwUXdTJ4wiElejBWnbENqKF5qf0/paHnE7SB68nVKPz51Pj3hRu+GeGkJQ4sZBb
+         87/q/VJLHYOS0jeM+7Y1aLgQ16gTSCLKkC3UL0lTa/KPj/LuVGeotYUH1Y4Vzs/cWeWQ
+         fmgNU2TOqkZTY5lJr5XhUnA+iLXJ+yaNd3c3M5hKvphsRW52IM39NrDO+BVO9EoqPzg5
+         S4vP1fdQeU8iG4sl5/o7yuazCzkNDfLHC7OyWbRrFbee2KIDJjWiG58vNNSxg9wkJ6Y2
+         Es3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793689951; x=1794294751;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=AqKxs5uUt1YSeqbBR/C8gR3VaWJED/4MoRfLDJact7I=;
+        b=VRYj+KzpU/kJDqisMS8NkqlPW+X8+Guva9ft5kxAB0Kvi61ILp/MWqd5NNIcn6t111
+         yv1M+DvtTSqZUmYg8f4fgtckSbOLhHXmQAfvx7m4LJCfe1OFNu0HcrX8CxanRFruqiqC
+         OS5n1Ha+Wvh4ZlCprXoXfmhxMo3/FUsZ+HgRxcGbao2e3j5agzeUXD71q9xPUly5qGsu
+         Rt36ofDEBpROTIKUyVnJPtFQVfdYbzUsRvTimPwj64JUrroCkC2Rsn+4681RDuwFA65o
+         m1AuPg4laMO/T2Gi5WzD4rVn0rDbr17CctTUbSr93QG2AeBL7eK16a4KvFfQ4Y1YIaV6
+         M8Dw==
+X-Forwarded-Encrypted: i=1; AKwUvBw9jBHigD7s54uxorGJhzMTUDm4li1HQ3rZEAtkeMFkffPGApJa7YRcykEovnBG4IfHJsyrD7enzBx8t/Bg0A==@vger.kernel.org
+X-Gm-Message-State: APuU4Z+bVjL1cbZ0DzIYPDvzUJhAptOKvbRPh4V1CpNvyaMnLEdcGroW
+	GnXrs5kbTIHDsWJ+f2WkgMfA+AbzbU6jFKajgLQbe7o6R3VBIZB78jURybaqHfD3bFA=
+X-Gm-Gg: AYBFou3Dsm9O0SWnXCK8EwQLOSo4g9K8RhecQpfUnIrunpfyBtnt2yHV3RHtkEkjasg
+	WJmiOd5R8PRGgON7he6SftHtotVuvwXgjke6Qc9MU3CDghGocmSGI+E2bV1qAgTQNIhGfRqSllQ
+	uMEhtnZmioTy1cS/j2QGyR+AUOHoXK6ky+gsYz88aGgrqhY+mRv6svHIvgBYoUBWycCLJfMuKg3
+	ZX6c4iiCfoMTLoS8W+NEnz8fqVPy+N4vFqu5ZP4xVevWW1WBQRvsqJ6SEXdwCLEi6JkpEv5k8Ou
+	Zomn9Y4kHBtPkAq+tyzd0pknsGm3sf2RuzSFH8mrw1mw03DHzDLQV6B4BarbhM2rGwKZKz8Sme5
+	lNIBB6VTQGW+DrDrH5bHn6dKSXPMx5t1EzYUOTp4+Fzjfh72GRY+LRi3T7/3XqTmiX1vUvwz0TR
+	XPbj8G39dJhOXqyTpmYamJHjRhvn/TmsY2b3SkzgQtLT8SieXdY4mKG90EbSsACGu6wiL+gILdk
+	8gyShePokP/eGB4VFbHoMRxW5Apq+Kj6sWQsQPxeS5TPyGXqZRamKE+ciYUNZXBNMFetNH2C4cI
+	+t7nsS7e9WySCFHDmwMWM8rIKkCUyd9sKSfaqwceZjok
+X-Received: by 2002:aa7:d488:0:b0:6b4:2fc3:7d85 with SMTP id 4fb4d7f45d1cf-6b4d4d8257bmr6199677a12.26.1793689950891;
+        Mon, 02 Nov 2026 23:12:30 -0800 (PST)
+Received: from vkn-desktop.lan ([213.52.63.204])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b4ec9ee537sm3895470a12.10.2026.11.02.23.12.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Nov 2026 23:12:30 -0800 (PST)
+From: Viktor Korsnes <viktor.korsnes@remarkable.no>
+To: Jeff Chen <jeff.chen_1@nxp.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Viktor Korsnes <viktor.korsnes@remarkable.no>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless v2 1/2] wifi: nxpwifi: fix hex parsing in nxpwifi_parse_cal_cfg()
+Date: Tue,  3 Nov 2026 08:11:59 +0100
+Message-ID: <20261103071203.1288146-1-viktor.korsnes@remarkable.no>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -51,140 +97,92 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 19/23] tty: sysrq: let procfs copy in writes to
- /proc/sysrq-trigger
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>,
- Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>,
- Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
- Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>,
- Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
- <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>,
- Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>,
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
- coreteam@netfilter.org, kexec@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
- netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org,
- ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net,
- linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org,
- linux-usb@vger.kernel.org, samba-technical@lists.samba.org,
- sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
- linux-doc@vger.kernel.org, linux-serial@vger.kernel.org,
- linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>,
- linux-input@vger.kernel.org, linux-raid@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org,
- linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
- <20261102-work-procfs-drivers-v1-19-a994bd4d3b1a@kernel.org>
-Content-Language: en-US
-From: Jiri Slaby <jirislaby@kernel.org>
-Autocrypt: addr=jirislaby@kernel.org; keydata=
- xsFNBE6S54YBEACzzjLwDUbU5elY4GTg/NdotjA0jyyJtYI86wdKraekbNE0bC4zV+ryvH4j
- rrcDwGs6tFVrAHvdHeIdI07s1iIx5R/ndcHwt4fvI8CL5PzPmn5J+h0WERR5rFprRh6axhOk
- rSD5CwQl19fm4AJCS6A9GJtOoiLpWn2/IbogPc71jQVrupZYYx51rAaHZ0D2KYK/uhfc6neJ
- i0WqPlbtIlIrpvWxckucNu6ZwXjFY0f3qIRg3Vqh5QxPkojGsq9tXVFVLEkSVz6FoqCHrUTx
- wr+aw6qqQVgvT/McQtsI0S66uIkQjzPUrgAEtWUv76rM4ekqL9stHyvTGw0Fjsualwb0Gwdx
- ReTZzMgheAyoy/umIOKrSEpWouVoBt5FFSZUyjuDdlPPYyPav+hpI6ggmCTld3u2hyiHji2H
- cDpcLM2LMhlHBipu80s9anNeZhCANDhbC5E+NZmuwgzHBcan8WC7xsPXPaiZSIm7TKaVoOcL
- 9tE5aN3jQmIlrT7ZUX52Ff/hSdx/JKDP3YMNtt4B0cH6ejIjtqTd+Ge8sSttsnNM0CQUkXps
- w98jwz+Lxw/bKMr3NSnnFpUZaxwji3BC9vYyxKMAwNelBCHEgS/OAa3EJoTfuYOK6wT6nadm
- YqYjwYbZE5V/SwzMbpWu7Jwlvuwyfo5mh7w5iMfnZE+vHFwp/wARAQABzSFKaXJpIFNsYWJ5
- IDxqaXJpc2xhYnlAa2VybmVsLm9yZz7CwXcEEwEIACEFAlW3RUwCGwMFCwkIBwIGFQgJCgsC
- BBYCAwECHgECF4AACgkQvSWxBAa0cEnVTg//TQpdIAr8Tn0VAeUjdVIH9XCFw+cPSU+zMSCH
- eCZoA/N6gitEcnvHoFVVM7b3hK2HgoFUNbmYC0RdcSc80pOF5gCnACSP9XWHGWzeKCARRcQR
- 4s5YD8I4VV5hqXcKo2DFAtIOVbHDW+0okOzcecdasCakUTr7s2fXz97uuoc2gIBB7bmHUGAH
- XQXHvdnCLjDjR+eJN+zrtbqZKYSfj89s/ZHn5Slug6w8qOPT1sVNGG+eWPlc5s7XYhT9z66E
- l5C0rG35JE4PhC+tl7BaE5IwjJlBMHf/cMJxNHAYoQ1hWQCKOfMDQ6bsEr++kGUCbHkrEFwD
- UVA72iLnnnlZCMevwE4hc0zVhseWhPc/KMYObU1sDGqaCesRLkE3tiE7X2cikmj/qH0CoMWe
- gjnwnQ2qVJcaPSzJ4QITvchEQ+tbuVAyvn9H+9MkdT7b7b2OaqYsUP8rn/2k1Td5zknUz7iF
- oJ0Z9wPTl6tDfF8phaMIPISYrhceVOIoL+rWfaikhBulZTIT5ihieY9nQOw6vhOfWkYvv0Dl
- o4GRnb2ybPQpfEs7WtetOsUgiUbfljTgILFw3CsPW8JESOGQc0Pv8ieznIighqPPFz9g+zSu
- Ss/rpcsqag5n9rQp/H3WW5zKUpeYcKGaPDp/vSUovMcjp8USIhzBBrmI7UWAtuedG9prjqfO
- wU0ETpLnhgEQAM+cDWLL+Wvc9cLhA2OXZ/gMmu7NbYKjfth1UyOuBd5emIO+d4RfFM02XFTI
- t4MxwhAryhsKQQcA4iQNldkbyeviYrPKWjLTjRXT5cD2lpWzr+Jx7mX7InV5JOz1Qq+P+nJW
- YIBjUKhI03ux89p58CYil24Zpyn2F5cX7U+inY8lJIBwLPBnc9Z0An/DVnUOD+0wIcYVnZAK
- DiIXODkGqTg3fhZwbbi+KAhtHPFM2fGw2VTUf62IHzV+eBSnamzPOBc1XsJYKRo3FHNeLuS8
- f4wUe7bWb9O66PPFK/RkeqNX6akkFBf9VfrZ1rTEKAyJ2uqf1EI1olYnENk4+00IBa+BavGQ
- 8UW9dGW3nbPrfuOV5UUvbnsSQwj67pSdrBQqilr5N/5H9z7VCDQ0dhuJNtvDSlTf2iUFBqgk
- 3smln31PUYiVPrMP0V4ja0i9qtO/TB01rTfTyXTRtqz53qO5dGsYiliJO5aUmh8swVpotgK4
- /57h3zGsaXO9PGgnnAdqeKVITaFTLY1ISg+Ptb4KoliiOjrBMmQUSJVtkUXMrCMCeuPDGHo7
- 39Xc75lcHlGuM3yEB//htKjyprbLeLf1y4xPyTeeF5zg/0ztRZNKZicgEmxyUNBHHnBKHQxz
- 1j+mzH0HjZZtXjGu2KLJ18G07q0fpz2ZPk2D53Ww39VNI/J9ABEBAAHCwV8EGAECAAkFAk6S
- 54YCGwwACgkQvSWxBAa0cEk3tRAAgO+DFpbyIa4RlnfpcW17AfnpZi9VR5+zr496n2jH/1ld
- wRO/S+QNSA8qdABqMb9WI4BNaoANgcg0AS429Mq0taaWKkAjkkGAT7mD1Q5PiLr06Y/+Kzdr
- 90eUVneqM2TUQQbK+Kh7JwmGVrRGNqQrDk+gRNvKnGwFNeTkTKtJ0P8jYd7P1gZb9Fwj9YLx
- jhn/sVIhNmEBLBoI7PL+9fbILqJPHgAwW35rpnq4f/EYTykbk1sa13Tav6btJ+4QOgbcezWI
- wZ5w/JVfEJW9JXp3BFAVzRQ5nVrrLDAJZ8Y5ioWcm99JtSIIxXxt9FJaGc1Bgsi5K/+dyTKL
- wLMJgiBzbVx8G+fCJJ9YtlNOPWhbKPlrQ8+AY52Aagi9WNhe6XfJdh5g6ptiOILm330mkR4g
- W6nEgZVyIyTq3ekOuruftWL99qpP5zi+eNrMmLRQx9iecDNgFr342R9bTDlb1TLuRb+/tJ98
- f/bIWIr0cqQmqQ33FgRhrG1+Xml6UXyJ2jExmlO8JljuOGeXYh6ZkIEyzqzffzBLXZCujlYQ
- DFXpyMNVJ2ZwPmX2mWEoYuaBU0JN7wM+/zWgOf2zRwhEuD3A2cO2PxoiIfyUEfB9SSmffaK/
- S4xXoB6wvGENZ85Hg37C7WDNdaAt6Xh2uQIly5grkgvWppkNy4ZHxE+jeNsU7tg=
-In-Reply-To: <20261102-work-procfs-drivers-v1-19-a994bd4d3b1a@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 02. 11. 26, 16:07, Christian Brauner wrote:
-> Implement ->proc_write_buf() so procfs copies in what is written before
-> it pins the entry, and handle the keys from that copy. Writes larger
-> than PAGE_SIZE - 1 bytes fail with -EINVAL now. They used to trigger the
-> first key, or all of them in bulk mode. procfs allocates the copy, which
-> is as small as the write, opening the file allocated as much already.
-> 
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+nxpwifi_parse_cal_cfg() passes a pointer into the raw firmware buffer to
+kstrtou8(). Because kstrtou8() requires a NUL- or newline-terminated
+string, it fails with -EINVAL as soon as it encounters a space after the
+first byte, causing nxpwifi_parse_cal_cfg() to return 0 bytes.
 
-Reviewed-by: Jiri Slaby <jirislaby@kernel.org>
+Use hex2bin() instead to parse each two-character hex byte, bound the
+output buffer to the command buffer capacity, and return -EINVAL when
+no calibration data is parsed.
 
-> ---
->   drivers/tty/sysrq.c | 9 +++------
->   1 file changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/tty/sysrq.c b/drivers/tty/sysrq.c
-> index f4571d05b496..99363e1b59ed 100644
-> --- a/drivers/tty/sysrq.c
-> +++ b/drivers/tty/sysrq.c
-> @@ -1200,17 +1200,14 @@ EXPORT_SYMBOL(unregister_sysrq_key);
->    * However, if the first character is an underscore,
->    * all characters are processed.
->    */
-> -static ssize_t write_sysrq_trigger(struct file *file, const char __user *buf,
-> +static ssize_t write_sysrq_trigger(struct file *file, char *buf,
->   				   size_t count, loff_t *ppos)
->   {
->   	bool bulk = false;
->   	size_t i;
->   
->   	for (i = 0; i < count; i++) {
-> -		char c;
-> -
-> -		if (get_user(c, buf + i))
-> -			return -EFAULT;
-> +		char c = buf[i];
->   
->   		if (c == '_')
->   			bulk = true;
-> @@ -1225,7 +1222,7 @@ static ssize_t write_sysrq_trigger(struct file *file, const char __user *buf,
->   }
->   
->   static const struct proc_ops sysrq_trigger_proc_ops = {
-> -	.proc_write	= write_sysrq_trigger,
-> +	.proc_write_buf	= write_sysrq_trigger,
->   	.proc_lseek	= noop_llseek,
->   };
->   
-> 
+Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
+Assisted-by: GitHub-Copilot:Gemini-4-Argon
+Signed-off-by: Viktor Korsnes <viktor.korsnes@remarkable.no>
+---
+v2:
+ - Add missing <linux/hex.h> include for hex2bin() (kernel test robot)
+ - Change src to const char * in nxpwifi_parse_cal_cfg() to avoid
+   -Wpointer-sign on architectures with signed char
 
+ drivers/net/wireless/nxp/nxpwifi/sta_cmd.c | 28 ++++++++++++++++------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c b/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
+index 5e8ffd306b31..c2ab32fc8e12 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
++++ b/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
+@@ -5,6 +5,8 @@
+  * Copyright 2011-2024 NXP
+  */
+ 
++#include <linux/hex.h>
++
+ #include "cfg.h"
+ #include "util.h"
+ #include "fw.h"
+@@ -1391,9 +1393,11 @@ nxpwifi_ret_sta_mem_access(struct nxpwifi_private *priv,
+ 	return 0;
+ }
+ 
+-static u32 nxpwifi_parse_cal_cfg(u8 *src, size_t len, u8 *dst)
++static u32 nxpwifi_parse_cal_cfg(const char *src, size_t len, u8 *dst,
++				 size_t dst_size)
+ {
+-	u8 *s = src, *d = dst;
++	const char *s = src;
++	u8 *d = dst;
+ 
+ 	while (s - src < len) {
+ 		if (*s && (isspace(*s) || *s == '\t')) {
+@@ -1401,7 +1405,8 @@ static u32 nxpwifi_parse_cal_cfg(u8 *src, size_t len, u8 *dst)
+ 			continue;
+ 		}
+ 		if (isxdigit(*s)) {
+-			if (kstrtou8(s, 16, d))
++			if (d - dst >= dst_size || src + len - s < 2 ||
++			    hex2bin(d, s, 1))
+ 				return 0;
+ 			d++;
+ 			s += 2;
+@@ -1423,14 +1428,18 @@ nxpwifi_cmd_sta_cfg_data(struct nxpwifi_private *priv,
+ 	u32 len;
+ 	u8 *data = (u8 *)cmd + S_DS_GEN;
+ 
+-	if (adapter->cal_data->data && adapter->cal_data->size > 0) {
+-		len = nxpwifi_parse_cal_cfg((u8 *)adapter->cal_data->data,
+-					    adapter->cal_data->size, data);
+-		nxpwifi_dbg(adapter, INFO,
+-			    "download cfg_data from config file\n");
+-	} else {
++	if (!adapter->cal_data || !adapter->cal_data->data ||
++	    !adapter->cal_data->size)
+ 		return -EINVAL;
+-	}
++
++	len = nxpwifi_parse_cal_cfg((const char *)adapter->cal_data->data,
++				    adapter->cal_data->size, data,
++				    NXPWIFI_SIZE_OF_CMD_BUFFER - S_DS_GEN);
++	if (!len)
++		return -EINVAL;
++
++	nxpwifi_dbg(adapter, INFO,
++		    "download cfg_data from config file\n");
+ 
+ 	cmd->command = cpu_to_le16(HOST_CMD_CFG_DATA);
+ 	cmd->size = cpu_to_le16(S_DS_GEN + len);
 -- 
-js
-suse labs
+2.53.0
+
