@@ -1,76 +1,71 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793684954;
-	b=2fuItnOBTjOZxx4h7OPcJbHw9Y9bnvWZ+V01GMXWf45x9mJl2eGCEc+rrlCiEDWcOswP
-	 wQBr99YSYc28hd6OZnFqzX7dTeCDje8mFwt/uo/4omFwFFR3DeO4uR7rzfqJOsRGm5/yY
-	 Q6ozzleQAaVDol2QVMH2r+5Vn1/g2IYH3fF6sEGJgmyhN/8QqtxmPjhUxCygQJDLGrnIL
-	 W+2NcXH5PN5ii6FyoOxQBeRXbzunmg/pPrGf7ASb73JkeuqJexhB7PYJFw0yGiYSxz36H
-	 i/a45VIImSltedeoJcTJiUwd2s1nI1fowhC0gw3ViOByO8Lwl4J1npxjVfmu+UdK+xQ==
+	t=1793685278;
+	b=lxRzPgW/WDAOnt18kWXP5G/uMaqIQERManzUEViG8nFgig4UJsNO7/6x2mNpjTWGEabt
+	 JzwGjGVncePpTjQYDKYX1ok/ND/nEbNB3bLRCqcKahNcQKPAVF5FXgS5J8r8bir47t861
+	 qpzir9gs+rlV2dQ9MdI93SmlgwpVWbhLXQCRjA4M+0iCdeWR0OKMtQ8TgdgmkXPQm/LUs
+	 pL7X+J7tbhgHyJwPJ6mqtRUJAA1jG5DFw+5r9P4jyllf9Dro6OpWwCiL6EO3WsPrH+Mpt
+	 gbUga0fl4K/1QUreuHIDCTktVz+DDneihrHz1US6Zrki07xTD050c3toUptWDvKrC6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793684954;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793685278;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:CC:Subject:In-Reply-To:References:
-	 Message-ID:Date:MIME-Version:Content-Type;
-	bh=SLyhkDh9JuWFxsRkyBCNBYa0D2q+FUx9Ee8ZaNKL5ng=;
-	b=fbXCMjjdCKX+pvJUuUo1ZAbc9srKrqhzJ3QI2PzF5iD4jJ2lz/KrodcJpZGf3M1EX0b1
-	 MBoTK5Bt09Zt8jGUS8o7uyLWZmSjFA2Pk0GgSPeiNjJdGKAkoO3/TYjN1D0f8OFQM3ZR3
-	 NMV9/aZVZiJ94QgFxIiNfnkvFFJKgPP35Q2swXrXcZHZks00oE97Glk9IkxhNnNyt0bdk
-	 5yIQYjv7WmD5rla4htUbPDkTO1ArAjbzX26VrPul9RdrLok1pNI/8ypLyVICVhjJhtv3E
-	 1OD//7JFRV+jnIaNicEYngy5W4oK+vYZDehSAzfU9yHmvsx1JtKA3GIxkw1090Ov3Zg==
+	 Received:From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type;
+	bh=FsxV6gx2jOppxne1N+ffOsujBoqL3LoQjEaNp1iXLQM=;
+	b=iXbkzsTGeWItjyahSjcHan+jeG8jaSg7MFiugkK4EbyRq3mKDEc/J8eyIbHr1DviGtHF
+	 i9WME0HJ4AJpgmuuUILS115kFp7ns4kcIe0JA7fBH9btO/gz+8Y5GtmhRLmxYUhFYaMqX
+	 f0WoTPwXKBREa3deIm433eAdDSOlM2przgoDHYRnCC1xymgx95yxy8/ztU/DXjLckWRwU
+	 f/SpWqDLdQbmzzBlY1PrNbDv4I2N2tyb3E4kaITa3Ht+RqxQkmiRWu0GYtJ7o+tbq0Zyx
+	 I7LXn0Q7Bmwll5MsEOG0NMxO/WM3HTQcoWIHFkiZ1Pz5IZjlnm9jZQd367tQcWduRjQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fC2noAyf;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=tNZkUjGa;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35D54606A324;
-	Tue,  3 Nov 2026 05:49:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 35D54606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C1F8606A324;
+	Tue,  3 Nov 2026 05:54:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C1F8606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fC2noAyf
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A35mVYZ12773890, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=tNZkUjGa
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A35sSyD52775820, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793684911; bh=SLyhkDh9JuWFxsRkyBCNBYa0D2q+FUx9Ee8ZaNKL5ng=;
+	t=1793685268; bh=FsxV6gx2jOppxne1N+ffOsujBoqL3LoQjEaNp1iXLQM=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=fC2noAyfzwmOIntdMM39cktwLO5h3WMr3StEKuKPq8667DGrpnAE6dCGQU7Qq5J8K
-	 CAL1vVW0NtTp7kWLqwBktOsoVyO5PjFJpPL7ahOD3KUYs7Z109Exz0d54X1mZ666DG
-	 583K5BSOcdDKdSp2eDy3+7i4y+eWGqS05eWLPhdfp0IRUHsEdW2Mt74pAf4+lxGDMW
-	 HZ3mBKOEqYah4O8pi7iLwlnIncEA6Nf6Hjdxvn9rJiE6tCRCELbFMNB9BCDoC/naU0
-	 1aGPluyInAwihW7nU+cnyW5eFOL5DdF7BVGqYK8hYdtosTq8XYOZTVrvWhyTt1Y9ZL
-	 wFn0B3j6fPP0g==
+	b=tNZkUjGaePzDeFkBO7HuxUL+ohsfJofNVGPb66RlVXNFyOkcwSHpFeTModU2OMfLq
+	 Aa/2AbAsZpGADl4k3bOA4N4Vs8OuyaJRAhnhh0aIp78zcLuRsFTz32fW55Amd6gbaB
+	 eI60pkqRMoIWCmpZIOhOi2Wr3ku5nty7YD2lzaSb7EN2vHc3by44V7okbn72i1T20R
+	 UgJScIX6lCLLWYu1HlkSNni3vljsZXHhsQyO9qsUslol7BoILjeiwhlW9ktdS7yd3e
+	 Ix4qr2u+AjGU+T+Y8rQRUw/F+HXz7YkSJWc8SlMSH27z81SHxXY/4BczEX5bk8RwpD
+	 aHP2m9iChP7XQ==
 Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A35mVYZ12773890
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A35sSyD52775820
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 3 Nov 2026 13:48:31 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+	Tue, 3 Nov 2026 13:54:28 +0800
+Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
  RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 13:48:31 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 13:48:28 +0800
+ 15.2.2562.56; Tue, 3 Nov 2026 13:54:26 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
  (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
- Transport; Tue, 3 Nov 2026 13:48:23 +0800
+ Transport; Tue, 3 Nov 2026 13:54:21 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ho Jie Feng <hjf3108@gmail.com>, Ping-Ke Shih <pkshih@realtek.com>
-CC: <linux-wireless@vger.kernel.org>, Ho Jie Feng <hjf3108@gmail.com>, "Luka
- Gejak" <luka.gejak@linux.dev>, Sascha Hauer <s.hauer@pengutronix.de>, "Hans
- Ulli Kroll" <linux@ulli-kroll.de>, Kalle Valo <kvalo@kernel.org>, neo_jou
-	<neo_jou@realtek.com>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH rtw-next v4] wifi: rtw88: usb: don't report the aggregation buffer as a frame
-In-Reply-To: <20261102033244.9330-1-hjf3108@gmail.com>
-References: <20261102033244.9330-1-hjf3108@gmail.com>
-Message-ID: <0e09718c-b73a-412f-bc80-f89cf1228474@RTKEXHMBS03.realtek.com.tw>
-Date: Tue, 3 Nov 2026 13:48:23 +0800
+To: Kalpesh Solanki <skalpesh942@gmail.com>, <pkshih@realtek.com>,
+	<kvalo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Kalpesh
+ Solanki <skalpesh942@gmail.com>
+Subject: Re: [PATCH v2 1/2] wifi: rtw88: pci: Add DMI quirk for HP Laptop 15s-fr5xxx
+In-Reply-To: <20261103031434.14449-1-skalpesh942@gmail.com>
+References: <20261103031434.14449-1-skalpesh942@gmail.com>
+Message-ID: <d428a558-1c47-4942-a522-8509a346eda1@RTKEXHMBS03.realtek.com.tw>
+Date: Tue, 3 Nov 2026 13:54:21 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -82,28 +77,23 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Ho Jie Feng <hjf3108@gmail.com> wrote:
+Kalpesh Solanki <skalpesh942@gmail.com> wrote:
 
-> When rtw_usb_tx_agg_skb() has more than one frame queued, it copies them
-> into a new buffer. That buffer was also handed to mac80211, as one
-> additional TX completion.
+> On the HP Laptop 15s-fr5xxx with RTL8822CE, PCIe ASPM L1/L1.2 and deep LPS
+> cause the card's firmware to fail to resume from low-power states,
+> resulting in repeated 'firmware failed to leave lps state' and
+> 'failed to send h2c command' errors and stalled network traffic.
 > 
-> Report TX status only for the original frames, and free the aggregate
-> buffer without passing it to mac80211.
+> Add a DMI quirk entry for 'HP Laptop 15s-fr5xxx' to disable PCIe ASPM
+> and deep LPS, ensuring reliable Wi-Fi operation.
 > 
-> In the case the ieee80211_purge_tx_queue is called, the frame is
-> passed to ieee80211_report_used_skb. Since it fulfills none of the
-> conditions within the function, the frame is freed as normal without
-> a TX status in that case too
-> 
-> Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-> Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
-> Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+> Signed-off-by: Kalpesh Solanki <skalpesh942@gmail.com>
 > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-1 patch(es) applied to rtw-next branch of rtw.git, thanks.
+2 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-62e69ef45567 wifi: rtw88: usb: don't report the aggregation buffer as a frame
+04c998418722 wifi: rtw88: pci: Add DMI quirk for HP Laptop 15s-fr5xxx
+dc16902cad9c wifi: rtw88: ps: Trigger firmware recovery when failing to leave LPS state
 
 ---
 https://github.com/pkshih/rtw.git
