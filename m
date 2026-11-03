@@ -1,57 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.20
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793736977;
-	b=oo2pGAb3mvflSEzCO46M/OyA8E1e+Us/gdmjkVHQNp3XgX2yzxI9k8iFJklGPHoWc3ZE
-	 PL1vTvo/V6k3zYrXwrd7YeE8qfIOL5R9ShZls8TnUo2g6W1uFn84/xlEOOKq7xdWBRVfc
-	 fZbtIUG/pNPSnImPaT5ldcQY/78ILzJfce3LH5pbubJ/iu/J1oz/2baW0bi9jiihPebzw
-	 a/7/vdYPObelgHDf1toOCd4w/MYf9CtPDAg/ZR9QszASS1AStMu13hWKOjPQ0QWDNs3p/
-	 MWk3LKlGNsUK11dWhZ1ZB3+dPywcy9uONWYluOa5m3wNn1CjSiOXwJF7gPEIuEiyLQA==
+	t=1793740472;
+	b=UHpD/NTbrb4Oy7GIqgElhkwrgXVbP/HoX70WWiLn/FsBBByZBhjTwiG4wzlqhbOEzSm8
+	 HA7il87IRb9bSguc8dp+sa7XwgnXGhpLCUnXU2+lVzTnRA4Q721OXGTlECMmmzRrA6J/S
+	 dr/qaxhSSKM0uEQGu7/Fw++prAKvxDc14FzAr8IGjIyiGCgpN/YFMKuTDuXZTBiBmXDwI
+	 BlSMy72uhCnv66tVC6HcG9qr0xzKmMWnjlMUKQopwtFd5KSnhy1YGh0QyxM0BRSPtducp
+	 /a05nqxTNNaS2sssgYhFZrUQ9Ldnw1W6yUc+Y15rCHXxFwKkturPS2SxzXaoiGzmDIQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793736977;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=BmhFJ0DqfEnwsR3z69z0SzPhT9jjNHDPlC+wagNCoH0=;
-	b=SlWFftCqhlGdtDnjPkaSQBWe3KM87ePrhqFM7hv3gbdxM9zKQh8SclVcCmnqtwxVrEjm
-	 MQ7g4+R2HKiyCWYD8gp6ss8JAa6olG0YLhbOy2ehb+kJY/SqIqlbyanQQDFQsf5dr5YSj
-	 SGPb68JdCV8892t1CgC4jJ4KnJ0S4aFvE+8ZWqNA35uJLb6T5dNCe24gDziijAp74N+zg
-	 X7zDMNsEWlGup8IQ6jfyCCsB7jTPBeWdUDvHU93Crj7e5myfk55hnB554HVdVZ0p8uznf
-	 ZeKVqD84jvexalsSsxO0UK3Cy/HvmYQIW1yztD+PASbgP0Qy8nDQcT7V09vkCdqP3Sg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793740472;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=+2yCJaGEbyCpc4GPm4MdejLrIvWaF/SQGhmWy+Wu8aI=;
+	b=qGoZwwPNjCFZNV5p2f/fN/i5dMQ+tJF2LONdEH+nPu4730Qs2n1wjio9+QvlrHJW+k2O
+	 kCYcK7mdgqM863kHVHSTvlkZVVJ1Ct8YtFcaOrwHh/EJ5SF3E1E6qJAETksUxlkFGv57P
+	 ocOTlhhw00971xluVXjBrh2JjZh9pBeHAFYRnEiI3C8PFMk4cvw1BDz2Opxgk8NEZsRKF
+	 2kHxzp7/pZAIeXWhUjvZrA+FNj7fDleXVANSF4jUK5LpIda4tyAW9p53AiaVYrLl/QHg2
+	 0oEbO3J4v2qzCM+aPB4JXEo62++6QlRsTZmre/TkS8KXOfNNkxZAmh9mmjBCz8Ungpg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=jiri.one;
-	spf=pass smtp.mailfrom=jiri.one;
-	dkim=pass header.d=jiri.one header.i=@jiri.one header.a=rsa-sha256 header.s=protonmail header.b=Kv6B8wwE;
-	arc=none smtp.remote-ip=109.224.244.20
-Received: from mail-24420.protonmail.ch (mail-24420.protonmail.ch [109.224.244.20])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--almasrymina.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=J0GTklSJ;
+	arc=none smtp.remote-ip=74.125.82.199
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3508606A324
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 20:16:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3508606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jiri.one
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jiri.one
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E3F7606EE91
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 21:14:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E3F7606EE91
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--almasrymina.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=jiri.one header.i=@jiri.one header.a=rsa-sha256 header.s=protonmail header.b=Kv6B8wwE
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jiri.one;
-	s=protonmail; t=1793736972; x=1793996172;
-	bh=BmhFJ0DqfEnwsR3z69z0SzPhT9jjNHDPlC+wagNCoH0=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=Kv6B8wwEkawRzNLcbQ9TytyFP9hWA5vvmW8VSytOo366gV98OwQ0+DzGRuoIqCQBx
-	 SeS26lrwwTq2bQ1Llptx6hqurPOpubMdHOHpgavMiBGx/ZTEmFZJnN4MXscmuL6lWn
-	 HjWM828g+X3D8HL+nV7Ev2BG90Wzyjq3FAsoCGuWQDmTso2AcyXtdlLKhoBcjRPB5f
-	 Im6s/BIvdFZRCIf2x+pK09MvO58s/8CmMUYyy7CLeGoyHLpiuF1UX5irAOsrLFwGti
-	 /IainxIXrXghwQ3+9dHL8ihzeuu3+Tiui6W7xiG711b0+/rnQoYT2EcE/BZ992pfGM
-	 YykHp+MCc4KXw==
-Date: Tue, 03 Nov 2026 20:16:05 +0000
-To: Ragul Balaji <ragulbaby@gmail.com>
-From: =?utf-8?B?SmnFmcOtIE7Em21lYw==?= <nemec@jiri.one>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH wireless-next 12/17] wifi: bcm4323x: add the USB transport and firmware setup
-Message-ID: <179373696123.186829.16487382332905756046@jiri.one>
-Feedback-ID: 127903936:user:proton
-X-Pm-Message-ID: d8e1848697dbb19457a787391c7179257fdfccb7
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=J0GTklSJ
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-33c35f5ca6cso9644496eec.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 13:14:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1793740471; x=1794345271; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+2yCJaGEbyCpc4GPm4MdejLrIvWaF/SQGhmWy+Wu8aI=;
+        b=J0GTklSJA0yPK2BwCTAjrh9eqi5L3NgNqWDz3qWwHvFAKjuw260KypyEmWMZHb8zpQ
+         4g53u+aqrx7AhHkDvpATs7i2/vmEWInSfCx9tDXP8qTyqK6I+V4keW/5NkamP7Vf+maW
+         y27HLk7d4vqhxNompL8ALUuNpOyDgHI8EGkgu6WK/R/fin39qMbZc6ODbIqS8utfqPoQ
+         cCBJMVtE0c/FYOuCjqhHjAyzFs1P51xbWZYILfE9CzZkglJU8u1JpAaov5qOJloEcGvi
+         Wc+RgAJeTXEot7KayINFeiN6WVP2QWc2ouNKaShXUpts1teJX3yrpS8WDvF8BkeVJz9N
+         gudg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793740471; x=1794345271;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+2yCJaGEbyCpc4GPm4MdejLrIvWaF/SQGhmWy+Wu8aI=;
+        b=ZcqRf148hqj+Tja84TYMOHqQK/HB+JoMzmFFJJPPYigvmekNG1OeUnIq0PvXT+6IWp
+         KTAJeeImQd/stEU2gMNJPUDW64tXhJmYXlrHNO8IoWsBQebU6/TrIvfAsBpWmrMaDnjc
+         S59VcroslBg26e0QOVjz4eTLpGPdWlvZVOK37qzbEX/MtYOkf7x1+d1ZOv5M2DI+fW0A
+         yCHCaOj+YqceFk8tu8UKKOpORtGZkp7V9fqZNxWLecZlIP6XDysoZWCRhaZ30v4/3vUl
+         HR4ce3TF3xWIcudDaduRX1ettw3gimAvlMqF+Xm3wXc10YkUBdVM0VAkWSEr9LVqKYtv
+         yLag==
+X-Forwarded-Encrypted: i=1; AKwUvBwGkU/UbBipiflQeXNmRM13L1EAl+HkxJMZGDE5uBKXLA4awwCdBLG73gU3P/qxLazWMbaDi6BF7c2C/LG5Mw==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9n04kE9bRDlafEXwGKPjDijyIh5p6QL7vL8qHZDcG/vYKs22Ko
+	xW9X/pTO1HsOPI6CGd7xRgCrD6/fHe5brjLd1xBPr+ise2SEb8l9AiBbYuBBG6Lo0cvriAnZlNm
+	tbWIKFVuACg4+Ay05HKIJsHZL3w==
+X-Received: from dyvj18-n1.prod.google.com ([2002:a05:693c:87d2:10b0:368:2c6d:de10])
+ (user=almasrymina job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:693c:8959:20b0:369:f5f6:36a7 with SMTP id 5a478bee46e88-36a423d1cc5mr22095354eec.16.1793740470274;
+ Tue, 03 Nov 2026 13:14:30 -0800 (PST)
+Date: Tue,  3 Nov 2026 21:14:22 +0000
+In-Reply-To: <20261103211424.127627-1-almasrymina@google.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -60,51 +78,299 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+References: <20261103211424.127627-1-almasrymina@google.com>
+X-Mailer: git-send-email 2.56.0.385.gac671c819a-goog
+Message-ID: <20261103211424.127627-4-almasrymina@google.com>
+Subject: [PATCH net-next v1 3/5] net: datagram: refcount page_pool frags in zerocopy_fill_skb_from_iter()
+From: Mina Almasry <almasrymina@google.com>
+To: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	virtualization@lists.linux.dev, linux-mm@kvack.org, bpf@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org, 
+	bcm-kernel-feedback-list@broadcom.com, imx@lists.linux.dev, 
+	linux-rdma@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-omap@vger.kernel.org
+Cc: Mina Almasry <almasrymina@google.com>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@kernel.org>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Simon Horman <horms@kernel.org>, Steffen Klassert <steffen.klassert@secunet.com>, 
+	Herbert Xu <herbert@gondor.apana.org.au>, Willem de Bruijn <willemb@google.com>, 
+	Stanislav Fomichev <sdf@fomichev.me>, Pavel Begunkov <asml.silence@gmail.com>, 
+	Bobby Eshleman <bobbyeshleman@meta.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowangio@gmail.com>, 
+	"=?UTF-8?q?Eugenio=20P=C3=A9rez?=" <eperezma@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+	Jesper Dangaard Brouer <hawk@kernel.org>, Ilias Apalodimas <ilias.apalodimas@linaro.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	John Fastabend <john.fastabend@gmail.com>, Sabrina Dubroca <sd@queasysnail.net>, 
+	Johannes Berg <johannes@sipsolutions.net>, Byungchul Park <byungchul@sk.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Randy Dunlap <rdunlap@infradead.org>, Lorenzo Bianconi <lorenzo@kernel.org>, 
+	Wen Gu <guwen@linux.alibaba.com>, Philo Lu <lulie@linux.alibaba.com>, 
+	Justin Chen <justin.chen@broadcom.com>, Florian Fainelli <florian.fainelli@broadcom.com>, 
+	Vikas Gupta <vikas.gupta@broadcom.com>, Michael Chan <michael.chan@broadcom.com>, 
+	Pavan Chebbi <pavan.chebbi@broadcom.com>, Doug Berger <opendmb@gmail.com>, 
+	Nicolai Buchwitz <nb@tipi-net.de>, Satish Kharat <satishkh@cisco.com>, Wei Fang <wei.fang@nxp.com>, 
+	Frank Li <frank.li@nxp.com>, Shenwei Wang <shenwei.wang@nxp.com>, 
+	Joshua Washington <joshwash@google.com>, Harshitha Ramamurthy <hramamurthy@google.com>, 
+	Jijie Shao <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>, 
+	Fan Gong <gongfan1@huawei.com>, Tony Nguyen <anthony.l.nguyen@intel.com>, 
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>, Marcin Wojtas <marcin.s.wojtas@gmail.com>, 
+	Russell King <linux@armlinux.org.uk>, Sunil Goutham <sgoutham@marvell.com>, 
+	Geetha sowjanya <gakula@marvell.com>, Ratheesh Kannoth <rkannoth@marvell.com>, 
+	Subbaraya Sundeep <sbhatta@marvell.com>, Bharat Bhushan <bbhushan2@marvell.com>, 
+	Felix Fietkau <nbd@nbd.name>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Tariq Toukan <tariqt@nvidia.com>, 
+	Saeed Mahameed <saeedm@nvidia.com>, Mark Bloch <mbloch@nvidia.com>, Leon Romanovsky <leon@kernel.org>, 
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>, 
+	Horatiu Vultur <horatiu.vultur@microchip.com>, UNGLinuxDriver@microchip.com, 
+	Daniel Machon <daniel.machon@microchip.com>, Steen Hegelund <Steen.Hegelund@microchip.com>, 
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
+	Dexuan Cui <decui@microsoft.com>, Yibo Dong <dong100@mucse.com>, 
+	Brett Creeley <brett.creeley@amd.com>, Justin Lai <justinlai0215@realtek.com>, 
+	Larry Chiu <larry.chiu@realtek.com>, 
+	"=?UTF-8?q?Niklas=20S=C3=B6derlund?=" <niklas.soderlund@ragnatech.se>, Paul Barker <paul@pbarker.dev>, 
+	Masahisa Kojima <kojima.masahisa@socionext.com>, 
+	Maxime Chevallier <maxime.chevallier@bootlin.com>, Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
+	Alexandre Torgue <alexandre.torgue@foss.st.com>, FUJITA Tomonori <fujita.tomonori@gmail.com>, 
+	Siddharth Vadapalli <s-vadapalli@ti.com>, Roger Quadros <rogerq@kernel.org>, 
+	MD Danish Anwar <danishanwar@ti.com>, Jiawen Wu <jiawenwu@trustnetic.com>, 
+	Mengyuan Lou <mengyuanlou@net-swift.com>, Ronak Doshi <ronak.doshi@broadcom.com>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, 
+	Sean Wang <sean.wang@mediatek.com>, Juergen Gross <jgross@suse.com>, 
+	Stefano Stabellini <sstabellini@kernel.org>, 
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, Jordan Rhee <jordanrhee@google.com>, 
+	Ankit Garg <nktgrg@google.com>, Tim Hostetler <thostet@google.com>, 
+	Erni Sri Satya Vennela <ernis@linux.microsoft.com>, Eric Joyner <eric.joyner@amd.com>, 
+	Mohammad Heib <mheib@redhat.com>, Prabu Thayalan <prabu.ponrajthayalan@amd.com>, 
+	Chintan Vankar <c-vankar@ti.com>, Nora Schiffer <nora.schiffer@ew.tq-group.com>, 
+	Alexander Sverdlin <alex@sverdlin.org>, Kevin Hao <haokexin@gmail.com>, 
+	Karl Mehltretter <kmehltretter@gmail.com>, 
+	Aleksandr Loktionov <aleksandr.loktionov@intel.com>, Meghana Malladi <m-malladi@ti.com>, 
+	Jacob Keller <jacob.e.keller@intel.com>, StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Ragul,
+When an application maps order-0 page_pool RX fragments into user space
+via TCP_ZEROCOPY_RECEIVE and forwards that mapped address into TX
+sendmsg(MSG_ZEROCOPY), zerocopy_fill_skb_from_iter() pins the pages via
+iov_iter_get_pages2() (which increments page->_refcount) while
+skb_release_data() releases fragments via netmem_dec_ref().
 
-I have a successful short test report for an LG AN-WF100 USB adapter,
-043e:3001 (BCM4323 family), using your 26 October RFC.
+Acquire each fragment reference via netmem_inc_ref() when attaching a
+fragment in zerocopy_fill_skb_from_iter() and release the corresponding
+GUP page->_refcount reference via the existing batched page_ref_sub()
+path so the TX SKB fragment reference pairs with netmem_dec_ref() in
+skb_release_data() once netmem_inc_ref() and netmem_dec_ref() handle
+page_pool netmems.
 
-The only device-specific change was adding this USB table entry:
+Signed-off-by: Mina Almasry <almasrymina@google.com>
+---
+ net/core/datagram.c |   5 ++
+ net/core/net_test.c | 146 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 151 insertions(+)
 
-    { USB_DEVICE(0x043e, 0x3001),
-      .driver_info =3D (kernel_ulong_t)&bcm4323_chip },
-
-The generic dual-band profile worked without LG-specific channel or
-WPS overrides. DL_GETVER returned boot ROM chip ID 0x4322, revision 1.
-
-Test environment: x86_64 Manjaro, kernel 7.3.0-rc6-1-MANJARO,
-NetworkManager/wpa_supplicant, with Wi-Fi power saving disabled.
-Firmware matched the SHA256 specified in your RFC:
-cc286a529396434a38e59382dcd46fa92a57f1cd1a38eea20d2b24dec028cf29
-
-Results:
-- Network scanning worked in both 2.4 and 5 GHz bands.
-- Association on 5 GHz channel 36, HT40, WPA3-SAE with required PMF
-  succeeded, followed by DHCP.
-- 100/100 pings to the access point; average RTT 2.810 ms.
-- HTTPS worked; a single 10 MiB download took about 1.135 seconds
-  (roughly 74 Mbit/s, just a short internet transfer).
-- Module unload/reload and reassociation succeeded, followed by
-  another 10/10 pings and successful HTTPS.
-
-The traffic tests explicitly used the Wi-Fi interface, while Ethernet
-remained connected.
-
-For this test I built the RFC driver as a standalone module, linking
-its rate helpers locally and using a private copy of the Linux BSSID
-helper, so the host mac80211/brcmutil modules were unchanged.
-
-2.4 GHz association, suspend/resume, cold power-cycle recovery,
-AP restart recovery and long-term stability remain untested.
-
-Would you consider adding the LG USB ID with this profile?
-Thanks for your work on this driver.
-
-Best regards,
-Ji=C5=99=C3=AD
+diff --git a/net/core/datagram.c b/net/core/datagram.c
+index ecc30a6f83023..f2d6d1d7be2b6 100644
+--- a/net/core/datagram.c
++++ b/net/core/datagram.c
+@@ -34,6 +34,7 @@
+  *
+  */
+ 
++#include <kunit/visibility.h>
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/kernel.h>
+@@ -696,12 +697,16 @@ int zerocopy_fill_skb_from_iter(struct sk_buff *skb,
+ 				refs = 0;
+ 			}
+ 			skb_fill_page_desc_noacc(skb, frag++, head, start, size);
++			netmem_inc_ref(page_to_netmem(head));
++			last_head = head;
++			refs++;
+ 		}
+ 		if (refs)
+ 			page_ref_sub(last_head, refs);
+ 	}
+ 	return 0;
+ }
++EXPORT_SYMBOL_IF_KUNIT(zerocopy_fill_skb_from_iter);
+ 
+ static int
+ zerocopy_fill_skb_from_devmem(struct sk_buff *skb, struct iov_iter *from,
+diff --git a/net/core/net_test.c b/net/core/net_test.c
+index e20059a00003c..73da75e6ca2c8 100644
+--- a/net/core/net_test.c
++++ b/net/core/net_test.c
+@@ -515,7 +515,9 @@ static void ip_tunnel_flags_test_run(struct kunit *test)
+ 
+ /* Netmem & SKB fragment refcounting */
+ 
++#include <linux/folio_queue.h>
+ #include <linux/skbuff_ref.h>
++#include <linux/uio.h>
+ #include <net/netmem.h>
+ #include <net/netdev_rx_queue.h>
+ #include <net/page_pool/helpers.h>
+@@ -841,6 +843,149 @@ static void netmem_ref_test_pp_page(struct kunit *test)
+ 	page_pool_put_full_page(pool, page, false);
+ 	page_pool_destroy(pool);
+ }
++
++int zerocopy_fill_skb_from_iter(struct sk_buff *skb,
++				struct iov_iter *from, size_t length);
++
++static void netmem_ref_test_zerocopy_fill_skb_from_iter(struct kunit *test)
++{
++	struct page_pool_params pp_params = {
++		.order = 0,
++		.pool_size = 4,
++		.nid = NUMA_NO_NODE,
++	};
++	struct page *pp_page, *comp_page, *reg_page;
++	struct page_pool *pool, *comp_pool;
++	int base_ref, base_comp_ref, base_reg_ref;
++	long base_pp_ref, base_comp_pp_ref;
++	struct folio_queue folioq;
++	struct bio_vec bvec[3];
++	struct iov_iter iter;
++	struct sk_buff *skb;
++
++	pool = page_pool_create(&pp_params);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, pool);
++	pp_page = page_pool_dev_alloc_pages(pool);
++	KUNIT_ASSERT_NOT_NULL(test, pp_page);
++	base_ref = page_ref_count(pp_page);
++	base_pp_ref = atomic_long_read(&pp_page->pp_ref_count);
++
++	/* 1. Single order-0 page_pool page (simulating TCP_ZEROCOPY_RECEIVE
++	 * page forwarded into MSG_ZEROCOPY TX via zerocopy_fill_skb_from_iter).
++	 */
++	skb = alloc_skb(0, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, skb);
++	bvec_set_page(&bvec[0], pp_page, 128, 0);
++	iov_iter_bvec(&iter, ITER_SOURCE, bvec, 1, 128);
++	KUNIT_ASSERT_EQ(test, zerocopy_fill_skb_from_iter(skb, &iter, 128), 0);
++	KUNIT_EXPECT_EQ(test, skb_shinfo(skb)->nr_frags, 1);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&pp_page->pp_ref_count),
++			base_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(pp_page), base_ref + 1);
++	consume_skb(skb);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&pp_page->pp_ref_count),
++			base_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(pp_page), base_ref);
++
++	/* 2. Contiguous segments on the same page_pool page coalesce into a
++	 * single skb_frag_t while a non-contiguous segment creates a second
++	 * skb_frag_t; all 3 GUP _refcounts are dropped.
++	 */
++	skb = alloc_skb(0, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, skb);
++	bvec_set_page(&bvec[0], pp_page, 64, 0);
++	bvec_set_page(&bvec[1], pp_page, 64, 64);
++	bvec_set_page(&bvec[2], pp_page, 64, 256);
++	iov_iter_bvec(&iter, ITER_SOURCE, bvec, 3, 192);
++	KUNIT_ASSERT_EQ(test, zerocopy_fill_skb_from_iter(skb, &iter, 192), 0);
++	KUNIT_EXPECT_EQ(test, skb_shinfo(skb)->nr_frags, 2);
++	KUNIT_EXPECT_EQ(test, skb_frag_size(&skb_shinfo(skb)->frags[0]), 128U);
++	KUNIT_EXPECT_EQ(test, skb_frag_size(&skb_shinfo(skb)->frags[1]), 64U);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&pp_page->pp_ref_count),
++			base_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(pp_page), base_ref + 2);
++	consume_skb(skb);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&pp_page->pp_ref_count),
++			base_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(pp_page), base_ref);
++
++	/* 3. Order-1 compound page_pool page spanning 2 subpages in a single
++	 * iov_iter_get_pages2() batch coalesces into 1 skb_frag_t and drops
++	 * both GUP _refcounts via batched page_ref_sub, alongside a
++	 * non-page_pool page in the same skb.
++	 */
++	pp_params.order = 1;
++	comp_pool = page_pool_create(&pp_params);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, comp_pool);
++	comp_page = page_pool_dev_alloc_pages(comp_pool);
++	KUNIT_ASSERT_NOT_NULL(test, comp_page);
++	base_comp_ref = page_ref_count(comp_page);
++	base_comp_pp_ref = atomic_long_read(&comp_page->pp_ref_count);
++
++	reg_page = alloc_page(GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, reg_page);
++	base_reg_ref = page_ref_count(reg_page);
++
++	skb = alloc_skb(0, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, skb);
++	bvec_set_page(&bvec[0], comp_page, 2 * PAGE_SIZE, 0);
++	bvec_set_page(&bvec[1], reg_page, 64, 0);
++	iov_iter_bvec(&iter, ITER_SOURCE, bvec, 2, 2 * PAGE_SIZE + 64);
++	KUNIT_ASSERT_EQ(test,
++			zerocopy_fill_skb_from_iter(skb, &iter,
++						    2 * PAGE_SIZE + 64), 0);
++	KUNIT_EXPECT_EQ(test, skb_shinfo(skb)->nr_frags, 2);
++	KUNIT_EXPECT_EQ(test, skb_frag_size(&skb_shinfo(skb)->frags[0]),
++			(unsigned int)(2 * PAGE_SIZE));
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&comp_page->pp_ref_count),
++			base_comp_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(comp_page), base_comp_ref + 1);
++	KUNIT_EXPECT_EQ(test, page_ref_count(reg_page), base_reg_ref + 1);
++	consume_skb(skb);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&comp_page->pp_ref_count),
++			base_comp_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(comp_page), base_comp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(reg_page), base_reg_ref);
++
++	/* 4. Single-batch mixed folios via ITER_FOLIOQ: order-1 compound
++	 * page_pool folio (2 subpages) + non-page_pool folio + order-0
++	 * page_pool folio returned in a single iov_iter_get_pages2() call.
++	 */
++	folioq_init(&folioq, 0);
++	folioq_append(&folioq, page_folio(comp_page));
++	folioq_append(&folioq, page_folio(reg_page));
++	folioq_append(&folioq, page_folio(pp_page));
++	iov_iter_folio_queue(&iter, ITER_SOURCE, &folioq, 0, 0,
++			     3 * PAGE_SIZE + 64);
++
++	skb = alloc_skb(0, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, skb);
++	KUNIT_ASSERT_EQ(test,
++			zerocopy_fill_skb_from_iter(skb, &iter,
++						    3 * PAGE_SIZE + 64), 0);
++	KUNIT_EXPECT_EQ(test, skb_shinfo(skb)->nr_frags, 3);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&comp_page->pp_ref_count),
++			base_comp_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(comp_page), base_comp_ref + 1);
++	KUNIT_EXPECT_EQ(test, page_ref_count(reg_page), base_reg_ref + 1);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&pp_page->pp_ref_count),
++			base_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(pp_page), base_ref + 1);
++	consume_skb(skb);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&comp_page->pp_ref_count),
++			base_comp_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(comp_page), base_comp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(reg_page), base_reg_ref);
++	KUNIT_EXPECT_EQ(test, atomic_long_read(&pp_page->pp_ref_count),
++			base_pp_ref);
++	KUNIT_EXPECT_EQ(test, page_ref_count(pp_page), base_ref);
++
++	__free_page(reg_page);
++	page_pool_put_full_page(comp_pool, comp_page, false);
++	page_pool_destroy(comp_pool);
++	page_pool_put_full_page(pool, pp_page, false);
++	page_pool_destroy(pool);
++}
+ #endif
+ 
+ #if defined(CONFIG_PAGE_POOL) && defined(CONFIG_NET_DEVMEM)
+@@ -1738,6 +1883,7 @@ static struct kunit_case net_test_cases[] = {
+ 	KUNIT_CASE(netmem_ref_test_page),
+ #ifdef CONFIG_PAGE_POOL
+ 	KUNIT_CASE(netmem_ref_test_pp_page),
++	KUNIT_CASE(netmem_ref_test_zerocopy_fill_skb_from_iter),
+ #endif
+ #if defined(CONFIG_PAGE_POOL) && defined(CONFIG_NET_DEVMEM)
+ 	KUNIT_CASE(netmem_ref_test_net_iov),
+-- 
+2.56.0.385.gac671c819a-goog
 
