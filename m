@@ -1,90 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.181
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793742960;
-	b=jHA8I9gF88KnzTg/y1yj9AhIpSY/OPGdUoDyEU3TwksSuIFFNJ/zHJgX+l39taE5qAu8
-	 lVVMNxFmEGGk4v8XUmkJPrqgjVpx5Dw/Hiy8owcEsuUVqxUE6AaomDCXZkuqSNw0cVzQQ
-	 N4eAqW2OvwU0SzUeK1FD4Kph572Yn589QuwcAofQY87Q33wCw3Kp3WvPbNw+zfLv9vL48
-	 RyGfYbVWhuSlttnm4QBRJSidl/0vidFBisGE/rrIkCqTKux58y2imxOFzLVxoL4aVSvCY
-	 WCo8TkbOEw8ljtUdxNMgLIXvJSY9jJBiDpoeEHthwX3UHxq009nXveVMWZkBAFBIPjA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793742960;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.177
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793744978;
+	b=V5kN5/rIMhiejCigyGzSGQcXn0VmC6xk3fZe8vvOABH39S7+yakRBVF+4TerXApUfKH4
+	 nGatGveUPFrqXJ76gWXWHbRHkMrTWXslANpBopcrV1TJmwjVaJKhlfA3TnlM/cyffzoK1
+	 eRh5vnLAEefr5EVS0KvzgeCZ7LRuMCBQNoiulufDPXYsnyFQq1QAldCwz3ISpWDL/sM0M
+	 fW7/ERf3WQr+3d8IQej0IvcDzc2yLZCunnG8XJcUsmgYHnCjjAuaN6rZbCjeL1vlUjWFX
+	 8DrsfFsLxiryW6BVOfYRSbKR9J0mmeAZMWYt4Rhrc08o1wS+izN4nYHae29QstgWMFw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793744978;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=s3fU+uIBacPNU5dcYXXxOIdYe2LuItJu7S++G+cSYLw=;
-	b=s/S/ZG1KYbrCxmUCJO0+DV+Csc0Xbiwds6Z0UoU66X42MtpwRuoCX3rChhpYe0Xi69kU
-	 IRRCOe5c7Qo/Goq70s6C1W+dplOLw0WZE0DP64twynbyFsFmqs1MQa5sZfDl2xrJVqhvB
-	 uplBDVcXzWuJrwbYxWZmfGBqRtxeHZhVUxMomk+2W+NpcIwe2sXOsbYtlhCSl8XnC+sD+
-	 ZCgndvWjhuFMQ/f89Fc6Cpw1xwzUkRluOgIv1JwX3kEsIyA7IwlYlo9kGeQaN3kvsRwKD
-	 lN/7i5QGi4UEiVsppaU6ucpQMvLZM2rvk/04BZsX5Gnv6Mo1N2+ri27LtzBlEGde+Gw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Content-Type;
+	bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
+	b=5Qlln25DscbBozNsMc58VVG7ejLMBaajjyZpaYf7qe/eO9TpmoThwUjlNNHWZv20q7iW
+	 dcSw0v/QLZPiDGH7BbMhS39DlMGJJREEJDmdh83mdff3OY3RHwGIhzyobNoVwrLtsB7xs
+	 vN9wqqpjaBItJyxQU01uCTiqxQxFpvKO28Qigon+uhO+oDG31GD0JQglZX+watRQHaEoN
+	 HC0aRC7B1QdrpOLA/d9pwLbwrUMSip3bRgWaoveA/3Cqad5Vrq4HW84RFxfrsFQjS/M26
+	 N3760quf5mQ5vn2q4edug+/Yt15yU9ZLKW0Kj6sFK7gG5L7zYi5KNB8/vNM73ydARpQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WsfbYW2Z;
-	arc=none smtp.remote-ip=209.85.215.181
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vQqlQN2F;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.177
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 004D2606A31B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 21:55:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 004D2606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4675606A31B
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 22:29:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4675606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WsfbYW2Z
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc4aa18f9afso39378a12.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 13:55:59 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vQqlQN2F
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-8b305d38bafso832727b3.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 14:29:37 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793744977; cv=none;
+        d=google.com; s=arc-20260327;
+        b=hCozFunsdRHoQtqjqkpxzMWqHfQoE6O6bDF0XnQ8ghoy56ViX1papt/VLq+Hnh0Dit
+         VJo7eIa3/rWcPZ/VKv4xO9AlZslUNaFah2hRY8WvYhoX9j0gBnYHfztB9Hjd+oowSrJo
+         ReoFZj8nFuw01jCMyS6q4BO+T9KmDl0GKwTOHvR3dyfazRGnQHfOowuA6FTo9aBwUIZx
+         Xte2EX/hNPV2ZmmySqHwu4WToNp+kdnEqmA7Iw8wKiyL7V/9sOP3SEGCt6wz813IEUHS
+         eOz5BTvMelX8bdWqdPsK03eg7rJjo4jKkyMrE3MJhrKG20b2NxKgSTzoFGywVs7+xBjq
+         Bm2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
+        fh=Y/U50gtRcX/xiKT0iQRQC67OMrNOneTQtxsu5P+GIFg=;
+        b=XiudbCg+o2HhufbxVpw6vplbRuW0EQJoN8drWEqZvyvJ5RSVwbZMK3Dp+BEYOs7JqR
+         jqv3RHqbrDyDJUEY6zy//ZIGjX8mpVFmHAQGxw5uCuzFPAubqEJRiNxQM+3nzhcipitm
+         kRauqEhWuw4yznSzwPvAgtkBbTeB2its2Rigwz/R9Cvx32Gya0FjMgsfguQlkt5MjYPN
+         GdfFMz4cKH8NjaLXukoJK5+b6580xbpguMZfeGbRaK6qlP0YkHc2XySzbC7w2sbrOnwh
+         prh+k6TTjnvcb3nvy1bm1mjGFHLPbyKVhLgOEt6xJfC6luSlZLEH6OLMkfIyRdo/rEX1
+         KHbg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793742959; x=1794347759; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=s3fU+uIBacPNU5dcYXXxOIdYe2LuItJu7S++G+cSYLw=;
-        b=WsfbYW2ZnE3D8XrxZ2f5xlSnVCKbXaiCxJTYTHnq3f51CAcUf6YOaN+IvPYAbSvn2c
-         L2djqS9YTEJByI/BIJRM1dvld7GHrEDPop8XK1JpkemEBdlNxKHTZMG+T6qdrfC0yDUK
-         mFAx8sQ3tNPZQxtrAR9Z6YayVQWAGwyqXrDxnx11R4TBS1LDrdxTQqwxJuURltQPf1xY
-         YGRk4Kpg40ZMLjJeJDY1fvO29slp+GVVSpm3mMWXqeVNrs+oTaIwZbx2BxX30gQFi9Co
-         JqognmRJatCnyg26E8eajiq2d8xoHLoYN1X6vQZl1R41qwh/yS5HjsUY026ICCWICtH1
-         DuXA==
+        d=gmail.com; s=20260707; t=1793744977; x=1794349777; darn=vger.kernel.org;
+        h=content-type:to:subject:message-id:date:from:mime-version:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
+        b=vQqlQN2F4BIb2n4DtnU9pg3XHQv/n4OETSzpGfk3DjrzjuyqN+GNPYCJC0lXbJS26W
+         Rg9XYqrL/FjlX/K8FOyWBtPrxCpipjmrhWKDfKQaBwO93bOeXjeCWltygLDXPoh1/WAc
+         7tW1KlZ3M7v1rjkD4eJFxSANNVg6gVVfj89bu7OZfaQ0GYtyB10EnJsjJLqXSNvZW6Zw
+         CzsqHAslZ9x2ubbeoZevOTyhBxjjp2q/Gf5dVHZwzX0cL/ZiRvMERFzOqtJZylbaUquK
+         i7Q5zoYXqlyqFe9YMR7fbBNODQ8IFzOb93jZqHqFLGVPCJV4HXTl2fesO3ZyezzYv+m5
+         C2tg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793742959; x=1794347759;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=s3fU+uIBacPNU5dcYXXxOIdYe2LuItJu7S++G+cSYLw=;
-        b=PLIXwu6ncp95qz2gyIYKn3LoLXWdYMmCQH0vT6JYZtWsPt0agduFiCiSuk6qMjP8BA
-         HFyjOLalU9feQpfMdD/hwQm7+OP8c8QXao/6EcJZRCkGoGXj8QR5pKCqcVxAFGzHVVi2
-         z4voMtTTvb05W2oo0UWLzXqNWHslKAEgf75IRYpXfphurQhFftVMZv5DhPM31Z4xdMOx
-         QarroCmyDmjFVuq4snOBtO5RA1DUahxy7aOhj5RCQLJT5k3RD76U+MVe8+08zt8quihF
-         n700O++D7HblYnNWhhE3r0OEodtoCNJXgwDOSJ8qYsf3jNs/islInnM5h8zI5nFZDhKj
-         /xjg==
-X-Gm-Message-State: APuU4Z9MwTjY3WqKuPBABOfBqnvIkkpJqS1Fab7pe0vd4aYe5yL6wD73
-	UsD62bIcJ+MHekOO7E2kpoLO+T9z0T/cads8zct/3GP4v6fw96+3qDJ9YXL3rA==
-X-Gm-Gg: AYBFou1GOQv4PpnRh3U0ZKkM09ye9DkGfpHVpQvJ/726n02XDQ5oXk0K+cKzfqMJYSk
-	QxTPoo49ByaFQ0RAtNgwuoX4WnTpFQhD5NPCPfsplg1fS04KB5bEJLQqH7spjUjLOedy7qvrDOg
-	88d5Tussa4Afcg/6tOrLvKbLEB8Ce7DRF86KzxLwRSz5krZjC84iIQe6ItbQv3bf9CikdCACSAY
-	8AgH7tWlkd8+MkZ56w+XeOL/p/qCQqFEFuFhn+i9M0R+PnPMEIScHKuNINL+bafzjA5qQyBk/4t
-	rhGBn8bSUKn5SaO72rp7zICE24CqbWkBXgpdeKoDz0CtN0XRSyGL2oTDnPW3JFrHgASXsqfSYe7
-	COl16iBP0CsZu9BgKflHE2M+8q20NhYBBXTShoic1JFP0dCBr7fMlsQ9nOHEpj0qJ6BAE4hIy8+
-	sNiIl4FBWNKYxeV7t5XMd55fXBnYqvhSfOyQ0gXS1vNNgJywhusEg5iZWnMUU92u4Jz42GMEEDC
-	+byJJ3rTHr2+380G/i03BxcPNT0vyk5By3U6SZR3N5H6asvarVhQ1ftPBp8EK9KFmTOppq21spg
-	wW0eoOqiRj3ldktCm9vt3qmkM5H2CSMnz02CyTJdRDwDraDbNtC0D29ONHz2+MX7TndO0eVQ/M1
-	NSnKBPq4rPdUkwHjzNSGR1nlX887cMIofxomyPxYg2sDSU0lXtbkhgXD1Cdqavxa8O48doSqRv0
-	zl/ANfuH04c3vgqdAtjWDarTc=
-X-Received: by 2002:a17:90b:4f88:b0:3ac:b185:fa16 with SMTP id 98e67ed59e1d1-3ae898185bamr11970368a91.43.1793742959303;
-        Tue, 03 Nov 2026 13:55:59 -0800 (PST)
-Received: from ryzen.lan ([2601:644:8000:37f::e34])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0944ea360sm830523a91.14.2026.11.03.13.55.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 13:55:58 -0800 (PST)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH rtw-next v2] wifi: rtw89: acpi: check for _DSM function support before evaluating it
-Date: Tue,  3 Nov 2026 13:55:57 -0800
-Message-ID: <20261103215557.183459-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+        d=1e100.net; s=20260707; t=1793744977; x=1794349777;
+        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
+        b=tI9AOGkBlNMZBzC3qmwDdmLYmgGTIa22ZWCVI1W0MfzZ7X8M0iPNCyVBKq50wTP0fj
+         cNI6S22U+cwDVKgrYthNqxGuhGtLgIA0cNeLSPQcZ+l+r98zqBaMSsxAjIatkWttKi1n
+         02UUwMobQWNUhtyFLW78j7+eLLlezl0PW/+LuKJAnf2wYFmVN06+sHewDzL6tAG7evF2
+         55hujdiUNNqekTjoLVtJmmsa14gEyzQs/50YZyAN+xV3br88WardhFndo91a6zBR6wzl
+         cr20dNBqDR5uuf27Tj3acwi8cKCgDQvdqfIGHd4b+d1llrxT8txI+MDjdRpkqUi0wnv3
+         PQ1A==
+X-Gm-Message-State: APuU4Z8umkbUHrzRgmsqXNGv2DQW1P54+dyPwCJgwkr+ZroJZZXu2IKW
+	AmjZg5Rm6H5Cmoi86xrFp6yr/dIX9OqYnmNYadLSWNOB6BgQTPqXA/sLghdsfyqR2WoZ6QsnOhV
+	BpBXsq3CzVskpjF98A2Quh+cgMiKVEorNRKDGBNk=
+X-Gm-Gg: AYBFou21ixJaUS8bVSwpqCAQQN8phglQhy1kF2gyOmoE80SJZTP8EkamUERc55+g4+x
+	9tuH0nawtM6jbBHwxylPqOApLutV1tMZRWdFipkdn6iPEaOcXP+WBYzsV9pp5zicsuWJP6eoJwk
+	1WnTda9bsYARMMRduKb98CnJ+bxI1QGadzVrAaeILk4I+Ksn7oe+uv+G3+OSsmEAoENrIJYMRrX
+	xYJ8SiHetNHG6tfn0l1DLgltYislxZC06LKkTJWsTfTtOjnRjDFOhXk8X223Bb07Qyhj2oGOHwD
+	lNH9wUEx9j/v8C3Ja+m7GLLBWvVp5no0Wt4OMFkroyFt+bZ5RLofgI5ypC5GiKOeaKLsJTNh9N4
+	BiPuG7Hzn+kLKCY+Cz6PGCfFlFNI6DfencKx6vKY=
+X-Received: by 2002:a05:690c:f05:b0:897:73ed:dd25 with SMTP id
+ 00721157ae682-8b2b67095afmr108503777b3.27.1793744976631; Tue, 03 Nov 2026
+ 14:29:36 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -94,61 +99,89 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: =?UTF-8?B?UGFibG8gTWFydMOtbmV6IFLDrW9z?= <pabloriosmartinez@gmail.com>
+Date: Tue, 3 Nov 2026 23:29:25 +0100
+X-Gm-Features: AclHuK-KWyigjh-JYhxazCuURrcf6kvPyIG1od7zsbxQNPNPqPflWrx8PqIWT6c
+Message-ID: <CALTviDkEWERPrtc51WFB1K3Sn7wLdt6YhB=_Ck4PwBPdLcojBQ@mail.gmail.com>
+Subject: rtw88: RTL8822BE (10ec:b822) never authenticates on 5 GHz with a
+ Huawei router; poor 2.4 GHz link; same hardware works fine on Windows
+To: linux-wireless@vger.kernel.org, pkshih@realtek.com
+Content-Type: text/plain; charset="UTF-8"
 
-When the WiFi device has no ACPI companion, or the firmware does not
-implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() calls
-acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
+Hello,
 
-  ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 rev:0 func:10 (0x1001)
-  ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7 rev:0 func:6 (0x1001)
+I would like to report a problem with an RTL8822BE using rtw88_8822be.
+The same card, in the same spot, works well on Windows, so I suspect a
+driver/firmware issue rather than coverage. I am happy to run any tests
+or try patches.
 
-Here the handle is NULL, and acpi_evaluate_object() returns
-AE_BAD_PARAMETER. All callers already treat failure as "no policy
-provided by the platform", so this is only noise.
+HARDWARE / SOFTWARE
+- Laptop: HP Pavilion 15-bc450ns (i5-8300H), BIOS F.32
+- Card: Realtek RTL8822BE, PCI ID 10ec:b822 (04:00.0), HP subsystem.
+  Both antenna cables are connected; "iw phy" reports available and
+  configured antennas TX 0x3 / RX 0x3.
+- Debian 13.7 live USB, kernel 6.12.107+deb13-amd64, firmware-realtek
+  20250410-2, rtw88 firmware 27.2.0 (H2C 13)
+- Same behaviour earlier on CachyOS (a recent 7.x kernel, exact version
+  not recorded) and on an Ubuntu live session (26.10)
+- Module parameters at defaults: disable_lps_deep=N, disable_aspm=N,
+  support_bf=Y
+- Router: ISP-supplied Huawei OptiXstar EG8145X6-10, separate SSIDs for
+  2.4 GHz (ch 6, 20 MHz) and 5 GHz (ch 36, auto width). The router is
+  one floor below the laptop, with a concrete slab in between.
 
-Bail out early when there is no ACPI handle, as acpi_check_dsm() would
-otherwise hit the same warning while querying function 0. Then use
-acpi_check_dsm() so that functions the firmware does not advertise fail
-quietly at debug level, as rtw89_acpi_evaluate_method() already does.
+PROBLEM 1: 5 GHz
+Linux never authenticates. This repeats indefinitely:
 
-Seen on an RTL8852BE in a desktop PCIe slot.
+  wlo1: authenticate with 22:87:ec:xx:xx:08 (local address=90:32:4b:xx:xx:xx)
+  wlo1: send auth to 22:87:ec:xx:xx:08 (try 1/3)
+  wlo1: send auth to 22:87:ec:xx:xx:08 (try 2/3)
+  wlo1: send auth to 22:87:ec:xx:xx:08 (try 3/3)
+  wlo1: authentication with 22:87:ec:xx:xx:08 timed out
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- v2: check handle separately. Remove Fixes.
- drivers/net/wireless/realtek/rtw89/acpi.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+- It fails with WPA2-PSK and with WPA3 (SAE), and with the router set to
+  WPA/WPA2 TKIP+AES and to WPA2/WPA3 AES, so it fails at the 802.11
+  authentication frame, before any SAE/EAPOL exchange.
+- Same result with regulatory domain 00 and with "iw reg set ES".
+- The BSS appears in scans (its beacons carry country IE ES), but no
+  authentication response is ever received.
+- Windows 11 on the same laptop, same spot (Realtek driver
+  2024.0.10.209): connects with WPA3-Personal, reported RSSI -76 to
+  -81 dBm, 80/80 pings answered, 3-9 ms, link rate 260-292 Mbps as
+  reported by Windows.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/acpi.c b/drivers/net/wireless/realtek/rtw89/acpi.c
-index ebb6cf555747..3396d42594b3 100644
---- a/drivers/net/wireless/realtek/rtw89/acpi.c
-+++ b/drivers/net/wireless/realtek/rtw89/acpi.c
-@@ -372,11 +372,22 @@ int rtw89_acpi_evaluate_dsm(struct rtw89_dev *rtwdev,
- 			    enum rtw89_acpi_dsm_func func,
- 			    struct rtw89_acpi_dsm_result *res)
- {
-+	acpi_handle handle = ACPI_HANDLE(rtwdev->dev);
- 	union acpi_object *obj;
- 	int ret;
- 
--	obj = acpi_evaluate_dsm(ACPI_HANDLE(rtwdev->dev), &rtw89_guid,
--				0, func, NULL);
-+	if (!handle) {
-+		rtw89_debug(rtwdev, RTW89_DBG_ACPI, "acpi dsm no handle\n");
-+		return -ENODEV;
-+	}
-+
-+	if (!acpi_check_dsm(handle, &rtw89_guid, 0, BIT(func))) {
-+		rtw89_debug(rtwdev, RTW89_DBG_ACPI,
-+			    "acpi dsm func %d not supported\n", func);
-+		return -ENOENT;
-+	}
-+
-+	obj = acpi_evaluate_dsm(handle, &rtw89_guid, 0, func, NULL);
- 	if (!obj) {
- 		rtw89_debug(rtwdev, RTW89_DBG_ACPI,
- 			    "acpi dsm fail to evaluate func: %d\n", func);
--- 
-2.56.0
+PROBLEM 2: 2.4 GHz
+- Linux associates, but the link is very poor: iw reports about -73 to
+  -76 dBm, and the beacon loss counter rises about once per second
+  (14 to 65 over roughly 2 minutes). Across 5 runs, ping to the router
+  showed 0-54% loss and average RTT of 37-278 ms.
+- Kernel messages: "rtw_8822be 0000:04:00.0: firmware failed to leave
+  lps state" (several times), and once "failed to send h2c command".
+- The beacon signal average (-97 to -109 dBm) is far below the frame
+  signal average (about -75 dBm). With a phone hotspot at -48 dBm both
+  agree (-46). Occasionally signal readings of -100 to -112 dBm appear
+  with the second chain at 0 while traffic continues.
+- Windows, same spot: 60/60 pings, average 12 ms (max 157 ms).
+- With a phone hotspot (2.4 GHz, ch 1, -48 dBm), Linux works well:
+  rx 78 Mbit/s (VHT-MCS 8, NSS 1), tx 65 Mbit/s (MCS 7).
 
+TRIED WITHOUT EFFECT
+- "iw dev wlo1 set power_save off" (one run had 54% ping loss)
+- rtw88_pci disable_aspm=Y (lspci still showed "ASPM L1 Enabled"
+  afterwards)
+- WPA2 vs WPA3, regulatory domain 00 vs ES
+
+COULD NOT CHECK
+/sys/kernel/debug/ieee80211/phy0/rtw88 does not exist on the Debian
+kernel (presumably rtw88 debugfs is not enabled), so I could not read
+tx_pwr_tbl, phy_info or coex_info, nor test the edcca_enable switch.
+A single correctable PCIe error (BadDLLP) was logged once; the AER
+counters were 0 later.
+
+QUESTIONS
+Is this a known issue? Which additional data would be most useful (a
+kernel with rtw88 debugfs, a debug_mask setting, a monitor-mode
+capture)? I can provide full logs and test patches.
+
+Thanks,
+Pablo.
