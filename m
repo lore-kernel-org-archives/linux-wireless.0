@@ -1,74 +1,74 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793676922;
-	b=VpJ3SaM6MU+ieu+1zzs3sBAy8W/myAmZG69/83rqo3/sCcGyV6a0SJVbeZqDNmmTPtfI
-	 gp6N4RtickiLp7Z00A4/3H/Rq3b3SoXsJaSkl/5V0Gbc8AC7m6ZmRXGskdFmNRME+DBuq
-	 QY+JqsEagJHseEa2gdLf/FUiU/rgz20Lr2BoBnuhuq7Ayu/9InXHjimBeYvfT0FszdJ0o
-	 gLR0anx7v79XvUR2LWSB/T4J1p5MG3bzdoz7n1VhEhhaP8QhWJvDkDPByfkkYejI0nl6+
-	 pLKCI/M3WbtKFSUJke5P18pxSKC8yQfOQ8pNndRIUQ51famVNCfaYD772N5ceO7zmaA==
+	t=1793677251;
+	b=zrAR5BIlzumbVWYEl4yZltUcvs5PMF/nVIlTzxDAM6XqTd7eerAr6+CbyaRvEpCx4QjP
+	 FXjH0p1nuPNSCTXMVcYLt6MxZrW4XGugDHjT5RnRrUqR0Iyrnh31HD3Tr5fqUqZ/FOn/i
+	 u1/B5wAKNPJftqiNKWYvF20H3L4UxvbdlVCsgYqZFd8vc8+gDAcaP52tZ73KnZt9g8nuX
+	 gSOiduCUFGH+wEPa23YkZrYgYTDrIcIxVWj8M7lw2lYXuyqgqJfTGVX05jeUqMgr63H+u
+	 imULqO6/w/0C3aQ6osz2amRu75rzqYxPEklw6S5iCaTbov0S7POfEzhToqv0fxkVS9A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793676922;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793677251;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
 	 Received:Received:From:To:CC:Subject:In-Reply-To:References:
 	 Message-ID:Date:MIME-Version:Content-Type;
-	bh=4uA49ef9muVRlHqAtrsTS4CYgc+PPnnVYcR80HgZwss=;
-	b=p3MojzggGL/1zWQBjxleObw/E8Oa7k5NIz+bSpbAbKkox+Fa38t0bBW41iRs7oRdjkcI
-	 K7xm+Ei60HZg0UEvIScGQwqOH62hMnOMN5OSEEitRNzawwn7BQgG9OX29kpmVgmARMDBM
-	 BJ/dWSvNEuX+8njqYx7p0Yqdb+u/kVQBq92VRYFTOroLj7lPb4yR+jlFDYjuapE7m1ZxB
-	 RiNjoFIPRs4YNEtRNeAkOmSI07r3MYGkv9U4qnt6Pui9CSlQwSnhymrhW37Zzhj0ol6Oi
-	 L2ggKHsSp8KJ+314fruR4ajqtZbSWiBbbAilbNq2G8mcbY1eQ4M6PMAv/16RLGIIRkg==
+	bh=HodTozwawD9j07WmHXhpT9Uy+aGkSUigiAybYEm4Tyc=;
+	b=F4I1D7YA4C0qPDUyk88C43ecNWY9AHmzWn7m0e73OCTOsSIDzO7LUYscoS5xVghpIhRt
+	 sDWlh4348ZdzWkfUIknsgOegMEsXxPqrrciNa783IZKD46CeUH2g1nhh/4qjblC3Lw/X0
+	 CLH5yx9Alnwb90SUznKiCSs7LC9hYHWmwMjQOsyiEh2+dLhSKujtrtQoC86wE9yoLfcFL
+	 S+8NvwOmwFovdKIaj6cZxBM8iza1TkOmkn0zXcHbFbNMQx6OpUzymZx/dq1DGrh78nUy9
+	 HbskzAU1jO567mIutBE9ob93+oYg+JihU+Tg/dH1hM2fxhqmBRVXwRDwGRpKWKYHP+Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fzsuPfw2;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fZTdKQOJ;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18372606A324;
-	Tue,  3 Nov 2026 03:35:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 18372606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15BE9606A324;
+	Tue,  3 Nov 2026 03:40:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 15BE9606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fzsuPfw2
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A33ZHFr82703608, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fZTdKQOJ
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A33ecc872705184, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793676917; bh=4uA49ef9muVRlHqAtrsTS4CYgc+PPnnVYcR80HgZwss=;
+	t=1793677238; bh=HodTozwawD9j07WmHXhpT9Uy+aGkSUigiAybYEm4Tyc=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=fzsuPfw2q3Wz1+TSdoICoha24ZUwQ1/zLuMGVIo4GdO21CuiGj00ngwqi14Zy1SP9
-	 mjG6ZqzQUeJdy6qDEboGev8AiN8wldYbQnkK4a5n7bua26Lqb4BUpitUslmmLov+Dz
-	 Gc4xoiTUw6ZgnT9sCmkheb0R59l0uRqZtZyYQ4WzVdEA+Vo7M7i29L249PJ0EL3WzE
-	 j8ZuqDEacXtBlXED0Bp2uqEt6gA8qzY/GNW+GHXg2lFt0cqutxN4oJLz0zEIS3z2XV
-	 hcZBT0tVy2RdVVMkjRWfnCOl3VJcbH6OYhB5ZzXvI5vUk9Evb9x4uW7L+E09VgTndL
-	 hwZb3Af4fXAaw==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A33ZHFr82703608
+	b=fZTdKQOJNPpmX5B5vn7vbz10rPnNlFERaOP8rokIGPTj2QFPPwm5C0nGBm/wRIjJu
+	 mgiCd577ULPA6q/fOS44FRvHFZ6m8aJI642lhVrOmn6A9I9UfHOMvqF1Be+1TTlWkR
+	 G3hPmEzxZMnH8pqAlkm+vXOTyJXSxxR96+FzgaVd6i1Rg0Z8Pd+HXXwRxLWZYEaoZT
+	 f8ePDJpNeFC1PGjr24lZK8uVUjSeEitv+1hlJW0cF5jhUiis92D+MrsqKNn9HAjyZ2
+	 zGVdKoMqGIPMgrpWQL6xyIHTplYxNbxduK6Qt4nK8HqTLI6wLTtS2O2StSosAw5/tm
+	 n3/l+AmKiKGNw==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A33ecc872705184
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 3 Nov 2026 11:35:17 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+	Tue, 3 Nov 2026 11:40:38 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 11:35:17 +0800
+ 15.2.2562.56; Tue, 3 Nov 2026 11:40:39 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Tue, 3 Nov 2026 11:35:17 +0800
+ 15.2.2562.56; Tue, 3 Nov 2026 11:40:38 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
  (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
- Transport; Tue, 3 Nov 2026 11:35:12 +0800
+ Transport; Tue, 3 Nov 2026 11:40:38 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Hungyu Lin <dennylin0707@gmail.com>, <pkshih@realtek.com>
-CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<reza1234khan1234@gmail.com>, Hungyu Lin <dennylin0707@gmail.com>
-Subject: Re: [PATCH] wifi: rtw88: allow key removal when the CAM table is full
-In-Reply-To: <20261019165103.5990-1-dennylin0707@gmail.com>
-References: <20261019165103.5990-1-dennylin0707@gmail.com>
-Message-ID: <664184db-a543-4cb5-9113-06f50525282c@RTKEXHMBS06.realtek.com.tw>
-Date: Tue, 3 Nov 2026 11:35:12 +0800
+To: Devin Wittmayer <lucid_duck@justthetip.ca>, Ping-Ke Shih
+	<pkshih@realtek.com>
+CC: <linux-wireless@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: Re: [PATCH rtw-next v2] wifi: rtw89: debug: return the error when a read handler fails
+In-Reply-To: <20261019170120.726156-1-lucid_duck@justthetip.ca>
+References: <20261019170120.726156-1-lucid_duck@justthetip.ca>
+Message-ID: <4f4ca02a-3d58-4391-9efa-6c82b708efa8@RTKEXHMBS06.realtek.com.tw>
+Date: Tue, 3 Nov 2026 11:40:38 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -80,25 +80,23 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Hungyu Lin <dennylin0707@gmail.com> wrote:
+Devin Wittmayer <lucid_duck@justthetip.ca> wrote:
 
-> rtw_ops_set_key() looks for a free CAM entry before checking the
-> command. When all pairwise entries are in use, DISABLE_KEY returns
-> -ENOSPC without clearing the existing entry.
+> Return the error when a read handler fails, instead of passing it to the
+> copy to userspace as a length:
 > 
-> Move the allocation and bounds check into SET_KEY. DISABLE_KEY uses
-> the existing key->hw_key_idx.
+>   rtw89_8852bu 2-1:1.0: invalid read reg len 0
+>   usercopy: Kernel memory exposure attempt detected from SLUB object 'kmalloc-8k' (offset 56, size 262144)!
+>   kernel BUG at mm/usercopy.c:102!
 > 
-> Fixes: 10d58823cb44 ("wifi: rtw88: fix out-of-bounds CAM write when key table is full")
-> Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
-> Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+> Fixes: 831cceed3baf ("wifi: rtw89: debugfs: implement file_ops::read/write to replace seq_file")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
 > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-> Tested-by: Imtiyaz Parvez <reza1234khan1234@gmail.com>
-> Tested-by: Imtiyaz Parvez <reza1234khan1234@gmail.com>
 
 1 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-b60ee9891e40 wifi: rtw88: allow key removal when the CAM table is full
+cc595477e6f8 wifi: rtw89: debug: return the error when a read handler fails
 
 ---
 https://github.com/pkshih/rtw.git
