@@ -1,87 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793735105;
-	b=0R+iFWtpXp8Zm3xooMnertJM8h3nYWm3TSMgQq8cQiS5GBXy+fztYYsW/SJ+2vz66lPe
-	 EcRmANEvsAe7fHsR68WjaR1uMxMF9o9DA1I14VoZScdJIlbeCeodjN5nlHnar0Qqnci6I
-	 vg9QiIu6xuS3TOYoR6wqYqgFVYfx1lrbu0GDq2qZ/BGDGkFQahib9EoPz3iOYAmWujNAN
-	 149z7/XNQhkMTtRBljMNvV1S8r76ZOWMgIheFHl5nKNYtiOKaxVQxwexyFsNgvNdqJfrl
-	 C5x9wyS+mj0T5HbVu/FGKinWo5LpWeYDxYu1GWZS1erjv8tqZsdAzD5qvdxYgrHb1Lw==
+	t=1793735390;
+	b=eG1aVgYUd64Oz7fmuYn0zfDfX49Py+DGI1J4ioEQKcOjD17DyoUAcME+edC0zyBSjQH+
+	 zFKt3EV4bu5gXult4i9ZM2tn/iF2J2hq1suyWo7ypIFp0CJTpey07MbDh8HlOaKoEgV5T
+	 BLYokbOX48HCO+HSf9bbGt8B9TsW8Zzawn4sLRfAu2lsSCbuQVfidcVnIi55BBvzSuxL6
+	 wG//3v/uqMDml0cdHibAfGANclqUkwWtLQrx2u/OoRClHxsxK31mCnIrNS2TZU/gN6BAA
+	 g4cMHl6X9Q4jh3BxTUoQx8g0Zk/qbYs6nDTk0h3bEjw0aw1GFBu82w5TNtCre+VUk2g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793735105;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=2NxF2EJvNe9HutfjzaiaV0fUg6tWLxFHd70JA4aRkJs=;
-	b=sOVwkGZXLaO6PRdz8hdS8GiwX7i7p+Lxyqtvjw+owwsjvydGI+LT7GuTWX7SpMDB3c3Z
-	 J3t57RhpWx3uF6vziZJYM6MmfQ1966AjUHsMGqAOLlS50RCKc+P6ZczmaODhjYPpk847d
-	 PLIEjiVXleR4kSmflzSPCd6l3gXLB2ty3JGY6yR3nSkyov/AEJycLwcHcGJdkesSuildW
-	 sNjEk2uK7EVoIfzOBlGVGpCjMNUiZQb0hNMB4Xk1a3Gl9riVXiS+vxrEUJKKayFvAN1dB
-	 UB26sF3RXlnHCoX0fR0Lw73Ad0L5CCO4tKlVIDfPosdVUVEoUWdiUoRZvjiHLwsrrJA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793735390;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
+	bh=9P+E53yKlDmqXM3P0gvNQJjIJEomFqG3poCHUiZ6Bi0=;
+	b=rToaIOicllhNgPHlPf489039pTpD4Kxm+j0rBonOq5c8GJa/WVzZuaPNSa4musjxqJBV
+	 u3wsq8wxKUUNuJI4fbNvPyRvums2xnRGyAV9+UPp9+G+MBAAepgDrQOSc3Km20Yscf5nv
+	 GpEKXolQX9Ra46E5N74jAPM4GENvIgDJOjN8DSdYg/qI1G7lYUPDNkn8eG9wei2vkfD6p
+	 OZ96/5fr41M0XGaJNtr4IKpYHN0Jvgn87cKc9U82Mt9kyJgxrJtv4X2BQngEULPpG2SKK
+	 26IRuuDzuxanyf6z8cWL1ZD/F7Idu1DJtuhuEGJFWoC/5hkJF+pNTi41qvGNvU/XGRA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=yAGEsWXk;
-	arc=none smtp.remote-ip=209.85.221.49
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=X59HlbTz;
+	arc=none smtp.remote-ip=198.175.65.21
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45C8D606A31B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 19:45:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 45C8D606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE146606A335;
+	Tue,  3 Nov 2026 19:49:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE146606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=yAGEsWXk
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48af4d4e61fso2819972f8f.2
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 11:45:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793735103; x=1794339903; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2NxF2EJvNe9HutfjzaiaV0fUg6tWLxFHd70JA4aRkJs=;
-        b=yAGEsWXks5Od7KjmN5J1BHpqOYr4HbyRKK7nH8X7fgDI1bJSdl+owJIolG39h94fh5
-         Y27TXUdAW90JECMxDSTGt3c/Yyde0RAqKOzbj0bIw4DYcAq7TGGoVGUyTWt74uf1JjQJ
-         GmhcguSoe/XZi90zPNc5ETio1qC5qHGTUKZCMlg+k2cyc08qFWwf5bgOZDLerukNzEb6
-         sE6ynlLNfEX2azuvrZSo0JlWMDoujJTGpryChcAztRJu1F9066e8QrIl0WhOE7hmxHO6
-         9KROBkoxI/kGseOgviSt1Xv3brOv7ObViFPzcLlGuzY3bJKFX4B59H1duiCtyQKjBxcM
-         w77g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793735104; x=1794339904;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2NxF2EJvNe9HutfjzaiaV0fUg6tWLxFHd70JA4aRkJs=;
-        b=Yy/r0VvTGNTVq6bVX/1kP782+4+EdxNDY0F3UrwkP5eL5sYAG7rXOV0nHtTV2Q8xJy
-         dePw+ERTZaqOQAUiHFoMV9XRaS/NWtMJ/36exshDq9poJi9JjFopzhRL92bAXWfvkfSV
-         Cj7NxUQq40/rBsvri64c2VMF/qbwzL7RSWqo38oNfLUOP5OlCCuiHrCaalR1WEpqn3la
-         OXpABFpVsAMy+uVJFAZfWgp1Go9Drp9ZLF5ciqWj+RB4jjj05yXef1dqVQV5UxPq7Dya
-         QLBa0OqoE2e0W8yv6Y56eJiXjLI1+66wJjMnow9OsNSv8zsp03B43ET7pGACdXMdRlpH
-         uz6g==
-X-Gm-Message-State: APuU4Z+sqi2EQEygByVdRTsUyvrMMicpqKSoVCkCpLJLUubeG4/khJ6+
-	tSFSaUDwTzwRI53nyeHlJlyAizxM2+BCzo9I04vKB4/QU3ymWtktwAdPpV+Onl05
-X-Gm-Gg: AYBFou3tEi5tFqBJ5MeikH2Ktf74WLDJFeH9Zwl4ytHfqJ95yC9rxrqGw94jopaLfqe
-	QtJyTWQFXKfjlOY7xklPdXcSPBg76OqbKlAXQYUrOtB/UjunQJo+wd+Q8ehl8G7Rqwmjqluzenz
-	qXKBUDNSl+E9l49uDFU4OHmTMy/zKi69mFPmLmmrixnS7baTBIs74rPvmcj/yhiBbFI3JAewbb2
-	Tpav0RfOwbxczu2FoTe3uaP4xrxyf2q6s2EfzMBPsVWV55pA4Zn86Ie/F5IN9U+6dFBXNf1frZq
-	m5GbdT3g4XFBB2K9xBPxXZGDy1tq1EZXtfSDMvw++mwjBzo9qP3FFsCx5ybdkb2h7TU5WjzsypY
-	cGhocDOn+V5CUaee8xT1M4GyVFDaodguE7y1ejK6LK+qR0EU7ylx8/iF2TSsuLCKs5VDdlM9GWe
-	3gdsRImJHqaXaY/9xk64N/NbLe7b+MKPEakkSvs/T/8eM26m3wXNY+LSaydusEXUDXo+RtptR8R
-	b2NMVB8vT+cvRiD7pAxcpFGlagvUkQ4HDJBQ3EucGzWbUifuMLn9aUHYYxRgIWY3Ocb5LyUK9o6
-	PgATh8YKnhHFMyYwmz+LLsR+ypOd/aWuGlyG8XOkoFfs4aLATVgSTPehD6A3wg==
-X-Received: by 2002:a5d:5d06:0:b0:48e:5fd8:5822 with SMTP id ffacd0b85a97d-48e6e2f66c1mr31809933f8f.18.1793735103321;
-        Tue, 03 Nov 2026 11:45:03 -0800 (PST)
-Received: from KYK-Workstation.. ([2a00:1d37:22b2:4600:f1fc:7ef0:5b92:7f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48fc9b819d2sm337822f8f.4.2026.11.03.11.45.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 11:45:02 -0800 (PST)
-From: Kadir Yavuz Kurt <k.yavuzkurt1@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [BUG] wifi: rtw89: 8922ae: no association until module reload
-Date: Tue,  3 Nov 2026 22:44:54 +0300
-Message-ID: <20261103194454.14002-1-k.yavuzkurt1@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=X59HlbTz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793735389; x=1825271389;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=rCERoXWCfBu35r5RRg7xmnqKjETJErwBKzmm+LfUQgQ=;
+  b=X59HlbTzuf7T9sTkMexVJVALXyzRA4JBN0tC3F2BDPk8T5yLTFsMN9ZN
+   IYYeM1/AfY0/Y7lMkTwaiiyRStTxECllESq7IDf9tPPdc9PwcT5nUxXan
+   hB4cckVCnW96mFB0LUwFT2mDwFTAgCkLAD92WmxEblDFPwZ3Etmhc9LnG
+   2VAgATcLiAcOpjoFgS2+MJn1HIs46V3OarcPgeI3ZSVzvvok+tmfgfbS9
+   x0OJJo4oEMZ1EvNqvfM1GFamGhdpVBrRkRIS/N6igg2QxfyBwVr0uXqY8
+   sKsPtR7V/4VILvU7QvIPTA6jy9UDkup26NkvMo2rAof8FGOZcqdMb/XW0
+   g==;
+X-CSE-ConnectionGUID: /v57nx9NSlO9oKLsrgGeBA==
+X-CSE-MsgGUID: Ue0TikruR0ifo1Xouh04jw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11955"; a="2568222"
+X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
+   d="scan'208";a="2568222"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 11:49:49 -0800
+X-CSE-ConnectionGUID: +nzjp0bdSYCWNsVVsQUiqQ==
+X-CSE-MsgGUID: M2Twv/xtSl6go+XODMWfkA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
+   d="scan'208";a="6364910"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 03 Nov 2026 11:49:47 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xOKVt-00000000jFH-18IU;
+	Tue, 03 Nov 2026 19:49:45 +0000
+Date: Wed, 4 Nov 2026 03:48:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: Gopikrishna Garmidi <gopikrishna.garmidi@oss.qualcomm.com>,
+	jjohnson@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
+	sibi.sankar@oss.qualcomm.com,
+	Gopikrishna Garmidi <gopikrishna.garmidi@oss.qualcomm.com>
+Subject: Re: [PATCH] wifi: ath12k: skip hardware rfkill setup on Surface
+ Laptop 8th Edition
+Message-ID: <202611040318.qlss0Yol-lkp@intel.com>
+References: <20261103094024.1764151-1-gopikrishna.garmidi@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -91,194 +86,66 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261103094024.1764151-1-gopikrishna.garmidi@oss.qualcomm.com>
 
-Hi Ping-Ke,
+Hi Gopikrishna,
 
-I have an RTL8922AE (PCIe) that cannot associate with any AP after the
-driver probes at boot. Scanning works and APs are listed, but the
-interface never sends an authentication frame. Unloading and reloading
-the driver fixes it every time, until the next reboot.
+kernel test robot noticed the following build errors:
 
-This is 100% reproducible here: 9 consecutive boots recorded in the
-journal, 9 failures on the initial probe, 9 successes after a reload.
+[auto build test ERROR on ath/ath-next]
+[also build test ERROR on wireless-next/main linus/master next-20261030]
+[cannot apply to wireless/main v7.3]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-I was unable to pin down the root cause, so I am reporting the data I
-have rather than guessing.
+url:    https://github.com/intel-lab-lkp/linux/commits/Gopikrishna-Garmidi/wifi-ath12k-skip-hardware-rfkill-setup-on-Surface-Laptop-8th-Edition/20261103-014024
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git ath-next
+patch link:    https://lore.kernel.org/r/20261103094024.1764151-1-gopikrishna.garmidi%40oss.qualcomm.com
+patch subject: [PATCH] wifi: ath12k: skip hardware rfkill setup on Surface Laptop 8th Edition
+config: arm64-defconfig (https://download.01.org/0day-ci/archive/20261104/202611040318.qlss0Yol-lkp@intel.com/config)
+compiler: aarch64-linux-gcc (GCC) 16.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261104/202611040318.qlss0Yol-lkp@intel.com/reproduce)
 
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611040318.qlss0Yol-lkp@intel.com/
 
-Hardware / software
-===================
+All errors (new ones prefixed by >>):
 
-Board:      Gigabyte X870 AORUS ELITE WIFI7 ICE, BIOS F8
-Adapter:    07:00.0 Network controller [0280]: Realtek Semiconductor
-            RTL8922AE 802.11be PCIe Wireless Network Adapter
-            [10ec:8922] (rev 01)
-            Subsystem: [10ec:8922]
-chip info:  CID: 71, CV: 2, AID: 6933, ACV: 1, RFE: 1
-Firmware:   rtw89/rtw8922a_fw-4.bin, version 0.35.80.3 (8ef4f0cf)
-            (linux-firmware 20240318.git3b128b60.0ubuntu3.1)
-Distro:     Ubuntu 24.04.5 LTS
-Kernels:    7.0.0-42-generic and 6.17.0-23-generic (Ubuntu HWE)
-            Both affected, identically.
-Userspace:  wpa_supplicant 2:2.10-21ubuntu0.4
-            NetworkManager 1.46.0-1ubuntu2.8
-AP:         WPA2-PSK (no WPA3/SAE, no PMF), 2.4 GHz ch 11 and 5 GHz
-            ch 36, signal ~67-77
-
-
-Symptom
-=======
-
-After boot, wlp7s0 comes up and scans normally. `iw dev wlp7s0 scan`
-returns 60 BSSs including the target AP. But wpa_supplicant loops:
-
-    supplicant interface state: disconnected -> scanning
-    supplicant interface state: scanning -> disconnected
-
-every ~10 s, and after 25 s NetworkManager gives up:
-
-    Activation: (wifi) association took too long, failing activation
-    state change: config -> failed (reason 'ssid-not-found')
-
-The 'ssid-not-found' reason is misleading: the AP is present in scan
-results throughout.
-
-The decisive observation is in the kernel log. In the broken state
-there is no
-
-    wlp7s0: authenticate with xx:xx:xx:xx:xx:xx
-
-line at all. mac80211 never starts authentication; it does not fail,
-it never happens. Immediately after a module reload, the first attempt
-goes through cleanly:
-
-    wlp7s0: authenticate with 14:8c:4a:6a:c4:ff (local address=...)
-    wlp7s0: authenticated
-    wlp7s0: associate with 14:8c:4a:6a:c4:ff (try 1/3)
-    wlp7s0: associated
+>> drivers/net/wireless/ath/ath12k/core.c:91:9: error: expected '}' before '{' token
+      91 |         { /* Sentinel */ }
+         |         ^
+   drivers/net/wireless/ath/ath12k/core.c:86:39: note: to match this '{'
+      86 | } ath12k_core_broken_rfkill_table[] = {
+         |                                       ^
 
 
-Reproducer
-==========
+vim +91 drivers/net/wireless/ath/ath12k/core.c
 
-1. Boot the machine.
-2. Try to connect to any WPA2 AP. It never associates.
-3. Run:
-     modprobe -r rtw89_8922ae rtw89_8922a rtw89_pci rtw89_core
-     modprobe rtw89_8922ae
-4. Connect again. Works immediately, every time.
+defae535dd63b1 Aaradhana Sahu      2025-07-08  76  
+5949d1910f13c2 François Roux       2026-10-06  77  /*
+5949d1910f13c2 François Roux       2026-10-06  78   * On these machines the OS cannot control the WCN7850 hardware rfkill
+5949d1910f13c2 François Roux       2026-10-06  79   * input, which reads as "radio off", so hardware rfkill must stay
+5949d1910f13c2 François Roux       2026-10-06  80   * disabled. Ideally this would come from the connector node of the board
+5949d1910f13c2 François Roux       2026-10-06  81   * DT, but that binding does not exist yet.
+5949d1910f13c2 François Roux       2026-10-06  82   */
+5949d1910f13c2 François Roux       2026-10-06  83  static const struct ath12k_core_broken_rfkill_table {
+5949d1910f13c2 François Roux       2026-10-06  84  	enum ath12k_hw_rev hw_rev;
+5949d1910f13c2 François Roux       2026-10-06  85  	const char *compatible;
+5949d1910f13c2 François Roux       2026-10-06  86  } ath12k_core_broken_rfkill_table[] = {
+5949d1910f13c2 François Roux       2026-10-06  87  	{ ATH12K_HW_WCN7850_HW20, "microsoft,denali" },
+5949d1910f13c2 François Roux       2026-10-06  88  	{ ATH12K_HW_WCN7850_HW20, "microsoft,romulus13" },
+5949d1910f13c2 François Roux       2026-10-06  89  	{ ATH12K_HW_WCN7850_HW20, "microsoft,romulus15" },
+2d169d089ae8e1 Gopikrishna Garmidi 2026-11-03  90  	{ ATH12K_HW_WCN7850_HW20, "microsoft,surface-laptop-8-13p8" }
+5949d1910f13c2 François Roux       2026-10-06 @91  	{ /* Sentinel */ }
+5949d1910f13c2 François Roux       2026-10-06  92  };
+5949d1910f13c2 François Roux       2026-10-06  93  
 
-
-What does and does not recover the device
-=========================================
-
-This is the most useful thing I found. Tested in the broken state,
-in this order, in one boot:
-
-  ip link set wlp7s0 down; ip link set wlp7s0 up    -> does NOT help
-  rfkill block wifi; rfkill unblock wifi            -> does NOT help
-  modprobe -r ... ; modprobe rtw89_8922ae           -> ALWAYS fixes it
-
-So neither the mac80211 start/stop path nor an RF off/on cycle clears
-the condition. Only re-running probe does. Whatever goes wrong appears
-to be established during the initial probe and to persist across
-everything short of a reload.
-
-
-RF calibration is NOT the cause
-===============================
-
-I initially suspected RFK, because 'failed to wait RF IQK' and
-'failed to wait RF TSSI' do show up in some boots. That turned out to
-be a red herring.
-
-With rtw89_core.debug_mask=0x6 (RFK | RFK_TRACK) I captured three
-boots in which every calibration completed successfully and well
-inside its budget:
-
-    RF PRE_NTFY takes 0 ms to complete
-    RF TXGAPK  takes 5 ms to complete
-    RF IQK     takes 23 ms to complete      (budget 84 ms)
-    RF TSSI    takes 9 ms to complete
-    RF DPK     takes 14 ms to complete
-    RF RX_DCK  takes 12 ms to complete
-
-Zero 'failed to wait RF' lines in those three boots -- and the
-interface still never associated. So RFK success is not sufficient and
-the sporadic RFK timeouts are a separate, non-causal symptom.
-
-'timed out to flush queues' also appears in some, but not all, of the
-failing boots, so it does not correlate either.
-
-
-Timing observation (hypothesis, not established)
-================================================
-
-The only systematic difference I can see between the failing probe and
-the working one is when it runs relative to Bluetooth initialisation.
-The RTL8922AE is a combo part; the BT function enumerates as USB
-0bda:8922 and is driven by btusb/btrtl.
-
-At boot (monotonic timestamps, failing probe):
-
-    [ 3.018707] Bluetooth: hci0: RTL: rom_version status=0 version=1
-    [ 3.018809] rtw89_8922ae 0000:07:00.0: loaded firmware
-                                           rtw89/rtw8922a_fw-4.bin
-    [ 3.018864] rtw89_8922ae 0000:07:00.0: enabling device (0000 -> 0003)
-    [ 3.019712] Bluetooth: hci0: RTL: loading rtl_bt/rtl8922au_fw.bin
-    [ 3.052054] rtw89_8922ae 0000:07:00.0: chip info CID: 71, CV: 2, ...
-    [ 3.097814] rtw89_8922ae 0000:07:00.0 wlp7s0: renamed from wlan0
-    [ 3.638714] Bluetooth: hci0: RTL: fw version 0x41c0c905
-
-The entire rtw89 probe (3.018 - 3.098) runs inside the BT firmware
-download (3.019 - 3.639), starting 1 ms after it.
-
-The working reload, same boot:
-
-    [53.643379] rtw89_8922ae 0000:07:00.0: loaded firmware
-                                           rtw89/rtw8922a_fw-4.bin
-    [53.675553] rtw89_8922ae 0000:07:00.0: chip info CID: 71, CV: 2, ...
-
-i.e. 50 s after BT finished initialising.
-
-I want to be clear that this is only a timing correlation. I have not
-yet tested booting with btusb blacklisted, and I am not claiming the
-two are causally related. It is simply the one difference I could find
-that is present in every failing case and absent in every working one.
-
-
-Already ruled out
-=================
-
-- ASPM / power save. /etc/modprobe.d/ with
-    options rtw89_pci  disable_clkreq=y disable_aspm_l1=y
-                       disable_aspm_l1ss=y
-    options rtw89_core disable_ps_mode=y
-  I verified these are actually in effect by reading
-  /sys/module/rtw89_pci/parameters/ and
-  /sys/module/rtw89_core/parameters/ (all Y). No change.
-  pcie_aspm=off on the kernel command line: no change either.
-
-- Kernel version. 6.17.0-23 and 7.0.0-42 behave identically.
-
-- Firmware load. Clean, no errors, no crash, no SER.
-
-- The AP and the environment. A phone associates with the same AP
-  fine; the same machine also fails against a phone hotspot.
-
-- Credentials / WPA3 / PMF. The network is WPA2-PSK with no SAE, and
-  the failure is before authentication, so no key material is involved
-  yet.
-
-- Regulatory domain. Was country 00 initially; setting it to the
-  correct country (TR, DFS-ETSI) made no difference to this problem.
-
-
-I can provide further information if needed.
-
-Thanks,
-
-------------
-K. Yavuz Kurt
-k.yavuzkurt1@gmail.com
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
