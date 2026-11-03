@@ -1,95 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.177
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793744978;
-	b=V5kN5/rIMhiejCigyGzSGQcXn0VmC6xk3fZe8vvOABH39S7+yakRBVF+4TerXApUfKH4
-	 nGatGveUPFrqXJ76gWXWHbRHkMrTWXslANpBopcrV1TJmwjVaJKhlfA3TnlM/cyffzoK1
-	 eRh5vnLAEefr5EVS0KvzgeCZ7LRuMCBQNoiulufDPXYsnyFQq1QAldCwz3ISpWDL/sM0M
-	 fW7/ERf3WQr+3d8IQej0IvcDzc2yLZCunnG8XJcUsmgYHnCjjAuaN6rZbCjeL1vlUjWFX
-	 8DrsfFsLxiryW6BVOfYRSbKR9J0mmeAZMWYt4Rhrc08o1wS+izN4nYHae29QstgWMFw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793744978;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.51
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793748414;
+	b=XymkUAQoGhLPOC/9lUazpt0kJBzs4DecwhkyuIK1Xh5pH/DK2EdtU5a8apnT0TYqlCOi
+	 FeURZtBDEhdl5om6emWgc403vKbwfaUyItNf3JNhvsS9FyDJuoivRamh34xMMtIjUoiYS
+	 Tw5R7OMKj/1l0sLSWvcsof0EsD4e+tCWVK/HuLSwbOlXnI7AJDc59muaMkSBDUaSgD1nx
+	 a76qmEBQikWCe0tsf8LT2IKLb2WKlt8GCNIshXyj37S2k1iKwbefhRirzWr5szSVIktOE
+	 7VZCMKpwKKDL94U6cf+bHksjvPCiYc9XDVpURRDDl7JIhR3W4HrYJMCvkjkBGzQYULw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793748414;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Content-Type;
-	bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
-	b=5Qlln25DscbBozNsMc58VVG7ejLMBaajjyZpaYf7qe/eO9TpmoThwUjlNNHWZv20q7iW
-	 dcSw0v/QLZPiDGH7BbMhS39DlMGJJREEJDmdh83mdff3OY3RHwGIhzyobNoVwrLtsB7xs
-	 vN9wqqpjaBItJyxQU01uCTiqxQxFpvKO28Qigon+uhO+oDG31GD0JQglZX+watRQHaEoN
-	 HC0aRC7B1QdrpOLA/d9pwLbwrUMSip3bRgWaoveA/3Cqad5Vrq4HW84RFxfrsFQjS/M26
-	 N3760quf5mQ5vn2q4edug+/Yt15yU9ZLKW0Kj6sFK7gG5L7zYi5KNB8/vNM73ydARpQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=6GC1/D8rCTZG76ZRBb6JFA+whGRoK5mBSHc05PTJ2Kk=;
+	b=fYIl9C9l8BWFTIw6grLw3XMCoptY3lnrQbolZv+yVSgHEhfSzeclT5QdpOreUFyVBcWb
+	 xlaHRCxHWCF3uWyuGhAQn7SNRRzfEmUkfyxg3jzZUBbbYrd7AIPJgwt5UEsM3LJhdNG16
+	 SmDC6W/buwmAn/CVqTQN4RoaW4HZ1Ka7TzId4KV9XYB1vCE6yOm+bALBIUR48wBYrpoNT
+	 6BfWhhGOg/TRMeIPiV4IQfIIXrNUdzULRpweEvZFlcPQpkn81hWsvwuImATi+tKBt05tQ
+	 yL7T35cdra2rDSr4/BFCtNnVdHHQSo1/zaPtj/HwZ25pwVcD4iVeS0U0KVARWYvRiQQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vQqlQN2F;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.177
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O9Nn3YTE;
+	arc=none smtp.remote-ip=209.85.128.51
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4675606A31B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 22:29:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4675606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39917606A326
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 23:26:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 39917606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vQqlQN2F
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-8b305d38bafso832727b3.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 14:29:37 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793744977; cv=none;
-        d=google.com; s=arc-20260327;
-        b=hCozFunsdRHoQtqjqkpxzMWqHfQoE6O6bDF0XnQ8ghoy56ViX1papt/VLq+Hnh0Dit
-         VJo7eIa3/rWcPZ/VKv4xO9AlZslUNaFah2hRY8WvYhoX9j0gBnYHfztB9Hjd+oowSrJo
-         ReoFZj8nFuw01jCMyS6q4BO+T9KmDl0GKwTOHvR3dyfazRGnQHfOowuA6FTo9aBwUIZx
-         Xte2EX/hNPV2ZmmySqHwu4WToNp+kdnEqmA7Iw8wKiyL7V/9sOP3SEGCt6wz813IEUHS
-         eOz5BTvMelX8bdWqdPsK03eg7rJjo4jKkyMrE3MJhrKG20b2NxKgSTzoFGywVs7+xBjq
-         Bm2g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
-        fh=Y/U50gtRcX/xiKT0iQRQC67OMrNOneTQtxsu5P+GIFg=;
-        b=XiudbCg+o2HhufbxVpw6vplbRuW0EQJoN8drWEqZvyvJ5RSVwbZMK3Dp+BEYOs7JqR
-         jqv3RHqbrDyDJUEY6zy//ZIGjX8mpVFmHAQGxw5uCuzFPAubqEJRiNxQM+3nzhcipitm
-         kRauqEhWuw4yznSzwPvAgtkBbTeB2its2Rigwz/R9Cvx32Gya0FjMgsfguQlkt5MjYPN
-         GdfFMz4cKH8NjaLXukoJK5+b6580xbpguMZfeGbRaK6qlP0YkHc2XySzbC7w2sbrOnwh
-         prh+k6TTjnvcb3nvy1bm1mjGFHLPbyKVhLgOEt6xJfC6luSlZLEH6OLMkfIyRdo/rEX1
-         KHbg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O9Nn3YTE
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4a5b2be99a8so408295e9.2
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 15:26:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793744977; x=1794349777; darn=vger.kernel.org;
-        h=content-type:to:subject:message-id:date:from:mime-version:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
-        b=vQqlQN2F4BIb2n4DtnU9pg3XHQv/n4OETSzpGfk3DjrzjuyqN+GNPYCJC0lXbJS26W
-         Rg9XYqrL/FjlX/K8FOyWBtPrxCpipjmrhWKDfKQaBwO93bOeXjeCWltygLDXPoh1/WAc
-         7tW1KlZ3M7v1rjkD4eJFxSANNVg6gVVfj89bu7OZfaQ0GYtyB10EnJsjJLqXSNvZW6Zw
-         CzsqHAslZ9x2ubbeoZevOTyhBxjjp2q/Gf5dVHZwzX0cL/ZiRvMERFzOqtJZylbaUquK
-         i7Q5zoYXqlyqFe9YMR7fbBNODQ8IFzOb93jZqHqFLGVPCJV4HXTl2fesO3ZyezzYv+m5
-         C2tg==
+        d=gmail.com; s=20260707; t=1793748411; x=1794353211; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6GC1/D8rCTZG76ZRBb6JFA+whGRoK5mBSHc05PTJ2Kk=;
+        b=O9Nn3YTE8dyOZfeNiT5qpPNlfOm3EpYECrP3B0GPokTicn25MDq/RklC3lk/43H4o2
+         YwK5z7zAxc+yq5rl3ajLofqGchDVxhiHP4kdq85jIj5F70xyhoRXzXtkg2lW02UV/BF/
+         0XtglXYfHNqnVdECtu8K0Y4rNO9WiqaDuopEEZCCIVpGbHrAY1EgS3Z4YZBYhlxmFVAv
+         RKqPEJcilYuUi2qnG7qmEw7L9cNB3HppLx17T4mXPAvR49XenhXqZgIMr9MtTrfMk57w
+         pj4Syrncp0XCTySp4/9eonuhN307DFVRjQIccB1QOecqL76g28Zlbl1dUvm7fhW8LcG8
+         UTLA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793744977; x=1794349777;
-        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=e+zgS/meIzysO65no3N4roovnU/p8m28ecSLsndu/gM=;
-        b=tI9AOGkBlNMZBzC3qmwDdmLYmgGTIa22ZWCVI1W0MfzZ7X8M0iPNCyVBKq50wTP0fj
-         cNI6S22U+cwDVKgrYthNqxGuhGtLgIA0cNeLSPQcZ+l+r98zqBaMSsxAjIatkWttKi1n
-         02UUwMobQWNUhtyFLW78j7+eLLlezl0PW/+LuKJAnf2wYFmVN06+sHewDzL6tAG7evF2
-         55hujdiUNNqekTjoLVtJmmsa14gEyzQs/50YZyAN+xV3br88WardhFndo91a6zBR6wzl
-         cr20dNBqDR5uuf27Tj3acwi8cKCgDQvdqfIGHd4b+d1llrxT8txI+MDjdRpkqUi0wnv3
-         PQ1A==
-X-Gm-Message-State: APuU4Z8umkbUHrzRgmsqXNGv2DQW1P54+dyPwCJgwkr+ZroJZZXu2IKW
-	AmjZg5Rm6H5Cmoi86xrFp6yr/dIX9OqYnmNYadLSWNOB6BgQTPqXA/sLghdsfyqR2WoZ6QsnOhV
-	BpBXsq3CzVskpjF98A2Quh+cgMiKVEorNRKDGBNk=
-X-Gm-Gg: AYBFou21ixJaUS8bVSwpqCAQQN8phglQhy1kF2gyOmoE80SJZTP8EkamUERc55+g4+x
-	9tuH0nawtM6jbBHwxylPqOApLutV1tMZRWdFipkdn6iPEaOcXP+WBYzsV9pp5zicsuWJP6eoJwk
-	1WnTda9bsYARMMRduKb98CnJ+bxI1QGadzVrAaeILk4I+Ksn7oe+uv+G3+OSsmEAoENrIJYMRrX
-	xYJ8SiHetNHG6tfn0l1DLgltYislxZC06LKkTJWsTfTtOjnRjDFOhXk8X223Bb07Qyhj2oGOHwD
-	lNH9wUEx9j/v8C3Ja+m7GLLBWvVp5no0Wt4OMFkroyFt+bZ5RLofgI5ypC5GiKOeaKLsJTNh9N4
-	BiPuG7Hzn+kLKCY+Cz6PGCfFlFNI6DfencKx6vKY=
-X-Received: by 2002:a05:690c:f05:b0:897:73ed:dd25 with SMTP id
- 00721157ae682-8b2b67095afmr108503777b3.27.1793744976631; Tue, 03 Nov 2026
- 14:29:36 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793748411; x=1794353211;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6GC1/D8rCTZG76ZRBb6JFA+whGRoK5mBSHc05PTJ2Kk=;
+        b=L09jz9fSwe01iXFpYqiEcv6UbFPdppuT2MJ8YW/52ErEPIn2fiuzKp6hTkicbkY05F
+         9r9hhdHrq7WVOFZ9k+g8qm0ZoAs72s0XvNJIzCyqAmHNVd2e5Xi7fJiXjR68md7Ccj7w
+         /4P5bQkuJJlKCPRDXfgo0takeUBhrTDc+IUY9P98hQPpfTdMGayWHxIF15dOlvkeUSF7
+         hsFquUzTfptTFM5PntDgwgVHtCxKAN87tvyvzr020yWTxEgY3rDAxFFZZ7HptAU03pNt
+         /AhD8M+MXkJugYAiXDa+sMtY+LgQhuQMr4pEe0msPfx2RrfP5oe6ZiV7jK9G3b/en57R
+         kgHQ==
+X-Forwarded-Encrypted: i=1; AKwUvBw2v0fy1unfqBNmZTqhiJyMa/af+0KmNic4mRAcnduVKD8Kuh5updHGHABq7TOHQm1dfchlZsOEuBaAsZfj3A==@vger.kernel.org
+X-Gm-Message-State: APuU4Z+CxKSkZ/y3Fovz8xCYmb+YlK5sc0bJY3MGVEpiqqwkjjtgNarB
+	hLZMCTyWiylbgFLvI3lK1jBcI5El/DKCV6j8SZyWh5dGpDT9iWi1WOI=
+X-Gm-Gg: AYBFou1YjyUqs++NuxLRFP0UDG2IONhN4xA+DWsLMloq1q/vbp71TARDozgwSwEPhE6
+	xq+9N481XcYL8MfCinJdnOsNjWwyQVBbvf7O91R1XHIilUpk2W58hjUS+bZRPQR0wzaijTKebf0
+	ZlErWAEKszZujJOyfQs469BH5cr86G/eIa5ufLsTQorrr9LSumFBCL4FvUg5Lkl9tlrOj2DduM3
+	gGukjGvgY0mNPsthIjRfAxbEJXlqMWVBfO4LZQj1xWXqdFL9X3+C6WQsHzeWmsKwhFJjDypvMPz
+	OEdF0LfVlYQBg9spHM7qYTf0GujyUMAqfhi2ydFNFMZwD5d8d4OI68qz4p7NQxy+A7d+B2FAn6/
+	iw/bgDXg+1qwq2jxFs9iF8kbYx6UzWHLiAmn7ySOe5RxTbk0jVC9XI6anujnrqjeiwtSDU5EOtZ
+	SBM4B5TFJOl+suRK7X9yNDTGD4rHBgAn7hPcML9V0bvaVQUAGHMhbIG01/GRPKbcypjougtgKnU
+	lLTn8WV3Eks+mMstGwTliXRqhJ7WhW6W92O1VJCBEyijT4WqOvmx6ENk2xs00gZsWk/tbuL+NFa
+	3s0V9Ghql0imyXXk1V0=
+X-Received: by 2002:a05:600c:83c5:b0:4a1:78c5:79f5 with SMTP id 5b1f17b1804b1-4ac1970b976mr282294535e9.33.1793748411490;
+        Tue, 03 Nov 2026 15:26:51 -0800 (PST)
+Received: from debian.. ([2001:41d0:303:db6b::])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b43c17ecdasm13822005e9.5.2026.11.03.15.26.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Nov 2026 15:26:50 -0800 (PST)
+From: Tristan Madani <tristmd@gmail.com>
+To: =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= <jerome.pouiller@silabs.com>,
+	linux-wireless@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Tristan Madani <tristan@talencesecurity.com>
+Subject: [PATCH wireless] wifi: wfx: validate num_tx_confs against message length
+Date: Tue,  3 Nov 2026 23:26:50 +0000
+Message-ID: <20261103232650.13350-1-tristmd@gmail.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,89 +97,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: =?UTF-8?B?UGFibG8gTWFydMOtbmV6IFLDrW9z?= <pabloriosmartinez@gmail.com>
-Date: Tue, 3 Nov 2026 23:29:25 +0100
-X-Gm-Features: AclHuK-KWyigjh-JYhxazCuURrcf6kvPyIG1od7zsbxQNPNPqPflWrx8PqIWT6c
-Message-ID: <CALTviDkEWERPrtc51WFB1K3Sn7wLdt6YhB=_Ck4PwBPdLcojBQ@mail.gmail.com>
-Subject: rtw88: RTL8822BE (10ec:b822) never authenticates on 5 GHz with a
- Huawei router; poor 2.4 GHz link; same hardware works fine on Windows
-To: linux-wireless@vger.kernel.org, pkshih@realtek.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hello,
+From: Tristan Madani <tristan@talencesecurity.com>
 
-I would like to report a problem with an RTL8822BE using rtw88_8822be.
-The same card, in the same spot, works well on Windows, so I suspect a
-driver/firmware issue rather than coverage. I am happy to run any tests
-or try patches.
+wfx_hif_multi_tx_confirm() iterates over the tx_conf_payload flexible
+array based on body->num_tx_confs, but does not check that the message
+is actually large enough to contain that many entries. Add a check
+comparing num_tx_confs against the available message payload before
+iterating.
 
-HARDWARE / SOFTWARE
-- Laptop: HP Pavilion 15-bc450ns (i5-8300H), BIOS F.32
-- Card: Realtek RTL8822BE, PCI ID 10ec:b822 (04:00.0), HP subsystem.
-  Both antenna cables are connected; "iw phy" reports available and
-  configured antennas TX 0x3 / RX 0x3.
-- Debian 13.7 live USB, kernel 6.12.107+deb13-amd64, firmware-realtek
-  20250410-2, rtw88 firmware 27.2.0 (H2C 13)
-- Same behaviour earlier on CachyOS (a recent 7.x kernel, exact version
-  not recorded) and on an Ubuntu live session (26.10)
-- Module parameters at defaults: disable_lps_deep=N, disable_aspm=N,
-  support_bf=Y
-- Router: ISP-supplied Huawei OptiXstar EG8145X6-10, separate SSIDs for
-  2.4 GHz (ch 6, 20 MHz) and 5 GHz (ch 36, auto width). The router is
-  one floor below the laptop, with a concrete slab in between.
+Fixes: 9bca45f3d692 ("staging: wfx: allow to send 802.11 frames")
+Cc: stable@vger.kernel.org
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+---
+ drivers/net/wireless/silabs/wfx/hif_rx.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-PROBLEM 1: 5 GHz
-Linux never authenticates. This repeats indefinitely:
+diff --git a/drivers/net/wireless/silabs/wfx/hif_rx.c b/drivers/net/wireless/silabs/wfx/hif_rx.c
+index 64ca8acb8e4f2..42417db66c128 100644
+--- a/drivers/net/wireless/silabs/wfx/hif_rx.c
++++ b/drivers/net/wireless/silabs/wfx/hif_rx.c
+@@ -62,8 +62,17 @@ static int wfx_hif_multi_tx_confirm(struct wfx_dev *wdev,
+ 				    const struct wfx_hif_msg *hif, const void *buf)
+ {
+ 	const struct wfx_hif_cnf_multi_transmit *body = buf;
++	size_t needed;
+ 	int i;
+ 
++	needed = sizeof(*body) +
++		 body->num_tx_confs * sizeof(body->tx_conf_payload[0]);
++	if (le16_to_cpu(hif->len) < sizeof(*hif) + needed) {
++		dev_warn(wdev->dev, "invalid num_tx_confs %d for msg length %d\n",
++			 body->num_tx_confs, le16_to_cpu(hif->len));
++		return -EINVAL;
++	}
++
+ 	WARN(body->num_tx_confs <= 0, "corrupted message");
+ 	for (i = 0; i < body->num_tx_confs; i++)
+ 		wfx_tx_confirm_cb(wdev, &body->tx_conf_payload[i]);
+-- 
+2.47.3
 
-  wlo1: authenticate with 22:87:ec:xx:xx:08 (local address=90:32:4b:xx:xx:xx)
-  wlo1: send auth to 22:87:ec:xx:xx:08 (try 1/3)
-  wlo1: send auth to 22:87:ec:xx:xx:08 (try 2/3)
-  wlo1: send auth to 22:87:ec:xx:xx:08 (try 3/3)
-  wlo1: authentication with 22:87:ec:xx:xx:08 timed out
-
-- It fails with WPA2-PSK and with WPA3 (SAE), and with the router set to
-  WPA/WPA2 TKIP+AES and to WPA2/WPA3 AES, so it fails at the 802.11
-  authentication frame, before any SAE/EAPOL exchange.
-- Same result with regulatory domain 00 and with "iw reg set ES".
-- The BSS appears in scans (its beacons carry country IE ES), but no
-  authentication response is ever received.
-- Windows 11 on the same laptop, same spot (Realtek driver
-  2024.0.10.209): connects with WPA3-Personal, reported RSSI -76 to
-  -81 dBm, 80/80 pings answered, 3-9 ms, link rate 260-292 Mbps as
-  reported by Windows.
-
-PROBLEM 2: 2.4 GHz
-- Linux associates, but the link is very poor: iw reports about -73 to
-  -76 dBm, and the beacon loss counter rises about once per second
-  (14 to 65 over roughly 2 minutes). Across 5 runs, ping to the router
-  showed 0-54% loss and average RTT of 37-278 ms.
-- Kernel messages: "rtw_8822be 0000:04:00.0: firmware failed to leave
-  lps state" (several times), and once "failed to send h2c command".
-- The beacon signal average (-97 to -109 dBm) is far below the frame
-  signal average (about -75 dBm). With a phone hotspot at -48 dBm both
-  agree (-46). Occasionally signal readings of -100 to -112 dBm appear
-  with the second chain at 0 while traffic continues.
-- Windows, same spot: 60/60 pings, average 12 ms (max 157 ms).
-- With a phone hotspot (2.4 GHz, ch 1, -48 dBm), Linux works well:
-  rx 78 Mbit/s (VHT-MCS 8, NSS 1), tx 65 Mbit/s (MCS 7).
-
-TRIED WITHOUT EFFECT
-- "iw dev wlo1 set power_save off" (one run had 54% ping loss)
-- rtw88_pci disable_aspm=Y (lspci still showed "ASPM L1 Enabled"
-  afterwards)
-- WPA2 vs WPA3, regulatory domain 00 vs ES
-
-COULD NOT CHECK
-/sys/kernel/debug/ieee80211/phy0/rtw88 does not exist on the Debian
-kernel (presumably rtw88 debugfs is not enabled), so I could not read
-tx_pwr_tbl, phy_info or coex_info, nor test the edcca_enable switch.
-A single correctable PCIe error (BadDLLP) was logged once; the AER
-counters were 0 later.
-
-QUESTIONS
-Is this a known issue? Which additional data would be most useful (a
-kernel with rtw88 debugfs, a debug_mask setting, a monitor-mode
-capture)? I can provide full logs and test patches.
-
-Thanks,
-Pablo.
