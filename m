@@ -1,53 +1,52 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793702459;
-	b=YdL3mXuZa9obfzCvx6FhimxWq5iiNwH8s1MfYKNd1zfHgWY2qBmOcRL1yRmDxg4BZG07
-	 c3kN48LTyrbDuoCLUEbyaJJkLE7ihDmmU9dwHGlao2QEYMYq8L6+sPqOG0JL37RiDj+4N
-	 eRScWaws8SZ500dtweKgpFbgKKBISRERMkCevR8Nc4oaW5ZkPFoc+oeNNugNmDF0be8a4
-	 Np+guoRQtmM8nm5mIFKEzp2gKoNqPds80TpOYqsxVXFhcKrxV2BmDi5nFJCNzOOfkKkck
-	 sGAhjGcrWBNgC4BeCwhsbVjr15o2+78RBMxYymcR+lAtB6TTrG0MXpfd4msouFPC/ng==
+	t=1793702465;
+	b=38vkBaJ0tHQhOKCXjY5P3iEeyQwr2fnj85xmQ5iLpsdDCPa5w8WGnk0YkPZq1+QYZ3QN
+	 /GtF0RcSbn4MbIbsLdjKjuWdk+6tnz+cErT5XQc1T/ITBkhW6HK65DhDEFki6Bfxp3Tyw
+	 0LDINObm7GQ0OZV/UHN2RH624wzjfasKUfMSGwlfF9nEZ3vLOIHtKSSkDoSgkkL9nuKdO
+	 Uz+osxEsWcV+9ChJtnYWrtJxx+fAzTFHdy1zBl7qav8zfz240CPN/XNu8WnuuOHdpYciF
+	 2PgYnF9qr/wj+dAeR0wL2gGnxIz0kRVitTp5aPvgMk7u0ihsBuuzVF/W8cLOvl+n5+g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793702459;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793702465;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=iD8MUsnfG+gwEr4piWPtvFiUZsvtNz+QmKslAm5U2v0=;
-	b=EZSFyYJiqkhafHw9tydVE1C8UcFzpvfIKxdD6rUIR2gUieqqcFaV39K6PvsjBu3HPKoZ
-	 0QWc8ZOd7OxD6Yh6nnGxXQ19AAm4VITRY5w2ScwnBkVhtkU3U+TRyYAcLIzPeHrzd8igJ
-	 OQL/HZhGcVWMJN6JBD3i6kxctqCqmDRbEPkN9wcoRuOqk3hq7brH7XjQw/BpYLU0qXa5T
-	 6SzVDatsLshSY2Q4ZXBpc+4GhV1dtBceO3kiiobMqcV5RRMZ7Xu6uieY20+16i49It6N7
-	 xj2SoWZSr1fD4/EWU9jUKTt1wPEElgbm5zvek2ZuW4tSYv6FoIp7Qm8cQ1HqhK8nsEw==
+	bh=jL9WHcxy2VQxd8cS6X0s7ZZ7+2kPJVDRsNqBp9O7BIs=;
+	b=e16itorG1QMO/jdZX0Aw017LetwYn71ZK7HpqMEMO2Q8oZAY25jggAcVLP3SKxjma46E
+	 JefcunRBm/QwdNdrdGC6L9XBXtcE463GD8Jk+rv3vL1dzB0ybcQJuPog5ewZz7UJrb4q2
+	 ZIp1d5zDSYxhsRE4+ezTgNtdrs66oXJl+WAm7mDnMcAZRAFmGtBtPV4krHfc8lM6LO8sp
+	 8TiGOpvT4QDxjJ3iafkYTb5pFwYZc5XWA1fnA1qcZNH90u2MR8YvrNr5s9bw2HSnCT6H2
+	 7ZMR3q4K4zQfrIk7QdRXE2aPfBVGWF+kO2eqPmR513Je/GqxWLWTWusm7dbRObT+mBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hf7vFOQQ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zux8ku5h;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E4F60784B4;
-	Tue,  3 Nov 2026 10:40:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F71C6078F29;
+	Tue,  3 Nov 2026 10:41:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hf7vFOQQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 963081F0093A;
-	Tue,  3 Nov 2026 10:40:58 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zux8ku5h
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 371451F000C1;
+	Tue,  3 Nov 2026 10:41:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793702459;
-	bh=iD8MUsnfG+gwEr4piWPtvFiUZsvtNz+QmKslAm5U2v0=;
+	s=k20260515; t=1793702464;
+	bh=jL9WHcxy2VQxd8cS6X0s7ZZ7+2kPJVDRsNqBp9O7BIs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hf7vFOQQ/d3CxJjXaTd4dJWmgKR9Frd7SHMnNvxpReYxf0Ps3shQxk644fYm8rMoO
-	 W8NgG25Rkve1DLxCJce8dJ3GHJP/kb4s/3mqBlPeRLZZ55XAoSDL2zNYlrhM/hqrtS
-	 RJcEpQU82Aoht3jeSs391paDKABAC+cCPDb6R+ecIYpL50V/bRXujKeXANOFamrggD
-	 8O2SIZtAqSLyTDXC82D7vWkVg4L7I/RKOYVV0lFUZr07m0v3H108gbU9sLouBZJPF/
-	 EOyVyBzFJatdVMU9z1S4JhhrN6GHGaSm081XBTgnlLvtTY4x5AvIW2niCMdYlvX8t7
-	 vV1z6OSPFZalw==
-Date: Tue, 3 Nov 2026 11:40:56 +0100
+	b=Zux8ku5hBjQhAiFVn+cFYWM7FazkEFoNqwKZOiwSznmCLp5A/5Wa3up985tco3mii
+	 ZeIADUsSAfe9Q7p5Zu+820EcpS+sxJdtMKt6K+qvsCWM66Ll6MHpvQSfxifUIctfRx
+	 /1t+hSqXdkBeLzmq40BAYgPEIF9X3iqoz+SfZbBACI8tJxiK/WSBUKfPdKr+DBBiRO
+	 vklNuNF2El6HXSZZ7lbhZKbIsf840bAhDcSUz1z34O8+PJgj46TO710GBfTZ7BapDH
+	 PFBBKRKWNZzFsKkVzh+awXCmtFpxBMUi9QKCQOLFHjJi7aZVk36ALUlqk2E8bmBAeu
+	 ZlQXNkxWnejJg==
+Date: Tue, 3 Nov 2026 11:41:02 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Wentao Liang <vulab@iscas.ac.cn>
-Cc: stable@vger.kernel.org, Jeff Johnson <jjohnson@kernel.org>, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ath11k@lists.infradead.org
-Subject: Re: [PATCH RESEND] wifi: ath11k: release the rproc reference on
- teardown
-Message-ID: <20261103-tidy-mustard-moth-d5c3bd@quoll>
-References: <20261103102915.1341148-1-vulab@iscas.ac.cn>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: ath6kl: free the ath6kl core on USB disconnect
+Message-ID: <20261103-cunning-walrus-of-chaos-dbd611@quoll>
+References: <20261103102901.1340914-1-vulab@iscas.ac.cn>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -59,29 +58,28 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261103102915.1341148-1-vulab@iscas.ac.cn>
+In-Reply-To: <20261103102901.1340914-1-vulab@iscas.ac.cn>
 
 
-On Tue, 03 Nov 2026 10:29:15 +0000, Wentao Liang wrote:
-> ath11k_core_get_rproc() looks up the target remoteproc with
-> rproc_get_by_phandle(), which takes a device reference and a reference on
-> the remoteproc driver's module.  The resulting pointer is stored in
-> ab_ahb->tgt_rproc and never released: ath11k_ahb_free_resources() only
-> tears down the firmware resources, and the probe error paths after the
-> lookup jump to err_core_free without dropping the reference either.
-> rproc_shutdown() does not release it, it only drops the power reference.
+On Tue, 03 Nov 2026 10:29:01 +0000, Wentao Liang wrote:
+> ath6kl_usb_probe() creates the core with ath6kl_core_create(), which
+> allocates the wiphy and the per-station aggregation state in
+> ath6kl_cfg80211_create(). These are released by ath6kl_core_destroy()
+> only. ath6kl_usb_device_detached() calls ath6kl_core_cleanup() and then
+> frees the HIF private data with ath6kl_usb_destroy(), so the allocation
+> made at probe time is never released when the USB device is detached.
 > 
-> Release the reference when the AHB resources are freed and on the probe
-> error path, so that repeated bind/unbind cycles no longer accumulate
-> remoteproc references and the remoteproc module can be unloaded again.
+> The SDIO counterpart, ath6kl_sdio_remove(), already calls
+> ath6kl_core_destroy() right after ath6kl_core_cleanup(). Do the same in
+> the USB detach path.
 > 
-> Fixes: ba929d6fe31a ("ath11k: Remove rproc references from common core layer")
+> Fixes: 241b128b6b69 ("ath6kl: add back beginnings of USB support")
 > Cc: stable@vger.kernel.org
 > Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
 > Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 > ---
->  drivers/net/wireless/ath/ath11k/ahb.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+>  drivers/net/wireless/ath/ath6kl/usb.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
 
 
