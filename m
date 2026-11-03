@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793699652;
-	b=SMmgJK7Dk47ZoRAMF0dG+RGHr05+1N5q0P/GGnTL5YHjna63a43VS6UwULE2cZoIpsH6
-	 /6eXw3L7eIQwb61ro8PisaXqYJldA0DQ0VwGWBizP4v2TEL/4yJmovlfHB3bouzAck2eI
-	 EtmvlO4KgRUqgnCI93P1pO4HyTVdTtN+1+V1P4B/8uQCbCmQKXwDOrgBbvhbna4jd9dTr
-	 jqKO7ykEobYbTlAsXGoCTCkCMGylxD2ULHw0bSyHvDc9L8hhPkOd8zyMqRwylPR5XZxkc
-	 ojC4/bTQztEkYK5JAUw5Z9a+ocib+nfFMLZJN+GD/y8MoAyTVi27fIYYyeI3KPkMHxg==
+	t=1793699654;
+	b=f8vtSM4E+u0eR/Kx4tr7/sy2kMTrFRyv30yIIWPAMtVjCupI/8Bc8AKF2yitc8tM05nn
+	 K5zwLfwyDRVWL6vdQqEqMHExbIXhI8vzpTH9XaRXjz6DC0TGxcUT8+b5kyaNMqCBBC+kb
+	 PtmJttC4QE06Zaop7lQmnx5Qc/a6pen9xCv+QIXb1KbiqOcHOLzbMpIrIhppKfqS3Q8H+
+	 xvx+QhysNIJjd2d4MuoPLzc17gKJ2ZVbRdMOg+qNbvjmQ2FzA5YSbpvNMeWXq7/0/u+vT
+	 dQ7heLekltNvyNE7J3i7CCgRv2/QFeMjf1/H8WW3+rin5EUds50KtVUlYE2dOrFmnZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793699652;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793699654;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=bEaC9cqGjO/waX3lszZK3l+LxB2AmWUBiYfX+wYhT3o=;
-	b=CKrwKU8se5sJtMxg5+GyIUIPM9/agi3cb5M7ZuKlCRNCzfslwHvcoXoadZ0xdkg02vIH
-	 3IwO7siXwZ1kXk92s5r40jxB9mmrgTAG2lnHNLKVwP9njWEJNlMPV0fN15PNv6cHl2kRO
-	 6BuMIh+n7pK8e2EDlS4IEIgF1I4QgzeQgSykKaW1R8TdfqLuJ9IJBqlFP9AWY/OTJLHKk
-	 ngmM9doq8Pj5JPjSzcSLSVeF4Kd7Q4LeEurpc8IFIy2+uvBDxfaLXNBPg1hXTZKdB6Gcv
-	 FN0Dt5NV/ZCMk7LiKV4IMOO2R+Uyf/N1Mx0+G7IFPpYbiMCb3W9WAFwUrmyKz4zcDSw==
+	bh=VH9rnPZxjjFJRh7v5jB1tJ74r1hNDJAcatTrJyGbn28=;
+	b=vuepvWBg6u3TeeiQ/26mCE71h3+C6CUnWze4+llXZHb8T7KRk9kHIMU+zhT05pYCeY3B
+	 SlZnIeP+d818+EXmvgA4U+awsIpQjBWEn85+Bkh4cfDD3SWEog2lD4pCxc7z2NWqBVmP6
+	 qKlOmKk4v6XFtlPI4j7beO3taMPZhBnzwEIo2E+PDz9xBfgGDV71z7MSTpv1IdpA3HxjL
+	 KdJMY8SqE3MMko1sw3vZSJKS+5nJwkiEcc19chFyd1oWPbRSyNw/khEuHR7ZvAj0KEAw7
+	 GPSdwIUBz2EmN4xlSB4mLsB9RHmIdK5q31C0UC/SPB3klLUnRnvis39kKNl53t7vJKQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VWPV0q2F;
-	arc=none smtp.remote-ip=74.125.82.44
-Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=znowCaag;
+	arc=none smtp.remote-ip=74.125.82.179
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B78C6085083
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 09:54:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B78C6085083
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522AC60850A0
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 09:54:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 522AC60850A0
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VWPV0q2F
-Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-1a8cc11ac42so3834681c88.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 01:54:11 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=znowCaag
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-3514b90bb89so8202077eec.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 01:54:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793699651; x=1794304451; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793699653; x=1794304453; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=bEaC9cqGjO/waX3lszZK3l+LxB2AmWUBiYfX+wYhT3o=;
-        b=VWPV0q2Fql7iwZXyb2WpBVW1604iWAwJ49R1dY/T1xlKmrcuPfXP1aPT8r15f06qki
-         Mg0Cs6Qvxcl/eOhdk+fWXFTfOJn6OlcYKu06Rnk4hVzegy5W4M9nBqD3R+jg2HicPSHb
-         VTrvhTDIEw41kwu+7w4vtKbrylmqg1v+H0wQmOb4/5Xk25+Kq2Mm7XXJt+3vo/h5Rd3D
-         cSY0mwwHeEKWtBEF0beETgc+x8pl803f43Lb/E3Ft/Ny6Ia7tcsJduZh4R89PT0LRGLi
-         nMnP7qTR5wQzsh0293uLJHNfLMiMP5jLNWSVt+9U1+oRzGnhaYqi992wVpehb65q2sNz
-         hcbw==
+        bh=VH9rnPZxjjFJRh7v5jB1tJ74r1hNDJAcatTrJyGbn28=;
+        b=znowCaag/T/6wn73dbKGw8K3eAxraIpXmNquQaSzH20Kkg5njNJ+r/aEETTgLvYSUY
+         zDCo5mPpeG/xFfp8vBdrq81Vz6kQwB2LyI3HI+LZ9rRQK3VWp1yEXEhha0fOfP/IT+Y1
+         I9Ui59lEkDHfrwnG9FmRQIfM5fB/cGps+YrTVI/NRyL1n1ZVsB6n08A5M45SfjAkPgpm
+         HdAqupqSO0zJa/zNHn1nQzWo8zcniFa8llMV1sD7EcOHagooZ+r/Zsbb7PfBFXMo0JWB
+         aAV2CsvZiEUkonyLusGmKAxcvFUSJzINNcA8KqlSSTGXYyo1yRQMvrourGSqJOYIDp4+
+         clJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793699651; x=1794304451;
+        d=1e100.net; s=20260707; t=1793699653; x=1794304453;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=bEaC9cqGjO/waX3lszZK3l+LxB2AmWUBiYfX+wYhT3o=;
-        b=C785z1hj7Ffo3eQWp/7Asi0i5XeM4R2tj6Sy8q3SNEdPnqdSdSCK3ZxSF/Q+09+JLT
-         2eCzl/YkNtBp5w9/qaTIxkUZi3/ZOFBUlihuzwCm/anSiZsHwYgZD0EqMydOsnyFBz2R
-         uE9zLBswmY5ba+BH4Brx+PMKfhbonzgILW9Z896hdw+ngcifrAmTBxCG+t1g7fx+x8bb
-         zGVvKo2yUMqyT8q2yXvpO0Ph4h3KRpaCWDywq6RJXanDYdqP/1u7VZfeHZlyAEtd9GSI
-         /0pd07r8JkfkwMalPGxNhIdS/W4BY4UVBYGDHbBTJyRi33R1qfNZyZKWNQdF1gm6aKSx
-         3eVg==
-X-Forwarded-Encrypted: i=1; AKwUvBwXfee3642GK05dCw3mJvkY2dtahhdNyTCi/tEWfqs+ziSZGVP/NoSUK22KgaXbGHRGFaqzyqfWU5xISvo6bg==@vger.kernel.org
-X-Gm-Message-State: APuU4Z/XIcNTU2TQt0pZw1Q7jGjPrn+uUc701Wi7n6yEdHyeT4HHrSj0
-	SLBoplXtb009IUDcSHWVZXk1AJKz8Xa2q24K/hLXWnBjiDzOeY8q0LjlIPelpw==
-X-Gm-Gg: AYBFou3ZUgL8kELi/dedcH6z5k912AMuEAuXnTWggUnxrZFNs44/BRnDEXPKa9WRmDR
-	E3C/HIjz6RBLVGLGCsUGnvH/S9UAip7xROhXX8YUTzgV4lcvMqZxXN8txJaZiK4cveLSEmf3/Tg
-	jAMs0/7zsiZfTBwvhi3qTxmQIXmIdoc5zRyx3T8KPowjc1twWGupsJTOFzfm9L3m7s8GyOyeBzR
-	r9OitGCu4FiaiQmH3OfeasKLudYbwBu59s6ZFZ5E9YcLQznY0RLRRerR74NaVNWFcHNUcS5MYUi
-	jTrLlW7gZm2wRGgPSniR5SUa1jwPEdDNspeGx8VY2KvbN8cgXz3GIUvwIF6hL7+bY1G3K0vj5PB
-	oVIzjS76uzK63U0/wjHCloWv3sPq5vItFlkvPZ3QnNTGNfUK8fQD7UScPDqsE4tAlN1GeZ4/fYb
-	yNGSzYWay/RTcqhJGqXRukNDlGXoiE1uXCeMaBBpBuJMhxD0OeAwPOtnK4Yu6zfzPCZm7m4I5Q8
-	TjXVnQ3kzK8FpZrKhPYBf8CmO4UhhYh/CUnu+ZBzxuFYMSNpSs/tUnLeMNFJ5jZVKf+9QgZzv9X
-	gkj1nIGcz2LxmVVUV1Axg6lm6iMBi1CvC0CKwXMF6/eSKpeVfpFlifBeGXcFdl1QiM5EAfSQQkh
-	C6p/HBvL7
-X-Received: by 2002:a05:7023:90b:b0:14c:8461:b3ef with SMTP id a92af1059eb24-1ac5e6f5132mr24148676c88.24.1793699651034;
-        Tue, 03 Nov 2026 01:54:11 -0800 (PST)
+        bh=VH9rnPZxjjFJRh7v5jB1tJ74r1hNDJAcatTrJyGbn28=;
+        b=xS3GyMo628w5bT9oJLE8sxlRDqH/W8Zn+YeggVlMkECx+67Ia46SEMILSf6hSXtpRh
+         FSZM6Mfgu7n74t1b9E4uP56f94rJeht6MtH9P/uSxQ1XcyIJAwgwg4A1SX5n0mFSkuav
+         xWMoeOPAhId8fBJL/vd6L0Yu+iw7uYy5LOmCZ4ehQdeAeAObNJKnldeEUO4NM5SvdgNk
+         3dgtxSiWUDcivYd9ftzlzqwamXE/UDZ4bDbOME9Ct3Y7yfSTSD9dwjaQiMIfIjtdRExk
+         oxkze+f6y+l6whUJLrAaSJUdNoSnpI6ClExBcM0W/URMP61Wow6LsgSjWyxfv5Zw77ob
+         IN4Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzS17/ZZbliUTf1lvutG97TqYjR55fK85mawa+IHX0V+qty85gCLCypR7plv8u3iVXs7DuJXlZ5pBVfenDKhg==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9cJFLtJoSD/ZgdyhnjCzuTYM77nUW2UZy+MfQhlX0aE73uVFAZ
+	h2PnYxuL/G6KjC1XlF4Ie85BCNvMIbeHdceg5vL8vORUQyxo8yX+p0H9
+X-Gm-Gg: AYBFou1YWKZFVQYKizjLvkutOZfKqe1mmMDXHcDdqRVvFQIW4+8IzOufhthXWkOzW0L
+	CrX7PdsXaZCcIYXoumAv8YTiGWId0yjV1pcSMGdTnkapUB2uATZNesK1RWQ4b3BwL1zQxa3273k
+	DyKTw2lhdWC2w0kKgBX4hj5qkBJhl/ivU5b0AdRIP2kYGxp0upyC4GskzVXxEt3rRerlZkmwU9y
+	2S1RLLDXmX2WaQdMjLXZQA8JCKcg92vVjNnPaRfelVD8i9X91mytVcOkIY1AE04c/DXduzGPTFu
+	bmAjQQJ4hCLi6VHl5bHzzFlyUZTC+UcCBu6vrob5zHk95l1MdkC26wUmMuQRFy36IzXLDtOTRK1
+	yEf3SMB2OBHUh3UmXjN/P/J+2iKAUGOCS9Uex4/kI6IufmS4C++CtPg/J4qryNUk5DFr4weXjGX
+	oxxktyG+23sCjkv3oPWdPU/sqg9BuNKaK6X8lNwMD1CAI9prI5rmHr6TGhYDClrfF54qwRVUQ9j
+	vn7aSbjRRQQPqvfd9F6y+zctk0P4FFApeiHJ2G+OfryfejtWzUpXSQmgP7lW7eoHWmTtVK1Iw0L
+	rWrt2yEPLCHhXtEH8WjzGdPhZ+sV9SjERGSWrccZQprBR2pvzpRBPlyA5aueNqhNjVm59zWRa97
+	+TUsjfQ6O
+X-Received: by 2002:a05:7022:4392:b0:1a4:c892:b14f with SMTP id a92af1059eb24-1ac5de53bc8mr31064985c88.29.1793699653343;
+        Tue, 03 Nov 2026 01:54:13 -0800 (PST)
 Received: from acemagic-m1.tail4fb79.ts.net ([2401:7400:c804:b668:9e8b:5db3:accd:585c])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1aed79b3dfcsm44178383c88.12.2026.11.03.01.54.09
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1aed79b3dfcsm44178383c88.12.2026.11.03.01.54.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 01:54:10 -0800 (PST)
+        Tue, 03 Nov 2026 01:54:13 -0800 (PST)
 From: Ho Jie Feng <hjf3108@gmail.com>
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	linux-wireless@vger.kernel.org
 Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH rtw-next 2/5] wifi: rtlwifi: rtl8192d: report no signal for frames without PHY status
-Date: Tue,  3 Nov 2026 17:52:51 +0800
-Message-ID: <20261103095256.949327-3-hjf3108@gmail.com>
+Subject: [PATCH rtw-next 3/5] wifi: rtlwifi: usb: unify the RX code path
+Date: Tue,  3 Nov 2026 17:52:52 +0800
+Message-ID: <20261103095256.949327-4-hjf3108@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261103095256.949327-1-hjf3108@gmail.com>
 References: <20261103095256.949327-1-hjf3108@gmail.com>
@@ -101,33 +101,95 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Only the first frame of an A-MPDU comes with the PHY status.
-This makes mac80211 report the correct value when queried from iw.
-
-Test results (2.4 GHz):
-   before after
-TX 6.1    5.2
-RX 29.1   27.1
+_rtl_usb_rx_process_agg is a copy of _rtl_usb_rx_process_noagg
+except without the tail end. The noagg function can be used for
+aggregated frames, so drop it and rename _rtl_usb_rx_process_noagg
+to _rtl_usb_rx_process to unify the code path.
 
 Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192d/trx_common.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 52 ++--------------------
+ 1 file changed, 3 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192d/trx_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192d/trx_common.c
-index 9f9a34492030c6..a8910cdbfa0979 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192d/trx_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192d/trx_common.c
-@@ -425,6 +425,9 @@ bool rtl92d_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
- 						     stats->rx_bufshift);
- 		_rtl92d_translate_rx_signal_stuff(hw, skb, stats, pdesc,
- 						  p_drvinfo);
-+	} else {
-+		/* Only the first frame of an A-MPDU has the PHY status. */
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index d013e5986948b5..d7b3192262c001 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -366,50 +366,7 @@ static int _rtl_prep_rx_urb(struct ieee80211_hw *hw, struct rtl_usb *rtlusb,
+ 	return 0;
+ }
+ 
+-static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
+-				    struct sk_buff *skb)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 *rxdesc = skb->data;
+-	struct ieee80211_hdr *hdr;
+-	bool unicast = false;
+-	__le16 fc;
+-	struct ieee80211_rx_status rx_status = {0};
+-	struct rtl_stats stats = {
+-		.signal = 0,
+-		.rate = 0,
+-	};
+-
+-	skb_pull(skb, RTL_RX_DESC_SIZE);
+-	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
+-	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
+-	hdr = rtl_get_hdr(skb);
+-	fc = hdr->frame_control;
+-	if (!stats.crc) {
+-		memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
+-
+-		if (is_broadcast_ether_addr(hdr->addr1)) {
+-			/*TODO*/;
+-		} else if (is_multicast_ether_addr(hdr->addr1)) {
+-			/*TODO*/
+-		} else {
+-			unicast = true;
+-			rtlpriv->stats.rxbytesunicast +=  skb->len;
+-		}
+-
+-		if (ieee80211_is_data(fc)) {
+-			rtlpriv->cfg->ops->led_control(hw, LED_CTL_RX);
+-
+-			if (unicast)
+-				rtlpriv->link_info.num_rx_inperiod++;
+-		}
+-		/* static bcn for roaming */
+-		rtl_beacon_statistic(hw, skb);
+-	}
+-}
+-
+-static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+-				      struct sk_buff *skb)
++static void _rtl_usb_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 *rxdesc = skb->data;
+@@ -470,8 +427,7 @@ static void _rtl_rx_pre_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	WARN_ON(skb_queue_empty(&rx_queue));
+ 	while (!skb_queue_empty(&rx_queue)) {
+ 		_skb = skb_dequeue(&rx_queue);
+-		_rtl_usb_rx_process_agg(hw, _skb);
+-		ieee80211_rx(hw, _skb);
++		_rtl_usb_rx_process(hw, _skb);
  	}
- 	/*rx_status->qual = stats->signal; */
- 	rx_status->signal = stats->recvsignalpower + 10;
+ }
+ 
+@@ -490,11 +446,9 @@ static void _rtl_rx_work(struct tasklet_struct *t)
+ 		}
+ 
+ 		if (likely(!rtlusb->usb_rx_segregate_hdl)) {
+-			_rtl_usb_rx_process_noagg(hw, skb);
++			_rtl_usb_rx_process(hw, skb);
+ 		} else {
+-			/* TO DO */
+ 			_rtl_rx_pre_process(hw, skb);
+-			pr_err("rx agg not supported\n");
+ 		}
+ 	}
+ }
 -- 
 2.53.0
 
