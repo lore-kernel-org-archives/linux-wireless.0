@@ -1,87 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.10
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793729564;
-	b=U3F9e9LVM2GHbclm8y9QbI+Y0KOnpJG++1q5qZ02fr1UGHnOPunJKrVCWX/t87pkAL/4
-	 JoMQtTQJVwES+HDiPUJGMzOkF+SPyWvs1L+gnK63n819eBEUV9cbzR4qn745qqWNUk2t5
-	 fTEoiyz2EZxHCKXBXsGU66rxLScGiGB6KAETPi2IHw5GTTQusobIl7d2UDb3JrTcJtMJ+
-	 qTd7KvNdmHbd4EG1mK9RvmRJyYFIBqIdimtf/Wp/X9z06R9GxYeZMmiLy5Cb+UEtSj6sp
-	 hpcq46kB5cLGb37zlELhQjptPE6tW+tBdGfsSgk6+iJsxZvhgEK1uTGwG9gDaOTxhGQ==
+	t=1793732924;
+	b=4fvIWXJkiFllhr1uDajFSYIp0NoWz087U2PpG5qdbcd6FyFTe5clNhYRlSdfN/iFE0Eq
+	 Y3YxI98JtDvzHPWH9qRI8Af8GGnOoJ4mFEuzq7YeJq5/KhEp9PVW/c556oPGObyQ80hrW
+	 nJh/uwztjAcKzvRd8WPkD99Q3dEoEfBQqK8AKATBCs18QeA9gwcuXvYNM4+bFZzO6dlTt
+	 CpfCk3uKS+MBzsGiZNYFRwy8qhsgs4gu9xDJOyhKwUizhjJ8BZMegvXt0SIufapzrI2P+
+	 dvVl+eZgYfg4DTo/5h5QYK5foNbpiOKHqxrRhRdBiGQxeH5Lz9C3w3U+PJ3r8pNvhvA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793729564;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Content-Transfer-Encoding:Message-Id:References:To:X-Mailer;
-	bh=307AF/jEOxbdpPS8rhJxDrUHxY2uVxJwujwuyFVAf7c=;
-	b=ptXcp9tvMjDUF2FUL/TPvWSwc2Y6AaPnm8riA7czuoj0fSuoivM5uE/g81fvAEE21d/W
-	 8kTCKRErz+fuq31VaYfndhKG7XJJ+ONoIy64OKQSzfHv2wKnhBImhBiyt7xEJbGEAtbTR
-	 /J8I9jnM0kk+4vUX6GqpUiaMfgUJFiWMuMDSILyeRdG1Li4AaEW47QtydLNx8pkih60/v
-	 OS8UgAYcyK+GXskK5qGn9lz/thhr3jNvoLVplfExjgpv5XvYNE4CJWkZbJousoIhYAxzw
-	 uSlwyaY87NlkdP5TNllWBO42fXEanxJLNVVgT/srokZGvfFrYgHzBQE3ddjEZkZkAVQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793732924;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=rG3SFa4AAaUg2yvo0TqdTbNQk1NPMrUpBZbx2RLBuAQ=;
+	b=3V4jfN5XFRyxnWmy8TTD6DKxX/tD5j62XTZT6wGWVd/JFrzmLP9FXcC71zMqxnFd0lrZ
+	 iGT1IjyE2Zdczh0aK1XPPPOJWysYiSc0Rb9C6FUqeBMCpuXYWjdzv6sKsl/k1y+x+AvMp
+	 FtNMtgVJRNLL6qE86eG5nxPwrZeBIU7XGkXsvVHHr0pS7kMWT1FjKY3QervCpzVoleytA
+	 gtTN212gkLDtzN/4LH2BK1DxUlkPg0RNWg51RqLK1aiQluNnzY1zn3Uyv6uUrmsn8F7X6
+	 t/5FyVwffD7jPolu+YTqyTAkxWI0b+G9Hk916ZmNfBTd12ba29+2Gu7jtWHg89eLVYQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lPmTlVuZ;
-	arc=none smtp.remote-ip=74.125.224.54
-Received: from mail-yx1-f54.google.com (mail-yx1-f54.google.com [74.125.224.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=fcy8bEvC;
+	arc=none smtp.remote-ip=192.198.163.10
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1406E606A31B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 18:12:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1406E606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C48A5606D818
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 19:08:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C48A5606D818
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lPmTlVuZ
-Received: by mail-yx1-f54.google.com with SMTP id 956f58d0204a3-6798c43a3d6so3179127d50.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 10:12:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793729563; x=1794334363; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:content-type:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=307AF/jEOxbdpPS8rhJxDrUHxY2uVxJwujwuyFVAf7c=;
-        b=lPmTlVuZaie32YitYcw8ewUSq1a0d5xY4pNB8Y3Pz5yp3/hWitDKu64bl/LLBmrf7w
-         hSeaZG2OJG7madkDL+zxENL7mILzkP3UvMtKfNoW/kkIOHOcg1gNAQwWyddeQ+A5Wpkj
-         eWglqiezygYtyxdqEE4Ki389kL0/lABwgrWlLDLDxqaSSJPDXjbmozMRGgpRDr9mXF/M
-         oweJ1MyQVfy6xKlLxBwVyWgaXMTXdeEPsYYZ8rPlL4XJY3+YC+maiJQWAk1wrLUdXAcZ
-         8q/6N18sh4DKXQpTvUSFgmMo7uQ1KUQninBUa2vShbox5x4rTYI8oALkIqnf1FtUcYSv
-         KkbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793729563; x=1794334363;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:content-type:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=307AF/jEOxbdpPS8rhJxDrUHxY2uVxJwujwuyFVAf7c=;
-        b=cHhbbkwMSlyl2mpMA+jwu8Na1PaAchBQd70OPMmFeQrD4Kn6gOr8XqhKe3oMyBerB+
-         Bm8gnfKIKJbOqfgOIgx7IimCYY0b9P13EaNbAjWbLemcT6Ko/gFDrrLLgNpHVUQh5kDX
-         wEQybSZh6gGts2az8zT59b/k77DHsJ0HHZTLJdlFQ2GVye2+jm5Iae4n5s0dPVOwhlRb
-         /gLHUdAIzbuSzxlzsQfZQfHWwdH7cPMI66LHGyavwaKNYSShYV2O5IlyU8zRrAF/wKMx
-         7NJBtP31eDdMEAA7XAFSHEvSYrH3WqHEu9JJRbsSqnQf6rUfIKH9A/stLaB9eLfyeEHj
-         yRDg==
-X-Forwarded-Encrypted: i=1; AKwUvBw8gIVV0+e/c4+Bvhw1NDRQ6T4uxNitHhR+CwfggDYVE1izhuOLFtXTMMeSSFb07XCBKfsQEktjiXX0a3As0g==@vger.kernel.org
-X-Gm-Message-State: APuU4Z/zsCV719mXe9sHTC4OnA2LUP9K+eaONPjMzfflp5JkHa+VNFqs
-	C+pvN9zukQJ6NGBRg5lP/iCTyF3TOilRfsx13hetsDMXfUB1PQ8wZQ+0
-X-Gm-Gg: AYBFou2qeZRDLg5LtbaqSbycAoLdzGGUQSU65ncrYBS7wvCzSRBZth69Ak+jy/ZvMX8
-	7aT4hnv8HfJ/CvZwBRUEgenq+xQfczfkEPyeyHHasTktFOs737uIVEXkjUyIMKjZ7OyjKbAUqXG
-	J3YGCpgfUo5YLfiMShci+vyEacsAOJs2h7UifxRYNCoUg6eMJ2j/MNALSAVaAi+nwZJuziV7hxR
-	2NQtBgJPUwjg0Rqo+Vu6C7uRSAvmD0jACow5gqe8kCxgWoArj5ARYffzwkSACQyufUse43x+vJh
-	il83KvVeALPoV/jthQfOgfw37hYribsP35Rj2ivUZEXXh4cxhy1sxB8Pz1hUoGvmpI6Pi3ir7tc
-	w7HzbjyWmbTle6927mvfkFXznWL6JeueMbFFGe7X0+d5qKspjSpQ5gVURe2WKDHpbrkRo2iQjY+
-	iZ8C1sA/B20p9GZ/5YOro6iQ4JL1BcsP5Jfv0GzdYhIkeDX0phuI13sVpugKrMmzfalJMqjhUgC
-	fCihNnuwvDMjr9KFGIaR+LilcWtUzSt6hj+pj9jDI5vo1Be6O7hQfu/AB6pxEh6XW0q5Fu3/DQK
-	Q7Y2rAtfLVNF4lxT+853Tz/ay16miFNU0puu6tMT2uLGNoizVnjWayK1QfWX7x7bTvQvnwZfofm
-	Y6WUf88NyeQ==
-X-Received: by 2002:a05:690e:dcb:b0:67a:2ca2:8a3d with SMTP id 956f58d0204a3-67ba4c8842dmr7196675d50.17.1793729563101;
-        Tue, 03 Nov 2026 10:12:43 -0800 (PST)
-Received: from smtpclient.apple (1433037-static.lxtnkya4.metronetinc.net. [162.221.218.20])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b3098c3122sm2112597b3.14.2026.11.03.10.12.42
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Nov 2026 10:12:42 -0800 (PST)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=fcy8bEvC
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793732924; x=1825268924;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=VoL+YQJBeqyynDk8BXstNbG+ukHz+EAdZJX3N6FlF5g=;
+  b=fcy8bEvCoqYmj3H9qhVoSlD+22/bwiCYZemD2XBQ5iMBeUMVn9Ct8nEn
+   BEUEJ123jrefWN+7szX7m9X5Ka3KPNnCsCU6b/Yo6uczz2leoMSvE+dwM
+   Y1Z2kJQRyQ93HfrqMnWwUQa9fTls8zHJOnj2N3d+psBnV0UqwUYnPQ/HN
+   ksc9pvbu5i7FRDd9RJt7fMiRQfuWcLpvn9nuqnPC4WHuq1aXpStpwC6Ak
+   Cei+8kHUZLQfS2J1gs0w9xJPOpGXatncU1W9C/wSEB5OibCOy1fWu6o1f
+   wgOU6zhUHofHG0mj6w6+hLf1KUp107bl9jO/mNkMHcy8yScung2bJ9cno
+   g==;
+X-CSE-ConnectionGUID: SZsM9uU6R/iQDwEbeKCToA==
+X-CSE-MsgGUID: zKNvPzgXT3SrxkofEVwgYw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11955"; a="2373027"
+X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
+   d="scan'208";a="2373027"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 11:08:44 -0800
+X-CSE-ConnectionGUID: UTRlRhiITj6JeXEnNe6kaQ==
+X-CSE-MsgGUID: PO3ZogCmTfWAfS567KyzHw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
+   d="scan'208";a="7032025"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 03 Nov 2026 11:08:42 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xOJs7-00000000jBX-01lx;
+	Tue, 03 Nov 2026 19:08:39 +0000
+Date: Wed, 4 Nov 2026 03:08:06 +0800
+From: kernel test robot <lkp@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Johannes Berg <johannes.berg@intel.com>,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: Re: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links
+ in for_each_sta_active_link()
+Message-ID: <202611040250.cGDVGGwA-lkp@intel.com>
+References: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -90,31 +84,81 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.200.71.1.16\))
-Subject: Re: [PATCH wireless-next v3] wifi: brcmfmac: pcie: restore FEM
- control pin mode on Apple BCM43602
-From: BJ Hinkle <bjhinkle@gmail.com>
-In-Reply-To: <20261101172011.1591620-1-dolph-in@yandex.ru>
-Date: Tue, 3 Nov 2026 13:12:32 -0500
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
- linux-wireless@vger.kernel.org,
- brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com,
- Angel Lindo <angellindo@gmail.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <908B5B94-5092-40DD-92D9-B19E9E68D52A@gmail.com>
-References: <20261101172011.1591620-1-dolph-in@yandex.ru>
-To: Sergey Armodin <dolph-in@yandex.ru>
-X-Mailer: Apple Mail (2.3901.200.71.1.16)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
 
-Tested on a MacBookPro14,2 (BCM43602, subsystem 106b:0157) with this =
-patch applied to Omarchy's 7.2.15 kernel.
+Hi Johannes,
 
-This machine unloads brcmfmac before suspend and loads it again after =
-resume. For the test, the sleep hook that normally sets bit 4 only read =
-chipcontrol, with the driver unbound. After each of two deep suspends on =
-battery, about 4 minutes each, it read 0x00000000. The driver then =
-logged "chipcontrol 0x00000000, setting discrete FEM control mode", and =
-5 GHz reconnected within 5 seconds with no status_code=3D16 rejects.
+kernel test robot noticed the following build errors:
 
-Tested-by: BJ Hinkle <bjhinkle@gmail.com> # MacBookPro14,2=
+[auto build test ERROR on wireless-next/main]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Johannes-Berg/wifi-mac80211-clarify-station-link-handling/20261102-224238
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+patch link:    https://lore.kernel.org/r/20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba%40changeid
+patch subject: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links in for_each_sta_active_link()
+config: loongarch-allmodconfig (https://download.01.org/0day-ci/archive/20261104/202611040250.cGDVGGwA-lkp@intel.com/config)
+compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261104/202611040250.cGDVGGwA-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611040250.cGDVGGwA-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/net/wireless/intel/iwlwifi/mld/sta.c:913:7: error: use of undeclared identifier 'vif'; did you mean 'if'?
+     913 |                 if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
+         |                     ^~~
+         |                     if
+>> drivers/net/wireless/intel/iwlwifi/mld/sta.c:913:7: error: expected expression
+   drivers/net/wireless/intel/iwlwifi/mld/sta.c:914:32: error: use of undeclared identifier 'vif'; did you mean 'if'?
+     914 |                         iwl_mld_remove_ap_keys(mld, vif, sta, link_id);
+         |                                                     ^~~
+         |                                                     if
+   drivers/net/wireless/intel/iwlwifi/mld/sta.c:914:32: error: expected expression
+   4 errors generated.
+
+
+vim +913 drivers/net/wireless/intel/iwlwifi/mld/sta.c
+
+d1e879ec600f9b Miri Korenblit 2025-02-16  890  
+d1e879ec600f9b Miri Korenblit 2025-02-16  891  void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta)
+d1e879ec600f9b Miri Korenblit 2025-02-16  892  {
+d1e879ec600f9b Miri Korenblit 2025-02-16  893  	struct ieee80211_link_sta *link_sta;
+d1e879ec600f9b Miri Korenblit 2025-02-16  894  	u8 link_id;
+d1e879ec600f9b Miri Korenblit 2025-02-16  895  
+d1e879ec600f9b Miri Korenblit 2025-02-16  896  	lockdep_assert_wiphy(mld->wiphy);
+d1e879ec600f9b Miri Korenblit 2025-02-16  897  
+d1e879ec600f9b Miri Korenblit 2025-02-16  898  	/* Tell the HW to flush the queues */
+d1e879ec600f9b Miri Korenblit 2025-02-16  899  	iwl_mld_flush_sta_txqs(mld, sta);
+d1e879ec600f9b Miri Korenblit 2025-02-16  900  
+d1e879ec600f9b Miri Korenblit 2025-02-16  901  	/* Wait for trans to empty its queues */
+d1e879ec600f9b Miri Korenblit 2025-02-16  902  	iwl_mld_wait_sta_txqs_empty(mld, sta);
+d1e879ec600f9b Miri Korenblit 2025-02-16  903  
+d1e879ec600f9b Miri Korenblit 2025-02-16  904  	/* Now we can remove the queues */
+d1e879ec600f9b Miri Korenblit 2025-02-16  905  	for (int i = 0; i < ARRAY_SIZE(sta->txq); i++)
+d1e879ec600f9b Miri Korenblit 2025-02-16  906  		iwl_mld_remove_txq(mld, sta->txq[i]);
+d1e879ec600f9b Miri Korenblit 2025-02-16  907  
+83b0c8b2692d39 Johannes Berg  2026-11-02  908  	for_each_sta_active_link(sta, link_sta, link_id) {
+d1e879ec600f9b Miri Korenblit 2025-02-16  909  		/* Mac8011 will remove the groupwise keys after the sta is
+d1e879ec600f9b Miri Korenblit 2025-02-16  910  		 * removed, but FW expects all the keys to be removed before
+d1e879ec600f9b Miri Korenblit 2025-02-16  911  		 * the STA is, so remove them all here.
+d1e879ec600f9b Miri Korenblit 2025-02-16  912  		 */
+67128af05c6419 Johannes Berg  2025-03-09 @913  		if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
+d1e879ec600f9b Miri Korenblit 2025-02-16  914  			iwl_mld_remove_ap_keys(mld, vif, sta, link_id);
+d1e879ec600f9b Miri Korenblit 2025-02-16  915  
+d1e879ec600f9b Miri Korenblit 2025-02-16  916  		/* Remove the link_sta */
+d1e879ec600f9b Miri Korenblit 2025-02-16  917  		iwl_mld_remove_link_sta(mld, link_sta);
+d1e879ec600f9b Miri Korenblit 2025-02-16  918  	}
+d1e879ec600f9b Miri Korenblit 2025-02-16  919  
+d1e879ec600f9b Miri Korenblit 2025-02-16  920  	iwl_mld_destroy_sta(sta);
+d1e879ec600f9b Miri Korenblit 2025-02-16  921  }
+d1e879ec600f9b Miri Korenblit 2025-02-16  922  
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
