@@ -1,62 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793723048;
-	b=aAfaLI+29dkLqiLs170y2O6W45bdHy0RjUWElRBOaHhnIqpE7ygGr8pLbyJMrRKX9JjP
-	 1QNCNKnRHQl+vVqnN0bHO2I4RueA+kWp6oycj6RjLoZYIji0deT+duEyeMuBCkE21Mdcm
-	 5N396sO1pBedRqMoeeH4fzx5f6lzNhc+KKy0Rdi/rorwACPKlJruCvmBSceEGb9gY3FiS
-	 IPd9zILg26WassvItKvGyeDmp43ojohTnocobAlqijq0b2p8ANJrVo07aygKdbNXNJmyC
-	 4TbKGZp/4dGq6r/eB/vvKzT64cUQDUAbm6JMgHa9NNaLjXyREj56mODtoTce5MonHRg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793723048;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=sViWAvq8fJy6svB9FvzX9naFNDuKXQysa+ZQkFDooII=;
-	b=ZovShtk+mgBCUtUnZHmZRo2OtyArKpEUXaW20kC8J84/mxQn2at3vWWR+tW54zASAgjk
-	 8KGrFcHc+4iJhpUHATrB9Ya9kcGrvTZsoBw2dSaqDtxoVCf+mO1sOd/y55VJ/MlOYOav1
-	 1dGTG4FH+NsE8RYFzUhdgqmpN8ZUbxmM9ppOaSw26pd0YMR4xyWeedMEUehPiAE67mtPC
-	 sp4MVjlVEgefwe24DTzppY9hFcmsb6fAGnrxvuzgc2ZARXS2CXPGtr5ies+v772n2VnHr
-	 Z3sjQZI4i0dFXzYczd201p5ecPz+IrSniPmzno57fwPwmhDgARhwr9kL8llwVNYgx1w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nbd.name;
-	spf=pass smtp.mailfrom=nbd.name;
-	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=h5h6tLUE;
-	arc=none smtp.remote-ip=46.4.11.11
-Received: from nbd.name (nbd.name [46.4.11.11])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.11
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793723192;
+	b=cCYM+8YoLVmQanmsqGQuT4cQn/uqEokbuU+nAAUIgS5DYmk8jpHFtQmtqqXoEe9tjU4V
+	 oIU0Pj28pXLhNcE3+tvm+NEIgA0A+Ys+4D3dcLKv7j0mERhJZnPLjn6BOkvWspvIkb6ek
+	 02d/bDo0BUr5KxT/6Sqg1BWjos/CQOUrxAqRi2LmlUHZt4X2TxyCN/psPH3yr7aFF957u
+	 TFjho+q7Lyc8PIx8ZrlL5r9ToHc6cmqXcP2LoqfPTw/umbbvEtMXnSWoAB5G5LTJ19NSx
+	 oclw5rEgpO2OVeJEeLypeHdhGxq6UE5FBJdMeiEd6ng73cMfRAdAkxS9xfJS/sb+/Fg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793723192;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Message-Id:
+	 In-Reply-To:References:Subject:MIME-Version:Content-Type:Importance:
+	 User-Agent:X-Mailer:X-Zoho-Virus-Status:X-Zoho-AV-Stamp;
+	bh=zCw7Xbz5zcSKtviW3A+koyateGcAfHH1zbxvtcOCrk8=;
+	b=E7iMZ5ilC5z8KF3uRyx0f1amhGw5Rjq9SZLO5XzpfO4QyQj749mSF0S0wQBmnmuiVg7d
+	 GVhqGpkZXxi8VHD7A56xMZ0iJenspZbOgd5N+K4kaVslTUX2x4j8molErdbrGuCZo9/uD
+	 gqUZu/cAVi+ZDCQpVsAK5sAE2l2RNbsrP872vm3EJLbtjFT77ZxcAQUDg65ZR+J/Nb/Cp
+	 hXtWYxZFZcb3C9SJA2IqQTFr3Ayc5UDiuEEhNS9uWLGO7dDLEW6uAAR9u3KKv9zSaEL8P
+	 Ds3jJUcGSaxU1bTEoY3ClPupvj7PHRrak2trDZA/PuObVYwhlQtmVCOJhJE3JGf4fsA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=collabora.com;
+	spf=pass smtp.mailfrom=collabora.com;
+	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=zohomail header.b="ikxqyV+/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.11
+Received: from sender6-op-o11.zoho.com (sender6-op-o11.zoho.com [165.173.180.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D89A606A33B
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:24:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D89A606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73183606A324
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 16:26:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73183606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=h5h6tLUE
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=sViWAvq8fJy6svB9FvzX9naFNDuKXQysa+ZQkFDooII=; b=h5h6tLUERPPuu/VcESZKoH4rYd
-	6GVcqNxQXHugx9Y2s6P8dyBecGSCOg5cLUzt06R8uiojhlPJ1X756JG4ZERwvk3LqkNLiDI9jVTsO
-	GLFCX60qX9vztx1SR/CJLAGcf+80uyibK68ozOpaO2MsvoYJQbWkWFjpVPgZr+FrW5aE=;
-Received: from p200300cadf12920000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:9200::5bb] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1xOHIl-00FDFp-1a;
-	Tue, 03 Nov 2026 17:23:59 +0100
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless-next 03/18] wifi: cfg80211: add the SCS evaluator
-Date: Tue,  3 Nov 2026 17:23:36 +0100
-Message-ID: <c8db19a443a4cd2dbdb68a7aaa41304d2aad6899.1793722802.git-series.nbd@nbd.name>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.118d7c7b799f8ed35de51dc2aefef460bf69727b.1793722802.git-series.nbd@nbd.name>
-References: <cover.118d7c7b799f8ed35de51dc2aefef460bf69727b.1793722802.git-series.nbd@nbd.name>
+	dkim=pass (1024-bit key, unprotected) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=zohomail header.b=ikxqyV+/
+ARC-Seal: i=1; a=rsa-sha256; t=1793723182; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=G1I47DdjILT+E3vuh1rBs6u2BdVDAi1UkI9LfLB7CyumFgPgIw9TQ25buekXZH6ne48LYKLBjM0N4NVWZyzCZoK1JK3UDBaWGfaTgayMbmCK46M3pE/9ajTB739G1BUlDRzF8XMsEqtV2S5eATHd/9uaFGBMGig3/Dvwttwr+TU=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1793723182; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=zCw7Xbz5zcSKtviW3A+koyateGcAfHH1zbxvtcOCrk8=; 
+	b=RRbrHsOwQTXZYXj0HBEnE9GSqt6pCOi6PVn4lICcR9CSwzl5y7pWpuQoMYwcBUBNwopVyDdwY7ym0mH+bGyD2tSh9elCO/Ls7lZgsWuO4uhVK1GuzWXPqhU9vBCDHNIxEQcbpP+yC6bDQr+rEgkp4pjkl6SBF7YfnDUDfQuIz0k=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=bob.beckett@collabora.com;
+	dmarc=pass header.from=<bob.beckett@collabora.com>
+DKIM-Signature: a=rsa-sha256; b=ikxqyV+/UH6gQaYOOR9WEFa+1ZRMIL4+HhufS5dMEIG8GRv/fhj5C+UhlOE6ckQjKhEdanH9O9QgHmYJV47zWtaFwahA0T5r/XMf2hWZRxFlYE85HQ+jr7sNWVQuSVjXZpdJTf5+vc/NGxH0F6/qKUcr1hR+DOvJL+2O6Yc8s/U=; c=relaxed/relaxed; s=zohomail; d=collabora.com; v=1; bh=zCw7Xbz5zcSKtviW3A+koyateGcAfHH1zbxvtcOCrk8=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: from mail.zoho.com by mx.zohomail.com
+	with SMTP id 1793723149867137.60083671115615; Tue, 3 Nov 2026 08:25:49 -0800 (PST)
+Date: Tue, 03 Nov 2026 16:25:49 +0000
+From: Robert Beckett <bob.beckett@collabora.com>
+To: "Bernie Huang" <phhuang@realtek.com>
+Cc: "Ping-Ke Shih" <pkshih@realtek.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luka Gejak" <luka.gejak@linux.dev>,
+	"Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
+	"Timlee" <timlee@realtek.com>,
+	"matthew.leach@collabora.com" <matthew.leach@collabora.com>,
+	"kernel@collabora.com" <kernel@collabora.com>
+Message-Id: <1a1a23b2de6.dd9d2b0431720.4311994153284342881@collabora.com>
+In-Reply-To: <527f96d6034f43d481c3bbacf0313f3a@realtek.com>
+References: <a615f09bb6f54128b792a13ebcbf8970@realtek.com> <20261021190529.3893821-1-bob.beckett@collabora.com> <90c40c3223c34562b2c171c52d987c2e@realtek.com> <1a163984687.46e4c9841111898.2085291868591283475@collabora.com> <527f96d6034f43d481c3bbacf0313f3a@realtek.com>
+Subject: RE: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted,
+ poisoning CCMP replay counter
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,352 +71,281 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_1462835_954143849.1793723149798"
+Importance: Medium
+User-Agent: Zoho Mail
+X-Mailer: Zoho Mail
+X-Zoho-Virus-Status: 1
+X-Zoho-AV-Stamp: zmail-av-0.2.13.1.5.4/293.698.2
 
-Add cfg80211_scs_evaluate(), which walks the active SCS descriptors of
-a peer and returns the user priority of the descriptor that matches an
-MSDU. When several descriptors match, the one that requires the most
-classifier parameters wins.
+------=_Part_1462835_954143849.1793723149798
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-A filter classifier cannot be answered from the flow key, so it reads
-the frame again.
 
-A descriptor can name a client, a host behind a 4-address peer. It then
-only matches an MSDU whose destination address is that client.
 
-The verdict also reports a descriptor that did not match only because
-the MSDU lacks a parameter that it selects, if that descriptor would
-take precedence over the result. A caller that evaluates a flow instead
-of a frame must not derive a flow rule from such a verdict.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+
+From: Bernie Huang <phhuang@realtek.com>
+To: "Robert Beckett"<bob.beckett@collabora.com>, "Ping-Ke Shih"<pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org"<linux-wireless@vger.kernel.org>, "Luka Gejak"<luka.gejak@linux.dev>, "Bitterblue Smith"<rtl8821cerfe2@gmail.com>, "Timlee"<timlee@realtek.com>, "matthew.leach@collabora.com"<matthew.leach@collabora.com>, "kernel@collabora.com"<kernel@collabora.com>
+Date: Mon, 02 Nov 2026 09:27:43 +0000
+Subject: RE: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted, poisoning CCMP replay counter
+
+ > Bob Beckett <bob.beckett@collabora.com> wrote:
+ > >  > > On Wed, 21 Oct 2026 07:30:58 +0000, Ping-Ke Shih
+ > > <pkshih@realtek.com> wrote:
+ > >  > > > Bob Beckett <bob.beckett@collabora.com> wrote:
+ > >  > > > >
+ > >  > > > > The AP's own PN sequence is consistent before and after the bad
+ > > frame,  > > > > so the corruption happens on the receive side.
+ > >  > > >
+ > >  > > > Maybe this is a hint to make a patch to defer (drop) reporting weird
+ > > packet,  > > > as Luka has fixed 3 of 4 problems.
+ > >  >
+ > >  > I quickly checked the debug patches, which seem not detect if PN sequence
+ > > is  > correct after the bad frame, for example
+ > >  >   seq     PN
+ > >  >    1      101
+ > >  >    2      99999   // bad frame. should be 102.
+ > >  >    3      103     // not detect this
+ > >  >
+ > >  > Or I missed something?
+ > > 
+ > > if pn jumps, rtw_rx_pn_guard returns early before latching pn, so the next
+ > > corrected pn would just be a regular increase and not get dropped.
+ > > 
+ > >  >
+ > >  > > > > 4. For completeness: on these chips can RXBD_IDX or the
+ > >  > > > >    buffer-descriptor RX tag ever be updated before the packet data
+ > > DMA
+ > >  > > > >    has completed, as described for WiFi 7 in rtw89 0bc7d1d4e63c?
+ > >  > > >
+ > >  > > > The RX tag in rtw88 located on memory allocated by
+ > > dma_alloc_coherent(), and  > > > the RX tag must be set after packet data
+ > > MAC completed.
+ > >  >
+ > >  > (fix typo:                          ... data DMA completed.)
+ > >  >
+ > >  > >
+ > >  > > Understood that this is the design intent. My question was whether the
+ > > host can  > > ever observe the tag before the data. dma_alloc_coherent()
+ > > only makes the tag  > > visible to the CPU without cache maintenance; the
+ > > payload is in a separate  > > streaming mapping (a SWIOTLB bounce buffer on
+ > > this platform), so the order in  > > which the host sees them depends on the
+ > > order of the device's PCIe writes.
+ > >  > > Relaxed Ordering is enabled on the 8822CE here (DevCtl RlxdOrd+).
+ > >  > > Does the 8822CE set the RO attribute on RX DMA writes, in particular the
+ > > > > buffer-descriptor/tag update? If it does, the tag write may pass the payload
+ > > > > writes.
+ > >  > >
+ > >  > > We are hoping to test this directly with the next round of tests. the
+ > > rx_debug  > > option re-syncs a suspect buffer 100 us later, so late payload
+ > > writes might  > > show up as changed bytes, and we can repeat the test with
+ > > Relaxed Ordering  > > disabled.
+ > >  >
+ > >  > I'll check the behavior internally and get back to you.
+ > >  >
+ > >  >
+ > >  >
+ > > 
+ > 
+ > // Please ignore the previous two emails
+ > 
+ > Hi Bob,
+ > 
+ > Do you mind testing this patch?
+ > Reproduce again with the same ftrace and sniffer logs
+ > By the result we can differentiate which is the case:
+ > (1) AP sends incorrect CCMP header (less likely)
+ > (2) DMA incomplete, but later the correct data can be retrieved
+ > (3) DMA incomplete, data never recovers
+ > 
+ > IIUC, our hardware writes payload first then the tag.
+ > The RO attribute is never set in our TLP, so despite the configuration
+ > space settings, PCIE RC shouldn't do reordering.
+ > I am waiting for protocol analyzer to verify this, and will update 
+ > later when I have the result.
+ > If the buffer poisoning somehow changes the timing, and fail becomes
+ > not reproducible, please let us know, thanks!
+ > 
+
+I can't test this yet, only an end cusomer is able to repro on their router so far.
+I have the previous patches included in the next version going out to customers soon, but it takes time currently.
+The good news is that I managed to find one of the affected routers on ebay France. It should be with me my end of the week and I'll be able to try reproducing the issue myself and debug much more quickly from then.
+Once I have the device, I'll test with your patch and report back in due course.
+
+------=_Part_1462835_954143849.1793723149798
+Content-Type: application/octet-stream; 
+	name=0001-wifi-rtw88-test-for-stale-packet.patch
+Content-Transfer-Encoding: 7bit
+X-ZM_AttachId: 140129044732830020
+Content-Disposition: attachment; 
+	filename=0001-wifi-rtw88-test-for-stale-packet.patch
+
+From 41175f8e54a044a5a0e273e3ac9b91e8866fcdf0 Mon Sep 17 00:00:00 2001
+From: Po-Hao Huang <phhuang@realtek.com>
+Date: Mon, 2 Nov 2026 17:26:31 +0800
+Subject: [PATCH] wifi: rtw88: test for stale packet
+
+Fellow developers found evidence that DMA operations might
+be incomplete during debugging. e.g. Rx tag is new but the
+remaining Rx buffer is old data.
+Since protocol anaylzer is not available at the moment,
+write the Rx buffer to a magic number after each use, and check
+for more convincing evidence for further troubleshooting.
+
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 ---
- include/net/cfg80211.h |  44 +++++++-
- net/wireless/scs.c     | 260 ++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 304 insertions(+)
+ drivers/net/wireless/realtek/rtw88/pci.c | 101 ++++++++++++++++++++++-
+ 1 file changed, 97 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bb7b122e5020..e2aaf80dbf7c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4257,6 +4257,50 @@ bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
- 			     struct cfg80211_flow_key *key);
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 66d2e5f51444..815087789b93 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -15,6 +15,10 @@
+ #include "debug.h"
+ #include "mac.h"
  
- /**
-+ * struct cfg80211_scs_desc - one SCS descriptor
-+ *
-+ * @tclas_processing: how the elements of @tclas relate
-+ * @id: SCSID, 1 to 255
-+ * @up: user priority to assign to a matching MSDU
-+ * @client: the host behind a 4-address peer that the descriptor applies
-+ *	to, matched against the destination address of an MSDU. All zero
-+ *	for every MSDU sent to the peer. The client does not scope @id,
-+ *	which names one descriptor among all descriptors of the peer.
-+ * @n_tclas: number of entries in @tclas
-+ * @tclas: the classifier
-+ */
-+struct cfg80211_scs_desc {
-+	enum cfg80211_tclas_processing tclas_processing;
-+	u8 id;
-+	u8 up;
-+	u8 client[ETH_ALEN];
-+	u8 n_tclas;
-+	struct cfg80211_tclas tclas[] __counted_by(n_tclas);
-+};
++#define RTW_PCI_RX_POISON		0xDEADBEEF
++#define RTW_PCI_RX_POISON_LEN		256
++#define RTW_PCI_RX_POISON_TIMEOUT	100
 +
-+/**
-+ * struct cfg80211_scs_verdict - result of an SCS evaluation
-+ *
-+ * @match: an SCS descriptor matched the MSDU
-+ * @undecided: a descriptor that would take precedence over the result
-+ *	matches every parameter that the MSDU carries, but selects one that
-+ *	it lacks. A caller that evaluates a flow instead of a frame must not
-+ *	derive a flow rule from this verdict.
-+ * @scsid: identifier of the matching descriptor
-+ * @up: user priority to assign
-+ */
-+struct cfg80211_scs_verdict {
-+	bool match;
-+	bool undecided;
-+	u8 scsid;
-+	u8 up;
-+};
-+
-+void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
-+			   const struct cfg80211_flow_info *info,
-+			   struct cfg80211_scs_verdict *verdict);
-+
-+/**
-  * DOC: Neighbor Awareness Networking (NAN)
-  *
-  * NAN uses two interface types:
-diff --git a/net/wireless/scs.c b/net/wireless/scs.c
-index e8e3b5501b39..1418cb130638 100644
---- a/net/wireless/scs.c
-+++ b/net/wireless/scs.c
-@@ -697,3 +697,263 @@ bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
- 	return true;
+ static bool rtw_disable_msi;
+ static bool rtw_pci_disable_aspm;
+ module_param_named(disable_msi, rtw_disable_msi, bool, 0644);
+@@ -207,6 +211,94 @@ static int rtw_pci_init_tx_ring(struct rtw_dev *rtwdev,
+ 	return 0;
  }
- EXPORT_SYMBOL(cfg80211_flow_key_build);
-+
-+static bool tclas_filter_offset(const struct cfg80211_flow_info *info,
-+				const struct cfg80211_tclas_filter *f,
-+				unsigned int *off)
+ 
++static void rtw_pci_rx_poison(struct sk_buff *skb)
 +{
-+	struct ipv6hdr ip6h_buf, *ip6h;
-+	unsigned int pos = info->l3_off;
-+	unsigned int hdrs = 0;
-+	u8 instance = 0;
-+	u8 nexthdr;
++	memset32((u32 *)skb->data, RTW_PCI_RX_POISON,
++		 RTW_PCI_RX_POISON_LEN / 4);
++}
 +
-+	if (info->key.ip_version == 4) {
-+		struct iphdr iph_buf, *iph;
++static bool rtw_pci_rx_range_poisoned(struct rtw_dev *rtwdev,
++				      struct sk_buff *skb, u32 start, u32 len)
++{
++	u32 *word = (u32 *)skb->data;
++	u32 i, first = start / 4, last = DIV_ROUND_UP(start + len, 4);
 +
-+		iph = skb_header_pointer(info->skb, pos, sizeof(*iph),
-+					 &iph_buf);
-+		if (!iph || iph->ihl < 5 || iph->frag_off & htons(IP_OFFSET))
-+			return false;
-+
-+		pos += iph->ihl * 4;
-+		if (iph->protocol == f->protocol && instance++ == f->instance) {
-+			*off = pos;
-+
-+			return true;
-+		}
-+
-+		/* IPv6 inside IPv4 continues the chain (9.4.2.29) */
-+		if (iph->protocol != IPPROTO_IPV6)
-+			return false;
-+	} else if (info->key.ip_version != 6) {
-+		return false;
-+	}
-+
-+	ip6h = skb_header_pointer(info->skb, pos, sizeof(*ip6h), &ip6h_buf);
-+	if (!ip6h || ip6h->version != 6)
++	if (!len)
 +		return false;
 +
-+	nexthdr = ip6h->nexthdr;
-+	pos += sizeof(*ip6h);
-+
-+	while (hdrs++ < 8) {
-+		struct ipv6_opt_hdr hdr_buf, *hdr;
-+
-+		if (nexthdr == f->protocol && instance++ == f->instance) {
-+			*off = pos;
-+
++	for (i = first; i < last; i++)
++		if (READ_ONCE(word[i]) == RTW_PCI_RX_POISON) {
++			rtw_warn(rtwdev, "rx buffer still 0xdeadbeef\n");
 +			return true;
 +		}
-+
-+		if (!ipv6_ext_hdr(nexthdr) || nexthdr == NEXTHDR_NONE)
-+			return false;
-+
-+		if (nexthdr == NEXTHDR_FRAGMENT) {
-+			struct frag_hdr fh_buf, *fh;
-+
-+			/* A later fragment has none of the headers behind this */
-+			fh = skb_header_pointer(info->skb, pos, sizeof(*fh),
-+						&fh_buf);
-+			if (!fh || fh->frag_off & htons(IP6_OFFSET))
-+				return false;
-+
-+			nexthdr = fh->nexthdr;
-+			pos += sizeof(*fh);
-+			continue;
-+		}
-+
-+		hdr = skb_header_pointer(info->skb, pos, sizeof(*hdr),
-+					 &hdr_buf);
-+		if (!hdr)
-+			return false;
-+
-+		if (nexthdr == NEXTHDR_AUTH)
-+			pos += ipv6_authlen(hdr);
-+		else
-+			pos += ipv6_optlen(hdr);
-+
-+		nexthdr = hdr->nexthdr;
-+	}
 +
 +	return false;
 +}
 +
-+enum scs_match {
-+	SCS_MATCH_NO,
-+	SCS_MATCH_YES,
-+	SCS_MATCH_UNDECIDED,
-+};
-+
-+static enum scs_match tclas_filter_match(const struct cfg80211_tclas *t,
-+					 const struct cfg80211_flow_info *info)
++static bool rtw_pci_rx_stale(struct rtw_dev *rtwdev, struct sk_buff *skb)
 +{
-+	const struct cfg80211_tclas_filter *f = &t->filter;
-+	u8 buf[CFG80211_TCLAS_FILTER_LEN], *p;
-+	unsigned int i, off;
++	struct rtw_rx_desc *rx_desc = (void *)skb->data;
++	u32 desc_sz = rtwdev->chip->rx_pkt_desc_sz;
++	u8 drv_info_sz, shift, enc_type;
++	struct ieee80211_hdr *hdr;
++	u32 pkt_len, offset, len;
++	bool is_c2h;
++	__le16 fc;
 +
-+	if (!info->skb)
-+		return SCS_MATCH_UNDECIDED;
++	if (rtw_pci_rx_range_poisoned(rtwdev, skb, 0, desc_sz))
++		return true;
 +
-+	if (!tclas_filter_offset(info, f, &off))
-+		return SCS_MATCH_NO;
++	pkt_len = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_PKT_LEN);
++	drv_info_sz = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_DRV_INFO_SIZE);
++	shift = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_SHIFT);
++	offset = desc_sz + drv_info_sz * 8 + shift;
++	if (offset >= RTW_PCI_RX_POISON_LEN)
++		return false;
 +
-+	p = skb_header_pointer(info->skb, off, f->len, buf);
-+	if (!p)
-+		return SCS_MATCH_NO;
++	is_c2h = le32_get_bits(rx_desc->w2, RTW_RX_DESC_W2_C2H);
++	if (is_c2h) {
++		len = min_t(u32, pkt_len, 4);
++	} else if (pkt_len < sizeof(fc)) {
++		len = pkt_len;
++	} else {
++		if (rtw_pci_rx_range_poisoned(rtwdev, skb, offset, sizeof(fc)))
++			return true;
 +
-+	for (i = 0; i < f->len; i++)
-+		if ((p[i] ^ f->value[i]) & f->mask[i])
-+			return SCS_MATCH_NO;
++		hdr = (struct ieee80211_hdr *)(skb->data + offset);
++		fc = hdr->frame_control;
++		len = ieee80211_hdrlen(fc);
 +
-+	return SCS_MATCH_YES;
-+}
-+
-+static enum scs_match tclas_match(const struct cfg80211_tclas *t,
-+				  const struct cfg80211_flow_info *info)
-+{
-+	u32 fields = t->fields & info->present;
-+	struct cfg80211_flow_key key, want;
-+
-+	if (t->type == CFG80211_TCLAS_FILTER)
-+		return tclas_filter_match(t, info);
-+
-+	flow_key_select(&info->key, fields, &key);
-+	flow_key_select(&t->key, fields, &want);
-+	if (memcmp(&key, &want, sizeof(key)))
-+		return SCS_MATCH_NO;
-+
-+	/* A parameter that @info does not carry could still differ */
-+	if (fields != t->fields)
-+		return SCS_MATCH_UNDECIDED;
-+
-+	return SCS_MATCH_YES;
-+}
-+
-+/* Number of classifier parameters required for a match, see 11.25.2 */
-+static u16 tclas_param_count(const struct cfg80211_tclas *t)
-+{
-+	if (t->type == CFG80211_TCLAS_FILTER)
-+		return 1;
-+
-+	if (t->type == CFG80211_TCLAS_VLAN)
-+		return 3;
-+
-+	return hweight32(t->fields & ~FLOW_F(IP_VERSION));
-+}
-+
-+static enum scs_match
-+scs_desc_client_match(const struct cfg80211_scs_desc *desc,
-+		      const struct cfg80211_flow_info *info)
-+{
-+	if (is_zero_ether_addr(desc->client))
-+		return SCS_MATCH_YES;
-+
-+	if (!(info->present & FLOW_F(ETH_DA)))
-+		return SCS_MATCH_UNDECIDED;
-+
-+	if (!ether_addr_equal(desc->client, info->key.da))
-+		return SCS_MATCH_NO;
-+
-+	return SCS_MATCH_YES;
-+}
-+
-+/* A definite result of one element decides over an undecided one */
-+static enum scs_match scs_desc_match(const struct cfg80211_scs_desc *desc,
-+				     const struct cfg80211_flow_info *info)
-+{
-+	bool all = desc->tclas_processing == CFG80211_TCLAS_PROCESSING_ALL;
-+	enum scs_match ret = all ? SCS_MATCH_YES : SCS_MATCH_NO;
-+	enum scs_match client;
-+	unsigned int i;
-+
-+	client = scs_desc_client_match(desc, info);
-+	if (client == SCS_MATCH_NO)
-+		return SCS_MATCH_NO;
-+
-+	for (i = 0; i < desc->n_tclas; i++) {
-+		enum scs_match m = tclas_match(&desc->tclas[i], info);
-+
-+		if (m == SCS_MATCH_UNDECIDED)
-+			ret = SCS_MATCH_UNDECIDED;
-+		else if (all && m == SCS_MATCH_NO)
-+			return SCS_MATCH_NO;
-+		else if (!all && m == SCS_MATCH_YES)
-+			return client;
++		enc_type = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_ENC_TYPE);
++		if (ieee80211_has_protected(fc) && enc_type == RX_DESC_ENC_AES)
++			len += IEEE80211_CCMP_HDR_LEN;
++		len = min(len, pkt_len);
 +	}
 +
-+	if (ret == SCS_MATCH_YES)
-+		return client;
++	len = min(len, RTW_PCI_RX_POISON_LEN - offset);
 +
-+	return ret;
++	return rtw_pci_rx_range_poisoned(rtwdev, skb, offset, len);
 +}
 +
-+static u16 scs_desc_param_count(const struct cfg80211_scs_desc *desc)
++static void rtw_pci_rx_sync_and_wait_fresh(struct rtw_dev *rtwdev,
++					   struct sk_buff *skb, dma_addr_t dma)
 +{
-+	unsigned int i;
-+	u16 count;
++	ktime_t deadline = ktime_add_ms(ktime_get(), RTW_PCI_RX_POISON_TIMEOUT);
 +
-+	if (desc->tclas_processing != CFG80211_TCLAS_PROCESSING_ALL) {
-+		count = U16_MAX;
-+		for (i = 0; i < desc->n_tclas; i++)
-+			count = min(count, tclas_param_count(&desc->tclas[i]));
++	dma_sync_single_for_cpu(rtwdev->dev, dma, RTK_PCI_RX_BUF_SIZE,
++				DMA_FROM_DEVICE);
 +
-+		return count == U16_MAX ? 0 : count;
-+	}
-+
-+	count = 0;
-+	for (i = 0; i < desc->n_tclas; i++)
-+		count += tclas_param_count(&desc->tclas[i]);
-+
-+	return count;
-+}
-+
-+/**
-+ * cfg80211_scs_evaluate - pick the SCS descriptor that matches a flow
-+ *
-+ * @desc: the active descriptors of one peer
-+ * @n_desc: number of entries in @desc
-+ * @info: the frame or flow to classify
-+ * @verdict: receives the result
-+ *
-+ * When several descriptors match, the one with the most classifier parameters
-+ * wins. An equal count keeps the first. A descriptor with a client only
-+ * matches an MSDU addressed to that client.
-+ */
-+void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
-+			   const struct cfg80211_flow_info *info,
-+			   struct cfg80211_scs_verdict *verdict)
-+{
-+	unsigned int i, best_idx = 0;
-+	int best = -1;
-+
-+	memset(verdict, 0, sizeof(*verdict));
-+
-+	for (i = 0; i < n_desc; i++) {
-+		u16 count = scs_desc_param_count(desc[i]);
-+
-+		if (count <= best ||
-+		    scs_desc_match(desc[i], info) != SCS_MATCH_YES)
-+			continue;
-+
-+		best = count;
-+		best_idx = i;
-+		verdict->match = true;
-+		verdict->scsid = desc[i]->id;
-+		verdict->up = desc[i]->up;
-+	}
-+
-+	/* Only a descriptor that could beat the match leaves it undecided */
-+	for (i = 0; i < n_desc; i++) {
-+		int count = scs_desc_param_count(desc[i]);
-+
-+		if (count < best || (count == best && i >= best_idx))
-+			continue;
-+
-+		if (scs_desc_match(desc[i], info) == SCS_MATCH_UNDECIDED) {
-+			verdict->undecided = true;
-+			break;
++	while (rtw_pci_rx_stale(rtwdev, skb)) {
++		if (!ktime_before(ktime_get(), deadline)) {
++			rtw_warn(rtwdev, "rx buffer still poisoned after %d ms\n",
++				 RTW_PCI_RX_POISON_TIMEOUT);
++			return;
 +		}
++		udelay(1);
++		dma_sync_single_for_cpu(rtwdev->dev, dma, RTK_PCI_RX_BUF_SIZE,
++					DMA_FROM_DEVICE);
 +	}
 +}
-+EXPORT_SYMBOL(cfg80211_scs_evaluate);
++
+ static int rtw_pci_reset_rx_desc(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 				 struct rtw_pci_rx_ring *rx_ring,
+ 				 u32 idx, u32 desc_sz)
+@@ -219,7 +311,8 @@ static int rtw_pci_reset_rx_desc(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 	if (!skb)
+ 		return -EINVAL;
+ 
+-	dma = dma_map_single(&pdev->dev, skb->data, buf_sz, DMA_FROM_DEVICE);
++	rtw_pci_rx_poison(skb);
++	dma = dma_map_single(&pdev->dev, skb->data, buf_sz, DMA_BIDIRECTIONAL);
+ 	if (dma_mapping_error(&pdev->dev, dma))
+ 		return -EBUSY;
+ 
+@@ -241,7 +334,8 @@ static void rtw_pci_sync_rx_desc_device(struct rtw_dev *rtwdev, dma_addr_t dma,
+ 	struct rtw_pci_rx_buffer_desc *buf_desc;
+ 	int buf_sz = RTK_PCI_RX_BUF_SIZE;
+ 
+-	dma_sync_single_for_device(dev, dma, buf_sz, DMA_FROM_DEVICE);
++	rtw_pci_rx_poison(rx_ring->buf[idx]);
++	dma_sync_single_for_device(dev, dma, buf_sz, DMA_BIDIRECTIONAL);
+ 
+ 	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
+ 						     idx * desc_sz);
+@@ -1065,8 +1159,7 @@ static u32 rtw_pci_rx_napi(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
+ 		rtw_pci_dma_check(rtwdev, ring, cur_rp);
+ 		skb = ring->buf[cur_rp];
+ 		dma = *((dma_addr_t *)skb->cb);
+-		dma_sync_single_for_cpu(rtwdev->dev, dma, RTK_PCI_RX_BUF_SIZE,
+-					DMA_FROM_DEVICE);
++		rtw_pci_rx_sync_and_wait_fresh(rtwdev, skb, dma);
+ 		rx_desc = skb->data;
+ 		ret = rtw_rx_query_rx_desc(rtwdev, rx_desc,
+ 					   &pkt_stat, &rx_status);
 -- 
-git-series 0.9.1
+2.25.1
+
+
+------=_Part_1462835_954143849.1793723149798--
+
+
