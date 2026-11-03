@@ -1,82 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.20
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793735390;
-	b=eG1aVgYUd64Oz7fmuYn0zfDfX49Py+DGI1J4ioEQKcOjD17DyoUAcME+edC0zyBSjQH+
-	 zFKt3EV4bu5gXult4i9ZM2tn/iF2J2hq1suyWo7ypIFp0CJTpey07MbDh8HlOaKoEgV5T
-	 BLYokbOX48HCO+HSf9bbGt8B9TsW8Zzawn4sLRfAu2lsSCbuQVfidcVnIi55BBvzSuxL6
-	 wG//3v/uqMDml0cdHibAfGANclqUkwWtLQrx2u/OoRClHxsxK31mCnIrNS2TZU/gN6BAA
-	 g4cMHl6X9Q4jh3BxTUoQx8g0Zk/qbYs6nDTk0h3bEjw0aw1GFBu82w5TNtCre+VUk2g==
+	t=1793736977;
+	b=oo2pGAb3mvflSEzCO46M/OyA8E1e+Us/gdmjkVHQNp3XgX2yzxI9k8iFJklGPHoWc3ZE
+	 PL1vTvo/V6k3zYrXwrd7YeE8qfIOL5R9ShZls8TnUo2g6W1uFn84/xlEOOKq7xdWBRVfc
+	 fZbtIUG/pNPSnImPaT5ldcQY/78ILzJfce3LH5pbubJ/iu/J1oz/2baW0bi9jiihPebzw
+	 a/7/vdYPObelgHDf1toOCd4w/MYf9CtPDAg/ZR9QszASS1AStMu13hWKOjPQ0QWDNs3p/
+	 MWk3LKlGNsUK11dWhZ1ZB3+dPywcy9uONWYluOa5m3wNn1CjSiOXwJF7gPEIuEiyLQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793735390;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
-	bh=9P+E53yKlDmqXM3P0gvNQJjIJEomFqG3poCHUiZ6Bi0=;
-	b=rToaIOicllhNgPHlPf489039pTpD4Kxm+j0rBonOq5c8GJa/WVzZuaPNSa4musjxqJBV
-	 u3wsq8wxKUUNuJI4fbNvPyRvums2xnRGyAV9+UPp9+G+MBAAepgDrQOSc3Km20Yscf5nv
-	 GpEKXolQX9Ra46E5N74jAPM4GENvIgDJOjN8DSdYg/qI1G7lYUPDNkn8eG9wei2vkfD6p
-	 OZ96/5fr41M0XGaJNtr4IKpYHN0Jvgn87cKc9U82Mt9kyJgxrJtv4X2BQngEULPpG2SKK
-	 26IRuuDzuxanyf6z8cWL1ZD/F7Idu1DJtuhuEGJFWoC/5hkJF+pNTi41qvGNvU/XGRA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793736977;
+	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
+	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=BmhFJ0DqfEnwsR3z69z0SzPhT9jjNHDPlC+wagNCoH0=;
+	b=SlWFftCqhlGdtDnjPkaSQBWe3KM87ePrhqFM7hv3gbdxM9zKQh8SclVcCmnqtwxVrEjm
+	 MQ7g4+R2HKiyCWYD8gp6ss8JAa6olG0YLhbOy2ehb+kJY/SqIqlbyanQQDFQsf5dr5YSj
+	 SGPb68JdCV8892t1CgC4jJ4KnJ0S4aFvE+8ZWqNA35uJLb6T5dNCe24gDziijAp74N+zg
+	 X7zDMNsEWlGup8IQ6jfyCCsB7jTPBeWdUDvHU93Crj7e5myfk55hnB554HVdVZ0p8uznf
+	 ZeKVqD84jvexalsSsxO0UK3Cy/HvmYQIW1yztD+PASbgP0Qy8nDQcT7V09vkCdqP3Sg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=X59HlbTz;
-	arc=none smtp.remote-ip=198.175.65.21
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=jiri.one;
+	spf=pass smtp.mailfrom=jiri.one;
+	dkim=pass header.d=jiri.one header.i=@jiri.one header.a=rsa-sha256 header.s=protonmail header.b=Kv6B8wwE;
+	arc=none smtp.remote-ip=109.224.244.20
+Received: from mail-24420.protonmail.ch (mail-24420.protonmail.ch [109.224.244.20])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE146606A335;
-	Tue,  3 Nov 2026 19:49:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE146606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3508606A324
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 20:16:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3508606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jiri.one
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jiri.one
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=X59HlbTz
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793735389; x=1825271389;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=rCERoXWCfBu35r5RRg7xmnqKjETJErwBKzmm+LfUQgQ=;
-  b=X59HlbTzuf7T9sTkMexVJVALXyzRA4JBN0tC3F2BDPk8T5yLTFsMN9ZN
-   IYYeM1/AfY0/Y7lMkTwaiiyRStTxECllESq7IDf9tPPdc9PwcT5nUxXan
-   hB4cckVCnW96mFB0LUwFT2mDwFTAgCkLAD92WmxEblDFPwZ3Etmhc9LnG
-   2VAgATcLiAcOpjoFgS2+MJn1HIs46V3OarcPgeI3ZSVzvvok+tmfgfbS9
-   x0OJJo4oEMZ1EvNqvfM1GFamGhdpVBrRkRIS/N6igg2QxfyBwVr0uXqY8
-   sKsPtR7V/4VILvU7QvIPTA6jy9UDkup26NkvMo2rAof8FGOZcqdMb/XW0
-   g==;
-X-CSE-ConnectionGUID: /v57nx9NSlO9oKLsrgGeBA==
-X-CSE-MsgGUID: Ue0TikruR0ifo1Xouh04jw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11955"; a="2568222"
-X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
-   d="scan'208";a="2568222"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 11:49:49 -0800
-X-CSE-ConnectionGUID: +nzjp0bdSYCWNsVVsQUiqQ==
-X-CSE-MsgGUID: M2Twv/xtSl6go+XODMWfkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
-   d="scan'208";a="6364910"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 03 Nov 2026 11:49:47 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xOKVt-00000000jFH-18IU;
-	Tue, 03 Nov 2026 19:49:45 +0000
-Date: Wed, 4 Nov 2026 03:48:54 +0800
-From: kernel test robot <lkp@intel.com>
-To: Gopikrishna Garmidi <gopikrishna.garmidi@oss.qualcomm.com>,
-	jjohnson@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
-	sibi.sankar@oss.qualcomm.com,
-	Gopikrishna Garmidi <gopikrishna.garmidi@oss.qualcomm.com>
-Subject: Re: [PATCH] wifi: ath12k: skip hardware rfkill setup on Surface
- Laptop 8th Edition
-Message-ID: <202611040318.qlss0Yol-lkp@intel.com>
-References: <20261103094024.1764151-1-gopikrishna.garmidi@oss.qualcomm.com>
+	dkim=pass (2048-bit key, unprotected) header.d=jiri.one header.i=@jiri.one header.a=rsa-sha256 header.s=protonmail header.b=Kv6B8wwE
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jiri.one;
+	s=protonmail; t=1793736972; x=1793996172;
+	bh=BmhFJ0DqfEnwsR3z69z0SzPhT9jjNHDPlC+wagNCoH0=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=Kv6B8wwEkawRzNLcbQ9TytyFP9hWA5vvmW8VSytOo366gV98OwQ0+DzGRuoIqCQBx
+	 SeS26lrwwTq2bQ1Llptx6hqurPOpubMdHOHpgavMiBGx/ZTEmFZJnN4MXscmuL6lWn
+	 HjWM828g+X3D8HL+nV7Ev2BG90Wzyjq3FAsoCGuWQDmTso2AcyXtdlLKhoBcjRPB5f
+	 Im6s/BIvdFZRCIf2x+pK09MvO58s/8CmMUYyy7CLeGoyHLpiuF1UX5irAOsrLFwGti
+	 /IainxIXrXghwQ3+9dHL8ihzeuu3+Tiui6W7xiG711b0+/rnQoYT2EcE/BZ992pfGM
+	 YykHp+MCc4KXw==
+Date: Tue, 03 Nov 2026 20:16:05 +0000
+To: Ragul Balaji <ragulbaby@gmail.com>
+From: =?utf-8?B?SmnFmcOtIE7Em21lYw==?= <nemec@jiri.one>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH wireless-next 12/17] wifi: bcm4323x: add the USB transport and firmware setup
+Message-ID: <179373696123.186829.16487382332905756046@jiri.one>
+Feedback-ID: 127903936:user:proton
+X-Pm-Message-ID: d8e1848697dbb19457a787391c7179257fdfccb7
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -86,66 +61,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261103094024.1764151-1-gopikrishna.garmidi@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Gopikrishna,
+Hi Ragul,
 
-kernel test robot noticed the following build errors:
+I have a successful short test report for an LG AN-WF100 USB adapter,
+043e:3001 (BCM4323 family), using your 26 October RFC.
 
-[auto build test ERROR on ath/ath-next]
-[also build test ERROR on wireless-next/main linus/master next-20261030]
-[cannot apply to wireless/main v7.3]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The only device-specific change was adding this USB table entry:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Gopikrishna-Garmidi/wifi-ath12k-skip-hardware-rfkill-setup-on-Surface-Laptop-8th-Edition/20261103-014024
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git ath-next
-patch link:    https://lore.kernel.org/r/20261103094024.1764151-1-gopikrishna.garmidi%40oss.qualcomm.com
-patch subject: [PATCH] wifi: ath12k: skip hardware rfkill setup on Surface Laptop 8th Edition
-config: arm64-defconfig (https://download.01.org/0day-ci/archive/20261104/202611040318.qlss0Yol-lkp@intel.com/config)
-compiler: aarch64-linux-gcc (GCC) 16.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261104/202611040318.qlss0Yol-lkp@intel.com/reproduce)
+    { USB_DEVICE(0x043e, 0x3001),
+      .driver_info =3D (kernel_ulong_t)&bcm4323_chip },
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611040318.qlss0Yol-lkp@intel.com/
+The generic dual-band profile worked without LG-specific channel or
+WPS overrides. DL_GETVER returned boot ROM chip ID 0x4322, revision 1.
 
-All errors (new ones prefixed by >>):
+Test environment: x86_64 Manjaro, kernel 7.3.0-rc6-1-MANJARO,
+NetworkManager/wpa_supplicant, with Wi-Fi power saving disabled.
+Firmware matched the SHA256 specified in your RFC:
+cc286a529396434a38e59382dcd46fa92a57f1cd1a38eea20d2b24dec028cf29
 
->> drivers/net/wireless/ath/ath12k/core.c:91:9: error: expected '}' before '{' token
-      91 |         { /* Sentinel */ }
-         |         ^
-   drivers/net/wireless/ath/ath12k/core.c:86:39: note: to match this '{'
-      86 | } ath12k_core_broken_rfkill_table[] = {
-         |                                       ^
+Results:
+- Network scanning worked in both 2.4 and 5 GHz bands.
+- Association on 5 GHz channel 36, HT40, WPA3-SAE with required PMF
+  succeeded, followed by DHCP.
+- 100/100 pings to the access point; average RTT 2.810 ms.
+- HTTPS worked; a single 10 MiB download took about 1.135 seconds
+  (roughly 74 Mbit/s, just a short internet transfer).
+- Module unload/reload and reassociation succeeded, followed by
+  another 10/10 pings and successful HTTPS.
 
+The traffic tests explicitly used the Wi-Fi interface, while Ethernet
+remained connected.
 
-vim +91 drivers/net/wireless/ath/ath12k/core.c
+For this test I built the RFC driver as a standalone module, linking
+its rate helpers locally and using a private copy of the Linux BSSID
+helper, so the host mac80211/brcmutil modules were unchanged.
 
-defae535dd63b1 Aaradhana Sahu      2025-07-08  76  
-5949d1910f13c2 François Roux       2026-10-06  77  /*
-5949d1910f13c2 François Roux       2026-10-06  78   * On these machines the OS cannot control the WCN7850 hardware rfkill
-5949d1910f13c2 François Roux       2026-10-06  79   * input, which reads as "radio off", so hardware rfkill must stay
-5949d1910f13c2 François Roux       2026-10-06  80   * disabled. Ideally this would come from the connector node of the board
-5949d1910f13c2 François Roux       2026-10-06  81   * DT, but that binding does not exist yet.
-5949d1910f13c2 François Roux       2026-10-06  82   */
-5949d1910f13c2 François Roux       2026-10-06  83  static const struct ath12k_core_broken_rfkill_table {
-5949d1910f13c2 François Roux       2026-10-06  84  	enum ath12k_hw_rev hw_rev;
-5949d1910f13c2 François Roux       2026-10-06  85  	const char *compatible;
-5949d1910f13c2 François Roux       2026-10-06  86  } ath12k_core_broken_rfkill_table[] = {
-5949d1910f13c2 François Roux       2026-10-06  87  	{ ATH12K_HW_WCN7850_HW20, "microsoft,denali" },
-5949d1910f13c2 François Roux       2026-10-06  88  	{ ATH12K_HW_WCN7850_HW20, "microsoft,romulus13" },
-5949d1910f13c2 François Roux       2026-10-06  89  	{ ATH12K_HW_WCN7850_HW20, "microsoft,romulus15" },
-2d169d089ae8e1 Gopikrishna Garmidi 2026-11-03  90  	{ ATH12K_HW_WCN7850_HW20, "microsoft,surface-laptop-8-13p8" }
-5949d1910f13c2 François Roux       2026-10-06 @91  	{ /* Sentinel */ }
-5949d1910f13c2 François Roux       2026-10-06  92  };
-5949d1910f13c2 François Roux       2026-10-06  93  
+2.4 GHz association, suspend/resume, cold power-cycle recovery,
+AP restart recovery and long-term stability remain untested.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Would you consider adding the LG USB ID with this profile?
+Thanks for your work on this driver.
+
+Best regards,
+Ji=C5=99=C3=AD
+
