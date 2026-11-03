@@ -1,97 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.47
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793689953;
-	b=4OFwy5aedgCNkxj1Ikd6ID5u5PX1mjRe92GKdVLnDUnqP+f7Lz5LZi5DkLd4R6fB6zSA
-	 uJMguZ8A6kvYMKoChUXhwl3f68li8BJRXELEwJzr//3H2NtMZsqOzNAbUN7Nmf/4usK2G
-	 tDD/t45gcaBbqvMiQo1ygaKhy8VEGjpAp8fNxoybDmIX77zehdngI9Q02PMbVbtp78d6X
-	 t7X5y9ciOcIm6pEYBWMTVNMf7+df8J2K6gUx6Yvan0K58YW7n+RRFWoCJa1XepK6ZQOVA
-	 P9CMjVSQCy7HGfnSh9Ky7p6tZkp1HvNowd5LgRS5C3+wKmkbJLsjzZKKc1c4NYOP9ug==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793689953;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=OfIBFKcwgYoWAWNIWo9NR6YEedzia1O6UyxuCj2s0bE=;
-	b=p2/O0RFy3w6T306CRsxv+n5pyxZfi/fCbSuxSriyULjMQG/uzbCfnh8vBNgz+F7jwXXG
-	 6rMZ5fdrJ64ckBrZsYMQOxOZ3kqMydHHluewMq+rjC0nt9JKizusnCFH1rYxCn//rloDT
-	 rSz2186dDXZRD9uwjaKPiAZRFvaQAKjzwVToWP07K4gr7smy3NyTg2xD8cwmxPe305fzH
-	 3PQbgu3QOta9Zwvk3IRKahoTTFoR/XLZV2+E6zi15UApGPkLlu9sNGkzJioX7CpGyK+3C
-	 DmE9+bR/mCvU7PCyti7HAWgD3N8pJS5t9cjcdL/507O7ts3ZrRrM7K2yivA2sag3mrQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=remarkable.no;
-	spf=pass smtp.mailfrom=remarkable.no;
-	dkim=pass header.d=remarkable.no header.i=@remarkable.no header.a=rsa-sha256 header.s=google header.b=kRsKjm79;
-	arc=none smtp.remote-ip=209.85.208.47
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.84.20
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793690439;
+	b=jyVHJrcaSoVCrEHlZP7nZwR9WChlqgQxKm9cxjbZSwTQjzawfquigC4PXrWblKiCq2s7
+	 G/LMBZ6kPpaWnM7Qv5ZXhe4bk+QVaj5l9qrDXJwtta0/JGb/r/oisQlyOxB7sfKXUrf5e
+	 UlQVeprqAVtjS0mT7uOD6CdACSMYYdLabJobrPCdLyVJD9+9x+h4skdZ4PXY1vfpO/YKs
+	 lC1knnb8JY6jxgOYY07EXW03YW1Z7gXMR/9agONzJwQ1LxsEZRrBu4WArtf5cbEUJwGx3
+	 LgQzwzYRgLtpvWdCDsus5VToAMEVNrdhSJuFS3UbALOGUozgLQnpL4aTYDvvWRiEq9Q==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793690439;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
+	 Date:Message-Id:X-Mailer:Content-Transfer-Encoding:Content-Type:
+	 X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=9aCmDz5zR+xeSEtPtENlxQN+6xFoXadhj5hilbu+fNI=;
+	b=5VRFcDVm7Og1gv7y+T9y1MOCx1uJHHOX+rjPCzCiK/k2vDf8tsHTPEKgIyFKh9cuW04L
+	 rdKqNssFhTXw+QZJzydyN55KTaH9o8MaHZaw5YACJWsYnmADPI1wlhV0f0JPm7sdNYUNn
+	 s3J2XKp1ZPcfVMWNsx/PpvQSIQ4ktFk9tT05ik+6Y0q7lOMLNPbVj/8YkNDDSGdLnZTXW
+	 7q/S4I4sO4BJlcGD/SRZFXSlBoLrGAcrdkzGor9KBw5QPNVmufB490/IAbdYc2S92H6Tp
+	 ZiF8qEjJwIJYiTm7xeauq7fYTrhUmtv98oFLtco2dwJb1hNzk29N0AkfHgtO8tz9B0g==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=AWknFg4q;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.84.20
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010020.outbound.protection.outlook.com [52.101.84.20])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73FF1606A333
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 07:12:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73FF1606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=remarkable.no
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=remarkable.no
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B08C3606A329
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2026 07:20:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B08C3606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=remarkable.no header.i=@remarkable.no header.a=rsa-sha256 header.s=google header.b=kRsKjm79
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6b486e1d02eso4908930a12.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2026 23:12:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=remarkable.no; s=google; t=1793689952; x=1794294752; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=OfIBFKcwgYoWAWNIWo9NR6YEedzia1O6UyxuCj2s0bE=;
-        b=kRsKjm79ytPxadXo5CH3NIvr8cel/rIXkiblgrh3W/MZYOT0nOJxeRA2rBFJcfPAUB
-         EwL4cCDPmYmcDbB+1hRXYIpAMrha4CjgiMcp26ysG/USdwJ4ep3BYpDaxlyIuvpudhc5
-         A5upDAC6uoip5dEwx4HJiGuacaiKaHSVO/C+mxcOt+n3R7m4WsDv9p/HVu2riXl9UxKm
-         Ds+N6SvIzJQr1AZxAYN7L61BaQXuA8HIcCXYnR0OArgRyUVM0LWhD3+AK6e9h4rIvHrE
-         BbviA26cVfPn6Zud7ZNqTTN1+CdRv/hQi7tV3k2/Qk58shS1ieS9tiRO+Rh8nDhGEuK+
-         AmnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793689952; x=1794294752;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=OfIBFKcwgYoWAWNIWo9NR6YEedzia1O6UyxuCj2s0bE=;
-        b=e/FNASOq0NqWD/Dpe4FflA4viXViuyIMO4vgUOeB4x10mVyntZK/G9hyj28asiooPD
-         f2GxI+Owy0je2psTEslg3tGUdBESGpLql3rqDlLeVKUtJpaKhMHuCXgc4G1WosRLU5dX
-         fpRZM4NQzVhuOamwoVbO53Lda59vDlRn/kbuCrkIytJFWG8aV/gQ7Cqc1l9vg2/+x6Or
-         ujQQtrP+13JiCTscPWsSdfMZsSIffm7b21bUF9jaNQ6PO3gvb+R1Wk8zZ9TQHdfkzVeI
-         B88KfLiHdRE9xqqVG8jig14+YjS6B3G8AIfAR9bnh2UENPwl0bFNrfDhomchczNmQGEv
-         f2pQ==
-X-Forwarded-Encrypted: i=1; AKwUvByGZR+W/MPiVz0I3v/jBe6qsuIL2wOEyRpoP5zINVNPvV8rmOacDbDc9AV3CStHvAf21WoA5gtNunFy82ibFQ==@vger.kernel.org
-X-Gm-Message-State: APuU4Z9Ak7WfKInzQHQ01DAqEziovx+waFxQFuXKGwQH5Z5QjwXkYLoS
-	+7zgrHtMKyx0syaxhpEl2xohx4az6KcWo+ty6xVNzkVKlRj6epmax8huLCiq0Oys4YJcOdywfi4
-	QdJMGWdU=
-X-Gm-Gg: AYBFou2QnZFAYxGUFTorZP9pKHtoFgsCBf00d8xMo3203m3J153uesWZuZDpgLgeejY
-	gbGPnubeUnhzlVwRal2r/V/uhx2UQ7a87y+HwlxpfUgprMh3Y2nwcMOKyz7GjZkSpItwe4NQlu9
-	PuBqw1fS9RiCM8P/YFmMd1gxXJek5OrkgZCQB52JIMDSjHSfysog4rTRZ5wmhBUIYJ3VdMOE9qJ
-	Ujag6rZ2BJR3dJRsQJTnuZki1c5k6GKNneQxtwiZTerSNP5CY1nTnEhRE9L3n0YFPdd4BXwjkHv
-	j1s4F2fSyTMFMuogQ1ZsrXbyCCh+AWbpIWoma2ifabXIJLJLO7pQVDqv1cBtJ29i9PqWT4JbsV0
-	JZvYMuB8HwSLMTezUzOwl/7vaFyJakYDNZfXSCNb3oM2uEvQjbEH06zVTasBoONMJgGYUSndBxP
-	blicBzjLusj9lgb0SzwEn78kJZiHitVrGcC19SqBHivc3yqsFN4dnL7dp8qbWziJ4C7yAJsBA0T
-	AfqOl+J+BVvcMTWg6NBlPOeDMuxGk0l2zJwfjxJspNDGJSJpt4Fdri++Wzd8ZQUx57lnDyM7fA+
-	7dZKsPEXH9BULjgBe2fl0z+Du9deMmgO36bBBxwVuPG0
-X-Received: by 2002:a05:6402:234c:b0:6ac:c618:8e76 with SMTP id 4fb4d7f45d1cf-6b4d4d6dc82mr8676361a12.16.1793689951912;
-        Mon, 02 Nov 2026 23:12:31 -0800 (PST)
-Received: from vkn-desktop.lan ([213.52.63.204])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b4ec9ee537sm3895470a12.10.2026.11.02.23.12.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 23:12:31 -0800 (PST)
-From: Viktor Korsnes <viktor.korsnes@remarkable.no>
-To: Jeff Chen <jeff.chen_1@nxp.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Viktor Korsnes <viktor.korsnes@remarkable.no>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless v2 2/2] wifi: nxpwifi: add missing header to HOST_CMD_CFG_DATA
-Date: Tue,  3 Nov 2026 08:12:00 +0100
-Message-ID: <20261103071203.1288146-2-viktor.korsnes@remarkable.no>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261103071203.1288146-1-viktor.korsnes@remarkable.no>
-References: <20261103071203.1288146-1-viktor.korsnes@remarkable.no>
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=AWknFg4q
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=xZofWXFgO0X3+BhT6PdLA+YQ3s43NsVPnBkKnTZeu9F1ojhLWRpucprt644Zj26mJ2OWp9AycxqPK284RthtTRMPF/0jaXTdG5nmM+7grRf1zNU/z88lKR5Cx305K+do20EN6syhEn4TyZQ/Qbwbs29i8/+lgQiTVPoRR2x6SNyHx4W5LOaCMq3cp3jZhQnLP9QsAwYoQdZZOUKpnNCRPTetfmbQQpPJVVnTTcLaz9OQpUYEe4MvOVajFOpWQ3v8giwsaFBVd+aMMBdVLI7pa73YysoR10YQCQfiAjAwQ5yr1q4B5IIDx9E3Qck2DMN0a9hNZMvc+Z1nJQ7yZV+yxQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9aCmDz5zR+xeSEtPtENlxQN+6xFoXadhj5hilbu+fNI=;
+ b=e81lW6jbe1CG5SC1My7RUt+Rp/hpUzEmq7Eeb0guo5+tO5WaJs236+ankhfA401+Zk09VLI0phTbIaach/rQdIk707ivYXfZ1WO68oBtO/cJJfcKRmb9hp3IEQPoIc/2EtIo/Wy+qnWcJBVd4Z+6QaZoqiMSXNDtqu0PpGJhWsM8/JvsU6isg/h0aHIAOn3AvvXTB9RWYP5Du0u8naSX5SCHCOag5rdT5HVlr56Xs1W5XBPopLZ6PcFt3NMrcBe8wjptcJX0tPKtWSxazQvqctAxHxPjraIS4+H7d6XPqE0E9N5JfMegmtlcMuUsouKbyWoMxzHp2d8IL27wjwmtxw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9aCmDz5zR+xeSEtPtENlxQN+6xFoXadhj5hilbu+fNI=;
+ b=AWknFg4qOm21K/u6ks6f19xOppz9m9hhSxe714d4jYfs6/YJoEQkKYji9TfoxXw4PLuPvJZsOyP2a3BvWyWMY9UruwEFfXXt3mIhNJL581t3O7gPjy/fvi8e/MOWMMycQXYonNHmXZrjnZwdNsW/wnsUoTKqsmf6ObtRS5IUAeAuWBUn/V36TpEoqpunKBSMBKxpmXsnXbQtOJ298o38IVqqwe6Ef07F35d0iKBCRekdWWeza8DNvCEmPoMqsM/U3fKwJqUCZlmLq2ynID2Ue3O49+v2PsLJcuNuj0KxuckkxRK+Fi5M7dabM+pDlnM+nWWkj2jUER1WrKLZop41CQ==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
+ by AM5PR04MB197544.eurprd04.prod.outlook.com (2603:10a6:20b:7d4::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.8; Tue, 3 Nov 2026
+ 07:20:36 +0000
+Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
+ ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
+ ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0569.011; Tue, 3 Nov 2026
+ 07:20:36 +0000
+From: jeff.chen_1@oss.nxp.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: pull-request: nxpwifi-fixes-20261103
+Date: Tue,  3 Nov 2026 15:20:22 +0800
+Message-Id: <20261103072022.3955633-1-jeff.chen_1@oss.nxp.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: AM9P193CA0022.EURP193.PROD.OUTLOOK.COM
+ (2603:10a6:20b:21e::27) To VE1PR04MB7280.eurprd04.prod.outlook.com
+ (2603:10a6:800:1af::22)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -101,102 +93,97 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|AM5PR04MB197544:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6033dde2-5ed4-4a5a-236f-08df397af496
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|23010399003|376014|1800799024|366016|10067099003|18002099003|56012099006|11063799006|261022105027099003|261021123027099003|261021121427099003|261028144727099003|261102123227099003|261026140227099003|261009223027099003;
+X-Microsoft-Antispam-Message-Info:
+	NDqP5s2mwKrfuioir10kA1nlodfaXKND/cIXj4qYgfTe8lqRai7clezBwQRXC96JlY8ujkhWdpORYBKneFSGVbUTUsl+LvhGJiOOgVl0E1PDjBLgGHKnDKViDmBz3GKUpDadTmYqbe3dlnmu4JxmKWDoiRpVQBjT/iEb2bplvcXH4kJgisa15rhKFyy+vY6VFBkZGSSuVb0wfeaA+6vrZcCe+e0/+uNNNjygPSMNo9jjLl9G5XSQzNGRhq6UO9xeKai2REPFhpl7U9Xdsr4gNs5/gLBcoe3CgB7qsOTwW5Uxg9dLsb2n12XOTP9CKt47pi4W3aMdoVtVWQ2YzkL8Ygudz4mCCul7T1h/SQzl1B14w+buMlAy2b0MJV+gH45PRt2BpIP/LybvtC7thBN8MvjCQbXJpyBjJ/sajwpYQ24CjuM6jeO5U/nCMi9kkOH5pdQo4RqWVkjyNl6baAN5xlT5NirYklDc+5smE5ajd1TLE3IZmIplplFuMS5h33Z4BF4kaNIeuO3Z03Mob8l5lWg/LFmruhpFaR/lgXd/SGIubsXjG8ZlXGk8RcZn3e7zH1J0Cqun8TklGemLk1wEPOJMWLNppDoapq7bgbMEAE4YuYemDJr7lFgW4DspL4Mejx6G0zxnfRyhgjbWp0q9C9cjnWZaiTfxSeZfgQ3d3tg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(376014)(1800799024)(366016)(10067099003)(18002099003)(56012099006)(11063799006)(261022105027099003)(261021123027099003)(261021121427099003)(261028144727099003)(261102123227099003)(261026140227099003)(261009223027099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?gUHseSLRHelfjrdJjtKNnNl7N72AcqP3YCcSY8ca8thzdopz0Y1o+cA5mJqw?=
+ =?us-ascii?Q?3+iy3tRMYr1BREIfucTCh4eTz2NGmg0pZ2NZWkmEUJcXpJIVOsHVvKrObshr?=
+ =?us-ascii?Q?3u12AMKPao+S/9vkSI0GZa+XDmhdxmtM+ApMmU9PQ084LGAD/XdIjTVBSAmP?=
+ =?us-ascii?Q?baHoGL66S8xSDc3uPRZXfR6r0Gaig8suLGKKclR1WKhr2mNnlUXaNZnZfES8?=
+ =?us-ascii?Q?+nZOzujJ/+CCMOpLvrAc1HsgD/Lr3mmEMPL4WcwBk2ZFPyftIJ9302SnJ2vr?=
+ =?us-ascii?Q?bMCTqJFnVgKpbYA2b5m5wcWAE9nLaBLFNukjxbATa9hVNCWl8PTxbk+mroF7?=
+ =?us-ascii?Q?Cy9deiC4pHvOd9PRBiSzRnsloEp2lL4hwBoTPy4gG1ZyszbIDCmj8vmZaGpx?=
+ =?us-ascii?Q?EEB7IvH1B67AXS/BTyIGHk9bwJbz1MGCfJ4lsoXAOqa1BAirijnBSXZ3jvN+?=
+ =?us-ascii?Q?YI7y4Oc4K/7zEtMQGP+4rX/gUy4KqM8R1tfS07QUmrCl51w5uxNms0WFxfU9?=
+ =?us-ascii?Q?XcRdVCgTPDgR2gGupC+gTOO7lD+rAauawVbgs1Yd+eb62FudMSXcd6lB+CAa?=
+ =?us-ascii?Q?InyDw4Ky5XZIQgYOtV8IkNuPl7jbdLkWqM+CsaLGNEaxQGmXJ9xdKx4Njkpa?=
+ =?us-ascii?Q?Emlv1dsSTDF4kENaWpuMfuR2hE8zoJTwnZpYT6AmzmPGB52vcn2tBwkwPr8p?=
+ =?us-ascii?Q?sc+0Zm6J9791T4OJTvoPGsVo1vNavYMtvKsdFe0a6CEVgktDbNJu0Lm1z7By?=
+ =?us-ascii?Q?NjlxsR8OuBqSR1m+adok5H14Yiys1C3jrrP02UBzdqSn2wKCofd7lWks537s?=
+ =?us-ascii?Q?lEnFGgT4TLSa3O3n+rEfVjLDNFYtTkXgChEc70S8Y7uw1wuzw71y/Ye0WqDx?=
+ =?us-ascii?Q?FqWAC4cJGdxl9XW60YyJIa5LlWRCVydDRe0/7AO+YbAxwJeWAKfcCQzq6hG4?=
+ =?us-ascii?Q?CCn2Z5DrU0o+iqkM2MPux/2C17OYFkdy/YklSdMi77DKhVHKAmbJNipkzuVG?=
+ =?us-ascii?Q?XM4ba/Qjdjp1Yd9baK4W3/INn9to1zqL7pGMvEyF9EXEwOfKJtnFOXCQd4Nk?=
+ =?us-ascii?Q?ndiETGbPPPqMZ5JiVVAdlzyZb5G+M9QrWct5NcR0WhIpwPkcWd5NFciVD0eE?=
+ =?us-ascii?Q?VFqcukMkQJ//QnNcnQFhNcHNnqsnxrcnW+P8cNG5jDkZdRpkLHHwu5EkhjpD?=
+ =?us-ascii?Q?g4KIsjGeHKkNwk0vpGunhr86rJj01EErkU7p12Za7t28hcwABdZpwdMoDYwC?=
+ =?us-ascii?Q?Gbox4anJr/A53iwBfOEH/Cgrq9hv5xnMPiOPLRAbmo8j8yJzAGk0QFemTSFl?=
+ =?us-ascii?Q?uSVDtbYEn7MU/1ylBM2nWQrNkYa5nRBJM6MbpQG3xV/IwwQwf5aRMeLNICot?=
+ =?us-ascii?Q?Pjrt+LebNl/4fFtQeMA/Ivn1T1mXIxP2x/1RN9W0oBitqhROBnmsG4RN5NUo?=
+ =?us-ascii?Q?aM4fRxuSbBoUuAptERK5y/g7yF9cjFIlOmovkcepqxY8BdTM4OWJ4pnRLMKs?=
+ =?us-ascii?Q?gMZQvS1JCqqAyuKjKZP/9jptkQ4jwumkw6h239YonYJCIOgaV7Vu98PHIrVX?=
+ =?us-ascii?Q?8+4Nd7zmc7WeppU7Izre/fAgPFuw7FCipW2RTpYmb5U86QGLefGIWCZFRtNF?=
+ =?us-ascii?Q?Db7KKCZL20CSWAG//czpHFwvx8KvjeC2NxAPGf5MBOCWrV9SUKDY/d3bcjmU?=
+ =?us-ascii?Q?zAgBmZ6XgRmV7nh1Z76UUhwMzVkgNmFyOlatlG8OgXB+fBKNfatLLFEb+V2t?=
+ =?us-ascii?Q?KGA5PTc4aqqdaqwXkaoyOFaeXd77JdJb2xDh4GSWh7NuEuSvoB9p?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6033dde2-5ed4-4a5a-236f-08df397af496
+X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Nov 2026 07:20:36.3671
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yf3kahj5T0twhtWJeu6gUeN4Yt+sBGDRmoXUW9RzEScHvE2mEpwws3nda/rUvko3IGc84bPNHXF5RCTBBXwKyT0wTLWIsJh9w9K1lb4MLcMj9LH8wwsZr3dgpm5bfOBx
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR04MB197544
 
-nxpwifi_cmd_sta_cfg_data() writes the parsed calibration payload
-directly at S_DS_GEN without prepending the 6-byte
-host_cmd_ds_802_11_cfg_data header (action, type, data_len) expected by
-the firmware for HOST_CMD_CFG_DATA (0x008f), matching upstream mwifiex
-commit 9868c4ce9481 ("wifi: mwifiex: Fix RF calibration data download
-from file").
+Hi Johannes,
 
-Add struct host_cmd_ds_802_11_cfg_data to struct host_cmd_ds_command,
-populate the header before the calibration payload, and include its size
-in cmd->size.
+Please pull the following nxpwifi changes for Linux 7.4.
 
-Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
-Assisted-by: GitHub-Copilot:Gemini-4-Argon
-Signed-off-by: Viktor Korsnes <viktor.korsnes@remarkable.no>
----
-v2:
- - No changes
+Thanks,
+Jeff
 
-Tested on i.MX8MM with IW611 (SDIO, FW 18.99.8.p136.0) using a 458-byte
-calibration configuration file: verified via kprobes on
-nxpwifi_ret_sta_cfg_data() that HOST_CMD_CFG_DATA (0x8f) succeeds
-(result=0, action=1, type=0x2, data_len=458, size=472) and the firmware
-parses and endian-converts all 113 32-bit calibration words from the file.
 
- drivers/net/wireless/nxp/nxpwifi/fw.h      | 10 ++++++++++
- drivers/net/wireless/nxp/nxpwifi/sta_cmd.c | 12 ++++++++----
- 2 files changed, 18 insertions(+), 4 deletions(-)
+The following changes since commit c3e67bd82b9b9b1a5118f09a429ccefe2aab0741:
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/fw.h b/drivers/net/wireless/nxp/nxpwifi/fw.h
-index 124728a72442..d4fe29faedea 100644
---- a/drivers/net/wireless/nxp/nxpwifi/fw.h
-+++ b/drivers/net/wireless/nxp/nxpwifi/fw.h
-@@ -2375,6 +2375,15 @@ struct host_cmd_twt_cfg {
- 	u8 val[];
- } __packed;
- 
-+#define NXPWIFI_CFG_TYPE_CAL	0x2
-+
-+struct host_cmd_ds_802_11_cfg_data {
-+	__le16 action;
-+	__le16 type;
-+	__le16 data_len;
-+	u8 data[];
-+} __packed;
-+
- struct host_cmd_ds_command {
- 	__le16 command;
- 	__le16 size;
-@@ -2382,6 +2391,7 @@ struct host_cmd_ds_command {
- 	__le16 result;
- 	union {
- 		struct host_cmd_ds_get_hw_spec hw_spec;
-+		struct host_cmd_ds_802_11_cfg_data cfg_data;
- 		struct host_cmd_ds_mac_control mac_ctrl;
- 		struct host_cmd_ds_802_11_mac_address mac_addr;
- 		struct host_cmd_ds_mac_multicast_adr mc_addr;
-diff --git a/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c b/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
-index c2ab32fc8e12..2536bc34f0a8 100644
---- a/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
-@@ -1425,24 +1425,28 @@ nxpwifi_cmd_sta_cfg_data(struct nxpwifi_private *priv,
- 			 u16 cmd_action, u32 cmd_type)
- {
- 	struct nxpwifi_adapter *adapter = priv->adapter;
-+	struct host_cmd_ds_802_11_cfg_data *pcfg_data = &cmd->params.cfg_data;
- 	u32 len;
--	u8 *data = (u8 *)cmd + S_DS_GEN;
- 
- 	if (!adapter->cal_data || !adapter->cal_data->data ||
- 	    !adapter->cal_data->size)
- 		return -EINVAL;
- 
--	len = nxpwifi_parse_cal_cfg((const char *)adapter->cal_data->data,
--				    adapter->cal_data->size, data,
--				    NXPWIFI_SIZE_OF_CMD_BUFFER - S_DS_GEN);
-+	len = nxpwifi_parse_cal_cfg((const char *)adapter->cal_data->data,
-+				    adapter->cal_data->size, pcfg_data->data,
-+				    NXPWIFI_SIZE_OF_CMD_BUFFER - S_DS_GEN -
-+				    sizeof(*pcfg_data));
- 	if (!len)
- 		return -EINVAL;
- 
-+	pcfg_data->action = cpu_to_le16(cmd_action);
-+	pcfg_data->type = cpu_to_le16(NXPWIFI_CFG_TYPE_CAL);
-+	pcfg_data->data_len = cpu_to_le16(len);
- 	nxpwifi_dbg(adapter, INFO,
- 		    "download cfg_data from config file\n");
- 
- 	cmd->command = cpu_to_le16(HOST_CMD_CFG_DATA);
--	cmd->size = cpu_to_le16(S_DS_GEN + len);
-+	cmd->size = cpu_to_le16(S_DS_GEN + sizeof(*pcfg_data) + len);
- 
- 	return 0;
- }
--- 
-2.53.0
+  ipv6: reject wrapped temporary address preferred lifetimes (2026-11-02 22:31:32 +0100)
 
+are available in the Git repository at:
+
+  https://github.com/nxp-upstream/nxpwifi-next.git 
+
+for you to fetch changes up to e7c7c4ca5c41c38bcd6bb08ab57f6ce53f4ed0df:
+
+  wifi: nxpwifi: validate monitor RX extra-header length (2026-11-03 14:23:57 +0800)
+
+----------------------------------------------------------------
+Heyang Tan (1):
+      wifi: nxpwifi: validate monitor RX extra-header length
+
+Tristan Madani (1):
+      wifi: nxpwifi: validate scan response TLV sizes before indexed access
+
+Vishal Gupta (1):
+      wifi: nxpwifi: synchronize scan cancellation state
+
+Yehyeong Lee (3):
+      wifi: nxpwifi: guard the 11ax response handlers against a detached command buffer
+      wifi: nxpwifi: read the 11AX_CFG extension ID at the right offset
+      wifi: nxpwifi: bound the TLV lengths in the 11AX_CFG response
+
+ drivers/net/wireless/nxp/nxpwifi/11ax.c | 67 +++++++++++++++++++++++----------
+ drivers/net/wireless/nxp/nxpwifi/scan.c | 52 ++++++++++++++++---------
+ drivers/net/wireless/nxp/nxpwifi/util.c |  4 ++
+ 3 files changed, 86 insertions(+), 37 deletions(-)
