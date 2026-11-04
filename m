@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813348;
-	b=xDlNo9NlwkHUs5xD3E2gao9D4EEu73GNl05pR9VRkN0domGDJU4/5hSLQmQCrXehKVCc
-	 gGWGntUxDWR4S+TnPNwJQzMJ7KVb3xfF0LdHlpGa5LSvB3uIfxDsXR+Q+/MQS4ZlA4nID
-	 TLdMM30sp3Z4cV3/fC0hZjYd2ZtXPSvni5whwoH2htaZz8qrRn59Im2eEM5Ukc8bF0xq5
-	 Usyiyb77GDldn635vzw0aIlckKwNHCKqE5HC9i+btDnXlsA7QqFKqh+Rg9hp+s/fOC1CM
-	 vfAtIRDM8VYmYs8JVklXdEV0R2fb3s+8teW6LIVoFLemwkhd8ol5AwtrnwYULbsevpQ==
+	t=1793813389;
+	b=EJtTMwfN8Vb4bVZGiXgbUaQeSGmj9faIfIiNKPdMICfh7F7dfW8KCbaA1gM1/Sin4XNE
+	 rMOO0bmwLYg/p+nYcEGV7SEwsNOnnH4SDnI5W+dp+XJFFntSMd0f7Pn8QuNXLsLGC/5TU
+	 XTYGh+EW6niyL+GjBVAfSrLIsDT+UBrLfoedctYUAKDuqM1w3JDHNFsSMJggIZyFUXOkR
+	 baZIBqL20Jnyy3TmJsPU5LHme6D5gPMKVS1z4xUHM9jFwmxzkBlU/6tf7dFWEIR0bna7H
+	 l3xN2erEe+mydJvmnMBablPLb4yXow7jCTneKg+qbs+gNqvCAb+k8N/QZmxzvIcSbPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813348;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813389;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=iSk3nsArFOOtW91DExIIvIg+E3fTnIkI1uYFn4dT7G8=;
-	b=OQ4sTWYvwiQLbWb1YcLz+ALaKAJATya6T/UNiduYX1aF3LmAs1cF65W2hTKcP2hYbY76
-	 KRkAyXw9gYgF0VCOjdXO+QGGG4drDNkuIaFiqdwp/3Gzwf1SV5u6jNTAw2dA9f5uhocYf
-	 ODOtg8cPilXiNY3vKiTbyh78TmSWjmy9ruaecoNwe9Mc8+6P/AhQJCqMASawhumMBAu5E
-	 VbljCsrkmtXYaqKJBjrAEkqf5lg/hShrmfvyF5FZgyWB86/RAoxrCHVHTJEU+6fE+GZbU
-	 Zf35OgWseg1CUjda+rVHkTp6XAG2FfMx3br39QArMfMppHaej/jk56vz84zfGPwj5ow==
+	bh=jP/hayhlpAKZdjJKk3r9BHeVVOYyvJcLU3d1z3kH9u8=;
+	b=sMqlL/Jq1E0mTxGzloD0Of/AxkGQVQGLZKmtyCAAC+Q5M09fsOgWMiFV4HdlDIAJtcLo
+	 IV496OKKCqP70TAV9lvEB/NeDrBBPFvM+QiRiVaAyOkJt0Jh7c5zrQfmtPS8fZT3UaMEp
+	 gJfLhpc4bcLy8+dgQfV19G6ID8qH0PfBXNubAQ0QwWoH+VLZOf/NMzDuJeVWyyQTkw6wc
+	 N9HZ7W9PqQUQ8D7yuHNjV3uRllM9DTHwGdSsp/W9KFqaOnK/YSrdEpdI8OV+IZWyfwRAB
+	 4Gg1kx7LVg4nOkeYa1dBitcROECfCf/2JKWwFEc+rDrBpw/fY4OyD6yx9vgXsg53B0w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MEOj2YVa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k29wYoDm;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4E9606D814;
-	Wed,  4 Nov 2026 17:29:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90DCF606A331;
+	Wed,  4 Nov 2026 17:29:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MEOj2YVa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A14F1F00A17;
-	Wed,  4 Nov 2026 17:28:53 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k29wYoDm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F7C51F000C1;
+	Wed,  4 Nov 2026 17:29:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793813347;
-	bh=iSk3nsArFOOtW91DExIIvIg+E3fTnIkI1uYFn4dT7G8=;
+	s=k20260515; t=1793813389;
+	bh=jP/hayhlpAKZdjJKk3r9BHeVVOYyvJcLU3d1z3kH9u8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=MEOj2YVa2iIdpw5z2/NDh/nS5/9YiUTydJpsuXgkbKBwIG8vtJQvRf2LpeGPo4QZ5
-	 w29MCiVMYZK7VIp0BshBq/zfoff8EDzOUsrS5HBn5xxq3ltk0oB2hX5ygXPEZjrVf1
-	 854j45f/iRAVKq/djckCLygA7FB8p1Zjx7psO38vVVq4bUsY5bxXVg/eXgiknxxWqI
-	 hhIFdc2uOWPB7MwA+0cdYVBWRsQi/CpTqM6ZnNZzgzc1bKeu5HnQD/VzYrhxCaOFwx
-	 QQbgQRnwMpXNmlsB9GdCiLATFPIHwQAd48vJlnM6Cja1L8MMtttR8X5ndAXXSShUjS
-	 FxpuymjfsN7fg==
+	b=k29wYoDmBb6ORIk/YigyTAaPtSyeooMT9Gehkig8HAb2s5/Z8UK6XLxRTz9EDVGnx
+	 eGiDz9bKPGnbG5+h4f2SaQeQuToessREwOdzcuVK45laKtepD5/4l2EkSVetuFazGP
+	 CpZi4D+axCqGJyyCzcjUodz4iFV75O3vIJZr+FuouuBv26oCOdXws7TH/pp445vvA+
+	 XWOP3PhxdwKX/fQLJFUO/FuU7suEDOp3lVbp7cTbUmYfkzbYCBmWMOBUGP0APptS+H
+	 BJ5uoSpfpKEmuDle2PpFnddFwy9xwQS99ffHUVrrShSkfHcu9R7iUf2ztEg6CLx6Z0
+	 avdFtYzV4BmjA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Wed, 04 Nov 2026 18:27:19 +0100
-Subject: [PATCH v2 02/51] scsi: esas2r: don't copy kernel pointers out in
- EXPRESS_IOCTL_GET_MOD_INFO
+Date: Wed, 04 Nov 2026 18:27:22 +0100
+Subject: [PATCH v2 05/51] xtensa: simdisk: remove the proc entry before the
+ disk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261104-work-procfs-bugfixes-v2-2-bbf7d5546809@kernel.org>
+Message-Id: <20261104-work-procfs-bugfixes-v2-5-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,46 +91,47 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1380; i=brauner@kernel.org;
- h=from:subject:message-id; bh=dmwAod4+27NCncmw2oz8APM07k66EUOhHcJdusbTjjg=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zvot03G954L932VP36TuXeTVkvctkvdOUEqnB1ulu
- qr1gnT9jlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIlsecPwz3hDeHERzzPPdYxN
- RjfC3XXUD1tofTqbtTjgpUSw4qvK64wM82LMu/+u3bKn+1TBxf0qvr9PTk2YlzJFZyPv1Nw/lcX
- L+AE=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1246; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=f7Qg/00vnZM3tuJ138yAFxD6JPv6/GBN+HDx2x0z8gg=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zvo3+8l6vuY9izMzGv+zF0+8zvxIgy/yWdNkY/Huk
+ 2e/XjWN6ihlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZhIUDXDX1nmkANzS/S1E9dt
+ 3WFX/Lro3morHw1n24ovs6+YTz8QwsjwT6HT/Ztok6F1lkCbjcPRzduKzU87T1/j1tyZf3L9t5Y
+ fLAA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-EXPRESS_IOCTL_GET_MOD_INFO fills in the addresses of the adapter, its
-pci_dev and its Scsi_Host and copies the whole struct back to userspace.
-Nothing in userspace can do anything with those addresses, and the
-ioctl is reachable through /proc/scsi/esas2r/ATTONode, which is created
-with mode 0444. Only pass the host number.
+simdisk_teardown() frees the gendisk and only then removes
+/proc/simdisk/<n>. A write to that entry in between attaches the file
+that was written to the disk, and simdisk_attach() sets the capacity of
+the gendisk that is gone. Remove the entry first, remove_proc_entry()
+waits for a writer that is in the middle of that.
 
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
+Fixes: b6c7e873daf7 ("xtensa: ISS: add host file-based simulated disk")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/scsi/esas2r/esas2r_ioctl.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ arch/xtensa/platforms/iss/simdisk.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index 3f7c1d131ec3..c93d9265e100 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -1468,9 +1468,10 @@ int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
+diff --git a/arch/xtensa/platforms/iss/simdisk.c b/arch/xtensa/platforms/iss/simdisk.c
+index a2ddb49c269d..e51edb8cf872 100644
+--- a/arch/xtensa/platforms/iss/simdisk.c
++++ b/arch/xtensa/platforms/iss/simdisk.c
+@@ -379,12 +379,13 @@ static void simdisk_teardown(struct simdisk *dev, int which,
+ {
+ 	char tmp[2] = { '0' + which, 0 };
  
- 	case EXPRESS_IOCTL_GET_MOD_INFO:
++	/* a write to the entry attaches a file to the disk, so it goes first */
++	remove_proc_entry(tmp, procdir);
+ 	simdisk_detach(dev);
+ 	if (dev->gd) {
+ 		del_gendisk(dev->gd);
+ 		put_disk(dev->gd);
+ 	}
+-	remove_proc_entry(tmp, procdir);
+ }
  
--		ioctl->data.modinfo.adapter = a;
--		ioctl->data.modinfo.pci_dev = a->pcid;
--		ioctl->data.modinfo.scsi_host = a->host;
-+		/* these are kernel pointers, userspace has no use for them */
-+		ioctl->data.modinfo.adapter = NULL;
-+		ioctl->data.modinfo.pci_dev = NULL;
-+		ioctl->data.modinfo.scsi_host = NULL;
- 		ioctl->data.modinfo.host_no = a->host->host_no;
- 
- 		break;
+ static void __exit simdisk_exit(void)
 
 -- 
 2.53.0
