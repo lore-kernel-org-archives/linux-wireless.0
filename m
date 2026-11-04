@@ -1,96 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=185.203.200.13
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793786144;
-	b=dHHUtzXwaMHlbnvlcglRbnUKRk+x3DHuUYY7YjeP7TSBxa5sDKZsGRRzHovvriXLWyIZ
-	 BmQAgMNciFllOErXankox/P6ofy/oIbfp1LrIzA2OICTA2nlnvhRWNZ2Xj7S+xq532v3T
-	 NSo8Sv81dRulKHqpCAg3qY8TG2WEBGn6ylGMvNrRBz9WiFQB/iA2Jb6SRXuKctisXNgll
-	 86BbjUp4rJoNRJ6xQMweWg02FBZ+xvNcSRXP9foWfnL/gDwznaoRZk0MEfihFTmMzUEfF
-	 N98OOv7Jzek9LTbpRBJWYl7ti9wWNGvuxDIdVFe3vlhyyq1+6qXXlhq6C3YDIlt1qcg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793786144;
-	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Subject:From:To:Cc:
-	 Date:In-Reply-To:References:Content-Type:Content-Transfer-Encoding:
-	 User-Agent:MIME-Version;
-	bh=eTFRhcEn12IL6H2Z1l21FtPdZX/lVEm4+csYwTijtb4=;
-	b=NsjVsHEAh95siGhdd3zJY47+X7TlbPxDfWhXRzfqzQl+jejfRnuZ+QPH0nPRwubueu1j
-	 u34xyxdAWtsE1C5YZnXdx27EyzNC9koOGO9A54V9/EhJWJuAAb8wwnrNZaUVIN3HGh4+t
-	 d3FAzPxCPGYPEnvLz0491kirBAU/91ieG2FkeyST8zci6xeFwFl1MoB6/qen3lm6AehyL
-	 TnhalHIl46fCtTWR2dBXanrN0v5mYM3j8biPmudQ6m0LA8d5GogQzAjhoSCFHKTDsk1rk
-	 auNdnIhZwCzXVfluF8wCSh1GrpIbl/zKq7wi0qXWIazs3BqCTqMfGfCEgiXCnwzdBXg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=none header.from=pengutronix.de;
-	spf=pass smtp.mailfrom=pengutronix.de;
-	dkim=pass header.d=pengutronix.de header.i=@pengutronix.de header.a=rsa-sha256 header.s=20260414 header.b=b+UdZXft;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=185.203.200.13
-Received: from mx1.white.stw.pengutronix.de (mx1.white.stw.pengutronix.de [185.203.200.13])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.41
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793789137;
+	b=M1xHYEiAffkRf6Yyek9+Jc+nxIKZJfanwaZs44HE0IyDxMydBl8vDovifHj+i/OkxW/p
+	 Mp03m2sBbfCdAhXjPSrCdLKkFkxoI3PoCxRsXwwzVx6fQ3pEagbUWVZg7g7hASOcnf33f
+	 rT21KLQd0T2HLjKoVtnG1mQkB6YJSvuCaEItA3mRnjjPax3u7uFxBkWS/xCXFuTrEZbzD
+	 EY+bcSSbziHbnTzvN1lf2h+ZxK79hiKcMiSsvyTiBtx9w7f0llTGQKCqyrRsT+UuVAm2w
+	 a0QD0L1zJDOYbI4cUdLu/hkw75l+knZVNXjcR+SacxSp1v+YBcjLzIFuMqPVeXHQLpA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793789137;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=Dz58ddTIcWacdijll4/jjmZ8el9TsxHUA1XVL6xqMC8=;
+	b=v5ZJYIkpcILz+9gi0xVua5w+WZkm9ry+kRwwUcRgD9RsdeCioNMAZfwPnXEac+BcoaXk
+	 oY7Iv1UmMNsTpjwfXCgcPKBd8RivvrDYEHsPyWRf93bhMiDj5SyQ5wRcBZHfiWlYP5wkq
+	 IXs2d92s7AMjYWG4ts5IBTO5uXGet4FrL44ylVrOcWAkJ6Keg/APntrN8PrwyWndCgSXu
+	 utb3HCWjqnTlsiYej53Q7sSybna15AxeajRMg2rWsITv8j/dTt1sPtY+9oU1VfjYQJKYZ
+	 ni0vIaER3kvmLAZTB6BeRPkY/d7Enxds6THXNPhdTDJ9OsfOLcH/kw1/qsJDJb8gQGw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=AsB1Zx4U;
+	arc=none smtp.remote-ip=209.85.221.41
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F66606D803;
-	Wed,  4 Nov 2026 09:55:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73F66606D803
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A82F606A31B
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 10:45:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A82F606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=pengutronix.de header.i=@pengutronix.de header.a=rsa-sha256 header.s=20260414 header.b=b+UdZXft
-Received: from [IPv6:2a0a:edc0:0:900:1d::4e] (lupine.office.stw.pengutronix.de [IPv6:2a0a:edc0:0:900:1d::4e])
-	(Authenticated sender: pza@pengutronix.de)
-	by mx1.white.stw.pengutronix.de (Postfix) with ESMTPSA id A7088201CE0;
-	Wed, 04 Nov 2026 10:55:40 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pengutronix.de;
-	s=20260414; t=1793786140;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eTFRhcEn12IL6H2Z1l21FtPdZX/lVEm4+csYwTijtb4=;
-	b=b+UdZXftB1uycmAFjc2aKkmFeC0BkmCzWZsxgBJNxVW2zYUWSrWSIm2wL1m7FsXVO4zAy4
-	EHpsy5Q07pGo2tCv3prWyJ897xUwbpxCAwM+LB8gV/S1oux3BQvL3lGWHjn7D6SO7zforx
-	0enJZf9Y3ADwfrkvxrpKeqBwwa3AJ9S8OyVu8HVYx8rJecxVL7pSw6EN0iNbmKMI112N6u
-	aVW2ld+S/fr2y86nQgfeOB+I6nE2wXhLqzltm6yqahkiv1AGfSIlt2Ik+UrH5OjvUDH/oq
-	5M6oE4GEsk79Juqrt+tZYlhFi1THkIHXVA5naNOf4rCDMJj3bcQ4Vjk7A8tGww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=pengutronix.de;
-	s=20260414; t=1793786140;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eTFRhcEn12IL6H2Z1l21FtPdZX/lVEm4+csYwTijtb4=;
-	b=eeoEwgOEIWL+AvZU0dby5dnZBv6ZdjGFTJYSXv9jrQE9Iz/vArbXHRv2hfaajThs0II7i6
-	IEwITRew6ym5i9IlVosQ+CKh4EExTtUjwGBHeJj7/EmEs7b11VB1U+48RlyP3WRJ55lCst
-	2jHGVASEzWqqhRcnIJvgGsGqldzW3r8+0fT31vPfHKEyhI5fwFpfqS+54XjaAScXUQgqPS
-	NJKegyXv1ncZ4PMX0sZogpDHG66ElmFQ/dLOTwACFUxWM5iRlNKC44pjL7lKUamqj1J/ZB
-	HcgBOol4MdAsqk/UtKNmSROijUpdfO9tl740jbLrLUvcQkiC3oSa5VvI6gj8mQ==
-ARC-Authentication-Results: i=1;
-	ORIGINATING;
-	auth=pass smtp.auth=pza@pengutronix.de smtp.mailfrom=p.zabel@pengutronix.de
-ARC-Seal: i=1; s=20260414; d=pengutronix.de; t=1793786140; a=rsa-sha256;
-	cv=none;
-	b=KVBW48X0NZUsU++qUQbWXD4V09DjVaEyft/+qRnwqvGMbDBn4vdBVjGUZIaVQMgDNvG5KC
-	Q9F2emqy240Ktq5SXVa57ddyw0owb9Ts4laqb28PKwBLxMpW25s65ItQTUgI0VWWjSTLtT
-	pPfq0z4rHA/SoDlKUvWiHJeGFE8qARTmcgR8aVFqTpwCUNM2lbab2OPfgxZVxDzSQcVEmd
-	Hrl6EmB6R4286gkzDvb1rni3RraTwYEy/csIoGeDO4Us3PuqoacvMJlJd6r9/gWJgk3mvE
-	MWHzQPr/f3JjAIsUbiwrulGNcQuiNCM27vW21Edvi/n7rxeiLck4jdTr+kseyg==
-Message-ID: <dd321689f566e687914908974bbe4c27ce2b587e.camel@pengutronix.de>
-Subject: Re: [PATCH v3 4/5] bcma: add host driver for the BCM6362 integrated
- WLAN backplane
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Alessio Ferri <alessio.ferri@mythread.it>, Rob Herring
- <robh@kernel.org>,  Krzysztof Kozlowski	 <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>,  =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?=	
- <zajec5@gmail.com>, Florian Fainelli <florian.fainelli@broadcom.com>, 
- Broadcom internal kernel review list	
- <bcm-kernel-feedback-list@broadcom.com>, Thomas Bogendoerfer	
- <tsbogend@alpha.franken.de>, Jonas Gorski <jonas.gorski@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org
-Date: Wed, 04 Nov 2026 10:55:40 +0100
-In-Reply-To: <20261104-bcm6362-wlan-v3-4-e46562b2ac12@mythread.it>
-References: <20261104-bcm6362-wlan-v3-0-e46562b2ac12@mythread.it>
-	 <20261104-bcm6362-wlan-v3-4-e46562b2ac12@mythread.it>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-0+deb13u1 
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=AsB1Zx4U
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-490585eddfcso230692f8f.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 02:45:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793789136; x=1794393936; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Dz58ddTIcWacdijll4/jjmZ8el9TsxHUA1XVL6xqMC8=;
+        b=AsB1Zx4U7u8LiqXXChXgXoa2Gjh+LBnhgkqu4aE5DbwcJfLOEw1U2dp6h1UU2lGa5h
+         WN8aCLZqoR7BADIOUDsWMhoQx7t7kAyHSAP7U6oJdMD05e3qOA4Eq/KQqbb/dKyV6Osf
+         dWwmUY1gfVa55/VJq5xuNhDdeALizG+D6DAnsHua1N58j7LEveKGgh8v5S5FFnEdKvqR
+         pMX+JkV9M6xi09vnjnvGFNi1RbTmHkXgbC/qWJ6z9J13nPx6CiPGW9D+SuSkZdmbJtm9
+         GLh8tiDY0f5S6R8sC5XCiqRV5QfYw277se8JjfR+vQreRV0FrS2GiKKu5ESY/8tWBnwa
+         hoiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793789136; x=1794393936;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Dz58ddTIcWacdijll4/jjmZ8el9TsxHUA1XVL6xqMC8=;
+        b=CeyrqXbYV++QEvG7DXVksE4PEcTP69oBTQnH+mzpVzrebNSd9qgpb1GR0Tk4itBhdh
+         wuPCrSKesZw3gwKqirOJPRpkRxsYQWweaQfY6lxC+T9jsbBnoPNWKHWqbeqkJ2J/ckEX
+         0MUloBXBQdTjgTyy6Shhu/4zvLCsWG34kVIy6tVNkso1fl5sFOk5uXM3fszIW3SU3MVn
+         UhCq/oxD6nTDoe0vDo5rS2zuUL/m8dAybZiN1lM9tRA2zNVWJB9tRPRKZG5BU3LcGN35
+         vlcyD4z/FRtNIs01dUZ+SC8jKefR8AOueQ5LD50bjvk8j6b0IYYdu3VA6WKJL5MYHvuN
+         xvyg==
+X-Forwarded-Encrypted: i=1; AKwUvBxXviuHZsYZSuecVVZZ41c0ZuEJP12+HLCDImKkWJB4meH4OrrJ8mXcqk3DpcOny3Jm5omMqimxs9daDGIJ/w==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9F3ufTDpAqatygeKzVK/FnDDhebsdI/YIuJh+F1JQvXuBCPcf4
+	N3H7yfqaq7o1o+PawVIVZd669KhGHrTzqtRMprNvCorwrmnleSP8RuU6dpDzOD6G
+X-Gm-Gg: AYBFou0JtvCVeRagaQNp1cl4S1NTC7Gtkje9SF6TDcWdostSrQQoagaT1+SeMcfw9SU
+	G5bK+09+90pwcCUBFlIFYUmRvXF4pUeC82JczUkjC+Q14T27wqNWe24gp0uKtMntdxpRLi3fmEH
+	fJZRQAO0hFj4ddDJiaoTNRRPDk778MEqggYGd6/3ZlhT5A2K9ETwfJCAnmjMiVEOZ6YUhQyDcgo
+	oXbNxX5/25d/AkRgduB1PsmlqanWm9U9u2/1GByRWGK0mpY71W8pD7j/XnHVFvIGbqF8FXENtaY
+	JP94inUIKmasu2Znr9ROoHfnBvIsz4N9sikwRqp65wZSyXOZKnrVcLuCD+Ky6Cx7YVJgKrwOlU6
+	qjCFOvS0XU+/P8pNZztZNqrhEDlWrURuMsEmv57hYee2GfA0UELObzBCSW109PPaSPAhLnIHWTf
+	gHDkP6N0UC4biRFFy6snbVXu/rE/DcEq3DUrH1aCW546mocicdTlgCe1M1MkZ1rnFtNjXbJckbg
+	tBKLLdSRP+z2mSjg9IhF/LoeUcw3dVQbO4FgoYlnAaK2sGtSVLHCkv97xhKp3BsbS4gRANcr3c6
+	/+kCk5LfvE95gts1CsXNgVDaWt6E7tanNDw=
+X-Received: by 2002:adf:e19d:0:b0:48d:ffcb:28e1 with SMTP id ffacd0b85a97d-48e6e4f570dmr35161976f8f.11.1793789135626;
+        Wed, 04 Nov 2026 02:45:35 -0800 (PST)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48fec8d87b5sm3049555f8f.11.2026.11.04.02.45.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Nov 2026 02:45:35 -0800 (PST)
+Message-ID: <7d68ebe2-d24e-4c07-9b49-7f76551a12bb@gmail.com>
+Date: Wed, 4 Nov 2026 12:45:33 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -100,189 +91,131 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: rtw88: RTL8822BE (10ec:b822) never authenticates on 5 GHz with a
+ Huawei router; poor 2.4 GHz link; same hardware works fine on Windows
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ =?UTF-8?B?UGFibG8gTWFydMOtbmV6IFLDrW9z?= <pabloriosmartinez@gmail.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <CALTviDkEWERPrtc51WFB1K3Sn7wLdt6YhB=_Ck4PwBPdLcojBQ@mail.gmail.com>
+ <2c8319def838488cb8a3e4d5dc44f357@realtek.com>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <2c8319def838488cb8a3e4d5dc44f357@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mi, 2026-11-04 at 00:31 +0100, Alessio Ferri wrote:
-> The BCM6362 integrates a WLAN macro on a dedicated bcma backplane.
-> CFE leaves the macro clock gated and in reset, the backplane is
-> a big-endian peripheral, and none of the cores has a wrapper:
-> gating and reset of ChipCommon and of the 802.11 core go through
-> per-core control registers in a separate WLAN control block.
->=20
-> Add a host driver for it that:
->=20
->   - maps the ChipCommon and WLAN control register blocks;
->   - enables the clock, cycles the WLAN and WLAN UBUS resets and runs the
->     macro enable sequence bcma touches the backplane;
->   - provides big-endian register and block I/O ops;
->   - emulates BCMA_IOCTL, BCMA_IOST, BCMA_RESET_CTL and BCMA_RESET_ST
->     on top of the per-core control registers. The PHY bits of
->     BCMA_IOST report what b43 needs to hear;
->   - sets the big_endian and wrapperless bus flags before scanning.
->=20
-> As for the PCI and generic SoC hosts, the driver is linked into
-> bcma.ko and registered from bcma_modinit().
->=20
-> Add a MAINTAINERS entry for the driver and its binding.
->=20
-> The 802.11 core (rev 0x16) is handled by b43 once a SPROM is
-> available; on this SoC it is not stored on the chip and has to be
-> provided. In openwrt i use 6362-sprom plus fixups.
->=20
-> Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
-> ---
->  MAINTAINERS                     |   7 +
->  drivers/bcma/Kconfig            |  12 ++
->  drivers/bcma/Makefile           |   1 +
->  drivers/bcma/bcma_private.h     |  15 ++
->  drivers/bcma/host_soc_bcm6362.c | 419 ++++++++++++++++++++++++++++++++++=
-++++++
->  drivers/bcma/main.c             |   6 +
->  6 files changed, 460 insertions(+)
->=20
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index f53047aa8d3c..00d964829db5 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -5235,6 +5235,13 @@ S:	Maintained
->  F:	arch/arm/boot/dts/broadcom/bcm47189*
->  F:	arch/arm/boot/dts/broadcom/bcm53573*
-> =20
-> +BROADCOM BCM6362 WLAN BCMA HOST DRIVER
-> +M:	Alessio Ferri <alessio.ferri@mythread.it>
-> +L:	linux-wireless@vger.kernel.org
-> +S:	Maintained
-> +F:	Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan-bus-axi.yaml
-> +F:	drivers/bcma/host_soc_bcm6362.c
-> +
->  BROADCOM BCM63XX/BCM33XX UDC DRIVER
->  M:	Kevin Cernekee <cernekee@gmail.com>
->  L:	linux-usb@vger.kernel.org
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index b9558ff20830..ef0c461bdf90 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -38,6 +38,18 @@ config BCMA_HOST_SOC
-> =20
->  	  If unsure, say N
-> =20
-> +config BCMA_HOST_SOC_BCM6362
-> +	bool "Support for the BCM6362 integrated WLAN backplane"
-> +	depends on BMIPS_GENERIC || COMPILE_TEST
-> +	depends on OF
-> +	help
-> +	  Host driver for the bcma backplane of the WLAN macro
-> +	  integrated in the Broadcom BCM6362 SoC. It powers the macro on
-> +	  and lets bcma enumerate the backplane, so that the 802.11 core
-> +	  can be driven by b43.
-> +
-> +	  If unsure, say N
-> +
->  config BCMA_DRIVER_PCI
->  	bool "BCMA Broadcom PCI core driver"
->  	depends on PCI
-> diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
-> index f8c37de35da2..3ff93990ecbb 100644
-> --- a/drivers/bcma/Makefile
-> +++ b/drivers/bcma/Makefile
-> @@ -13,6 +13,7 @@ bcma-$(CONFIG_BCMA_DRIVER_GMAC_CMN)	+=3D driver_gmac_cm=
-n.o
->  bcma-$(CONFIG_BCMA_DRIVER_GPIO)		+=3D driver_gpio.o
->  bcma-$(CONFIG_BCMA_HOST_PCI)		+=3D host_pci.o
->  bcma-$(CONFIG_BCMA_HOST_SOC)		+=3D host_soc.o
-> +bcma-$(CONFIG_BCMA_HOST_SOC_BCM6362)	+=3D host_soc_bcm6362.o
->  obj-$(CONFIG_BCMA)			+=3D bcma.o
-> =20
->  ccflags-$(CONFIG_BCMA_DEBUG)		:=3D -DDEBUG
-> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-> index 6eded32d1aac..931a0ca0aea3 100644
-> --- a/drivers/bcma/bcma_private.h
-> +++ b/drivers/bcma/bcma_private.h
-> @@ -118,6 +118,21 @@ static inline void __exit bcma_host_soc_unregister_d=
-river(void)
->  }
->  #endif /* CONFIG_BCMA_HOST_SOC && CONFIG_OF */
-> =20
-> +/* host_soc_bcm6362.c */
-> +#ifdef CONFIG_BCMA_HOST_SOC_BCM6362
-> +int __init bcma_host_soc_bcm6362_register_driver(void);
-> +void __exit bcma_host_soc_bcm6362_unregister_driver(void);
-> +#else
-> +static inline int __init bcma_host_soc_bcm6362_register_driver(void)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline void __exit bcma_host_soc_bcm6362_unregister_driver(void)
-> +{
-> +}
-> +#endif /* CONFIG_BCMA_HOST_SOC_BCM6362 */
-> +
->  /* driver_pci.c */
->  #ifdef CONFIG_BCMA_DRIVER_PCI
->  u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
-> diff --git a/drivers/bcma/host_soc_bcm6362.c b/drivers/bcma/host_soc_bcm6=
-362.c
-> new file mode 100644
-> index 000000000000..5a4fa6a63411
-> --- /dev/null
-> +++ b/drivers/bcma/host_soc_bcm6362.c
-> @@ -0,0 +1,419 @@
-[...]
-> +struct bcma_host_soc_bcm6362 {
-[...]
-> +	struct reset_control	*rst_wlan;
-> +	struct reset_control	*rst_wlan_ubus;
-> +};
-[...]
-> +/*
-> + * Macro enable sequence from the Broadcom board support code: with the
-> + * clock forced on and the macro in soft reset, enable the 802.11 core
-> + * clock with force gated clock set, then release the soft reset and the
-> + * forces.
-> + */
-> +static int bcma_host_soc_bcm6362_power_on(struct bcma_host_soc_bcm6362 *=
-host)
-> +{
-[...]
-> +	reset_control_assert(host->rst_wlan_ubus);
-> +	reset_control_assert(host->rst_wlan);
+On 04/11/2026 03:33, Ping-Ke Shih wrote:
+> Pablo Martínez Ríos <pabloriosmartinez@gmail.com> wrote:
+>> Hello,
+>>
+>> I would like to report a problem with an RTL8822BE using rtw88_8822be.
+>> The same card, in the same spot, works well on Windows, so I suspect a
+>> driver/firmware issue rather than coverage. I am happy to run any tests
+>> or try patches.
+>>
+>> HARDWARE / SOFTWARE
+>> - Laptop: HP Pavilion 15-bc450ns (i5-8300H), BIOS F.32
+>> - Card: Realtek RTL8822BE, PCI ID 10ec:b822 (04:00.0), HP subsystem.
+>>   Both antenna cables are connected; "iw phy" reports available and
+>>   configured antennas TX 0x3 / RX 0x3.
+>> - Debian 13.7 live USB, kernel 6.12.107+deb13-amd64, firmware-realtek
+>>   20250410-2, rtw88 firmware 27.2.0 (H2C 13)
+>> - Same behaviour earlier on CachyOS (a recent 7.x kernel, exact version
+>>   not recorded) and on an Ubuntu live session (26.10)
+> 
+> Is there any version working well to you?
+> 
+>> - Module parameters at defaults: disable_lps_deep=N, disable_aspm=N,
+>>   support_bf=Y
+>> - Router: ISP-supplied Huawei OptiXstar EG8145X6-10, separate SSIDs for
+>>   2.4 GHz (ch 6, 20 MHz) and 5 GHz (ch 36, auto width). The router is
+>>   one floor below the laptop, with a concrete slab in between.
+> 
+> I think it is worth to try putting closer.
+> 
+> And, can you try another AP to see if anything different?
+> 
+>>
+>> PROBLEM 1: 5 GHz
+>> Linux never authenticates. This repeats indefinitely:
+>>
+>>   wlo1: authenticate with 22:87:ec:xx:xx:08 (local address=90:32:4b:xx:xx:xx)
+>>   wlo1: send auth to 22:87:ec:xx:xx:08 (try 1/3)
+>>   wlo1: send auth to 22:87:ec:xx:xx:08 (try 2/3)
+>>   wlo1: send auth to 22:87:ec:xx:xx:08 (try 3/3)
+>>   wlo1: authentication with 22:87:ec:xx:xx:08 timed out
+>>
+>> - It fails with WPA2-PSK and with WPA3 (SAE), and with the router set to
+>>   WPA/WPA2 TKIP+AES and to WPA2/WPA3 AES, so it fails at the 802.11
+>>   authentication frame, before any SAE/EAPOL exchange.
+>> - Same result with regulatory domain 00 and with "iw reg set ES".
+>> - The BSS appears in scans (its beacons carry country IE ES), but no
+>>   authentication response is ever received.
+> 
+> How can you prove "no authentication response is ever received" ?
+> Can AP ack the auth? I mean that might be a TX side problem.
+> 
+>> - Windows 11 on the same laptop, same spot (Realtek driver
+>>   2024.0.10.209): connects with WPA3-Personal, reported RSSI -76 to
+>>   -81 dBm, 80/80 pings answered, 3-9 ms, link rate 260-292 Mbps as
+>>   reported by Windows.
+>>
+>> PROBLEM 2: 2.4 GHz
+>> - Linux associates, but the link is very poor: iw reports about -73 to
+>>   -76 dBm, and the beacon loss counter rises about once per second
+>>   (14 to 65 over roughly 2 minutes). Across 5 runs, ping to the router
+>>   showed 0-54% loss and average RTT of 37-278 ms.
+>> - Kernel messages: "rtw_8822be 0000:04:00.0: firmware failed to leave
+>>   lps state" (several times), and once "failed to send h2c command".
+> 
+> For this case, "iw dev wlo1 set power_save off" should help.
+> 
+>> - The beacon signal average (-97 to -109 dBm) is far below the frame
+>>   signal average (about -75 dBm). With a phone hotspot at -48 dBm both
+>>   agree (-46). Occasionally signal readings of -100 to -112 dBm appear
+>>   with the second chain at 0 while traffic continues.
+>> - Windows, same spot: 60/60 pings, average 12 ms (max 157 ms).
+>> - With a phone hotspot (2.4 GHz, ch 1, -48 dBm), Linux works well:
+>>   rx 78 Mbit/s (VHT-MCS 8, NSS 1), tx 65 Mbit/s (MCS 7).
+>>
+>> TRIED WITHOUT EFFECT
+>> - "iw dev wlo1 set power_save off" (one run had 54% ping loss)
+> 
+> How about the loss rate comparing to power_save on? Almost the same?
+> 
+>> - rtw88_pci disable_aspm=Y (lspci still showed "ASPM L1 Enabled"
+>>   afterwards)
+>> - WPA2 vs WPA3, regulatory domain 00 vs ES
+>>
+>> COULD NOT CHECK
+>> /sys/kernel/debug/ieee80211/phy0/rtw88 does not exist on the Debian
+>> kernel (presumably rtw88 debugfs is not enabled), so I could not read
+>> tx_pwr_tbl, phy_info or coex_info, nor test the edcca_enable switch.
+>> A single correctable PCIe error (BadDLLP) was logged once; the AER
+>> counters were 0 later.
+>>
+>> QUESTIONS
+>> Is this a known issue? Which additional data would be most useful (a
+>> kernel with rtw88 debugfs, a debug_mask setting, a monitor-mode
+>> capture)? I can provide full logs and test patches.
+> 
+> The kernel v5.3 or earlier support RTL8822BE. Could you bisect (use
+> distro live image) which kernel can work to you? It would be easier
+> to address problem. 
+> 
+> Have you tested with disabling Bluetooth, since this is a combo chip?
+> 
+> Another point is that rtw88 can only support these types:
+> 
+> static const struct rtw8822b_rfe_info rtw8822b_rfe_info[] = {
+> 	[2] = I2GE5G_CCUT(efem),
+> 	[3] = IFEM_EXT_CCUT(ifem),
+> 	[5] = IFEM_EXT_CCUT(ifem),
+> };
+> 
+> You can add a printk to print the type of your RTL8822BE.
 
-These are asserted in different order than in
-bcma_host_soc_bcm6362_power_off(). Is this on purpose?
+On CachyOS you can get the RFE type from debugfs:
 
-If the order can be switched here, you can use the reset_control_bulk
-API.
-
-> +	fsleep(1000);
-> +	reset_control_deassert(host->rst_wlan_ubus);
-> +	reset_control_deassert(host->rst_wlan);
-> +	fsleep(1000);
-[...]
-> +}
-> +
-> +static void bcma_host_soc_bcm6362_power_off(struct bcma_host_soc_bcm6362=
- *host)
-> +{
-[...]
-> +	reset_control_assert(host->rst_wlan);
-> +	reset_control_assert(host->rst_wlan_ubus);
-
-[...]
-> +static int bcma_host_soc_bcm6362_probe(struct platform_device *pdev)
-> +{
-[...]
-> +	host->rst_wlan =3D devm_reset_control_get_exclusive(dev, "wlan");
-> +	if (IS_ERR(host->rst_wlan))
-> +		return dev_err_probe(dev, PTR_ERR(host->rst_wlan),
-> +				     "failed to get wlan reset\n");
-> +
-> +	host->rst_wlan_ubus =3D devm_reset_control_get_exclusive(dev, "wlan-ubu=
-s");
-> +	if (IS_ERR(host->rst_wlan_ubus))
-> +		return dev_err_probe(dev, PTR_ERR(host->rst_wlan_ubus),
-> +				     "failed to get wlan-ubus reset\n");
-[...]
-> +}
-
-regards
-Philipp
+cat /sys/kernel/debug/ieee80211/phy*/rtw88/coex_info
