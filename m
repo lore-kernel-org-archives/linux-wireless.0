@@ -1,80 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.11
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793809140;
-	b=eH7f7yiw8/2OrSZRsHz8KQUKgYoAjbIxWDoalkYdY72knHd+g0gxmj7653mJnIGygIa3
-	 0KId6nOu3e8EXv3VsZ6mR8+emDDDWmb3alXA2m92R2oc4f/CneJJCix8ICtYOedrMcqu4
-	 NAHiOFEWsSdHUrfHwAS8JrctP3K1bsr4xRB833ThdBeDXdaH/zgrV+SkMgsjTm+BDA+Hn
-	 bu/25YNW3B1SwjvrNvd37KsNJU3iuL158b2jz0EZzA5Cc5M4hKMjl8qeG2cThmepOtjUj
-	 2ml/JWcpQMyRzhiUPZJyUxkLVw6a76STeIIsfYLa2TKPWaL4IfvKiok+V87RHClzH+w==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793809140;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=hWt8Nh5aa/NAaAQcdUS3NCzDpZ9vbHpEVRswZNG5YNg=;
-	b=CH2abzLL4tZXtyWnG19OD/SQVSakJDd/cJMNIOoAzf2ZzHnwsMzD8uXvBgTqNP58ydEl
-	 is15rwsCjAneV2+PsBLloEcAclIjgpber6zRtNh9QWCSj9u4wyuOE4UVZiQqEU4+KmupL
-	 tal8zLWJrYyx3MgMidefP7Y2iMJxd7xJ1gxe9/fVSH4wOFhLIHl3xrhsyjo02wYXFi0i1
-	 wN67Ku7nMnKytM4LgU76BjHyOoePbNzsep0Vh2e6CbM7HDbPSISuZiw6X2dQY48MGXsxJ
-	 PByOfSULda3KR77KumpNOkTcfW1LKTnU1i97fOy72oGcJDzFYFJy2KyyUoXrG1YJsxQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ZKVwi9iN;
-	arc=none smtp.remote-ip=198.175.65.11
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793810772;
+	b=WsRJ6WqllrfPsa+0XZpJJgdx0DPP6uYUPBnpAZ6h3qdf0/ysX67ceH5gxSOo24G99R4M
+	 q+d+D3D8w5Qypcqrs6MaVwxv43UnF/FW49CfN2i2eJDB3BvQhbU8Zy762m3Pul+kJTVlH
+	 JpGOTNcdrpqlEWrMetlmLMYB36wLgePeaPV5Cku8PFK7iU8X1MpTOLTDESXC5lydC2VzN
+	 PJA3f8ZVamqqpAqncMB0n0C4UiBd/6LmYGoAxClOfGX6wO2GiuiSQ96/1/cKmGGxDKep7
+	 EOs5x5ELqVW45TFSUNPUu77o2iTqETN+kDDIp1CaBQHGjhItIo6brQ85PkvVTBFzn2A==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793810772;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=JfRW0SPoALVVWDl2xAXTfh37dfRQmby6sb8WYvVZUog=;
+	b=1LwIvpLuFFfJMKXvN7fprJMkMpfSOmtReVWXMppoXFHbsDJrkUpbWh2Bfxd+HeNaNhKC
+	 xrCdOisFs1uK49jDOv8qNIc+S7ftySvwtPCh8TuA9uWl0AI2fvefM17JD+gYGrfUePG4Y
+	 Ofw+eOqQsx2HkjKP3hs22tkF2NQ1ldlSJlvM0mHLUajCxZbZu3reabzUP8XEa6vZj8R7c
+	 /ozFNSfOmMkjmRoul4HwSe9D2vyShXN9Oc8ebEOI62EJ/U1a1gRkiZIQNADc3DgW6T/2w
+	 27o9nMDC1dZb/CW4kcTUh9WmYkv1oPHk55Cbt4MP3T4OIqzYThndafWhXEnBTRu5dLA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WV9EWSqQ;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5D7606AADF
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 16:18:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AC5D7606AADF
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BCCF606D817;
+	Wed,  4 Nov 2026 16:46:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ZKVwi9iN
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793809139; x=1825345139;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=sYiOQuBYqid09I+mMVkZpI/PoAwNsfLnhRc6uGZfzTU=;
-  b=ZKVwi9iNWJK4F0oC4m3JzpRE53vryChTBqSXw7WSTzr4apv32lW7D/FT
-   fFrMjR+/fpovgdLV964RQGzkgXlz11Bj5nmq4vhLbCb5Itnxd1caWlkWJ
-   Sc3EIHbuTXAN2iXonZ+xHBkVCWT7JnGuy7PmwrQIrA5pFjLFAyTu6Rhxg
-   cJ4I6tEPcJjeV2srk/W+CrJn2yRdnbgSin5dJt4zCs1pq89jNejetATNi
-   JrM5Iwj5/PIL86du1DbcOlyqQiT9wFrcB21eUToAMo6S4M5mtAkhVgKwv
-   5X6zbYGtZu+xLGsBntc8LBmxVKGdKlHryRM/Gn0TZ4FZ4eMF8HVsh6tiP
-   w==;
-X-CSE-ConnectionGUID: GJlPtKqwQyOqLDUz7hGVMQ==
-X-CSE-MsgGUID: XHFfbOK7RNa3DgOj8pIx4w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11956"; a="2448591"
-X-IronPort-AV: E=Sophos;i="6.27,195,1787036400"; 
-   d="scan'208";a="2448591"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2026 08:18:59 -0800
-X-CSE-ConnectionGUID: +1oYTMjAQwCDn4EDRbS2uA==
-X-CSE-MsgGUID: PGkM6NguSFaT5yeXHJhF9g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,195,1787036400"; 
-   d="scan'208";a="6639445"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa003.jf.intel.com with ESMTP; 04 Nov 2026 08:18:57 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xOdhO-00000000keZ-27lq;
-	Wed, 04 Nov 2026 16:18:54 +0000
-Date: Thu, 5 Nov 2026 00:18:00 +0800
-From: kernel test robot <lkp@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: Re: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links
- in for_each_sta_active_link()
-Message-ID: <202611042348.ZiFAbrdl-lkp@intel.com>
-References: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WV9EWSqQ
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793810772;
+	b=oX4qZQ0X/LEZpGiGsTad+R+lcXXEDZWouBoS3l5mbcOOX6XK2hZXXoc6U7SQdSKa3ZOs
+	 Mt3W7EmwwJ5iUQ0E5XAS15xpatC4V84T87ZsDWbTXcjJcF1YgBI12g6RSNKXrdtEDfXFD
+	 dibho8BNkb59sObmY1ORzmTViUkASmgb9D+8nDgy5V2u5An93LjptChBrCtVkcqdzkF7u
+	 0kWNGJGHFrfvUr/M07+m/ddN5GeUB0YWURz6momw21L2gZlpRkfy/bxZp4YEeoX286Key
+	 yXEg7FEGtbkeRNMfEdEYsFMNY2oNlKK3if1dMwq1jdYHN6Sm+DQ39630wHYMj/p3C2w==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793810772;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=JfRW0SPoALVVWDl2xAXTfh37dfRQmby6sb8WYvVZUog=;
+	b=mG3qJWzHM+oE6KeOzg/+3REXCv/7hZrdpr1keji4ZT/vHlgxM9hIoazDgOuXL8BcKtbM
+	 vvDzX54d3s4Nw9JO2PtLZX7AYV7qmX3AFNiYRbAtwm218NKC9cRdP0dQzAjduqAv/xIBS
+	 o5sRgKAorOBv/EWcTp1V+c8M+CLuTW5YN9TRtXZOfUFWELh5E16Mfc1kY6AOpdmR/fjVV
+	 ghaz0r37byly4r4Wd8fdzAF/P8FIkJZ++0/swPFO/1mKe7GkJOdxfU7BoJ33RUx3t96S+
+	 JhEwLL7MOdcyeB+ye+fKA8SXgq3jmuAoe1gr16fyEmizKrFnLlcP1yNoFQubgwSkt0g==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id F0AD11F00A21;
+	Wed,  4 Nov 2026 16:46:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793810772;
+	bh=JfRW0SPoALVVWDl2xAXTfh37dfRQmby6sb8WYvVZUog=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=WV9EWSqQrxTLVYIztlmELVMVh85LejnCzBIC/5HM5n2zKwdA0gfrXRjWfoF++o0TO
+	 bl91mJb7fEVI0JbWMBszqwbTfU14LXei3zPpLRQVF7I2pti/yOu4LMd/qz6iwCMssi
+	 cAjPa2ZJxWP85xi2ZGVDsHLMKxQKPdj2PGy/MJ35LvWa/lSVPQ8+GftpI1YaDw7JYu
+	 OLFq5Agow/jaHVmgR23ZCg9uvZCqetjCGX5G4PnYn+y7nazs9eUiiE7dyTXk7LuAUh
+	 0wWofSEUX+MsN/nceCi8NuWRmkXPkd7h/rslsP8V38vIlpRElE6vL595Srh1DzZrIc
+	 Gw0rBmvp+f2hg==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 7BA4946ED2;
+	Wed,  4 Nov 2026 16:46:09 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Wed, 04 Nov 2026 08:46:03 -0800
+Subject: [PATCH net-next v5 3/4] wifi: ath11k: Connect to the QMI server
+ belonging to the device owned by this driver
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,74 +83,154 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba@changeid>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261104-qrtr-multi-ep-v5-3-4cdb2b4f1920@oss.qualcomm.com>
+References: <20261104-qrtr-multi-ep-v5-0-4cdb2b4f1920@oss.qualcomm.com>
+In-Reply-To: <20261104-qrtr-multi-ep-v5-0-4cdb2b4f1920@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
+ Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+ Jeff Johnson <jjohnson@kernel.org>, Eric Dumazet <edumazet@kernel.org>, 
+ Eric Dumazet <edumazet@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Chris Lew <christopher.lew@oss.qualcomm.com>, 
+ Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>, 
+ Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, 
+ Juha-Matti Tilli <juha-matti.tilli@iki.fi>, 
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4200;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=8jdd/IxbkpdXzxb0pbbCtVyl0Xl30Xp8Q0D9LtdyvhY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq62FPbjDf/0qWzmhZRJGSlPc5ilpfYhrma+JkR
+ fdrQ7uP0XWJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauthTwAKCRBVnxHm/pHO
+ 9R8BCACidy14HAjJGZYhBuvH+k52nwAL23/DmWX1dAWwekfv4MDQF8Mdj64fv2T9mMtH8wOaQUM
+ dT470wVrTKQAKkfzzLMPschxkhU9Y7BdbFAI2dE+Wjv0mHTCjKUnB5EIFtJzZxQRtJm0zCOwpiQ
+ PB1RyQdwiruDc/o/OIEOR3zgTZROTIejzZ6JxdFEjJx2TG0fByWWvRU8FqNWrZNl1+VmJZ2o30S
+ vbL84l3K8MHy1yjWWauqzT15iT44TJc09Jmh6uAJTZhzQWIDo6PT1GvU8pspoUQn+vaegVLO57w
+ 7XQUlbm8TLs0+WSDQsdhSf91VgQvDYzqpoZpGMhuVwntwryg
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+Content-Transfer-Encoding: 7bit
 
-Hi Johannes,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-kernel test robot noticed the following build errors:
+When two identical ath11k PCIe devices are connected to the same host, both
+advertise the WLFW service with the same service and instance id. The QMI
+lookup reports both servers to each device, so a device may connect to the
+firmware running on the other device.
 
-[auto build test ERROR on wireless-next/main]
+But now, QRTR provides each MHI endpoint a unique node id which is
+different from the node id announced by the device. So use the same id to
+pick the correct server. Add a get_qrtr_node_id() HIF callback that returns
+the node id derived from the MHI controller index and zero for transports
+that do not assign one. In the new_server callback, reject any service
+whose node id does not match. A node id of zero disables the check, so
+transports that do not assign one keep their current behavior.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Johannes-Berg/wifi-mac80211-rename-ieee80211_sta_activate_link/20261102-224237
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20261102224349.e1d1ed2eef37.I0f5c26e0f6a05feaf5c578fa048ca5586530f0ba%40changeid
-patch subject: [PATCH wireless-next 7/7] wifi: mac80211: use sta->active_links in for_each_sta_active_link()
-config: openrisc-allmodconfig (https://download.01.org/0day-ci/archive/20261104/202611042348.ZiFAbrdl-lkp@intel.com/config)
-compiler: or1k-linux-gcc (GCC) 16.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261104/202611042348.ZiFAbrdl-lkp@intel.com/reproduce)
+Reviewed-by: Simon Horman <horms@kernel.org>
+Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath11k/hif.h |  9 +++++++++
+ drivers/net/wireless/ath/ath11k/pci.c |  9 +++++++++
+ drivers/net/wireless/ath/ath11k/qmi.c | 11 +++++++++++
+ 3 files changed, 29 insertions(+)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611042348.ZiFAbrdl-lkp@intel.com/
+diff --git a/drivers/net/wireless/ath/ath11k/hif.h b/drivers/net/wireless/ath/ath11k/hif.h
+index 017fed1b4bd1..f432fa4890be 100644
+--- a/drivers/net/wireless/ath/ath11k/hif.h
++++ b/drivers/net/wireless/ath/ath11k/hif.h
+@@ -32,6 +32,7 @@ struct ath11k_hif_ops {
+ 	void (*ce_irq_disable)(struct ath11k_base *ab);
+ 	void (*get_ce_msi_idx)(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx);
+ 	void (*coredump_download)(struct ath11k_base *ab);
++	unsigned int (*get_qrtr_node_id)(struct ath11k_base *ab);
+ };
+ 
+ static inline void ath11k_hif_ce_irq_enable(struct ath11k_base *ab)
+@@ -159,4 +160,12 @@ static inline void ath11k_hif_coredump_download(struct ath11k_base *ab)
+ 		ab->hif.ops->coredump_download(ab);
+ }
+ 
++static inline unsigned int ath11k_hif_get_qrtr_node_id(struct ath11k_base *ab)
++{
++	if (!ab->hif.ops->get_qrtr_node_id)
++		return 0;
++
++	return ab->hif.ops->get_qrtr_node_id(ab);
++}
++
+ #endif /* _HIF_H_ */
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index a163168f3617..d40c057e130c 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -10,6 +10,7 @@
+ #include <linux/of.h>
+ #include <linux/time.h>
+ #include <linux/vmalloc.h>
++#include <net/qrtr.h>
+ 
+ #include "pci.h"
+ #include "core.h"
+@@ -900,6 +901,13 @@ static int ath11k_pci_start(struct ath11k_base *ab)
+ 	return 0;
+ }
+ 
++static unsigned int ath11k_pci_get_qrtr_node_id(struct ath11k_base *ab)
++{
++	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
++
++	return qrtr_host_node_id(ab_pci->mhi_ctrl->index);
++}
++
+ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
+ 	.start = ath11k_pci_start,
+ 	.stop = ath11k_pcic_stop,
+@@ -921,6 +929,7 @@ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
+ #ifdef CONFIG_DEV_COREDUMP
+ 	.coredump_download = ath11k_pci_coredump_download,
+ #endif
++	.get_qrtr_node_id = ath11k_pci_get_qrtr_node_id,
+ };
+ 
+ static void ath11k_pci_read_hw_version(struct ath11k_base *ab, u32 *major, u32 *minor)
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 7dc07339b957..09c23ddffb38 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -3170,8 +3170,19 @@ static int ath11k_qmi_ops_new_server(struct qmi_handle *qmi_hdl,
+ 	struct ath11k_qmi *qmi = container_of(qmi_hdl, struct ath11k_qmi, handle);
+ 	struct ath11k_base *ab = qmi->ab;
+ 	struct sockaddr_qrtr *sq = &qmi->sq;
++	unsigned int node_id;
+ 	int ret;
+ 
++	/*
++	 * Identical devices advertise the same QMI services, so connect only
++	 * to the QMI server on this device's node. A node id of 0 means the
++	 * transport has not assigned a unique node id, so accept the server
++	 * unfiltered.
++	 */
++	node_id = ath11k_hif_get_qrtr_node_id(ab);
++	if (node_id && service->node != node_id)
++		return -EINVAL;
++
+ 	sq->sq_family = AF_QIPCRTR;
+ 	sq->sq_node = service->node;
+ 	sq->sq_port = service->port;
 
-All errors (new ones prefixed by >>):
-
-   drivers/net/wireless/intel/iwlwifi/mld/sta.c: In function 'iwl_mld_remove_sta':
->> drivers/net/wireless/intel/iwlwifi/mld/sta.c:913:21: error: 'vif' undeclared (first use in this function)
-     913 |                 if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
-         |                     ^~~
-   drivers/net/wireless/intel/iwlwifi/mld/sta.c:913:21: note: each undeclared identifier is reported only once for each function it appears in
+-- 
+2.43.0
 
 
-vim +/vif +913 drivers/net/wireless/intel/iwlwifi/mld/sta.c
-
-d1e879ec600f9b Miri Korenblit 2025-02-16  890  
-d1e879ec600f9b Miri Korenblit 2025-02-16  891  void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta)
-d1e879ec600f9b Miri Korenblit 2025-02-16  892  {
-d1e879ec600f9b Miri Korenblit 2025-02-16  893  	struct ieee80211_link_sta *link_sta;
-d1e879ec600f9b Miri Korenblit 2025-02-16  894  	u8 link_id;
-d1e879ec600f9b Miri Korenblit 2025-02-16  895  
-d1e879ec600f9b Miri Korenblit 2025-02-16  896  	lockdep_assert_wiphy(mld->wiphy);
-d1e879ec600f9b Miri Korenblit 2025-02-16  897  
-d1e879ec600f9b Miri Korenblit 2025-02-16  898  	/* Tell the HW to flush the queues */
-d1e879ec600f9b Miri Korenblit 2025-02-16  899  	iwl_mld_flush_sta_txqs(mld, sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  900  
-d1e879ec600f9b Miri Korenblit 2025-02-16  901  	/* Wait for trans to empty its queues */
-d1e879ec600f9b Miri Korenblit 2025-02-16  902  	iwl_mld_wait_sta_txqs_empty(mld, sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  903  
-d1e879ec600f9b Miri Korenblit 2025-02-16  904  	/* Now we can remove the queues */
-d1e879ec600f9b Miri Korenblit 2025-02-16  905  	for (int i = 0; i < ARRAY_SIZE(sta->txq); i++)
-d1e879ec600f9b Miri Korenblit 2025-02-16  906  		iwl_mld_remove_txq(mld, sta->txq[i]);
-d1e879ec600f9b Miri Korenblit 2025-02-16  907  
-4fa80ba223dd72 Johannes Berg  2026-11-02  908  	for_each_sta_active_link(sta, link_sta, link_id) {
-d1e879ec600f9b Miri Korenblit 2025-02-16  909  		/* Mac8011 will remove the groupwise keys after the sta is
-d1e879ec600f9b Miri Korenblit 2025-02-16  910  		 * removed, but FW expects all the keys to be removed before
-d1e879ec600f9b Miri Korenblit 2025-02-16  911  		 * the STA is, so remove them all here.
-d1e879ec600f9b Miri Korenblit 2025-02-16  912  		 */
-67128af05c6419 Johannes Berg  2025-03-09 @913  		if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
-d1e879ec600f9b Miri Korenblit 2025-02-16  914  			iwl_mld_remove_ap_keys(mld, vif, sta, link_id);
-d1e879ec600f9b Miri Korenblit 2025-02-16  915  
-d1e879ec600f9b Miri Korenblit 2025-02-16  916  		/* Remove the link_sta */
-d1e879ec600f9b Miri Korenblit 2025-02-16  917  		iwl_mld_remove_link_sta(mld, link_sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  918  	}
-d1e879ec600f9b Miri Korenblit 2025-02-16  919  
-d1e879ec600f9b Miri Korenblit 2025-02-16  920  	iwl_mld_destroy_sta(sta);
-d1e879ec600f9b Miri Korenblit 2025-02-16  921  }
-d1e879ec600f9b Miri Korenblit 2025-02-16  922  
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
