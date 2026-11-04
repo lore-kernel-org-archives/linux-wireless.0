@@ -1,95 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793755710;
-	b=nu36eQ5AEtPC2ZkBV83R35IlAV0G27LvE1qFR2durZYNx4miMUuZcOySkkrA/c1e1rgd
-	 h+iI1ECKxG6J6mYFxHcqzLak8TbLvb/yjUFab3DClSaTK+q7tYYGmYjulCYPxJmzC6ZsW
-	 SFDFqJv7DPZPm9gIz8wlCVp+W6F4NGRjZcWr6Bz+qiZMYgX+9qkbw88lBNgv8OOLER+qA
-	 pLBMHoCcf8jFfCm2GQ5gF2IazoCcNS1RYHmsS8sfgBYA2oUoZmVjnX34MGPr/neiUEQpU
-	 swVzLLKWwsVBSnAMYSIebngWaOHXFEQGv/+yr5nAMHJV01tGWQxXxAUm9e3gdoVUMDg==
+	t=1793756008;
+	b=C7w2YBEcrwqwsNarM//YYlrfHH3iuGXxHFQicMa7+vmMGfxQ6z1ipcnyxM7bvHIbhrUq
+	 43YsR2uRQq76Jzx42V7yWUD9oiQERksV1x2+aOp+xCD+aGyixLvALrvq+FGe9j+sQKhLh
+	 pH0dsT/ZMK0odthGKLEJ24RU6j9+bT2KsUBuSOqAeSmyJo+l1bk4FaNgRNP0pCYd6EhDw
+	 TgWIaOvIrF7gz+VxWZrYX6hD2CWeqDRLgRx+X3aMZrDvkoPxSo4NDQLi81AsNxLoraRYP
+	 f8AmGMa6mK8Pe9WfvLHx6S4XFlZOMVrMa3WVrf0Wb39z9HfwUoWaSlZibYUjhmUMK7w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793755710;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=KCVgDvaZXHa08ljqzUcaj2GuBC47j28XlCNU2sxllkg=;
-	b=L4KAgpfCc3BptDF3BCmzRYifMnv0JDXjd45QgGZEiJ3zz4IHlvGbE9dQ2hKikYSbTSJP
-	 bLIyieauBM9T905fao6NANgNXka+uwmjdztdFOH1Uy7vXOic9XHqht/i9HHIYIRVmyai6
-	 IiXxMW+T3M4g4vje04xUKvIFOMqRy/6/88aBou1iianhf2+OHcflyJxmQ0jo2S5rubBnY
-	 Yvq2WZjGaMSq0GMVcyGyMqBWcK5bbVZ5hMark2iJAVcSgZKd5gqvg21uXTdGZ9tPobxM6
-	 I1pm1T3aEPZMWDorTJdSPMqNdiIk7IUhF2HF5JENidlKdK2GsohrmvZQ0Mp0lVhXgcg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793756008;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:From:To:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 References:In-Reply-To:Accept-Language:Content-Language:
+	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=jrbhlKGr5xj36qPJRdE9SU6v5d20hTkFAvGTnhxuajs=;
+	b=N6gEqvKEhja0h7UKCVMvERY4PzJchdpdXfWAOWuV2oYUI1Z/MOHRVcJe0s0kcaNDbfaT
+	 0vRBQfELYmOTqO/qGoXSOR/FpgByiTkWtK2jCBn5yyyOhquWWmNylTZm9Peg7bUS6P009
+	 fL+IsjoXgH2O2ieaFtzkpOnVKh2Tkwq3agivWrdZSKgBf5Aj/T8drplp95oNTAHRw8anY
+	 0o+0n9hHy0+chzo82/fuST8kIUoB+HCOluxvxqT3UkrB6EaT2GQlunjiJwtTNcrjKdssn
+	 Zk86AUJigSwmRVSaAtUqRV2dfk0QHOZymcouwbv95Q9rj05Vop+rYAi/dq5/mIHqIqQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=morsemicro.com;
-	spf=pass smtp.mailfrom=morsemicro.com;
-	dkim=pass header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b="ArQcn/dH";
-	arc=none smtp.remote-ip=209.85.210.169
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=q8mVugQk;
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D996C606A330
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 01:28:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D996C606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 698B1606A31B
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 01:33:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 698B1606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=ArQcn/dH
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-8ac1f2ff78dso641649b3a.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 17:28:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20260707.gappssmtp.com; s=20260707; t=1793755709; x=1794360509; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=KCVgDvaZXHa08ljqzUcaj2GuBC47j28XlCNU2sxllkg=;
-        b=ArQcn/dHA4gv5EmqI5TVDaPKtlVeWisjQgFL5kYXe6tFW1RTslqd6qOwP4ny/wNJB3
-         vmi3QTS6vBpVeQg1xFomry2nDPMy5/nToLEb44gWTuR+PrCE36Ks39e/u+J4J5CArwpA
-         ODN+PYiz/jhUg6b4BdEt0mXxgZ5mPCB0yf/BEMwEznIIOZOC97ZJF+zsN1iSSr5hUUSo
-         abNBQubz5NCddiTp12M9yKkjTJ65RPCXpY2gYEBRIGwqEFzr/lLq/h+a8oeWazS1yeve
-         wM+C4nmgP+MxAn7EWEJCkQxsDh6wGc1FEpL+dj6sMhvxVO0p8bsAEbkpwoFUfbVLOV8Q
-         olFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793755709; x=1794360509;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=KCVgDvaZXHa08ljqzUcaj2GuBC47j28XlCNU2sxllkg=;
-        b=mEtDvpMgAzNeJ/l5QzKRRMx9tRAUl6Jx1VM0b5wFjJ1aryE0piXLXDc9bs3x/WMKE9
-         BL7ED30ncD9bTO5jEcpPZP+axq6dlBbSIKgKqbjd0KgF0MBbVYXNqiZ+ef/FRWroBvr4
-         G25kEvBOBcQYQNUjaQLfhFLiwXJc8tdPCgcwLIry1P7n7V0AoBIYbcjIhZRkNx+P/cUK
-         DV/K7B6cfIXb5YJTUWCBzQiDXoRUBeYJObEY3M3m86Ne1X5NvCWyjbCkfSrQd3pM0z4D
-         7wDq2tJyq1BZUxfdbHC5rlACUM9rAR5NCX+iCCmU1Q9MhTXB0qFflrf4+L1ivkOspIsL
-         X0Eg==
-X-Forwarded-Encrypted: i=1; AKwUvBxZSWVLecPX5WMn/qNavR7KL/ssZwljrgz6L47uAvTXELIw3L/OfK7g9sFG2Iwi91j5GhO9lkGZJ4tt9yILoA==@vger.kernel.org
-X-Gm-Message-State: APuU4Z+LQGrnO0LB6F3SXcIA2XOlZN/15CdEdnE/ajaqdkuhkgu0lMPp
-	E6uU/WAe1OybvrSgKpDFnThY0McD3BR7P34gYJFDtnruVaNf2DME4DeWM/ZUabdeGe0=
-X-Gm-Gg: AYBFou04gceE4X1JuS+4q2qZD2pHxOIMovwYaE4j3Q+HNPyB5G2JyCigPjOQXWAG8E2
-	HYVMRrKmoj1/+hERzzbciEjAEjR4Y5OkpYeTr34FLazgmqfwSCCHfFB49UKMazw3PGvsUN7dTKJ
-	4xQhq2/PG3403RVIuSvcvKYB9ogXN4oJM25X+Q7F10WeI48nsVrBpHFIyCm/SQV7Glo98lltsci
-	QeKHdy3HiSIqIQPimoVmrSMQJe64gNifiM6jPy4uKCLLwFhz0j4TG9F6TxmLXsb79WVrhY2BDmB
-	Lipz3YtPWYVY4GgfLXjNWhHI65WV8Yxal2XxPUuXCFzCTKkJnuh3r8inbJkKYp2ErfNT0tqAYIY
-	az/VKsJCrH0C0ve7TB1ol6pZR3ksUOn5BafbC/Rh8IEYU9Fg5LpZ2TSjToNVoAe2dkxX6QNjz7k
-	+GJJSSMcN9TFeIn2oxVTq/lHbo4LR3RgpGWmx46AFv7ViF054o0znLSDHCRuE4aGv1UefEYUgie
-	2tkWpjjrzH6WUPPzRRTXXSlW6UoOX9mNU/rfKmu6v9Zlz6bLtPBUeQLfkeEAjnJKBxpzVncgjhz
-	T+SEjTUTQG8RQP1/ox4QkLxMGbJq7DqBnOy8RbiIj45x699Hnui56QCHl7YE/WGgRwuLRB6Kuqj
-	/KE07QZMLiwveAh1r6AcYeLgwkjprko5dBYF/2LxXWfKVmAk=
-X-Received: by 2002:a05:6a20:918a:b0:3e2:58f2:7557 with SMTP id adf61e73a8af0-3e913b5b07amr12874646637.18.1793755709212;
-        Tue, 03 Nov 2026 17:28:29 -0800 (PST)
-Received: from mma-H9MHD44.sydney.mm.lcl (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdb469814b4sm300794a12.26.2026.11.03.17.28.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 17:28:28 -0800 (PST)
-From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
-To: lachlan.hodges@morsemicro.com,
-	dan.callaghan@morsemicro.com
-Cc: arien.judge@morsemicro.com,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-next 7/7] wifi: mm81x: use the default mac80211 TCP pacing shift
-Date: Wed,  4 Nov 2026 12:27:56 +1100
-Message-ID: <20261104012756.510424-8-lachlan.hodges@morsemicro.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261104012756.510424-1-lachlan.hodges@morsemicro.com>
-References: <20261104012756.510424-1-lachlan.hodges@morsemicro.com>
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=q8mVugQk
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A41XLCh83576137, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1793756001; bh=jrbhlKGr5xj36qPJRdE9SU6v5d20hTkFAvGTnhxuajs=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=q8mVugQkWHyoBcLSkCg1+06jM2Z7QNve4juJUWjFNucqcLq2tolZytfqXA+HTD5gR
+	 J1kUT7IUzLGpqalCfHoXaFqRpzWumXlnnPf4gCE3sN+X7uahfbYXB5xtwZpgc082LJ
+	 4BywKvHCHXYgQY9u21bNZmFEAad3aFi8su/Olxyt5RS/JLMbqJJhbNSiE+hZhe0H5D
+	 hzfla6ZDRReUNULdSbYHX5vG1rqss1uhsvMR4Yn8z1pRgcz+Yvw7g7Iq+SJdJS1z2U
+	 3xl+mlU5DBTZsk2LERIGHJwKIyu+4ulvEQQW6h43PmZaovTT/TSylKOGTObWj8RfaG
+	 YTouo3rs7JNLg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A41XLCh83576137
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 4 Nov 2026 09:33:21 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Wed, 4 Nov 2026 09:33:03 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
+ 15.02.2562.056; Wed, 4 Nov 2026 09:33:03 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: =?utf-8?B?UGFibG8gTWFydMOtbmV6IFLDrW9z?= <pabloriosmartinez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: rtw88: RTL8822BE (10ec:b822) never authenticates on 5 GHz with a
+ Huawei router; poor 2.4 GHz link; same hardware works fine on Windows
+Thread-Topic: rtw88: RTL8822BE (10ec:b822) never authenticates on 5 GHz with a
+ Huawei router; poor 2.4 GHz link; same hardware works fine on Windows
+Thread-Index: AQHda+LR09FgVN+480OQuZbmo76KhLcdFQrw
+Date: Wed, 4 Nov 2026 01:33:03 +0000
+Message-ID: <2c8319def838488cb8a3e4d5dc44f357@realtek.com>
+References: <CALTviDkEWERPrtc51WFB1K3Sn7wLdt6YhB=_Ck4PwBPdLcojBQ@mail.gmail.com>
+In-Reply-To: <CALTviDkEWERPrtc51WFB1K3Sn7wLdt6YhB=_Ck4PwBPdLcojBQ@mail.gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -99,51 +81,88 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-We currently override tx_sk_pacing_shift to 3 and while in theory
-that would make sense given the much longer transmission times of
-S1G, our driver wrongly has large intermediate SW queues that are
-invisible to CoDel.
-
-A lower pacing shift allows more frames to be queued locally. At low
-bandwidths and rates (e.g. 2 MHz MCS2) these fill the driver's internal
-SW queues, so the driver stops pulling from mac80211 and frames wait in
-the TXQ longer than the 20 ms CoDel target. CoDel then drops them,
-causing retransmits and throughput dips.
-
-While reverting to the mac80211 default does not fix this problem
-entirely (as fundamentally we should not have such large queues in
-SW that CoDel is unaware of), it significantly increases reliability
-at lower bandwidths and MCS values.
-
-Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
----
- drivers/net/wireless/morsemicro/mm81x/mac.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
-index 6df06b535319..d6ef7fee67e9 100644
---- a/drivers/net/wireless/morsemicro/mm81x/mac.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
-@@ -48,9 +48,6 @@
- /* Max rate attempts */
- #define MM81X_HW_MAX_RATE_TRIES (1)
- 
--/* Max sk pacing shift */
--#define MM81X_HW_TX_SK_PACING_SHIFT (3)
--
- /* NSS/MCS map values */
- #define MM81X_NSS_MCS_BYTE_0 0xfe /* 1SS */
- #define MM81X_NSS_MCS_BYTE_1 0x00
-@@ -2394,7 +2391,6 @@ static void mm81x_mac_config_hw(struct mm81x *mors)
- 	hw->max_rates = MM81X_HW_MAX_RATES;
- 	hw->max_report_rates = MM81X_HW_MAX_REPORT_RATES;
- 	hw->max_rate_tries = MM81X_HW_MAX_RATE_TRIES;
--	hw->tx_sk_pacing_shift = MM81X_HW_TX_SK_PACING_SHIFT;
- 	hw->vif_data_size = sizeof(struct mm81x_vif);
- 	hw->sta_data_size = sizeof(struct mm81x_sta);
- 	hw->extra_tx_headroom =
--- 
-2.43.0
-
+UGFibG8gTWFydMOtbmV6IFLDrW9zIDxwYWJsb3Jpb3NtYXJ0aW5lekBnbWFpbC5jb20+IHdyb3Rl
+Og0KPiBIZWxsbywNCj4gDQo+IEkgd291bGQgbGlrZSB0byByZXBvcnQgYSBwcm9ibGVtIHdpdGgg
+YW4gUlRMODgyMkJFIHVzaW5nIHJ0dzg4Xzg4MjJiZS4NCj4gVGhlIHNhbWUgY2FyZCwgaW4gdGhl
+IHNhbWUgc3BvdCwgd29ya3Mgd2VsbCBvbiBXaW5kb3dzLCBzbyBJIHN1c3BlY3QgYQ0KPiBkcml2
+ZXIvZmlybXdhcmUgaXNzdWUgcmF0aGVyIHRoYW4gY292ZXJhZ2UuIEkgYW0gaGFwcHkgdG8gcnVu
+IGFueSB0ZXN0cw0KPiBvciB0cnkgcGF0Y2hlcy4NCj4gDQo+IEhBUkRXQVJFIC8gU09GVFdBUkUN
+Cj4gLSBMYXB0b3A6IEhQIFBhdmlsaW9uIDE1LWJjNDUwbnMgKGk1LTgzMDBIKSwgQklPUyBGLjMy
+DQo+IC0gQ2FyZDogUmVhbHRlayBSVEw4ODIyQkUsIFBDSSBJRCAxMGVjOmI4MjIgKDA0OjAwLjAp
+LCBIUCBzdWJzeXN0ZW0uDQo+ICAgQm90aCBhbnRlbm5hIGNhYmxlcyBhcmUgY29ubmVjdGVkOyAi
+aXcgcGh5IiByZXBvcnRzIGF2YWlsYWJsZSBhbmQNCj4gICBjb25maWd1cmVkIGFudGVubmFzIFRY
+IDB4MyAvIFJYIDB4My4NCj4gLSBEZWJpYW4gMTMuNyBsaXZlIFVTQiwga2VybmVsIDYuMTIuMTA3
+K2RlYjEzLWFtZDY0LCBmaXJtd2FyZS1yZWFsdGVrDQo+ICAgMjAyNTA0MTAtMiwgcnR3ODggZmly
+bXdhcmUgMjcuMi4wIChIMkMgMTMpDQo+IC0gU2FtZSBiZWhhdmlvdXIgZWFybGllciBvbiBDYWNo
+eU9TIChhIHJlY2VudCA3Lngga2VybmVsLCBleGFjdCB2ZXJzaW9uDQo+ICAgbm90IHJlY29yZGVk
+KSBhbmQgb24gYW4gVWJ1bnR1IGxpdmUgc2Vzc2lvbiAoMjYuMTApDQoNCklzIHRoZXJlIGFueSB2
+ZXJzaW9uIHdvcmtpbmcgd2VsbCB0byB5b3U/DQoNCj4gLSBNb2R1bGUgcGFyYW1ldGVycyBhdCBk
+ZWZhdWx0czogZGlzYWJsZV9scHNfZGVlcD1OLCBkaXNhYmxlX2FzcG09TiwNCj4gICBzdXBwb3J0
+X2JmPVkNCj4gLSBSb3V0ZXI6IElTUC1zdXBwbGllZCBIdWF3ZWkgT3B0aVhzdGFyIEVHODE0NVg2
+LTEwLCBzZXBhcmF0ZSBTU0lEcyBmb3INCj4gICAyLjQgR0h6IChjaCA2LCAyMCBNSHopIGFuZCA1
+IEdIeiAoY2ggMzYsIGF1dG8gd2lkdGgpLiBUaGUgcm91dGVyIGlzDQo+ICAgb25lIGZsb29yIGJl
+bG93IHRoZSBsYXB0b3AsIHdpdGggYSBjb25jcmV0ZSBzbGFiIGluIGJldHdlZW4uDQoNCkkgdGhp
+bmsgaXQgaXMgd29ydGggdG8gdHJ5IHB1dHRpbmcgY2xvc2VyLg0KDQpBbmQsIGNhbiB5b3UgdHJ5
+IGFub3RoZXIgQVAgdG8gc2VlIGlmIGFueXRoaW5nIGRpZmZlcmVudD8NCg0KPiANCj4gUFJPQkxF
+TSAxOiA1IEdIeg0KPiBMaW51eCBuZXZlciBhdXRoZW50aWNhdGVzLiBUaGlzIHJlcGVhdHMgaW5k
+ZWZpbml0ZWx5Og0KPiANCj4gICB3bG8xOiBhdXRoZW50aWNhdGUgd2l0aCAyMjo4NzplYzp4eDp4
+eDowOCAobG9jYWwgYWRkcmVzcz05MDozMjo0Yjp4eDp4eDp4eCkNCj4gICB3bG8xOiBzZW5kIGF1
+dGggdG8gMjI6ODc6ZWM6eHg6eHg6MDggKHRyeSAxLzMpDQo+ICAgd2xvMTogc2VuZCBhdXRoIHRv
+IDIyOjg3OmVjOnh4Onh4OjA4ICh0cnkgMi8zKQ0KPiAgIHdsbzE6IHNlbmQgYXV0aCB0byAyMjo4
+NzplYzp4eDp4eDowOCAodHJ5IDMvMykNCj4gICB3bG8xOiBhdXRoZW50aWNhdGlvbiB3aXRoIDIy
+Ojg3OmVjOnh4Onh4OjA4IHRpbWVkIG91dA0KPiANCj4gLSBJdCBmYWlscyB3aXRoIFdQQTItUFNL
+IGFuZCB3aXRoIFdQQTMgKFNBRSksIGFuZCB3aXRoIHRoZSByb3V0ZXIgc2V0IHRvDQo+ICAgV1BB
+L1dQQTIgVEtJUCtBRVMgYW5kIHRvIFdQQTIvV1BBMyBBRVMsIHNvIGl0IGZhaWxzIGF0IHRoZSA4
+MDIuMTENCj4gICBhdXRoZW50aWNhdGlvbiBmcmFtZSwgYmVmb3JlIGFueSBTQUUvRUFQT0wgZXhj
+aGFuZ2UuDQo+IC0gU2FtZSByZXN1bHQgd2l0aCByZWd1bGF0b3J5IGRvbWFpbiAwMCBhbmQgd2l0
+aCAiaXcgcmVnIHNldCBFUyIuDQo+IC0gVGhlIEJTUyBhcHBlYXJzIGluIHNjYW5zIChpdHMgYmVh
+Y29ucyBjYXJyeSBjb3VudHJ5IElFIEVTKSwgYnV0IG5vDQo+ICAgYXV0aGVudGljYXRpb24gcmVz
+cG9uc2UgaXMgZXZlciByZWNlaXZlZC4NCg0KSG93IGNhbiB5b3UgcHJvdmUgIm5vIGF1dGhlbnRp
+Y2F0aW9uIHJlc3BvbnNlIGlzIGV2ZXIgcmVjZWl2ZWQiID8NCkNhbiBBUCBhY2sgdGhlIGF1dGg/
+IEkgbWVhbiB0aGF0IG1pZ2h0IGJlIGEgVFggc2lkZSBwcm9ibGVtLg0KDQo+IC0gV2luZG93cyAx
+MSBvbiB0aGUgc2FtZSBsYXB0b3AsIHNhbWUgc3BvdCAoUmVhbHRlayBkcml2ZXINCj4gICAyMDI0
+LjAuMTAuMjA5KTogY29ubmVjdHMgd2l0aCBXUEEzLVBlcnNvbmFsLCByZXBvcnRlZCBSU1NJIC03
+NiB0bw0KPiAgIC04MSBkQm0sIDgwLzgwIHBpbmdzIGFuc3dlcmVkLCAzLTkgbXMsIGxpbmsgcmF0
+ZSAyNjAtMjkyIE1icHMgYXMNCj4gICByZXBvcnRlZCBieSBXaW5kb3dzLg0KPiANCj4gUFJPQkxF
+TSAyOiAyLjQgR0h6DQo+IC0gTGludXggYXNzb2NpYXRlcywgYnV0IHRoZSBsaW5rIGlzIHZlcnkg
+cG9vcjogaXcgcmVwb3J0cyBhYm91dCAtNzMgdG8NCj4gICAtNzYgZEJtLCBhbmQgdGhlIGJlYWNv
+biBsb3NzIGNvdW50ZXIgcmlzZXMgYWJvdXQgb25jZSBwZXIgc2Vjb25kDQo+ICAgKDE0IHRvIDY1
+IG92ZXIgcm91Z2hseSAyIG1pbnV0ZXMpLiBBY3Jvc3MgNSBydW5zLCBwaW5nIHRvIHRoZSByb3V0
+ZXINCj4gICBzaG93ZWQgMC01NCUgbG9zcyBhbmQgYXZlcmFnZSBSVFQgb2YgMzctMjc4IG1zLg0K
+PiAtIEtlcm5lbCBtZXNzYWdlczogInJ0d184ODIyYmUgMDAwMDowNDowMC4wOiBmaXJtd2FyZSBm
+YWlsZWQgdG8gbGVhdmUNCj4gICBscHMgc3RhdGUiIChzZXZlcmFsIHRpbWVzKSwgYW5kIG9uY2Ug
+ImZhaWxlZCB0byBzZW5kIGgyYyBjb21tYW5kIi4NCg0KRm9yIHRoaXMgY2FzZSwgIml3IGRldiB3
+bG8xIHNldCBwb3dlcl9zYXZlIG9mZiIgc2hvdWxkIGhlbHAuDQoNCj4gLSBUaGUgYmVhY29uIHNp
+Z25hbCBhdmVyYWdlICgtOTcgdG8gLTEwOSBkQm0pIGlzIGZhciBiZWxvdyB0aGUgZnJhbWUNCj4g
+ICBzaWduYWwgYXZlcmFnZSAoYWJvdXQgLTc1IGRCbSkuIFdpdGggYSBwaG9uZSBob3RzcG90IGF0
+IC00OCBkQm0gYm90aA0KPiAgIGFncmVlICgtNDYpLiBPY2Nhc2lvbmFsbHkgc2lnbmFsIHJlYWRp
+bmdzIG9mIC0xMDAgdG8gLTExMiBkQm0gYXBwZWFyDQo+ICAgd2l0aCB0aGUgc2Vjb25kIGNoYWlu
+IGF0IDAgd2hpbGUgdHJhZmZpYyBjb250aW51ZXMuDQo+IC0gV2luZG93cywgc2FtZSBzcG90OiA2
+MC82MCBwaW5ncywgYXZlcmFnZSAxMiBtcyAobWF4IDE1NyBtcykuDQo+IC0gV2l0aCBhIHBob25l
+IGhvdHNwb3QgKDIuNCBHSHosIGNoIDEsIC00OCBkQm0pLCBMaW51eCB3b3JrcyB3ZWxsOg0KPiAg
+IHJ4IDc4IE1iaXQvcyAoVkhULU1DUyA4LCBOU1MgMSksIHR4IDY1IE1iaXQvcyAoTUNTIDcpLg0K
+PiANCj4gVFJJRUQgV0lUSE9VVCBFRkZFQ1QNCj4gLSAiaXcgZGV2IHdsbzEgc2V0IHBvd2VyX3Nh
+dmUgb2ZmIiAob25lIHJ1biBoYWQgNTQlIHBpbmcgbG9zcykNCg0KSG93IGFib3V0IHRoZSBsb3Nz
+IHJhdGUgY29tcGFyaW5nIHRvIHBvd2VyX3NhdmUgb24/IEFsbW9zdCB0aGUgc2FtZT8NCg0KPiAt
+IHJ0dzg4X3BjaSBkaXNhYmxlX2FzcG09WSAobHNwY2kgc3RpbGwgc2hvd2VkICJBU1BNIEwxIEVu
+YWJsZWQiDQo+ICAgYWZ0ZXJ3YXJkcykNCj4gLSBXUEEyIHZzIFdQQTMsIHJlZ3VsYXRvcnkgZG9t
+YWluIDAwIHZzIEVTDQo+IA0KPiBDT1VMRCBOT1QgQ0hFQ0sNCj4gL3N5cy9rZXJuZWwvZGVidWcv
+aWVlZTgwMjExL3BoeTAvcnR3ODggZG9lcyBub3QgZXhpc3Qgb24gdGhlIERlYmlhbg0KPiBrZXJu
+ZWwgKHByZXN1bWFibHkgcnR3ODggZGVidWdmcyBpcyBub3QgZW5hYmxlZCksIHNvIEkgY291bGQg
+bm90IHJlYWQNCj4gdHhfcHdyX3RibCwgcGh5X2luZm8gb3IgY29leF9pbmZvLCBub3IgdGVzdCB0
+aGUgZWRjY2FfZW5hYmxlIHN3aXRjaC4NCj4gQSBzaW5nbGUgY29ycmVjdGFibGUgUENJZSBlcnJv
+ciAoQmFkRExMUCkgd2FzIGxvZ2dlZCBvbmNlOyB0aGUgQUVSDQo+IGNvdW50ZXJzIHdlcmUgMCBs
+YXRlci4NCj4gDQo+IFFVRVNUSU9OUw0KPiBJcyB0aGlzIGEga25vd24gaXNzdWU/IFdoaWNoIGFk
+ZGl0aW9uYWwgZGF0YSB3b3VsZCBiZSBtb3N0IHVzZWZ1bCAoYQ0KPiBrZXJuZWwgd2l0aCBydHc4
+OCBkZWJ1Z2ZzLCBhIGRlYnVnX21hc2sgc2V0dGluZywgYSBtb25pdG9yLW1vZGUNCj4gY2FwdHVy
+ZSk/IEkgY2FuIHByb3ZpZGUgZnVsbCBsb2dzIGFuZCB0ZXN0IHBhdGNoZXMuDQoNClRoZSBrZXJu
+ZWwgdjUuMyBvciBlYXJsaWVyIHN1cHBvcnQgUlRMODgyMkJFLiBDb3VsZCB5b3UgYmlzZWN0ICh1
+c2UNCmRpc3RybyBsaXZlIGltYWdlKSB3aGljaCBrZXJuZWwgY2FuIHdvcmsgdG8geW91PyBJdCB3
+b3VsZCBiZSBlYXNpZXINCnRvIGFkZHJlc3MgcHJvYmxlbS4gDQoNCkhhdmUgeW91IHRlc3RlZCB3
+aXRoIGRpc2FibGluZyBCbHVldG9vdGgsIHNpbmNlIHRoaXMgaXMgYSBjb21ibyBjaGlwPw0KDQpB
+bm90aGVyIHBvaW50IGlzIHRoYXQgcnR3ODggY2FuIG9ubHkgc3VwcG9ydCB0aGVzZSB0eXBlczoN
+Cg0Kc3RhdGljIGNvbnN0IHN0cnVjdCBydHc4ODIyYl9yZmVfaW5mbyBydHc4ODIyYl9yZmVfaW5m
+b1tdID0gew0KCVsyXSA9IEkyR0U1R19DQ1VUKGVmZW0pLA0KCVszXSA9IElGRU1fRVhUX0NDVVQo
+aWZlbSksDQoJWzVdID0gSUZFTV9FWFRfQ0NVVChpZmVtKSwNCn07DQoNCllvdSBjYW4gYWRkIGEg
+cHJpbnRrIHRvIHByaW50IHRoZSB0eXBlIG9mIHlvdXIgUlRMODgyMkJFLg0KDQoNCg0K
