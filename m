@@ -1,112 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793764495;
-	b=tKXyk71bY4Oq0Qu6lS7rokmJJSe+ev74k4jMSH5sOTgcEGDT/eZyhHSSQuLNAh2DMU/x
-	 umTVnucKVU88aJtEa96nMAVPEKY0EID9/LRcPgt+JDlbmfZQirXoBK9g/MmLJhRRsdaLc
-	 SKYuq8HHONMmq4ldmgCo4lQP7SbKWR6UoWrqvnCmB6J0HO6JeXAgnDvOUznnF5d+3gdDo
-	 lhgDXS3+DMH4N/mDnyuA5QS7BpoGjOIR9b5FOtDxfm6FYCF2uVOiNzFe1m6087bJNb9ni
-	 Nf/I/0w9zTS+hAm/d+Il2HNFU1X7M3dWMtruXLoJ3VrHb7BdTYxo4ZlJLIQ2kvIbASg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793764495;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
-	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=ZGsdm7ECwxa4fqXlpHPQLCedahUTjcPZ09cWyAaDufw=;
-	b=FSaueDgxsD8LwmFc79Svi1HXMMLbthx4bQzDoRRZTRTHPDXJod3pJg/InR7B0YK9BAsU
-	 QmLqujaeDXl5uT+aZj3uQfYVobKM/iVJM8jbUZu8Q1hO7AtLBWJT8Jz7VA6KQcWuK8HzG
-	 2bHBfHZrQJqAbI6D8XOhthulI5udtYIg2ZCA6mX1k21SlCy1eM5pB9XzULSffjCgip2cj
-	 mDx1coRKlqC+nDaN4HZa2JXgziusgv5wIVXoBA/C0rnSGcPB/43WvG5gMZKK25VbFGEJt
-	 H3FHHut7kPtjtJgpGrUYSRWkDhez+Y9vqhCGU9A/cafLwOpoMcI6En8SrK5c25MWGJg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=fIGofGSS;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=WAC+67Y4;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.54
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793767969;
+	b=1kOAozwLjYXY6r/v2ND7RxbS4qmK8eHSydt8K7cWqSYBLvCDUNwa5CYPYiHnLtyF8281
+	 FmupokbzWs9FSoWvOgCRxAmjyXlEyWO9CaPcb6so7X2W/wslOb0fyD03RvXKPYpLuFXkz
+	 5uT0qMpwGNSsq3QFYL8xe7+GGy/khUYtHY3xkfQFkdolpqWkJqoIDVxpFkMRtTSyhdB07
+	 WVzD+MtnGzFcHjltn4YL8AJ32egD0J5e6/8cRkLv5WW2yhWXRbuqgfEWE8cPB0X7rmZvq
+	 CewtSuG4hB+Df4yg9ITNcW3vVayE6Giq9eCR9dEyWcTwdVbsZepPTApxSaLUgddMM5Q==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793767969;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=pFoH3xvN9EWBbrUcPIA3qDP5aom6jOQyZeF4FVw6u6w=;
+	b=zlW91kiQ0E2aAFCWcVCcTnlc7HmDbshajwqrNMU824KuKsIUefiS3redHj5ENyW06N6b
+	 vz43VTRDt+R4UKqLsT9NHahoVh2LsR0vUjRiNcnuC5NiPXcbD+qge90thS5vctq8tZ8Sy
+	 UQA52esXnISiuzaNcYDQrIdQ0jgAwA0HjfuYaFUiVfRvNU/uXJTGPtx64il81vNlRhG+n
+	 OCLROWnS5qJQzzOiWu1eEFUxPawdelEbCoApNu2Z2RnLxVxCCcqM3PffNcGFLQ20Qbgfc
+	 RtEQ0fjr+3LMBDfThGq5WrPr6+tAuqqr/MJw78hGBy/8LbFqf7rCEolH8nvmQD4BHrA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=aiRLH7pr;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.54
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0770F606A31B
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 03:54:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0770F606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81AC7606A32D
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 04:52:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 81AC7606A32D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=fIGofGSS;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=WAC+67Y4
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A40RFY8838281
-	for <linux-wireless@vger.kernel.org>; Wed, 4 Nov 2026 03:54:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ZGsdm7ECwxa4fqXlpHPQLCedahUTjcPZ09cWyAaDufw=; b=fIGofGSScLv97ose
-	faXMoZPzVyctNtKeZH7oT39kbyAENOMO+DqPgJh+dvlUoTp3XEs3GicB1AjXkncm
-	1VoOSub+KwXOXUGnedpPlt0lemocjtHfEgcNBjfThAfdRkfTEJhkVXznvuXYdmoU
-	e9IZc7DLgXpTT3iSJ93K+kt3+Zw3yXoKzeqOpjUGRFZgNNa7rXu2PIYojQox9WKa
-	IsW/QYLx5fwpR32d1KKGw0uYEyk/cQqF+uZs6t36eGB0JwYRAXu9BDWH/mGUpyWx
-	ubFdQ03aw/N6LTXrUC5YNg0/LKUZ4UZVJPjw+K66/u5ghyutzFfPf5JPsPQh2w4v
-	WTpQyg==
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hqn8msug4-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 03:54:53 +0000 (GMT)
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cdacb64970bso207850a12.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 19:54:53 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=aiRLH7pr
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c450ab1483cso43747866b.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 20:52:49 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793767968; cv=none;
+        d=google.com; s=arc-20260327;
+        b=cj1kE2i+0dEv03X7Zd419Vwq/FAOaG/ygF0RLxE7xKJRQxUvTMKkqLLtu8uCLtsF9+
+         sPNbWd6YfwqU9eL4JJQjAUE7Vu3Op6pS0M90VrtJ9P/EwR3IcNMak6A/LWe+K5MXhs9K
+         aov53cE7szPv4lwNtu/2H9gKk8UYCjbTxsCwMHAkUDrgHLE6hLiZp5H41j0IdMWgn1JC
+         AVcLJilmgBcOcs9UA81QSYzXXtrf90k5n7SxoOTkbouQuhjPOYLsE5//E9OQKHo/Kl+t
+         EyfNSm+g+c2mjRTCCleWFsyptjSIYOd/Bl1WY9TUuBJOpSf5HqBhMnc6QrNz3B38jWKz
+         YtKw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=pFoH3xvN9EWBbrUcPIA3qDP5aom6jOQyZeF4FVw6u6w=;
+        fh=tA/qOmjbHMAFsRsDEhDLXK2o0U0MdkZ/FQgef05ZCVc=;
+        b=WzGihY7buD85CYtamLhToujU7HE8j7IfKiVVs0D5KkErV/BolEQk71Jb9shWfhjHVZ
+         9D0w2Sev+9KMapThPdi6YqWU91dLUlsu1L0tHL5gJrG2TOyaUftn7TkKi2wBgEuz15lD
+         c0meSgrW/zBr/Zz/U/tJjzuiYd7PgmYvoGeGMt0Ul61gmTB/kQgTrFscIgRpxqoe7ECT
+         2mrcWJMsGiT4rhS3WV1BOVKJvXmAdqXv15GXFXWcYqMAa3k/7e5RgLB74S7FgQKFN/lu
+         9nIwcKLScHphmG8ohX+qt8Hi6o8AdkJ273acVr0SFIA0x86y/XAxX8n6NIDRNzLcsEMK
+         taaA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793764493; x=1794369293; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ZGsdm7ECwxa4fqXlpHPQLCedahUTjcPZ09cWyAaDufw=;
-        b=WAC+67Y4ffhgU1eoy05dm2Rin7HJMwf2L5VdBIjlnRMAvo0FvuGY2CODWWRPWR1GYo
-         bNdCS6jmVUfkOUC5L2djwvunrXQ4605ii83tqCG2RrRjfUNN7stfjCP/ztcbuGpYo4D3
-         +WMUy2LW8d0Ibo/KhlXWlcy759CFmMOdD/rZHdj/aDJNTCbd2JhsYjS/fMEO2M7fdkol
-         CeSwVjLU1HDeKrjc3AJHJ31wTZHzyClU+66TRt0+HVynHsJB1MSK0ukPg/nJgKpusthW
-         z2I45ZoHTTtTJPCKzmfY90/erVKrk4l5FOiN8tChnAus5pj43YUPofBkWKyPtG/J7O1a
-         gc7w==
+        d=gmail.com; s=20260707; t=1793767968; x=1794372768; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=pFoH3xvN9EWBbrUcPIA3qDP5aom6jOQyZeF4FVw6u6w=;
+        b=aiRLH7prZ4+gVrvOk5uBmzvbOq6/s+Sl1DQtGkGd+kW6YdlzA84iI56Z04BS8bIrtf
+         +K4nk9U+6N03dxsTecuheaSE0EJ7/BoY/bWjqB2ZLIunjG00BsU6ITNCkyoPfvnsoCB4
+         h6WlUZy1/WudE4DUlKC6qRUcZfTwj4nmnl+URpsfv4Qrmm8KxiJNq/YAnsCeHnlFM0xC
+         +LLa2BH+NQn1hJQVnAndjjwbq0gRawOPU7m2qBvzkv10DQ3mpJSzoZfb8kxPE9Q2FDaF
+         c0mwBVBhvYUa8GBmQIH47uaKc1/Lx+CsIm1cEdVXJE7wyZlDE210owyNtZ8zRgkTBP/P
+         Bauw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793764493; x=1794369293;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ZGsdm7ECwxa4fqXlpHPQLCedahUTjcPZ09cWyAaDufw=;
-        b=HN7buIBRpUG+eXD01KeZBxRgamf/WrE42DL+I6mOpMK5OKDogbXIXqdQHFkpaxWfQM
-         8GIxwlZNOctdu7QsuVA6N9ZOOEyYPYxqC6Pd62LRx0HqvCx22QGV3JKbtHISWMlz714B
-         nTrYRjPzY5F37I+B9IfnRF/fQujKGR5NImZAo6/q5G8L17F/JpTp+m8sC6kb3GHAYGIC
-         F/7xx4+NMxna2DGyrd5/jOLjegs7Ejl5iYmu5A6TDYBMWZmLm9jZyz9JshqLTHYkUu3z
-         FstyGgg/w7pSdqWxl/c2P5VDRTbuYVNAmfdbSUpUAdRUmoM8wgcios3b708BUNFlFxM6
-         p0pg==
-X-Forwarded-Encrypted: i=1; AKwUvBzvFksrEOLc83FmhPakoC6hF0JHusrjNomAQJI2wl0qX+ketRoeFbCJtACfpbgr8Qa7+FDCGUaQojlt2kD30w==@vger.kernel.org
-X-Gm-Message-State: APuU4Z8/bG0lm8E9WcxRDTmadFsVU44UGaNAOLx7ALniAE/KtuXHTqlX
-	0W2JiSDoizzp6cuk5XR9wl4ALP05SUbl7D+4zQnM9kk3c77G36Z2WtoKbFeySSS1I2qT/V2L8+M
-	GAGIJzKxDMubnQR9pEuYV28HzCzUNJAeotDIu4+fScm3VCNXeCAiRvGh2UqHqnZ9Y2CBH2qHzI+
-	3guQ==
-X-Gm-Gg: AYBFou0nmU40AZBWMxJ09eCrAB/tGWjV0oUAlguOu8iiyOUqCkcEYgb5W08yYjPWaV6
-	FPTA+H3lybhCp1hvNyVfzA+o/cYoRu18C1uV8jStPcjAtcNDhthTWyLZ4d73x2Oj/QBJmy+HrXW
-	Q5Xw3lrtD6ENA2P/2wGA5lEeH6U7ftGGkforDfkqPl6Fy7/4nOVRzUiTBjxy+kK3coAztQTUlny
-	IGZAK3qj0UVY/rekCYRujEXmT9uoS45zOxxvtyzkrXZCskK5caAz31Un7QKCAdCoIGQY1PELjuM
-	DNNiqxetqYyUTuQK7/7b5px4VbSY9rG24aCOfRWglAHeXVtjQXIS3jA0DHbR2nZ7pCXVHiE4Z+J
-	yK2KAI5LWNCmh9SrX9mow765qTcaR/8xH/LDA+z6pxJEr0ANo5CNfKDkAm5uPfzCy2PolLHK2zp
-	P9wmROyOHEYeTVuqJ5Gsd3FRcl1mlbklnX5uGjyOR0xOm7
-X-Received: by 2002:a17:90b:5404:b0:3ae:6fda:78ab with SMTP id 98e67ed59e1d1-3ae897b2faemr11997997a91.25.1793764492872;
-        Tue, 03 Nov 2026 19:54:52 -0800 (PST)
-X-Received: by 2002:a17:90b:5404:b0:3ae:6fda:78ab with SMTP id 98e67ed59e1d1-3ae897b2faemr11997981a91.25.1793764492372;
-        Tue, 03 Nov 2026 19:54:52 -0800 (PST)
-Received: from [10.133.33.51] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b07c9928d1sm7300015a91.14.2026.11.03.19.54.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Nov 2026 19:54:52 -0800 (PST)
-Message-ID: <4e0d6173-d908-4b6f-9696-c05a8fd7714f@oss.qualcomm.com>
-Date: Wed, 4 Nov 2026 11:54:49 +0800
+        d=1e100.net; s=20260707; t=1793767968; x=1794372768;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pFoH3xvN9EWBbrUcPIA3qDP5aom6jOQyZeF4FVw6u6w=;
+        b=2qxzIaauXC0H9A6lZsTcla9mCNc2eKBfS6IhHh6iWdPtLB/dad96OqGydqdOZ8DrTa
+         ik5YjNlHNNJ93lsjzeOGn7qeJrHbCFW5c4Wlmtga+cJRehuaBEUlH/sB8BOb4d5Rr73/
+         IOixjcKvpAjmEAvZpmTOwdx7lJcUfJHqqvjhcTTr4RnNiuyUTYDEOeeUbLSYpB8SCcf8
+         KZeXhF7TGaVeFoS9C8NecWYG6tvd97qkxQYGzaKbGvr9U9mIF5dpa9942j9hOf3jFDVW
+         nAcM9YSkVvfwSMDMIgkM7bpRkH61LXmUSG9Idy/mbf+GuXOxJHjHe5Oh8UpsC80AJJmM
+         USJQ==
+X-Gm-Message-State: APuU4Z81HrWlMDhusALEVNKrIl4w4THV078L8r56rAj3sLFEc+QZdZWd
+	hg3r8lEDcj5NkZRyw6zMiFwd8E5JJdS3Tkr7/SuiXa320NN0MnqXCT8NAnQXe1Q7P8va2dG+mEX
+	dw/BKkpGig9e+xMOn0nTA3n0qHFnLSUI=
+X-Gm-Gg: AYBFou1o2Ef3KF0pIiWNNbMbMMGibWa4pl6k698c36eA4uCscQFe8O9NL16YUduzfM0
+	CHR8W5wZenxZM1LdNDL5TdxG0jpQswgyTMK6Lh4Vu+t6wRjav8Yz+lRVhnOojhfzuKZDIv+nn+t
+	SAeDiM+lndVtmDyf/8jwPtE/+tYG+lEDEbA2ffLt1XFPDfJF9mYnKp57oVZHq1EZ+SeQb0PCo2n
+	6Byy0TLY3MBePm8ZRCi3zQrU+WrcG51O+6XELG9pexGUNxZgHhCeKyBPL7lw0tQAzQqPf8owYIK
+	jcnaLpllb57poBzFw2dkzRJgLKD92xGtP9H6w0b6u85un0AOsedKDViBfRWToNJ5W9a8wDUfymI
+	qCzjWB4cVMdq6E256esiQB64glm0FxCR3b52xKPtixH5nT3qgYyJXSI1mmtE3dwuguE+2GWLCkZ
+	9VgoL08zgmMTSBEZo1T7zyDoYFyPVwoQc0Anlqq3hFxBpHEyAY7pdbr73F2Lr/1TFdnDfQv+kbe
+	DDGMJq7eMdmf4OFm6PDTu2mlWnkG9jd1h3yLmGh5wK3NdzqQQ==
+X-Received: by 2002:a17:906:f5a1:b0:c41:6de7:7dee with SMTP id
+ a640c23a62f3a-c4ca7949b3dmr1198860166b.7.1793767967575; Tue, 03 Nov 2026
+ 20:52:47 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -116,54 +105,97 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless-next 3/6] wifi: ath11k: register regulatory
- before wiphy
-To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-References: <20261022101836.148512-8-johannes@sipsolutions.net>
- <20261022101836.148512-10-johannes@sipsolutions.net>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20261022101836.148512-10-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: D773Gu5a5gFVTjLU2pOylSdWnKxjxYG4
-X-Proofpoint-ORIG-GUID: D773Gu5a5gFVTjLU2pOylSdWnKxjxYG4
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA0MDAxNSBTYWx0ZWRfX4VuAhQ5RvPfN
- r9ROU+tPZ0Vsx0Om6g0SlkFhsdWUCtqOsqdeIrigDjAd68iyp/iTd3ygaeRzTdUVpq3Qp0IbxL0
- 1CKqx4RRjXscY5zqx/VWcVyLVWfl9eIcjYkDcRia6ajDyvoiQzK0tVdeI9zjTGKYaVRlwImmFsw
- PjPqsB4b3K1lh/s/0RSOFb5Pjpcgl5MAiPDmVbuhkJFOU1QEKsVUgVEntCJVLGd/O+BGL/7BWmd
- dL/4iP9pMC/8LVC+qcPyV/O5dnqKgVEAfvuaIU7zkDlLmJ2kaSvewXLvCUp4Kb/R3quRBHMbnF9
- 9049/TnJ76oxeilsTS24sIN/Ah+xt6MmP9eelaV3NtowZgpkHoFVXV6WhqYE9ZdxQlrbkRX3EAt
- sEqXGnap/8KBYMG1U1D9EKwjmUDDDYcUdNXN6k69u6XTKa0an+B2zMuxHtsfCz9n/+VZURrntVA
- NGNALbLRuwYMXFSnovQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA0MDAxNSBTYWx0ZWRfX0lb+5j+fudpp
- bYD/+CKYNzKZu6lGwYrzFr4+GiOQ8KWDUIEO9J6S+TznfnqsxaSNeM6Y9r04rcLJXSE17Pw/ttC
- 9DwVYjouPkjhZ16zDwUTx4uKjrUURNU=
-X-Authority-Analysis: v=2.4 cv=HbWB3SE8 c=1 sm=1 tr=0 ts=6aeaac8d cx=c_pps
- a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=QyXUC8HyAAAA:8 a=EUspDBNiAAAA:8 a=m1vWl0tTxCWmHZaFBgAA:9 a=QEXdDO2ut3YA:10
- a=x9snwWr2DeNwDh03kgHS:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-04_01,2026-11-03_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 adultscore=0 malwarescore=0 suspectscore=0
- clxscore=1015 spamscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611040015
+References: <20261103215557.183459-1-rosenp@gmail.com> <a5f044a803a64a1eb68815f075bda2ee@realtek.com>
+In-Reply-To: <a5f044a803a64a1eb68815f075bda2ee@realtek.com>
+From: Rosen Penev <rosenp@gmail.com>
+Date: Tue, 3 Nov 2026 20:52:36 -0800
+X-Gm-Features: AclHuK-PgB-kCA1qvvR-AVgXtcHeHVRUwBypOKy-ZNzFoSBd052ve_9ylaFIDM4
+Message-ID: <CAKxU2N9OpxoKF6M5rJpNOJ1HWXx8oJ3wXHpfyGGVgQpZaMi+uA@mail.gmail.com>
+Subject: Re: [PATCH rtw-next v2] wifi: rtw89: acpi: check for _DSM function
+ support before evaluating it
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, Nov 3, 2026 at 4:47=E2=80=AFPM Ping-Ke Shih <pkshih@realtek.com> wr=
+ote:
+>
+> Rosen Penev <rosenp@gmail.com> wrote:
+> > When the WiFi device has no ACPI companion, or the firmware does not
+> > implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() calls
+> > acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
+> >
+> >   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7=
+ rev:0 func:10 (0x1001)
+> >   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe8607803aa7=
+ rev:0 func:6 (0x1001)
+> >
+> > Here the handle is NULL, and acpi_evaluate_object() returns
+> > AE_BAD_PARAMETER. All callers already treat failure as "no policy
+> > provided by the platform", so this is only noise.
+> >
+> > Bail out early when there is no ACPI handle, as acpi_check_dsm() would
+> > otherwise hit the same warning while querying function 0. Then use
+> > acpi_check_dsm() so that functions the firmware does not advertise fail
+> > quietly at debug level, as rtw89_acpi_evaluate_method() already does.
+>
+> Adding this check is fine to me. But my question in v1 is that
+> acpi_check_dsm() checks func 0 to determine if BIT(func) is existing.
+> Is it possible func 0 not existing, but BIT(func) existing?
+Shouldn't happen, but who knows.  I can drop the acpi_check_dsm() part.
 
+7bf2dfccc2dd70821104d15cbab7b6fca21872be
 
-On 10/22/2026 6:15 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This order is going to become required, since userspace
-> can query the regulatory in the window between the two
-> registrations.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+is effectively the same as this.
+
+Note that this specific card was taken out of a laptop and placed in a
+desktop, hence the warning.
+>
+> >
+> > Seen on an RTL8852BE in a desktop PCIe slot.
+> >
+> > Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> > ---
+> >  v2: check handle separately. Remove Fixes.
+> >  drivers/net/wireless/realtek/rtw89/acpi.c | 15 +++++++++++++--
+> >  1 file changed, 13 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/realtek/rtw89/acpi.c b/drivers/net/wi=
+reless/realtek/rtw89/acpi.c
+> > index ebb6cf555747..3396d42594b3 100644
+> > --- a/drivers/net/wireless/realtek/rtw89/acpi.c
+> > +++ b/drivers/net/wireless/realtek/rtw89/acpi.c
+> > @@ -372,11 +372,22 @@ int rtw89_acpi_evaluate_dsm(struct rtw89_dev *rtw=
+dev,
+> >                             enum rtw89_acpi_dsm_func func,
+> >                             struct rtw89_acpi_dsm_result *res)
+> >  {
+> > +       acpi_handle handle =3D ACPI_HANDLE(rtwdev->dev);
+> >         union acpi_object *obj;
+> >         int ret;
+> >
+> > -       obj =3D acpi_evaluate_dsm(ACPI_HANDLE(rtwdev->dev), &rtw89_guid=
+,
+> > -                               0, func, NULL);
+> > +       if (!handle) {
+> > +               rtw89_debug(rtwdev, RTW89_DBG_ACPI, "acpi dsm no handle=
+\n");
+> > +               return -ENODEV;
+> > +       }
+> > +
+> > +       if (!acpi_check_dsm(handle, &rtw89_guid, 0, BIT(func))) {
+> > +               rtw89_debug(rtwdev, RTW89_DBG_ACPI,
+> > +                           "acpi dsm func %d not supported\n", func);
+> > +               return -ENOENT;
+> > +       }
+> > +
+> > +       obj =3D acpi_evaluate_dsm(handle, &rtw89_guid, 0, func, NULL);
+> >         if (!obj) {
+> >                 rtw89_debug(rtwdev, RTW89_DBG_ACPI,
+> >                             "acpi dsm fail to evaluate func: %d\n", fun=
+c);
+> > --
+> > 2.56.0
+>
