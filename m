@@ -1,66 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793781402;
-	b=auszYZIZaKw4UGpyYp1nW/+F6EDlzp3JBBYOatpR4jY0LOZ5/u6ltSrq3u3FOESKRykm
-	 +qG+cjgPaoocpB9pf60JY8lqsnBl52MaFk2xxhb8/IwOo+7vSa8no4hrcxOxg2ILJ5Axq
-	 udQOIXbtjMlL1A49SmRCEOCj3+ctqXjMjOHWAdwzPFdHZBfeEvSu8GP16I88dKjSwVu0C
-	 3FpOX6pW1H/PiC+MD0p7/UmxUHLbcEErIUq/r1UpVXp3GEFlJGd7ifZYgPzEY1Y60L5MA
-	 B5RDAWmc5Qv4FLNcxF0dZtOhZeeEAB85loq0nPSt2gc+vyWVUjHj2eoml1U+GitbsDg==
+	t=1793783736;
+	b=heY8DZfjs596eoeBD5Z2sDOUU9B1ozsiyIw9Ub5j5NN18cL3ACo/mUb+8fdUQxz5eknT
+	 AGHLKCBcM82NzD0fuSMaukcw6smbGvzmBLwxSSuq5fKTgnyFK3wIgZtHAwOfjsyOLGNUl
+	 EiCrjnO3XhFFGMySJ3xCOCLWogk3C1BrrMYba4ksBCT8888DurqYn6Vt6hFNjwvkESbOU
+	 /ilzQS+Bmzpgc8XaQVtUdl3qH0LHiLromofkdHAcDZgzYez5ObWIz+6D+m3kF3Mt6fzkT
+	 kzuU+alJ51HWmnUBCnfr72czmjbMxJZizh+ZFsMPXlAwFP7C4rrf0/Ct+Mu9O4f6a7Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793781402;
-	h=DKIM-Signature:Received:Message-ID:Subject:From:To:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-malware-bazaar;
-	bh=JVfuxFdvPZKXflkAWiwEyTE+Cn3z/jyS+y+LpcBkNJ0=;
-	b=vQ9RGqzsyb3amCLLyBiPNrQ7b6NYb77YTCQ/tvGq43vUTKL5egp+rLiFklqmv27znzcU
-	 7cWSnoC50XKFAyystFgnUFwVOPaQr/pBPkPe3OyFcwqG5xpSAtRbvMPoJPkWUNWbtvxB5
-	 s/R9TJOIycYdV/FrCEndiQrAsXvT6GTezpwMQ8F/66+GkCChAYCj4i9RHpJ/DgV+mOfj2
-	 mcMHCGj8UpGZPFNrSCu6T+FS6Qajh+iYt9azoMjt8h3FEHizG00Ygi7YHbdrtit5ybWbm
-	 st+gL4q72icnjrrQ0F9JsXNhPyvJGXOV3sb+u2OPwd2moTAnb+CYbvSGgkjVAn8XvDg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793783736;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=tun3DxnivT6n8ykyvHDle1jgjloMyn9wMMyaVwUBJtE=;
+	b=xmcr7yec+WPhYpeNieSszKshZJXr/3jZlrcW8PLnr+8Zh4T2kyeXJvf1i/aGPlwa+qVS
+	 R6xPzgd1Ro2Z+SaMXtkyN6ZxEdLAAtVN6DqR2QjzGXvdlwahqdhv6qUOiaQl1kLdUMPPo
+	 svBQYusftCZ8mNsJ9Le9tpJsm1Jf6NSf+sX3zXiHp5gTlqJVORtB3x1oNI6PIm6r1kdGV
+	 PolVhj4xUkvFWlKwY7Lk1oM+acc8YBO0v7qi0n7xFCNGfHNKesXbXw7JqXVKcphP3VWel
+	 PHCWI5ukpuhM5nNOHoVBztxqRAXPCZbK895HWGrw28um8DVKOXnYgI8YqQOODf7vdeA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=vnMS7tTj;
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QF98rpjB;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE379606A328
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 08:36:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1070606A31B;
+	Wed,  4 Nov 2026 09:15:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=vnMS7tTj
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=JVfuxFdvPZKXflkAWiwEyTE+Cn3z/jyS+y+LpcBkNJ0=;
-	t=1793781400; x=1794991000; b=vnMS7tTjET04ev8rXTDQs43E8jTVspAV+tKECgSnEErW7Rm
-	fplyx8q7RWBiNfVGjPC3BtiT7zAyRH29n+clrSOc/lud3TvZEpfYnnNKzhTTdKPRg/qjLcHcFNO+t
-	rYs4XKv8s6P1HQkMxfcwkkkC6KHFR7yYeXHlJe82DlgX1sWik+gdKEx4v4JjPWhVpWi4F9QPh+op1
-	xGpz8Grn+amluDqOiyMl0DcqE/wlSPGd4bv6Z4+De5exFOqQHRHU5mcaGtG0887oSTrEQ2DrtJGWw
-	Ku02Gw7NJh6GBKEITXKBqPU4KErWo3G6D1199eJNMAXVD4JXNwriO+ZBDA7pl4XA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xOWU0-00000005Ew3-3qfz;
-	Wed, 04 Nov 2026 09:36:37 +0100
-Message-ID: <9efc1e507a2c7eaf6ab68ea0be0f5f02178ff4c7.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 4/6] wifi: ath12k: register regulatory
- before wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>, 
-	linux-wireless@vger.kernel.org
-Date: Wed, 04 Nov 2026 09:36:36 +0100
-In-Reply-To: <d613e20e-16c3-4a39-b9a6-538a8740d2d6@oss.qualcomm.com>
-References: <20261022101836.148512-8-johannes@sipsolutions.net>
-	 <20261022101836.148512-11-johannes@sipsolutions.net>
-	 <d613e20e-16c3-4a39-b9a6-538a8740d2d6@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QF98rpjB
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 786C51F000C1;
+	Wed,  4 Nov 2026 09:15:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793783735;
+	bh=tun3DxnivT6n8ykyvHDle1jgjloMyn9wMMyaVwUBJtE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=QF98rpjBzH7nX1jmz4Zo8ykeu0WPbxz0HGt6XxCXrOQ4V4PB3P/wbn5sluIzZ3bgP
+	 woOpkCVq06Ek6V7bKkHEP2phdvrGGARxXAl1OBE0IhgkRUa/IQ935AFbXxh1YUY5bJ
+	 utfjbIjp7LtybAhtZNGHqFcIoDw2mhpfxaUaUe5IHuBCvHt5tgYAPu/YfrtEAf4jWd
+	 v5zbJS1rE1Hby/io2vM2SNwmccLVR3w7pjdFYCtf7rR4Wu4skeBeZ5GH0Q1ajKmHHR
+	 yetiYqpJqieJOdcKUSYdWCjNW5p22mqd+bHsoVYbOTO4y8Ft2ybe6f5kRc5h/hiSzc
+	 /PiiXfUYZ7Gcw==
+Date: Wed, 4 Nov 2026 10:15:18 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Florian Westphal <fw@strlen.de>
+Cc: linux-fsdevel@vger.kernel.org, 
+	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
+	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
+	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
+	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
+	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
+	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
+	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
+Subject: Re: [PATCH RFC 03/38] netfilter: xt_recent: don't remove the proc
+ entries under a spinlock
+Message-ID: <20261104-entgangen-nettigkeiten-intuitiv-f39521735261@brauner>
+References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
+ <20261102-work-procfs-bugfixes-v1-3-59422ed3e465@kernel.org>
+ <auig_zhd3L0HEis3@strlen.de>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -70,34 +79,12 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <auig_zhd3L0HEis3@strlen.de>
 
-Hi Baochen,
+On Mon, Nov 02, 2026 at 03:41:03PM +0100, Florian Westphal wrote:
+> Yes, but note that this change is already part of a pending nf -> net
+> merge request.
 
-> Hmm, this might reopens the race that 906619a00967 ("wifi: ath12k: handle=
- regulatory hints
-> during mac registration") fixed: With this patch there is no ath12k_regd_=
-update() call
-> after wiphy registration. So when there is userspace regdomain hint sent =
-during
-> registration, that hint is sent to firmware and firmware update to host w=
-ith a new
-> regdomain, however the new regdomain is simply ignored.
->=20
-> I'd suggest keeping this old call (to make sure the new regdomain is hand=
-led) and
-> also adding the new call before wiphy registration as this patches does.
-
-I'm not sure if you changed your mind about this since you sent the ACK
-a few seconds later?
-
-Despite the long commit message I don't really understand the commit you
-point to, I guess I'm missing the FW side of things. Also not exactly
-sure what you mean by the userspace regdomain hint "during
-registration", I thought this was self-managed?
-
-But I can also change the patch to do both, cfg80211 won't really care
-about the second call after the registration, although it might send
-another notification to userspace and cause quite a bit of work.
-
-johannes
+Dropped.
