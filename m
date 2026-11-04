@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813375;
-	b=uLPYJ7wDfCKDILBBGY7tsoTV8pWFSIC9A9Su7mLdxY8dg4EEQZnUcMEhFEqibspfqyI0
-	 DeB8lTbZP0Sv9swJNWHSgyk/6NL7As9AoJAsnW+aZsTQmcIHxo320EhawHKLrbN2qlYJM
-	 hyuxfh03mJNvzFQ4U1sw7yeGXQ0v2PxgfDtcqn4PEOD0OPvFq1trm2o04Ewi+B+BqkUVc
-	 Pl1h5er/82TECEaRJXfnpN7v83SEzgpOpHKbx23EBgK00o/54THzfZcEcFnjU5+G+qtVi
-	 Jf8IRBCCAIUJY+E85YonPaUT6Hy4X5sWuYds2sDDLd3qMAA37jXc9H7NzeHvFDb8ZLA==
+	t=1793813417;
+	b=gfD/6DFNjvtXO3CzdoPYk/Yhrx34a7WH6I8zYXExCVOeZ03BpvGvgfRHfVR3zo07NWrn
+	 bUhqQGFn/i+qftNnPMXf0iHSxU6Bv37N7+lSQn7zKDGmBd+Js1F8wSXdPzjxZhUQ24X9h
+	 CyRigXNadd5djExY0se9oCZlV07jQsv6ymIVi1d6DLxgRsnk7DX2W+A14nGd3p8z7RgBf
+	 4VP0CUFThFqf1sLg0eVlnKfJSHmYNjswPCwN+wLZdSc/3sNtduZjPDmPc6zKE8qyrqdKg
+	 aezBV4JQrMSvFMtjOcfL7Wu+1Jf0ps+/wgmmG4ehgPE7UImEqIVQY3XrHA9tNaBTRDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813375;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813417;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=9+yARzdOpzdllKXUJ7Oz/hxaICj5Mm35ej5JnL7jd2E=;
-	b=TduCvu5mpkGVlu+UulMbVLhELCDGSgzA84IVIH32kKOWbOgKdqF4VOTwRH50GV/w485X
-	 pikfZX05g9IVom6ihYK1SzEXf+/6EjIJfiMhYbcd5Bum8H/0HVRJuh/fu3/8XhQcD3t+h
-	 U4XuIc7PvcPjhtMGnUxIByk/MtuNoYD4qZJsVyuAmSS3a6AgUblop06JiSOVynNr6l3TO
-	 HYFtO3/JXAXXhEZUyKtIbHOlRcMIqFEmVJ1m7NgTW931BsuYQFGs2915/F39RYKwqPTUO
-	 pKWIHCJxsRytDgMli5cpXrYlbUcUBuQV5UvdgUooBBVw2ZSG0xqBcSrt7aBedalrWKA==
+	bh=Bp2DPgSMAVNPpocNHMMHSMxcgQhQwNKqaFQNAmEUdgU=;
+	b=LrYdNKvw8Ajr9ZccflA4DgKTvoJcBlFTfahxAS8hbD/J4++chd3qo9VQuc3FGBYvLLNS
+	 P+BQqVg5dhbJ4mg2ozWn+TfzPOXELefMnjOm4ivTzubI9gGDRyoNZpKmf5LmihGfKN/gF
+	 9ggfTDPWlgEg3Loaqd9U2YYHH6rH7im5YM+npjuOi4Wv00YnbG2ktDAUc7zqzgTaWBMdB
+	 9rB9Ns9nZV7ZGxZ7G+Q3lnOy61YGCOkuMcQBaHqyDvFmVCLC94n0hnl+HwN3OAQYCNOhm
+	 YL8nGnV3ZtOCp3HKrAPBT4tA2Xry282K0pXktQ9FLCxdtleiK22y/YzPkqB+qJ5p4Ng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GEKJ5oBt;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g5u712B9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730EF60A380F;
-	Wed,  4 Nov 2026 17:29:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6D69606A92F;
+	Wed,  4 Nov 2026 17:30:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GEKJ5oBt
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 641541F0093A;
-	Wed,  4 Nov 2026 17:29:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g5u712B9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70FBE1F000C1;
+	Wed,  4 Nov 2026 17:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793813375;
-	bh=9+yARzdOpzdllKXUJ7Oz/hxaICj5Mm35ej5JnL7jd2E=;
+	s=k20260515; t=1793813416;
+	bh=Bp2DPgSMAVNPpocNHMMHSMxcgQhQwNKqaFQNAmEUdgU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=GEKJ5oBtLs1Ued5KRzNH5ufzbODMyZ6PKn/Udd/hvL22vNsuoFBfVggV2ZFxVjqP4
-	 8F6aIiAZmFuauOKTCLsqRblXf+tPD9fnHwb6IvcjUGRXyp5jYpp7RSlQRYmw3/tKTN
-	 3hMTsxwcM7o+Kilf/qR1r6m4VjBReM+Zmlafux1A+LYZbzqYGdtm7xeTAIKiPpNlNL
-	 g4/R+I932DYQ/ARbsO2FY4bDvIYVnkPqPp5PHE+IMmU+7MpzPMNLR8uYrmx3l5Cm5R
-	 oPZrT41KRDe91uyE80CWxhIqW85F4PsqrtLkGrQKTz3AeHWg2FuAsXTXsMj7Uv14PH
-	 8ydiIpfAzbpUw==
+	b=g5u712B9uyY/EHBMvMcIJjwX1Q9oNafVwZZdSTe+wWNmne5PBjIRnbjMdNBKEaIP4
+	 4sN1akBTM0upEXPMnrPesATu9t0mv+J9tGR4BfcCUQnJpzUcbcj+IvUqAQlpKvEFAP
+	 maIQiS285xRthBs8kUjqLULi7ZlP9EZaMs6jvYgyfDdyykDtrKuOIUKXiUE5xq8j0K
+	 rnPkE+GVlVCE8ozm0404SgO7RYqyMkzZKzwWo1p+WxGQXY8MTkERhkp4+WNxvZiOYe
+	 CguRECqkxpVtUS2A9kODUDoxnBc90vENA1/MJjeZ4tQ9xNPhj1ug3QG1Rnyknyga3s
+	 5rdxM+QnpKA9g==
 From: Christian Brauner <brauner@kernel.org>
-Date: Wed, 04 Nov 2026 18:27:21 +0100
-Subject: [PATCH v2 04/51] PNP: isapnp: don't go on when isapnp_cfg_begin()
- fails
+Date: Wed, 04 Nov 2026 18:27:24 +0100
+Subject: [PATCH v2 07/51] lockd: don't hand out the terminator of
+ nlm_end_grace
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261104-work-procfs-bugfixes-v2-4-bbf7d5546809@kernel.org>
+Message-Id: <20261104-work-procfs-bugfixes-v2-7-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -89,120 +89,40 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
  linux-debuggers@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
+ Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3910; i=brauner@kernel.org;
- h=from:subject:message-id; bh=zJWqbpFP7Eog9HhLBr1/8hQ7kUfFg3Bc340XkbmHZ+k=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zvqrMu+3ucHOq8s8Hi6dUyBieqBr4iYJ9fLMtfG+8
- hk+XGY5HaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABOxkGT4Z1x3X32vSsH+H8de
- Tzy0tm6dPV/iyZO8NQtV2Rd9k3CX7mdk+Gmf7XH+YJVede/Zl5mfRZNs98TPb/HRte7TWrnzoYE
- JLwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=879; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=tKzHzMLxBoW/zY681xcBM67Jqe2y1s4JEAk9OycZ8F8=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zma88mPSwzMZES8ZvfsaK7K5NIr2+azZ3b+Xc1Xpm
+ 7Wz/9nbdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExkbT3DP623G/ymh8nr95bL
+ Sj1ZqVz5I/v5xTDO2LLF07okt9w1Ws/wP0bKWD8yk0Xj8wP2OJmbXq1N7z9lRV6ZFj3BvzE/x+E
+ BNwA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-isapnp_cfg_begin() refuses a logical device number above 10 and a bad
-card number with -EINVAL before it takes isapnp_cfg_mutex. The callers
-that read and write the device's configuration, the proc file included,
-don't look at that: they go on talking to whatever device the card
-currently has selected and then unlock a mutex they never took in
-isapnp_cfg_end(). isapnp_create_device() hands out logical device
-numbers without a bound, so a card with twelve or more logical devices
-gets there. Return the error instead.
+nlm_end_grace_read() answers with "Y\n" or "N\n" from a three byte
+buffer and hands out all three bytes, the terminating NUL included.
+Leave the NUL out.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: stable@vger.kernel.org
+Fixes: d68e3c4aa416 ("lockd: add a /proc/fs/lockd/nlm_end_grace file")
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/pnp/isapnp/core.c | 16 ++++++++++++----
- drivers/pnp/isapnp/proc.c |  5 ++++-
- sound/isa/es18xx.c        |  6 +++++-
- 3 files changed, 21 insertions(+), 6 deletions(-)
+ fs/lockd/procfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pnp/isapnp/core.c b/drivers/pnp/isapnp/core.c
-index 219f96f2aaaf..3591a2791c1a 100644
---- a/drivers/pnp/isapnp/core.c
-+++ b/drivers/pnp/isapnp/core.c
-@@ -853,7 +853,9 @@ static int isapnp_get_resources(struct pnp_dev *dev)
+diff --git a/fs/lockd/procfs.c b/fs/lockd/procfs.c
+index a01f08c8c2f3..74f7ab77535a 100644
+--- a/fs/lockd/procfs.c
++++ b/fs/lockd/procfs.c
+@@ -57,7 +57,7 @@ nlm_end_grace_read(struct file *file, char __user *buf, size_t size,
+ 	resp[1] = '\n';
+ 	resp[2] = '\0';
  
- 	pnp_dbg(&dev->dev, "get resources\n");
- 	pnp_init_resources(dev);
--	isapnp_cfg_begin(dev->card->number, dev->number);
-+	ret = isapnp_cfg_begin(dev->card->number, dev->number);
-+	if (ret)
-+		return ret;
- 	dev->active = isapnp_read_byte(ISAPNP_CFG_ACTIVATE);
- 	if (!dev->active)
- 		goto __end;
-@@ -887,10 +889,12 @@ __end:
- static int isapnp_set_resources(struct pnp_dev *dev)
- {
- 	struct resource *res;
--	int tmp;
-+	int tmp, ret;
+-	return simple_read_from_buffer(buf, size, pos, resp, sizeof(resp));
++	return simple_read_from_buffer(buf, size, pos, resp, sizeof(resp) - 1);
+ }
  
- 	pnp_dbg(&dev->dev, "set resources\n");
--	isapnp_cfg_begin(dev->card->number, dev->number);
-+	ret = isapnp_cfg_begin(dev->card->number, dev->number);
-+	if (ret)
-+		return ret;
- 	dev->active = 1;
- 	for (tmp = 0; tmp < ISAPNP_MAX_PORT; tmp++) {
- 		res = pnp_get_resource(dev, IORESOURCE_IO, tmp);
-@@ -936,9 +940,13 @@ static int isapnp_set_resources(struct pnp_dev *dev)
- 
- static int isapnp_disable_resources(struct pnp_dev *dev)
- {
-+	int ret;
-+
- 	if (!dev->active)
- 		return -EINVAL;
--	isapnp_cfg_begin(dev->card->number, dev->number);
-+	ret = isapnp_cfg_begin(dev->card->number, dev->number);
-+	if (ret)
-+		return ret;
- 	isapnp_deactivate(dev->number);
- 	dev->active = 0;
- 	isapnp_cfg_end();
-diff --git a/drivers/pnp/isapnp/proc.c b/drivers/pnp/isapnp/proc.c
-index c1f6e6bd0eb2..b3abab24050b 100644
---- a/drivers/pnp/isapnp/proc.c
-+++ b/drivers/pnp/isapnp/proc.c
-@@ -25,6 +25,7 @@ static ssize_t isapnp_proc_bus_read(struct file *file, char __user * buf,
- 	struct pnp_dev *dev = pde_data(file_inode(file));
- 	int pos = *ppos;
- 	int cnt, size = 256;
-+	int ret;
- 
- 	if (pos >= size)
- 		return 0;
-@@ -37,7 +38,9 @@ static ssize_t isapnp_proc_bus_read(struct file *file, char __user * buf,
- 	if (!access_ok(buf, cnt))
- 		return -EINVAL;
- 
--	isapnp_cfg_begin(dev->card->number, dev->number);
-+	ret = isapnp_cfg_begin(dev->card->number, dev->number);
-+	if (ret)
-+		return ret;
- 	for (; pos < 256 && cnt > 0; pos++, buf++, cnt--) {
- 		unsigned char val;
- 		val = isapnp_read_byte(pos);
-diff --git a/sound/isa/es18xx.c b/sound/isa/es18xx.c
-index 3cadbf7cf238..de1eda5a0656 100644
---- a/sound/isa/es18xx.c
-+++ b/sound/isa/es18xx.c
-@@ -1950,7 +1950,11 @@ static int snd_audiodrive_pnp_init_main(int dev, struct pnp_dev *pdev)
- 	/* ok. hack using Vendor-Defined Card-Level registers */
- 	/* skip csn and logdev initialization - already done in isapnp_configure */
- 	if (pnp_device_is_isapnp(pdev)) {
--		isapnp_cfg_begin(isapnp_card_number(pdev), isapnp_csn_number(pdev));
-+		int ret = isapnp_cfg_begin(isapnp_card_number(pdev),
-+					   isapnp_csn_number(pdev));
-+
-+		if (ret)
-+			return ret;
- 		isapnp_write_byte(0x27, pnp_irq(pdev, 0));	/* Hardware Volume IRQ Number */
- 		if (mpu_port[dev] != SNDRV_AUTO_PORT)
- 			isapnp_write_byte(0x28, pnp_irq(pdev, 0)); /* MPU-401 IRQ Number */
+ static const struct proc_ops lockd_end_grace_proc_ops = {
 
 -- 
 2.53.0
