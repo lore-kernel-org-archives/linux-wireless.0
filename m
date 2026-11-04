@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821174;
-	b=f52SLtn4sOTGw1y/fdNOqxtUmOPkA9ipPpuP+DSRyD1m+bMcI0ohnova4mqWI3xDvZzi
-	 ucl4yrcBtiYXUVoE4eTJxMNVItCMfSDOYC5dUuA3itWvd0iX0T4OUJZgAiLBJjAAqDPRP
-	 DXXrL42Pn618EVzQfa6mBjvAGlAmMYpsXveaEONctYgFGCe/9I5Qu3bRqebMfZPatw1Z7
-	 6rL0R/RfutLWEHirmTgF6bpvM1meonDH9nuh2lxcQD5nOnKnL39XRTIHDnKrO3toFgNb7
-	 HrO5d6cYp8DKNqO6JJL30LbM4dZiQkyr4AmN1OGy4yS58ydIuJrMz9SbthPN8FgppOQ==
+	t=1793821218;
+	b=L4C1EroY5doNStlN7REalePt1UKH5qj75ITDy1An2uY262iyexLEjTloNhfOQvAnnJLP
+	 kMZD6kChEn5m4ExeKheivR6GrXiNq9oKwnD+cmoqaF2wweR5DVwEgBdQZ83VROz3gg9A8
+	 J1VvMYtj51eh+9KALGs5ZquB4SEHvXLFf7fc3jX1oL+81HUs1tcIDUnA7bBMb99Gc26QK
+	 GckQgZAOnxIeNuxzQFkZ9qMZFeh5pbMDKYR5AktLc0YlkCHdN5jh78JgP2GJXoiz0JYeB
+	 9ET1xzRvuQ220vpEjYWGHOVFBcEB7SbRayK6fMrqRsW+1MTvhvgInABQeHE1BKovtqA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821174;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821218;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=OLir7M9bUqyYwhZJ8zktlBEIF8q4TgFqxNnhzWbUGpI=;
-	b=VrrlTauqM2Dfxi/rzVT31sJX2iBEpO39MgH2E/GEtWAnX4rzq07esg6EbZQAOaNsn2m3
-	 rErXooy+VP0pfY0VCf+XPTBOLmmKGGil+GFx3DIuMslHqTJ8b9KVsG3Hyr3L0vnA0tskH
-	 y+qc9uLX7JlxYYnUzJiSHWE7xpfw/LO2b+/xJ5l09ANq4k9T8YMWCc9Lf8x2carKb52l8
-	 nSGqSM7EEwck1UIu9pXNWT4wcNKypHrHRUtApDo3TgNy7n9bYAOOxsLZzq6uOelcRt6nO
-	 EXwPiqJKlC1IqolJ3MAiuKioWeRGTIIsVifF/uRpYqiD1GL+V1EQaZkgGIHRxNZ8NEg==
+	bh=Jqve5dom8G0YagWg0DUi21Qt2CUJnz11dMCfHhOCDkM=;
+	b=HMr+jJmKiHvzfXHZnFMVW5+qxT27uo55DVdWVSYZ0WyBUSj8uyZs4CWQ4e+4taSRasHn
+	 9a2z/EBStMiL3fo25o31c4aAXRhdvxxbDLwchI8KZPD3P9a8hM+UlREFE6jlrfNkWlxdw
+	 nYY8UezF1f3PZunRQvdABbDq12iXQp9ye5w2dHOr1HArZ7wQ507uj0al0E212wSEQLPnX
+	 l3rhexC6Q5rqXSv0UqPTn3ntSguTezm8DAnKC0ESDdhRLgJrX5yi6ixvAbMpg3IOtzkfM
+	 N/Dx3vQCaeMqgUe23Bp4rBcD6qqVxbU3nggpqzq4O5GnIgy6F/SbNW9WKiWAzn5z7cA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BGoQWKYK;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DS3z8fo4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3951560A6F53;
-	Wed,  4 Nov 2026 19:39:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2596071A18;
+	Wed,  4 Nov 2026 19:40:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BGoQWKYK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A1E51F000C1;
-	Wed,  4 Nov 2026 19:39:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DS3z8fo4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 224F31F000C1;
+	Wed,  4 Nov 2026 19:40:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821173;
-	bh=OLir7M9bUqyYwhZJ8zktlBEIF8q4TgFqxNnhzWbUGpI=;
+	s=k20260515; t=1793821218;
+	bh=Jqve5dom8G0YagWg0DUi21Qt2CUJnz11dMCfHhOCDkM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BGoQWKYKlGRHqH707lt8XPTrvhILrDN2CTBKW6sy4z5pHja4DdtN3raBG+NHLj92g
-	 lT3j0AXWk+7UPpWWF1UqKr0teEMq0y/evuKx3wT6DI1igbFRETKr9nHjbLI1nR+NjU
-	 nEQrgLu5V7p8Qbs7lNxg7pYdY0OS3AJ/InKacvNpa8Yy6bqqt2ucHdsOEUVuRjnglA
-	 2neUJAv7gx7ca66gWQEIWKVKaKhIVOkX6ditAtUOyn0NGQtQzqUmcl3a3hd5YUr0He
-	 y/DG+4nLiOv9JHOQGcWwzY6YiJ6Wsg6U5djleaHL/yx5FfWJcZpIQT5B9uaN3JkFIL
-	 szVI5opji+ZoQ==
+	b=DS3z8fo4+XcVun7qDjz2NB285oy50w37ZhabVQ+2KTyYBD2yK9k0cv1ydfdyDbb2G
+	 F2kOHfTeVzmbTPa9e/WdAD70pmv8wAUop1Anni0EzwRVSbumICFkMK1x1F9P4tYZIC
+	 c3MZ0Kd/4HbFldytGX1vHUsdhINZ5NpZWDpvM+t0Z5wHT/E+VFr+t/6p+AttFRpI6Z
+	 mwCDXmDky64VEy6slIdAHdiThaCm746BEvz4eDgLL3BHUTx/IA08z0BMxgO0LJmQyT
+	 NF1MhcwXbC2axzqG1STp/J698+gtyVKqI7HYsWuCQMJlP4fOePGgiGm6vAX9LAFZim
+	 TqL2Dw1DliqSQ==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 15/23] x86/mtrr: let procfs copy the ioctl arguments of /proc/mtrr
-Date: Wed,  4 Nov 2026 20:39:19 +0100
-Message-ID: <20261104-work-procfs-arch-v2-15-2aeb952c9597@kernel.org>
+Subject: [PATCH RESEND v2 18/23] ACPI: proc: let procfs copy in writes to /proc/acpi/wakeup
+Date: Wed,  4 Nov 2026 20:40:03 +0100
+Message-ID: <20261104-work-procfs-arch-v2-18-2aeb952c9597@kernel.org>
 In-Reply-To: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org>
 References: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -116,163 +116,51 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5220; i=brauner@kernel.org; h=from:subject:message-id; bh=t9lK4yPSWnjPiNqpcmr+36rhqvijTQ7A+lZHV62u0/o=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97vj/uHT//LsHnab9aFnoUuZU1fZb4kuq29bvwVZqM xnei7cs7yhlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIbxlGhonnGEILvndsKS85 4PR6CvPGms8/XAXntzvM/P7oi4Bb8TJGhpu+z1R/eV2YMPmXmkv3oae5PxjPCl3dUPM/5vMn56O LV3IAAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1423; i=brauner@kernel.org; h=from:subject:message-id; bh=IJsID2u9MwR2UWiBoMaBlflke6dvKtZBVcAIKZfI9/A=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97mTSWXVefuGeEyelmfYp78ycWKUkyn49ZGWQk+eRL 0tjb5df7ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIXhmGf+a115bOnrtr8gHR +0o1t4SK21/t283HxHqtW0P5SrNTrxYjQ6Pi/sVHc5622fk3Tnk5Q7znZtAi0aS07pWzZjY9Od9 YwQ0A
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Implement ->proc_ioctl_buf() so procfs copies the arguments in before
-it pins the entry and back out after unpinning it. The native and the
-32-bit commands encode their arguments and share one table.
-mtrr_ioctl() reads and fills procfs' copy, also in the 32-bit layouts.
+Implement ->proc_write_buf() so procfs copies in what is written before
+it pins the entry, and take the device name from that copy. Writes
+larger than PAGE_SIZE - 1 bytes fail with -EINVAL now.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/x86/kernel/cpu/mtrr/if.c | 79 +++++++++++++++++++++++++------------------
- 1 file changed, 46 insertions(+), 33 deletions(-)
+ drivers/acpi/proc.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/kernel/cpu/mtrr/if.c b/arch/x86/kernel/cpu/mtrr/if.c
-index 038e2dc38797..9c33c0428dfe 100644
---- a/arch/x86/kernel/cpu/mtrr/if.c
-+++ b/arch/x86/kernel/cpu/mtrr/if.c
-@@ -149,7 +149,7 @@ mtrr_write(struct file *file, char *buf, size_t len, loff_t * ppos)
- }
+diff --git a/drivers/acpi/proc.c b/drivers/acpi/proc.c
+index b8a0bd4580e0..feb8283fd855 100644
+--- a/drivers/acpi/proc.c
++++ b/drivers/acpi/proc.c
+@@ -86,7 +86,7 @@ static void physical_device_enable_wakeup(struct acpi_device *adev)
  
- static long
--mtrr_ioctl(struct file *file, unsigned int cmd, unsigned long __arg)
-+mtrr_ioctl(struct file *file, unsigned int cmd, void *arg)
+ static ssize_t
+ acpi_system_write_wakeup_device(struct file *file,
+-				const char __user * buffer,
++				char *buffer,
+ 				size_t count, loff_t * ppos)
  {
- 	int err = 0;
- 	mtrr_type type;
-@@ -157,7 +157,6 @@ mtrr_ioctl(struct file *file, unsigned int cmd, unsigned long __arg)
- 	unsigned long size;
- 	struct mtrr_sentry sentry;
- 	struct mtrr_gentry gentry;
--	void __user *arg = (void __user *) __arg;
+ 	struct acpi_device *dev, *tmp;
+@@ -96,8 +96,7 @@ acpi_system_write_wakeup_device(struct file *file,
+ 	if (count > 4)
+ 		count = 4;
  
- 	memset(&gentry, 0, sizeof(gentry));
+-	if (copy_from_user(strbuf, buffer, count))
+-		return -EFAULT;
++	memcpy(strbuf, buffer, count);
+ 	strbuf[count] = '\0';
+ 	sscanf(strbuf, "%s", str);
  
-@@ -170,13 +169,11 @@ mtrr_ioctl(struct file *file, unsigned int cmd, unsigned long __arg)
- 	case MTRRIOC_SET_PAGE_ENTRY:
- 	case MTRRIOC_DEL_PAGE_ENTRY:
- 	case MTRRIOC_KILL_PAGE_ENTRY:
--		if (copy_from_user(&sentry, arg, sizeof(sentry)))
--			return -EFAULT;
-+		memcpy(&sentry, arg, sizeof(sentry));
- 		break;
- 	case MTRRIOC_GET_ENTRY:
- 	case MTRRIOC_GET_PAGE_ENTRY:
--		if (copy_from_user(&gentry, arg, sizeof(gentry)))
--			return -EFAULT;
-+		memcpy(&gentry, arg, sizeof(gentry));
- 		break;
- #ifdef CONFIG_COMPAT
- 	case MTRRIOC32_ADD_ENTRY:
-@@ -187,27 +184,21 @@ mtrr_ioctl(struct file *file, unsigned int cmd, unsigned long __arg)
- 	case MTRRIOC32_SET_PAGE_ENTRY:
- 	case MTRRIOC32_DEL_PAGE_ENTRY:
- 	case MTRRIOC32_KILL_PAGE_ENTRY: {
--		struct mtrr_sentry32 __user *s32;
-+		struct mtrr_sentry32 *s32 = arg;
+@@ -123,7 +122,7 @@ acpi_system_write_wakeup_device(struct file *file,
  
--		s32 = (struct mtrr_sentry32 __user *)__arg;
--		err = get_user(sentry.base, &s32->base);
--		err |= get_user(sentry.size, &s32->size);
--		err |= get_user(sentry.type, &s32->type);
--		if (err)
--			return err;
-+		sentry.base = s32->base;
-+		sentry.size = s32->size;
-+		sentry.type = s32->type;
- 		break;
- 	}
- 	case MTRRIOC32_GET_ENTRY:
- 	case MTRRIOC32_GET_PAGE_ENTRY: {
--		struct mtrr_gentry32 __user *g32;
-+		struct mtrr_gentry32 *g32 = arg;
- 
--		g32 = (struct mtrr_gentry32 __user *)__arg;
--		err = get_user(gentry.regnum, &g32->regnum);
--		err |= get_user(gentry.base, &g32->base);
--		err |= get_user(gentry.size, &g32->size);
--		err |= get_user(gentry.type, &g32->type);
--		if (err)
--			return err;
-+		gentry.regnum = g32->regnum;
-+		gentry.base = g32->base;
-+		gentry.size = g32->size;
-+		gentry.type = g32->type;
- 		break;
- 	}
- #endif
-@@ -312,19 +303,17 @@ mtrr_ioctl(struct file *file, unsigned int cmd, unsigned long __arg)
- 	switch (cmd) {
- 	case MTRRIOC_GET_ENTRY:
- 	case MTRRIOC_GET_PAGE_ENTRY:
--		if (copy_to_user(arg, &gentry, sizeof(gentry)))
--			err = -EFAULT;
-+		memcpy(arg, &gentry, sizeof(gentry));
- 		break;
- #ifdef CONFIG_COMPAT
- 	case MTRRIOC32_GET_ENTRY:
- 	case MTRRIOC32_GET_PAGE_ENTRY: {
--		struct mtrr_gentry32 __user *g32;
-+		struct mtrr_gentry32 *g32 = arg;
- 
--		g32 = (struct mtrr_gentry32 __user *)__arg;
--		err = put_user(gentry.base, &g32->base);
--		err |= put_user(gentry.size, &g32->size);
--		err |= put_user(gentry.regnum, &g32->regnum);
--		err |= put_user(gentry.type, &g32->type);
-+		g32->base = gentry.base;
-+		g32->size = gentry.size;
-+		g32->regnum = gentry.regnum;
-+		g32->type = gentry.type;
- 		break;
- 	}
- #endif
-@@ -393,14 +382,38 @@ static int mtrr_open(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
-+static const struct proc_ioctl_arg mtrr_ioctl_args[] = {
-+	PROC_IOCTL_IOC(MTRRIOC_ADD_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_SET_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_DEL_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_GET_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_KILL_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_ADD_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_SET_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_DEL_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_GET_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC_KILL_PAGE_ENTRY),
-+#ifdef CONFIG_COMPAT
-+	PROC_IOCTL_IOC(MTRRIOC32_ADD_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_SET_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_DEL_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_GET_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_KILL_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_ADD_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_SET_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_DEL_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_GET_PAGE_ENTRY),
-+	PROC_IOCTL_IOC(MTRRIOC32_KILL_PAGE_ENTRY),
-+#endif
-+};
-+
- static const struct proc_ops mtrr_proc_ops = {
- 	.proc_show		= mtrr_seq_show,
- 	.proc_open		= mtrr_open,
- 	.proc_write_buf		= mtrr_write,
--	.proc_ioctl		= mtrr_ioctl,
--#ifdef CONFIG_COMPAT
--	.proc_compat_ioctl	= mtrr_ioctl,
--#endif
-+	.proc_ioctl_buf		= mtrr_ioctl,
-+	.proc_ioctl_args	= mtrr_ioctl_args,
-+	.proc_nr_ioctl_args	= ARRAY_SIZE(mtrr_ioctl_args),
- 	.proc_release		= mtrr_close,
+ static const struct proc_ops acpi_system_wakeup_device_proc_ops = {
+ 	.proc_show	= acpi_system_wakeup_device_seq_show,
+-	.proc_write	= acpi_system_write_wakeup_device,
++	.proc_write_buf	= acpi_system_write_wakeup_device,
  };
  
+ void __init acpi_sleep_proc_init(void)
 
 -- 
 2.53.0
