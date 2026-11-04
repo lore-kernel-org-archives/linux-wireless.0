@@ -1,54 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.156.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820657;
-	b=Nql3joNY9mThi2L6d2OUkslf+wBsnjd8+5unq/aw96vMdjNasdk/R29HltOjpjMQecn+
-	 KEChzfAw4k3INNwxwZFlsSBSiYbywm3pmvlbyFNsdTf+ATMyzJTrgo3QPRiRbyu8nEl9W
-	 rxrt1PRmJbeovHoqc/aEyhPjxQyjM12YLJGSY5JC4wcHt3phSEoH47lAVenEjixwZRxGx
-	 4K6qAyLQCQohxw8UTgz13z/1Of7+nZLtPm8gwrsAvpZQwj2y9PdmfI7GaeyiukqgnFGXF
-	 +H+vT5aw2hUfqNydLhVSBZlWXAc4anUaTwjmaqptcTLj52D7LyULsS0kPf7DR4QHKfg==
+	t=1793820673;
+	b=dteefXCOPRTOFzViYVpUs2qlCXYtMpj3onui88DprISKj4KJyUavTiyX0bwHfGeGh1LP
+	 3qfauKZTDjJC1jj2DkTTomyifhiDPL/QXdcM5uPkzPZPNWRX39deV1NbT3WRKPxbYSUT+
+	 8ZcoCPnlQLI95jCh82PrufCJ14TEyEuI1eY1y6QgCQINaQwiRsZ8CROVEc7nPhBxUUyar
+	 OFKiWRNg5zRe10IY7LD1MaGM6yHloqasPRvHzG1pX03vUc1mw+/SYkVVcQ337rvfHR7l3
+	 +AmAcTmpNOYK3QJ9VDgGItlASQezBKOm16jZfmaatD54Z5cZ5hscUJBcmd+5jWZiD5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820657;
-	h=DMARC-Filter:Received:DKIM-Signature:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-CMAE-Envelope;
-	bh=TRMyW9/DrVgmOS7Aq8HdI8WRw1qeBXydS7xDzEqPUnc=;
-	b=gvksDlWOI9UIvQV0YEbhgxyInpZ+hJPFxAhGvLR+p+4bvf+TsnvjwRSqEjPxf00VQsAs
-	 XIudYzux7ODID/3V+TWVamhHdEXVpgt906K7NFr1sr7J/BhwU9mZAEjU2oqPIMIPgxDPi
-	 4gFa7dxp5uPuSzoGPnhUhGZmBeR1ySd6Opupc1DWPb5jqRm7Us9uoZMpD+QopydH+iR4q
-	 rzmUsG3veApQrVB/06oecfOca525LwXY+6wHyr4hVxEulPibscyc76c997IqgkMfkTmEP
-	 6Fo/xo3uEcEb/MM5H3RbmLL1CVP80D+VjWgd8VU+EX0rJ2mhtlK2LLa31w2jTTSI+rw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820673;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=PsYU3gTP7wRg/qADM041CPCqWdlsrAZN9M0Rb8ATmeI=;
+	b=bEcwnojxWd2MqvQIOC8BzrO7eNwcwu0KbecGVhD8q2MxbXtCcQ5vs/PZVisY7wq9DdF6
+	 TBiogMJAwK1sOitXezB4fVVQnoJGCkYoF7gFpFPeWf+bb1HOacNplTVgfrrxQS9g++Ad0
+	 IM9wqDJLLokDYJ9JrRaadl+8ZYEDKYEq0xi/vCqH+yQu/EawkHflSbslntFn1VnT61Yl2
+	 /u/XyDwsTbuEdcfJbocciduQ/lyg/g2KbI65l25s4bNY/PQzM5rsCPfcYPysFYsus3P5v
+	 /8qBgEfvpwqsLFEDTjqQE/EmjZmmAVz74gxRGKKfB7FVm6gaCC0WmxKzsGhZ27+tX+Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mythread.it;
-	spf=pass smtp.mailfrom=mythread.it;
-	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=M+ESQc2l;
-	arc=none smtp.remote-ip=62.149.156.56
-Received: from smtpcmd0756.aruba.it (smtpcmd0756.aruba.it [62.149.156.56])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="U9PU/zDz";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A6A6096082
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 19:30:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4A6A6096082
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E55E607800A;
+	Wed,  4 Nov 2026 19:31:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=M+ESQc2l
-Received: from [192.168.1.237] ([94.34.125.0])
-	by Aruba SMTP with ESMTPSA
-	id Ogh3xxDlIuuRMOgh3xJX6j; Wed, 04 Nov 2026 20:30:46 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1793820646; bh=bGcg5jnGoPmYKwgcM9JVWIXm8MizZ1eSFtIhv/FD2nY=;
-	h=From:Subject:Date:MIME-Version:Content-Type:To;
-	b=M+ESQc2lImSGR035HPK2PZxJY7BHNP4vig7i8FCXf8hGQVDM5ElX6X8QUBRAc0thF
-	 ekhp7kCeUVkfekcVjN+0cqrcTOpSa4+uHvi2tPpPbAYyddupeW6sphqXiSNMj53ky3
-	 MrFSpnkHO09gkMVXAFN18ezG5fU1NQh0PKa6VMt08HcjH0+NttSN4CY0yYKsrxs5vN
-	 hlvW9S0LmxZsvQKU8JdZexEYaizAyLMYp1WaOIi/Gectq8L5CZSVHd7Tmv70UDgFCT
-	 ogXu4y9eJcyMgV1QaRicRf/e5dz4KkBx7zf3HKojQjUIo/eQ91SCK3Y60nsgyXte/6
-	 3I7BlmlLjq4yA==
-From: Alessio Ferri <alessio.ferri@mythread.it>
-Subject: [PATCH v4 0/5] bcma: support the BCM6362 integrated WLAN backplane
-Date: Wed, 04 Nov 2026 20:30:43 +0100
-Message-Id: <20261104-bcm6362-wlan-v4-0-f001f6d75dc3@mythread.it>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U9PU/zDz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20BEB1F00A1A;
+	Wed,  4 Nov 2026 19:31:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793820672;
+	bh=PsYU3gTP7wRg/qADM041CPCqWdlsrAZN9M0Rb8ATmeI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=U9PU/zDzaVAltxYxStqwW8rHvP0jU6OdIi9RBg1wn/JWlBqPV6BYlBzlMWrwMpcJG
+	 3eU+qxUPU0LrZr9SXclOLmfymuCTpBaGHMUvrT5A1+NBX3prA1ghZ3FKndVwGcpNps
+	 KN1G8MNaJ/W/DN5CsbgTFaIRvKcadOCkNRMwaZGsRchdPUi7hYz7whizdtZ5L0z/6w
+	 HHkGlyWCzWRBgJvKrQXQ85V+EgFF3NosOiNXzT2GpDpkYEaE2RDMVF41oo977U2+yQ
+	 3w2KDBa0RmzyTMDJmENPI+Czyfs7FkGe2oaV77JLAINAlrOWELaQ79hR1EMtMGhf9U
+	 F1UghcZpaf7Pg==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 07/23] proc: let procfs own the seq_file of seq_file entries
+Date: Wed,  4 Nov 2026 20:30:58 +0100
+Message-ID: <20261104-work-procfs-core-v2-7-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
+References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -59,150 +115,479 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/13OTQqDMBCG4atI1o0kY0y0K+9Ruohm1IA/JRFbE
- e/eaKGlLr+B52VW4tFZ9OQarcThbL0dhzDEJSJVq4cGqTVhE2AgOeOcllUvEwn02emBGiFUUhp
- eAzISyMNhbV9H7nYPu7V+Gt1y1Ge+X48QSyGn2pj/2MwpowoABCil6jQrml7bLq7GnuyxGb6B8
- AmcMAQsVApGK2R5BkW/TK1DbWI7fXjy45yJE08CRyFTCSXoip/4tm1vV2/h/yoBAAA=
-X-Change-ID: 20261011-bcm6362-wlan-d4473bd1f2e0
-To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>, 
- Florian Fainelli <florian.fainelli@broadcom.com>, 
- Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
- Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
- Jonas Gorski <jonas.gorski@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org, 
- Alessio Ferri <alessio.ferri@mythread.it>
-X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfIRwhac84wbXo9VECU0DHaAKnY1rE1DV2KeJfsIi4OYJeMrh9+umvn813y1/n5XC2FHQ4GVjf8Pj5aciqrxd9dax3j2nPWj8q4X3RBqR7cK/jBhExe3m
- QXePPBXU1w7etHk9Wcz3oKxWa5QaDRiCgiA8XKAucsxI5QI0v9Lpwv1gGdZmmeQSGkuBsYLez/R67p8m12cFXMprNa5alhVR6Oz5b6EzzFKUrSa5U8U5mSiv
- mPuEjdWZPuG62z8D2AkU4keIle9hRKxMnImCZ3xWOZgWiLI/kBriRWYIi/IaVxNLVPoqFNS/Cdz8NcDL62wPYLs6QG6Uw/MBnjO2aaALV+a59Epy5y3HUnkQ
- m/H+cwr9sa+O5Bj5QFbmmGXa6FXi1jKk9PNnakVm4aF+qEHT0BjgFwO1L+xJcNGf6HqBdFJAuoCJ7FRKY8Bnw/WA0zkhCJX19wm4N9TRLZJsd0mCrNHexu2h
- hnK+docw7bDqz5ppBlUzlI0hBf9DRlrXeE+i9klhtJgpYCCz0LxwYtqWkme4GgYhjcVJ/0UL7UnGHYqbsBELxIdkkRDdTeJpMeQnAVQgUwPHcVjXOB/c++wv
- 3NpKCUVxnGNXxIgO4GsE1LnTCy6IB2piIlPiMBVLhrBh/N5nFOWzRbVduTaRW0UGSx4BDFrYGycCi/wc+Nun3lPF9q5ye3XgZfUjtnaTwXPz9w==
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=16105; i=brauner@kernel.org; h=from:subject:message-id; bh=NknAwwkK4L9ER+HlZOPx363jfWosvwxugcFhrl9okcM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bq9kjT1hrpD/5WLWx3bW3utVx21MbjYe2n+ry9bk0 It9M1k+d5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExETZnhn97P+FShOdXaZ/Y/ qVlvFXBfZsHPBPZdE7fvejeHacKEOwGMDC3dcqlfe8755Ox78fjpdsH/gldmL1dtm/L357mLC9c nzmYAAA==
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-The BCM6362 integrates a WLAN macro (802.11n core) on its own 
-bcma backplane. The backplane differs from the ones bcma supports 
-because: 1) its registers are big-endian, 2) none of its cores has 
-a wrapper and make bcma loop crash, and 3) the macro has to be 
-clocked, taken out of reset and enabled through a SoC-level WLAN
-control block before the backplane can be accessed.
+remove_proc_entry() waits until every call into the entry has returned.
+For a seq_file entry that's all of seq_read_iter(), including the copy
+to userspace. A page fault in that copy can be made to take as long as
+the reader wants, e.g. with userfaultfd or by punching holes into a
+memfd over and over. And callers of remove_proc_entry() like to hold
+locks while they wait. xt_hashlimit holds hashlimit_mutex, which all
+network namespaces share, and addrconf holds RTNL.
 
-Patches 2 and 3 add two opt-in bus flags to the scan code for the
-endianness and for wrapper-less cores. Patch 4 adds a dedicated host
-driver that brings the macro up, provides big-endian ops and emulates
-the agent registers on top of the WLAN control block. Patches 1 and 5
-add the binding and the SoC dtsi node.
+But the entry's code only runs between ->start() and ->stop() and the
+copies to userspace happen outside of that. So let procfs own the
+seq_file the way kernfs does. An entry declares its seq_operations, or
+just a show function, and the size of its private state in struct
+proc_ops. procfs then opens the seq_file with seq_operations it builds
+for the entry when it is registered: the entry's own ->next() and
+->show() with a ->start() and ->stop() of procfs around them that pin
+the entry and unpin it again. Nothing of procfs runs between the
+records that way. procfs reads and seeks through seq_file directly. The
+copies to userspace happen with the entry unpinned.
 
-My router run with this series backported to kernel 6.12, and has a 
-bcm4352 and the integrated wlan targeted by this patch; bcma scans both 
-without problems, both chips transmit just fine. The bcm4352 is pcie and
-has a normal backplane, so the changes are tested as non-breaking.
+That changes who owns the seq_file. remove_proc_entry() can now finish
+while a reader is still copying out of the buffer, so the seq_file
+can't go away with the entry. procfs frees it once the file is
+released. ->proc_open() finds the seq_file in ->private_data and sets
+up whatever the entry needs and ->proc_release() releases just that. It
+still runs when the entry is removed, or when the file is closed before
+that.
 
-This is a small module and i have plenty of hardware to test it (3x 
-6362), I am able to maintain it as long as my hardware allows. 
-It is also low risk: the flags that change the behaviour of bcma are 
-opt-in and it is "complete", at least for the 6362.
-Further code is only expected if the bcm63168, that i also have in high 
-numbers (5 routers), requires it.
+Since procfs reads these entries through seq_read_iter() itself they
+all have ->splice_read() now, so sendfile(), splice(), aio, the RWF
+flags and kernel_read() work on them, and readv() is one read instead
+of one per segment. Note that a removed entry still hands out what it
+had already formatted and then answers -EIO to reads, and to seeks that
+have to walk the records. Seeking it failed with -EINVAL right away
+before.
 
-Proof that it scan and works (macs edited):
+For an entry that only has a show function the seq_operations do what
+single_open() does, like kernfs_seq_start(). If the entry can't be
+pinned ->start() fails with -EIO and switches the seq_file to
+seq_operations whose ->stop() doesn't unpin, so the entry's own
+->start() and ->next() can return any error they like. An entry that
+declares a seq_file and also a read or seek method of its own, or one
+that releases the seq_file with seq_release() itself, doesn't make
+sense, procfs reads, seeks and releases the seq_file itself, so
+registering it fails.
 
-bcma-sprom bcm6362-sprom: patching SPROM with 38 fixups...
-bcma-sprom bcm6362-sprom: mtd mac X
-bcma-sprom bcm6362-sprom: registered SPROM for SoC bcma [bus]
-bcma-sprom bcm4352-sprom: patching SPROM with 35 fixups...
-bcma-sprom bcm4352-sprom: mtd mac X
-bcma-sprom bcm4352-sprom: registered SPROM for [1:0]
-bcma-host-soc-bcm6362 10004000.bus: bus0: Found chip with id 0x6362, rev 0x01 and package 0x00
-bcma-host-soc-bcm6362 10004000.bus: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x23, class 0x0)
-bcma-host-soc-bcm6362 10004000.bus: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x16, class 0x0)
-bcma-host-soc-bcm6362 10004000.bus: bus0: Core 2 found: SHIM (manuf 0x4BF, id 0x837, rev 0x01, class 0x0)
-bcma-host-soc-bcm6362 10004000.bus: bus0: Found rev 6 PMU (capabilities 0x084C2806)
-bcma-host-soc-bcm6362 10004000.bus: bus0: Flash type not supported
-bcma-sprom bcm6362-sprom: requested by SoC bcma [bus]
-bcma-host-soc-bcm6362 10004000.bus: bus0: Using SPROM revision 8 provided by platform.
-bcma-host-soc-bcm6362 10004000.bus: bus0: PMU res mask pre-write: min=0x0000005d max=0x0000ffff
-bcma-host-soc-bcm6362 10004000.bus: bus0: Bus registered
-bcma-pci-bridge 0000:01:00.0: enabling device (0000 -> 0002)
-bcma-pci-bridge 0000:01:00.0: bus1: Found chip with id 0x4352, rev 0x03 and package 0x01
-bcma-pci-bridge 0000:01:00.0: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
-bcma-pci-bridge 0000:01:00.0: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
-bcma-pci-bridge 0000:01:00.0: bus1: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
-bcma-pci-bridge 0000:01:00.0: bus1: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
-bcma-pci-bridge 0000:01:00.0: bus1: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
-bcma-pci-bridge 0000:01:00.0: bus1: Found rev 17 PMU (capabilities 0x10A22B11)
-bcma-pci-bridge 0000:01:00.0: bus1: Found SPROM revision 11
-bcma-pci-bridge 0000:01:00.0: bus1: PMU PLL pre-write: ctl2=0x00000c31 ctl3=0x0000100e
-bcma-pci-bridge 0000:01:00.0: bus1: PMU res mask pre-write: min=0x000007fb max=0x000007ff
-bcma-pci-bridge 0000:01:00.0: bus1: Bus registered
+No users yet.
 
-br-lan: port 5(phy0-ap0) entered blocking state
-br-lan: port 5(phy0-ap0) entered disabled state
-b43 bcma0:1 phy0-ap0: entered allmulticast mode
-b43 bcma0:1 phy0-ap0: entered promiscuous mode
-hostapd: phy0-ap0: interface state UNINITIALIZED->COUNTRY_UPDATE
-bcma-host-soc-bcm6362 10004000.bus: bus0: Unknown spuravoidance settings for chip 0x6362, not changing PLL
-br-lan: port 5(phy0-ap0) entered blocking state
-br-lan: port 5(phy0-ap0) entered forwarding state
-netifd: Network device 'phy0-ap0' link is up
-hostapd: phy0-ap0: interface state COUNTRY_UPDATE->ENABLED
-hostapd: phy0-ap0: AP-ENABLED
-hostapd: phy0-ap0: STA Y IEEE 802.11: authenticated
-hostapd: phy0-ap0: STA Y IEEE 802.11: associated (aid 1)
-hostapd: phy0-ap0: AP-STA-CONNECTED Y auth_alg=open
-
-Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
+Suggested-by: Jann Horn <jannh@google.com>
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
-Changes in v4:
-- Incorporated Philipp Zebel suggestion about reset handling
-- Link to v3: https://lore.kernel.org/r/20261104-bcm6362-wlan-v3-0-e46562b2ac12@mythread.it
+ fs/proc/generic.c       |  65 ++++++++++++++++++---
+ fs/proc/inode.c         | 146 +++++++++++++++++++++++++++++++++++++++++++-----
+ fs/proc/internal.h      |  21 +++++++
+ include/linux/proc_fs.h |  22 +++++++-
+ 4 files changed, 231 insertions(+), 23 deletions(-)
 
-Changes in v3:
-- Restricted interrupt mask
-- Link to v2: https://lore.kernel.org/r/20261012-bcm6362-wlan-v2-0-4752da7e0982@mythread.it
+diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+index 84f064a651e4..59b89e251ba3 100644
+--- a/fs/proc/generic.c
++++ b/fs/proc/generic.c
+@@ -41,6 +41,7 @@ void pde_free(struct proc_dir_entry *pde)
+ 	if (pde->name != pde->inline_name)
+ 		kfree(pde->name);
+ 	kfree(pde->open);
++	kfree(pde->seq_direct);
+ 	kmem_cache_free(proc_dir_entry_cache, pde);
+ }
+ 
+@@ -431,19 +432,41 @@ static const struct inode_operations proc_dir_inode_operations = {
+ 	.setattr	= proc_setattr,
+ };
+ 
+-static void pde_set_flags(struct proc_dir_entry *pde)
++static int pde_set_flags(struct proc_dir_entry *pde)
+ {
+ 	const struct proc_ops *proc_ops = pde->proc_ops;
+ 
+ 	if (!proc_ops)
+-		return;
++		return 0;
+ 
+ 	if (proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
+ 		pde->flags |= PROC_ENTRY_PERMANENT;
+-	if (proc_ops->proc_read_iter)
+-		pde->flags |= PROC_ENTRY_proc_read_iter;
+-	if (proc_ops->proc_lseek)
++	if (proc_ops->proc_seq_ops) {
++		pde->seq_ops = proc_ops->proc_seq_ops;
++		pde->state_size = proc_ops->proc_state_size;
++		pde->flags |= PROC_ENTRY_proc_seq_ops;
++	} else if (proc_ops->proc_show) {
++		pde->single_show = proc_ops->proc_show;
++		pde->flags |= PROC_ENTRY_proc_show;
++	}
++	if (pde_is_seq_file(pde)) {
++		/* procfs reads and seeks through the seq_file itself */
++		if (WARN_ON_ONCE(proc_ops->proc_read || proc_ops->proc_read_iter ||
++				 proc_ops->proc_lseek))
++			return -EINVAL;
++		/* and frees it, see pde_seq_release() */
++		if (WARN_ON_ONCE(proc_ops->proc_release == seq_release ||
++				 proc_ops->proc_release == seq_release_private ||
++				 proc_ops->proc_release == single_release))
++			return -EINVAL;
+ 		pde->flags |= PROC_ENTRY_proc_lseek;
++	} else {
++		if (proc_ops->proc_read_iter)
++			pde->flags |= PROC_ENTRY_proc_read_iter;
++		if (proc_ops->proc_lseek)
++			pde->flags |= PROC_ENTRY_proc_lseek;
++	}
++	return 0;
+ }
+ 
+ /*
+@@ -458,6 +481,32 @@ static bool pde_needs_open_node(const struct proc_dir_entry *pde)
+ 	return pde->proc_ops->proc_release;
+ }
+ 
++/*
++ * The seq_operations of a seq_file entry: procfs's start and stop around the
++ * entry's own next and show, see pde_seq_start().
++ */
++static int pde_init_seq_direct(struct proc_dir_entry *pde)
++{
++	struct seq_operations *ops;
++
++	if (!pde_is_seq_file(pde))
++		return 0;
++	ops = kmalloc(sizeof(*ops), GFP_KERNEL);
++	if (!ops)
++		return -ENOMEM;
++	ops->start = pde_seq_start;
++	ops->stop = pde_seq_stop;
++	if (pde_has_proc_seq_ops(pde)) {
++		ops->next = pde->seq_ops->next;
++		ops->show = pde->seq_ops->show;
++	} else {
++		ops->next = pde_single_next;
++		ops->show = pde->single_show;
++	}
++	pde->seq_direct = ops;
++	return 0;
++}
++
+ /* returns the registered entry, or frees dp and returns NULL on failure */
+ struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
+ 		struct proc_dir_entry *dp)
+@@ -465,14 +514,16 @@ struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
+ 	if (proc_alloc_inum(&dp->low_ino))
+ 		goto out_free_entry;
+ 
+-	if (!S_ISDIR(dp->mode))
+-		pde_set_flags(dp);
++	if (!S_ISDIR(dp->mode) && pde_set_flags(dp))
++		goto out_free_inum;
+ 	if (pde_needs_open_node(dp)) {
+ 		dp->open = kzalloc(sizeof(*dp->open), GFP_KERNEL);
+ 		if (!dp->open)
+ 			goto out_free_inum;
+ 		INIT_LIST_HEAD(&dp->open->files);
+ 	}
++	if (pde_init_seq_direct(dp))
++		goto out_free_inum;
+ 
+ 	write_lock(&proc_subdir_lock);
+ 	dp->parent = dir;
+diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+index 56eab69e1dcc..d51ab7548b11 100644
+--- a/fs/proc/inode.c
++++ b/fs/proc/inode.c
+@@ -219,6 +219,87 @@ static void pde_unpin(struct proc_dir_entry *pde)
+ 		unuse_pde(pde);
+ }
+ 
++/*
++ * procfs owns the seq_file of a seq_file entry and only calls into the entry
++ * with it pinned. A read copies to userspace without the pin, so a reader
++ * that faults on its buffer doesn't hold up remove_proc_entry().
++ *
++ * The seq_operations the seq_file runs are the entry's own next and show
++ * with procfs's start and stop around them, see pde_init_seq_direct(): the
++ * pin is taken in start and dropped in stop, and nothing sits between the
++ * seq_file and the entry's per record code. An entry that only has a show
++ * function is iterated like single_open() does it.
++ *
++ * If the pin fails start switches the seq_file to seq_operations whose stop
++ * doesn't unpin, so that the entry's own start or next can return any error
++ * they like, ERR_PTR(-EIO) included.
++ */
++static struct proc_dir_entry *seq_pde(struct seq_file *m)
++{
++	return PDE(file_inode(m->file));
++}
++
++static void pde_seq_stop_unpinned(struct seq_file *m, void *v)
++{
++	m->op = seq_pde(m)->seq_direct;
++}
++
++static const struct seq_operations pde_seq_ops_unpinned = {
++	.start	= pde_seq_start,
++	.stop	= pde_seq_stop_unpinned,
++};
++
++void *pde_seq_start(struct seq_file *m, loff_t *pos)
++{
++	struct proc_dir_entry *pde = seq_pde(m);
++
++	if (!pde_pin(pde)) {
++		m->op = &pde_seq_ops_unpinned;
++		return ERR_PTR(-EIO);
++	}
++	m->op = pde->seq_direct;
++	if (!pde_has_proc_seq_ops(pde))
++		return single_start(m, pos);
++	return pde->seq_ops->start(m, pos);
++}
++
++void pde_seq_stop(struct seq_file *m, void *v)
++{
++	struct proc_dir_entry *pde = seq_pde(m);
++
++	if (pde_has_proc_seq_ops(pde))
++		pde->seq_ops->stop(m, v);
++	pde_unpin(pde);
++}
++
++/* what single_open() iterates with, seq_file keeps its own private */
++void *pde_single_next(struct seq_file *m, void *v, loff_t *pos)
++{
++	++*pos;
++	return NULL;
++}
++
++static int pde_seq_open(struct proc_dir_entry *pde, struct file *file)
++{
++	int err;
++
++	if (pde->state_size)
++		return seq_open_private(file, pde->seq_direct, pde->state_size);
++	err = seq_open(file, pde->seq_direct);
++	if (!err && pde_has_proc_show(pde))
++		((struct seq_file *)file->private_data)->private = pde->data;
++	return err;
++}
++
++static void pde_seq_release(struct proc_dir_entry *pde, struct inode *inode,
++			    struct file *file)
++{
++	if (pde->state_size)
++		seq_release_private(inode, file);
++	else
++		seq_release(inode, file);
++}
++
+ /*
+  * At most 2 contexts can enter this function: the one doing the last
+  * close on the descriptor and whoever is deleting PDE itself.
+@@ -474,22 +555,35 @@ static unsigned int proc_reg_mmap_capabilities(struct file *file)
+ }
+ #endif
+ 
++static int pde_open(struct proc_dir_entry *pde, struct inode *inode,
++		    struct file *file)
++{
++	const auto open = pde->proc_ops->proc_open;
++	int rv;
++
++	if (!pde_is_seq_file(pde))
++		return open ? open(inode, file) : 0;
++
++	rv = pde_seq_open(pde, file);
++	if (rv || !open)
++		return rv;
++	rv = open(inode, file);
++	if (rv)
++		pde_seq_release(pde, inode, file);
++	return rv;
++}
++
+ static int proc_reg_open(struct inode *inode, struct file *file)
+ {
+ 	struct proc_dir_entry *pde = PDE(inode);
+ 	int rv = 0;
+-	typeof_member(struct proc_ops, proc_open) open;
+ 	struct pde_opener *pdeo;
+ 
+ 	if (!pde_has_proc_lseek(pde))
+ 		file->f_mode &= ~FMODE_LSEEK;
+ 
+-	if (pde_is_permanent(pde)) {
+-		open = pde->proc_ops->proc_open;
+-		if (open)
+-			rv = open(inode, file);
+-		return rv;
+-	}
++	if (pde_is_permanent(pde))
++		return pde_open(pde, inode, file);
+ 
+ 	/*
+ 	 * Ensure that
+@@ -514,9 +608,7 @@ static int proc_reg_open(struct inode *inode, struct file *file)
+ 		}
+ 	}
+ 
+-	open = pde->proc_ops->proc_open;
+-	if (open)
+-		rv = open(inode, file);
++	rv = pde_open(pde, inode, file);
+ 
+ 	if (pde->open) {
+ 		if (rv == 0) {
+@@ -544,23 +636,45 @@ static int proc_reg_release(struct inode *inode, struct file *file)
+ 	if (pde_is_permanent(pde)) {
+ 		const auto release = pde->proc_ops->proc_release;
+ 		if (release)
+-			return release(inode, file);
+-		return 0;
++			release(inode, file);
++		goto out;
+ 	}
+ 
+ 	if (!pde->open)
+-		return 0;
++		goto out;
+ 	spin_lock(&pde->pde_unload_lock);
+ 	list_for_each_entry(pdeo, &pde->open->files, lh) {
+ 		if (pdeo->file == file) {
+ 			close_pdeo(pde, pdeo);
+-			return 0;
++			goto out;
+ 		}
+ 	}
+ 	spin_unlock(&pde->pde_unload_lock);
++out:
++	/* ->proc_release() has run, here or in remove_proc_entry() */
++	if (pde_is_seq_file(pde))
++		pde_seq_release(pde, inode, file);
+ 	return 0;
+ }
+ 
++/* For seq_file entries, see pde_seq_ops. */
++static const struct file_operations proc_seq_file_ops = {
++	.llseek		= seq_lseek,
++	.read_iter	= seq_read_iter,
++	.splice_read	= copy_splice_read,
++	.write		= proc_reg_write,
++	.poll		= proc_reg_poll,
++	.unlocked_ioctl	= proc_reg_unlocked_ioctl,
++	.compat_ioctl	= proc_reg_compat_ioctl,
++	.mmap		= proc_reg_mmap,
++	.get_unmapped_area = proc_reg_get_unmapped_area,
++#ifndef CONFIG_MMU
++	.mmap_capabilities = proc_reg_mmap_capabilities,
++#endif
++	.open		= proc_reg_open,
++	.release	= proc_reg_release,
++};
++
+ static const struct file_operations proc_reg_file_ops = {
+ 	.llseek		= proc_reg_llseek,
+ 	.read		= proc_reg_read,
+@@ -644,7 +758,9 @@ struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
+ 
+ 	if (S_ISREG(inode->i_mode)) {
+ 		inode->i_op = de->proc_iops;
+-		if (pde_has_proc_read_iter(de))
++		if (pde_is_seq_file(de))
++			inode->i_fop = &proc_seq_file_ops;
++		else if (pde_has_proc_read_iter(de))
+ 			inode->i_fop = &proc_iter_file_ops;
+ 		else
+ 			inode->i_fop = &proc_reg_file_ops;
+diff --git a/fs/proc/internal.h b/fs/proc/internal.h
+index 7dea0237f08b..674e6b4ed21e 100644
+--- a/fs/proc/internal.h
++++ b/fs/proc/internal.h
+@@ -46,6 +46,8 @@ struct proc_dir_entry {
+ 	};
+ 	/* the open files procfs has to know, see struct pde_open_node */
+ 	struct pde_open_node *open;
++	/* the seq_operations of the seq_file, see pde_init_seq_direct() */
++	struct seq_operations *seq_direct;
+ 	proc_write_t write;
+ 	void *data;
+ 	unsigned int state_size;
+@@ -97,6 +99,22 @@ static inline bool pde_has_proc_lseek(const struct proc_dir_entry *pde)
+ 	return pde->flags & PROC_ENTRY_proc_lseek;
+ }
+ 
++static inline bool pde_has_proc_seq_ops(const struct proc_dir_entry *pde)
++{
++	return pde->flags & PROC_ENTRY_proc_seq_ops;
++}
++
++static inline bool pde_has_proc_show(const struct proc_dir_entry *pde)
++{
++	return pde->flags & PROC_ENTRY_proc_show;
++}
++
++/* procfs owns the seq_file, see pde_seq_start() */
++static inline bool pde_is_seq_file(const struct proc_dir_entry *pde)
++{
++	return pde_has_proc_seq_ops(pde) || pde_has_proc_show(pde);
++}
++
+ extern struct kmem_cache *proc_dir_entry_cache;
+ void pde_free(struct proc_dir_entry *pde);
+ 
+@@ -343,6 +361,9 @@ void proc_init_kmemcache(void);
+ void proc_invalidate_siblings_dcache(struct hlist_head *inodes, spinlock_t *lock);
+ void set_proc_pid_nlink(void);
+ extern struct inode *proc_get_inode(struct super_block *, struct proc_dir_entry *);
++void *pde_seq_start(struct seq_file *m, loff_t *pos);
++void pde_seq_stop(struct seq_file *m, void *v);
++void *pde_single_next(struct seq_file *m, void *v, loff_t *pos);
+ extern void proc_entry_rundown(struct proc_dir_entry *);
+ 
+ /*
+diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
+index 6ad5150020bf..ea55ed85a2d6 100644
+--- a/include/linux/proc_fs.h
++++ b/include/linux/proc_fs.h
+@@ -27,6 +27,8 @@ enum {
+ 
+ 	PROC_ENTRY_proc_read_iter	= 1U << 1,
+ 	PROC_ENTRY_proc_lseek		= 1U << 3,
++	PROC_ENTRY_proc_seq_ops		= 1U << 4,
++	PROC_ENTRY_proc_show		= 1U << 5,
+ 
+ 	PROC_ENTRY_FORCE_LOOKUP		= 1U << 7,
+ };
+@@ -37,7 +39,10 @@ struct proc_ops {
+ 	ssize_t	(*proc_read)(struct file *, char __user *, size_t, loff_t *);
+ 	ssize_t (*proc_read_iter)(struct kiocb *, struct iov_iter *);
+ 	ssize_t	(*proc_write)(struct file *, const char __user *, size_t, loff_t *);
+-	/* mandatory unless nonseekable_open() or equivalent is used */
++	/*
++	 * mandatory unless nonseekable_open() or equivalent is used, procfs
++	 * seeks seq_file entries itself
++	 */
+ 	loff_t	(*proc_lseek)(struct file *, loff_t, int);
+ 	int	(*proc_release)(struct inode *, struct file *);
+ 	__poll_t (*proc_poll)(struct file *, struct poll_table_struct *);
+@@ -47,6 +52,21 @@ struct proc_ops {
+ #endif
+ 	int	(*proc_mmap)(struct file *, struct vm_area_struct *);
+ 	unsigned long (*proc_get_unmapped_area)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
++	/*
++	 * For seq_file entries procfs opens the seq_file, reads and seeks
++	 * through it and frees it once the file is released. ->proc_open()
++	 * finds the seq_file in ->private_data and ->proc_release() only
++	 * releases what ->proc_open() set up. It can run while a reader still
++	 * copies out of the seq_file, so it must leave that alone. procfs
++	 * allocates ->proc_state_size bytes of ->private state for
++	 * ->proc_seq_ops and points ->private at the entry's data for
++	 * ->proc_show(). Nothing that runs with the entry pinned may wait for
++	 * something a copy to or from userspace can hold, like the seq_file's
++	 * lock.
++	 */
++	const struct seq_operations *proc_seq_ops;
++	int	(*proc_show)(struct seq_file *, void *);
++	unsigned int proc_state_size;
+ } __randomize_layout;
+ 
+ /* definitions for hide_pid field */
 
-Changes in v2:
-- Replace the drivers/bus bridge driver and the host_soc platform_data
-  quirks with a dedicated bcma host driver, drivers/bcma/host_soc_bcm6362.c;
-  host_soc.c is left untouched
-- DT: describe the WLAN backplane with a single
-  "brcm,bcm6362-wlan-bus-axi" node instead of a bridge node with a
-  brcm,bus-axi child; add the node to bcm6362.dtsi
-- Drop the "SHIM" naming: reg-names "chipcommon"/"wlan-ctrl",
-  reset-names "wlan"/"wlan-ubus", bus flag "wrapperless"
-- Split the scan changes into two opt-in bus flags (big_endian,
-  wrapperless)
-- Move the MAINTAINERS entry to the new driver and binding
-- Link to v1: https://lore.kernel.org/r/20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com
-
----
-Alessio Ferri (5):
-      dt-bindings: bus: add Broadcom BCM6362 WLAN AXI backplane
-      bcma: scan: support big-endian backplanes
-      bcma: scan: accept wrapper-less cores on wrapper-less backplanes
-      bcma: add host driver for the BCM6362 integrated WLAN backplane
-      MIPS: dts: bcm6362: add the integrated WLAN backplane
-
- .../bindings/bus/brcm,bcm6362-wlan-bus-axi.yaml    | 109 ++++++
- MAINTAINERS                                        |   7 +
- arch/mips/boot/dts/brcm/bcm6362.dtsi               |  20 +
- drivers/bcma/Kconfig                               |  12 +
- drivers/bcma/Makefile                              |   1 +
- drivers/bcma/bcma_private.h                        |  15 +
- drivers/bcma/host_soc_bcm6362.c                    | 423 +++++++++++++++++++++
- drivers/bcma/main.c                                |   6 +
- drivers/bcma/scan.c                                |  10 +-
- include/linux/bcma/bcma.h                          |   5 +
- 10 files changed, 607 insertions(+), 1 deletion(-)
----
-base-commit: d6d3455d8751854e0d1820f14184682e23ac4475
-change-id: 20261011-bcm6362-wlan-d4473bd1f2e0
-
-Best regards,
 -- 
-Alessio Ferri <alessio.ferri@mythread.it>
+2.53.0
 
