@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793822163;
-	b=378He3vbTM89/Hjwj76c1jiQOp8wInCblV02XIVvEFs2WZ6wtNKHVXRi3iZJIA6auMVf
-	 mJAdlpnOBmly7LH6Pmk/0O91API7JUf3uTkNnThADZX3onEj1BLUc/oPWmEbCUNI7B9m7
-	 U4n7C1M7dvIv4ic/lfwC/1rO3eL3n7oxPJfB7wFR3hJByHku9eX4w7Xh87JBgBBt85zKS
-	 DAeNVMKBajt//hOeXKnGHLSvpKpy70LrY/zAb6CwxpC8u7ztFMOUx9wHZrU0oVmDmBevI
-	 YezQCojc6iK3cDQDBFkr1fsCziilPr8WtNLJ+ETXpQaDJqiIlovlbj0pm1t2ao+BDwg==
+	t=1793822193;
+	b=CLgwOQ2I54MJ7pjYBupfNvHZwZPWf+RHFTrtGjsZbGoLzVcejtRGoTq6fLx2SB5he50S
+	 jekpQHcTcvrDV1mxRhJckYI6C8+sapNi2Wt0pTb3N3ypvuoUqTbHG1NwCrpYEgZ6QOs6M
+	 Qr165uacb9qtn5PkZOK2cJVmKl2Toie5KDdHdzrHKlAoVWa3Q9jDnEIMQwvFpmqtHqeEj
+	 E/sj/h1hAHWHorQuI1iNMn4BPZU3OYtJ9BRwPX5QCE9m/8O9utmNrw7VJ5Z09138N/l+k
+	 8m9LzOEIqr5i0FumJgp2gUWttc7PLFLJi30bqs2YYEiiR6keOyHtpC/prF/5CICYIzw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793822163;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793822193;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=bCEpJCXGgk21zgMyVrJnsb9d3IAiyaFEBDru2XgYb4M=;
-	b=QZUhOXvmanBwuPyGrMwjcC48cdAnJY1zc8X/LIho9snXiz8+7NH72fLGLX76GCZ21HIN
-	 RGusMLoinDJcVADu22g+HHDTxsMab9VBHlEZ9G7tS6YqVlHV8n8pNecEUsDYrkDmHUBnL
-	 XlmXu/uCTUlUl/DJ5tyfYMQ+G5O4GKgO/ZMmbCWfhmxVa34EKSVPvmkWzrbX7YpkhdKII
-	 NvHd0BCyN/moMvPvc8WUKdai9CTrY/UQOmSQtnEI3RfXYWSH9z5/VtVjQwqbgJVGCYLiv
-	 JdhXjm7cRws1cT8I/g6gZfkr0dzK5mwV8a9DH5obhVnrVp4oK0Qyal6YKZ5kHthYcDQ==
+	bh=LBl2/qBMA7OV4BMTYua5kVHXByvRuxQ8RJbkH2xlEeQ=;
+	b=KxfZ+fMcUIRncfBRU2z7GFqw11/hHRythL1xYGUqrpX86SPOX0wOYDrdNCIX1/uHnG2q
+	 6B5MRWYxqcR7VEquC3hAlADymbVsmX3h3o8tcv16/cPASymiHKgHaQ/UmKL2L2n1Pz6Xo
+	 qJtO+LZiY06P+JeD0JQzzTlGLhfmfUn29g+o3WBlvk87fW/We6swiQwArKKRK3qN14O2v
+	 NAS+RtGIhP9RqT/JChyUQB5Bq2vfZi3QTxl4ueKApKqyARyns3GtN3LvrROI+CpIHwvUu
+	 4JETGrlYL7NueHgQMvVrZ+GMqqZHJ+jdMAGWVjHyHIjwwyx+bHC+hKja3kDuhXadT1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n6uNIEN8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aKP7JyYG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 629566078705;
-	Wed,  4 Nov 2026 19:56:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A268609CAC6;
+	Wed,  4 Nov 2026 19:56:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n6uNIEN8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB9F61F00919;
-	Wed,  4 Nov 2026 19:55:50 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aKP7JyYG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B86BA1F000C1;
+	Wed,  4 Nov 2026 19:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793822162;
-	bh=bCEpJCXGgk21zgMyVrJnsb9d3IAiyaFEBDru2XgYb4M=;
+	s=k20260515; t=1793822192;
+	bh=LBl2/qBMA7OV4BMTYua5kVHXByvRuxQ8RJbkH2xlEeQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=n6uNIEN8UtFFIaiDpvbvTTBdWrfLopeDookEM+XOfGJBmQaBLBud7PW4ZywRa4UqY
-	 sj9lKf00u87t0rYyILLdTAzUShhG08ZdGf/Lzb6uT5y+NXjXXOrpjMTCCufRj/+vUf
-	 qn2Hm5dCkKTQ/5xyNTYylulY92AYSZ+tzxPbaFXkvFnu/q327E+8W9jss69XVk/qWl
-	 RFW6EwVAfNKvgEJ3eedNnGhh4txPJEwh75Q839TLwgEzuVUSv49ucfVtBinxI3hk3b
-	 fb0M7feqk7mkAAGLRXxYscDizmCBmFG4sFYYV3OBo/qiimcnQoXdcT6kySNh1lRNIF
-	 bhwX+vUqpJ/hg==
+	b=aKP7JyYGkDXXcZgiOMyJDOMnJ3YKXipcdyKMOhnZ/kDushdocc5j2aUosHVgdFjuG
+	 W8NqrAjXIVJtlk3D6BRdnDPijmdfnyH55xY4/5GIe8B7ijNhQWuqM7VHbGTChu/S5p
+	 bjawb6WUZLBB8pnefyGL4zorD4j/72K+4RlaEoOxwLWCBU80eFeiO+LKNoVR3cDXsM
+	 3PJy33mjWSy8B1p5T5flpR5Cr9VBJtwZuxs51UHe1Pt2cbGiY3/+T4y9EH9bSAjyVG
+	 E7eQOJVTxndTF1qhOS06r3zzRaWFs4kd9ALYhL3GOdUn4eRB1X31/INX4f8HZSXd4y
+	 I59kxqMTzVXsw==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 25/30] alloc_tag: let procfs own the seq_file of /proc/allocinfo
-Date: Wed,  4 Nov 2026 20:55:48 +0100
-Message-ID: <20261104-work-procfs-fs-v2-25-319e0f9a8aae@kernel.org>
+Subject: [PATCH RESEND v2 27/30] mm/swapfile: let procfs own the seq_file of /proc/swaps
+Date: Wed,  4 Nov 2026 20:56:18 +0100
+Message-ID: <20261104-work-procfs-fs-v2-27-319e0f9a8aae@kernel.org>
 In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -116,80 +116,52 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2428; i=brauner@kernel.org; h=from:subject:message-id; bh=w2e219TOPzYhqaNEYdOja/Iy2kqKR7KfDC/oRUWRjFA=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97vFcddfCmyOAVbf9SsDD2QKqjkaTBOc97Z200n3GL K1V/52WdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExEm5mR4fL8sPeSEVKLCxs1 t6daZRx/N59v9c2uBvbciVVGFpzdXxj+itqIaCekhc3YHW/sfpNlJ0++MIP1I9HZqYuF7+sHn5n NCgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1169; i=brauner@kernel.org; h=from:subject:message-id; bh=xP8svTINdkdtOq03sFDyUkKM00LKGtRsGg97ENBLGtM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97vHhXJd8Kth7+zWufRt8tZu59658dXe75H+F8xvTV ml+XhRg2lHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRqbMZ/kps+sao8ittxlXf /G8XPGKtjMsDSyLXBR7ut+jjuGbTHMHwP7A9pOPMY4eI2fw/JsV8unzukJPgecs1+ql+y/k/6SR 1sAAA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Declare the seq_operations and the size of the private state and let
-procfs open and free the seq_file. ->proc_open() and ->proc_release()
-only set up and destroy the ioctl lock now.
+Declare the seq_operations and let procfs open and free the seq_file.
+->proc_open() only records the event count for ->proc_poll() now.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- mm/alloc_tag.c | 28 +++++++++++-----------------
- 1 file changed, 11 insertions(+), 17 deletions(-)
+ mm/swapfile.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/mm/alloc_tag.c b/mm/alloc_tag.c
-index 7d7ad6704953..697e44468ebc 100644
---- a/mm/alloc_tag.c
-+++ b/mm/alloc_tag.c
-@@ -152,27 +152,21 @@ static const struct seq_operations allocinfo_seq_op = {
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 254ce86fa923..ee4868ecc3a7 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3410,26 +3410,19 @@ static const struct seq_operations swaps_op = {
+ 	.show =		swap_show
  };
  
- /*
-- * Initializes seq_file operations and allocates private state when opening
-- * the /proc/allocinfo procfs entry.
-+ * Initializes the private state when opening the /proc/allocinfo procfs
-+ * entry. procfs opened the seq_file and allocated the state.
-  */
- static int allocinfo_open(struct inode *inode, struct file *file)
++/* procfs opens the seq_file */
+ static int swaps_open(struct inode *inode, struct file *file)
  {
+-	struct seq_file *seq;
 -	int ret;
 -
--	ret = seq_open_private(file, &allocinfo_seq_op,
--			       sizeof(struct allocinfo_private));
--	if (!ret) {
--		struct seq_file *m = file->private_data;
--		struct allocinfo_private *priv = m->private;
-+	struct seq_file *m = file->private_data;
-+	struct allocinfo_private *priv = m->private;
+-	ret = seq_open(file, &swaps_op);
+-	if (ret)
+-		return ret;
++	struct seq_file *seq = file->private_data;
  
--		mutex_init(&priv->ioctl_lock);
--	}
--	return ret;
-+	mutex_init(&priv->ioctl_lock);
-+	return 0;
+-	seq = file->private_data;
+ 	seq->poll_event = atomic_read(&proc_poll_event);
+ 	return 0;
  }
  
- /*
-- * Cleans up the seq_file state and frees up the private state allocated in
-- * allocinfo_open() when closing the /proc/allocinfo file descriptor.
-+ * Undoes allocinfo_open() when closing the /proc/allocinfo file descriptor.
-+ * procfs frees the seq_file and the private state.
-  */
- static int allocinfo_release(struct inode *inode, struct file *file)
- {
-@@ -180,7 +174,7 @@ static int allocinfo_release(struct inode *inode, struct file *file)
- 	struct allocinfo_private *priv = m->private;
+ static const struct proc_ops swaps_proc_ops = {
+ 	.proc_flags	= PROC_ENTRY_PERMANENT,
++	.proc_seq_ops	= &swaps_op,
+ 	.proc_open	= swaps_open,
+-	.proc_read	= seq_read,
+-	.proc_lseek	= seq_lseek,
+-	.proc_release	= seq_release,
+ 	.proc_poll	= swaps_poll,
+ };
  
- 	mutex_destroy(&priv->ioctl_lock);
--	return seq_release_private(inode, file);
-+	return 0;
- }
- 
- /*
-@@ -475,9 +469,9 @@ static long allocinfo_compat_ioctl(struct file *file, unsigned int cmd,
- #endif
- 
- static const struct proc_ops allocinfo_proc_ops = {
-+	.proc_seq_ops		= &allocinfo_seq_op,
-+	.proc_state_size	= sizeof(struct allocinfo_private),
- 	.proc_open		= allocinfo_open,
--	.proc_read_iter		= seq_read_iter,
--	.proc_lseek		= seq_lseek,
- 	.proc_release		= allocinfo_release,
- 	.proc_ioctl		= allocinfo_ioctl,
- #ifdef CONFIG_COMPAT
 
 -- 
 2.53.0
