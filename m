@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.216.248.212
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793805394;
-	b=OKM9Nb91bFxAUBuum8Jj6A8Om+iorO27o1h8mIy/70Suwu9Nj0FTIwFZnW3Nwd84nLEx
-	 SGg7l+As3yHsvz0/5QTzOua+wqinDMzczaVyL4n9UMhTqtozPU8lszED5YEGh2fqV/Hty
-	 y8StjGJ9FQBPi1KErIXgewn6xSF8XpkiegH/47qmWHADPtNPASujdkaerTCBBeQCBPGIc
-	 MnGcd6VDP+vFn7rQuE8CsU/7mEzEAz7joJCj628OhC+iAGvrW2lfOImEPmXqN5+tANjLk
-	 pNAAMFQgWF3WKOBAKRABNk4+vn7LFzRpi/BI12Yh2NgQjf9fczWpVtPk74HThdc9F4Q==
+	t=1793805391;
+	b=C5lXn5Qb4HNRqias+ZB+dhYqYCfCh3dg6/X03b6XyLfak9EtEnaazlEbdRzKUOFgdfsD
+	 hfqoHMP8JzM2gVfi/sf2xx0mAWlArRYvTmqgwOgg7heqEWs1drgh/PHGcEU3upNgJxPjh
+	 nd6LfeNlSWHurzllBwpIrnIJoT/sdlhW2Imo/nsC9KuBckMwbGeFIWQZXHnL9HvgXPBCz
+	 iwFZoib1FF1Xmly4J6IHKrrTbXMoYEuyijFzW7wLKa56l/KvekJATE7Ea9FSzA4iO5ub5
+	 /wapp0WirvHqtApGaxaxiJbgTD+HQV7NxZlE0hqeHjhZsAX5H5+zuhbTaSPcM6I+WMA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793805394;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793805391;
 	h=DMARC-Filter:From:X-Lima-ML-UUID:DKIM-Signature:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=HUv3aonTMOVsk8qMfoC0IbbTBHPuVDViUYD2TXVBWn4=;
-	b=nrzSOVZCv7ECxhDUI1Mns4yd78rV5ADrzwwAvcE3EhxtR9QnnsJkeEBo/OHP/8pa7RWv
-	 6mlyicl8QDfpSq5aI6HMnfg/bcAq1Y/6E5U9Gy+3andIqdo1VK8VUJ+6jY3gAkfOJOSsF
-	 lXfrL+RTnTPhBnDu+tshiKtjr4GfEleeOCgxhNhsMqSxg9hM/6sR+UrHQ7Xgi8ixb/uj8
-	 mHU89KLPB1nhscd5/TCzk5Uc9ue1/AYpV+jI8wHpuzYvmRqmRfomdOoiiwuLefLiqiiUU
-	 sifQ63z9acfsVet0xNCnBOtlEtrIKXHIWzXznlLvl8R5IW0EjXCOCRRC1BEbP36oaUg==
+	bh=BC2BTMGT0MonLeNLnYUzQ8CslpdJa2459jbN4UryEuY=;
+	b=5lIu6ZlqcxcwYKcjV0nNldvFTbV7LvtH9NR83e3IWbitiWObB4x387p4voWVtAtsN+uT
+	 oxSGKvbgY2ZJIC+4OHf5HWJOmHTHSOG883JQFY/CHTITch7sAKhcnpQYCDWhwIOg2jd/a
+	 MLcTD9QrcrntW7G+EYpHT3WpMlPXiTynJdQoOHI74faae1xC0pf9VxImTEH/p/wPw1Qsn
+	 zAZdMxwuV5faClIKFYAquRAzC/i26B8owX8Fa9yIkvuS6yYGe81KbzqrdkFmmbH/XAMaI
+	 2mzsX2EKS4tPxVPgzo33wxWpMXxSJf/GLAbcltk/LqK8lACTgnawh+GyQrKpYFnvKqg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=deq.rocks;
 	spf=none smtp.mailfrom=deq.rocks;
-	dkim=pass header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=IZmpUEBE;
+	dkim=pass header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=uZbzD2we;
 	arc=none smtp.remote-ip=91.216.248.212
 Received: from bulk0.mail-out.lima-city.de (bulk0.mail-out.lima-city.de [91.216.248.212])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C57606EEA4;
-	Wed,  4 Nov 2026 15:16:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B6C57606EEA4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1846860A5BE0;
+	Wed,  4 Nov 2026 15:16:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1846860A5BE0
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=deq.rocks
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=deq.rocks
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=IZmpUEBE
+	dkim=pass (2048-bit key, unprotected) header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=uZbzD2we
 From: Andre Eikmeyer <dev@deq.rocks>
-X-Lima-ML-UUID: 8235dade-8040-48b1-a247-fa48c184aae2
+X-Lima-ML-UUID: f567161f-405e-4b88-98a9-490ae3628851
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=deq.rocks;
-	s=securedbylima-20251205; t=1793805392;
-	bh=cZFQiaUWCwTwbQ5cpntohWw8f+YGs8832d0mnDdIQ9U=;
+	s=securedbylima-20251205; t=1793805389;
+	bh=P+W/pFLHzJaOD2sQaIiUr8QFTt02Y7Pu/LNFlzocG2Q=;
 	h=From:To:Cc:Subject:Date:From;
-	b=IZmpUEBE3jPNfx5um1SWcsxAwW8F9klf4/ahjxJ/X6amEBsc4fOYTPz2VD7eK/ikk
-	 jMtWGReU6FIsAGyL0NFYtkeiEA8EB7nYynPhjMbEh0Yqx60Yaizc4aK/1e3RHjeJLD
-	 RRcrGEigVfRdv9nAPD4UCZJ7RoUbJTugBP/seOYJdjEglmJbp2g+Qwluh0xIX6tBOu
-	 HfbpaPppQ/kZkJKBGfGgCAPJqP5QoFS0xcXgIx2oZiHTJ1zjMU0uKu0GPESzDEGNS4
-	 3nxFt00uTYQ5Sj9hav5kqo8y4W0ipIjZq0UHcs6vbd82oaOceXMKlfO4R0fzdqSpA+
-	 fVFxtnfhj4ZlA==
+	b=uZbzD2wejnwmt+sxQhFszdEdLV8jk+Y7izKkU9YHpxbwsZOvyA1UBdkIB73shZLAY
+	 kQrepDqVEPs47qLGYFTHIOUdLxvC66ljFVzLaFsh8jOsUvpSH2siknwemGPaVM94wb
+	 XU6aP1ytgL26/WedyOIWldTrAoOEzjA0KnWW/5rgsaaHxLYRI8+Fu5gGTRXgE9dZNk
+	 OHKpoX/2DZreYphPde3aH0Cw04DG6n5pTGj5QlpO9FYlb/CpH1yPG1uFOIkg6/3No2
+	 2lSGLpiifaMI5i0XKwgOCoS+nNdMP2L3vWuMqpQsHcvfitAVpP4toIlM2YMTt7/ybC
+	 cbpRKKn7yXmOg==
 To: arend.vanspriel@broadcom.com
 Cc: linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
@@ -52,9 +52,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Andre Eikmeyer <dev@deq.rocks>,
 	Yossef Osman <Yossef.Osman@proton.me>,
 	Aditya Garg <aditya.garg@linux.dev>
-Subject: [PATCH] wifi: brcmfmac: leave the AP 4-way handshake to the host on Apple chips
-Date: Wed,  4 Nov 2026 16:16:29 +0100
-Message-ID: <20261104151629.70790-1-dev@deq.rocks>
+Subject: [PATCH] wifi: brcmfmac: use a 200 ms power save timeout by default
+Date: Wed,  4 Nov 2026 16:16:26 +0100
+Message-ID: <20261104151626.70737-1-dev@deq.rocks>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -67,24 +67,19 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The Apple firmware for the BCM4364 and BCM4377 lists "idauth" in its
-capabilities, so brcmfmac enables BRCMF_FEAT_FWAUTH and advertises
-NL80211_EXT_FEATURE_4WAY_HANDSHAKE_AP_PSK. hostapd and wpa_supplicant
-then pass the PSK to the driver and leave the AP side of the 4-way
-handshake to the firmware. On the BCM4364 that handshake never
-completes. The client associates, no EAPOL-Key frame is sent, and the
-firmware removes the station after about 8 s.
+cfg80211 calls set_power_mgmt with timeout -1 when userspace leaves the
+dynamic power save timeout to the driver, as NetworkManager does. brcmfmac clamps that to BRCMF_PS_MAX_TIMEOUT_MS, so the firmware
+stays awake for 2 s after every frame in PM_FAST mode and rarely sleeps
+with the background traffic of a typical network.
 
-Measured on a MacBookPro15,1 (BCM4364/3, firmware 9.30.514.0.32.5.94,
-FWID 01-47278712) with a WPA2-PSK access point and a Samsung Galaxy
-S22 Ultra as client:
+Use 200 ms for -1. macOS 15.4.1 sets pm2_sleep_ret to 200 ms on the
+BCM4377 of a MacBookAir9,1, seen in a trace of its iovar calls across a
+sleep and wake cycle. Measured on a MacBookPro15,1, idle with WLAN
+associated:
 
-  offload advertised:  NEW_STATION, DEL_STATION 7.8 s later, no EAPOL
-  offload not advertised: 4-way handshake by wpa_supplicant completes,
-                          AP-STA-CONNECTED, DHCP lease, traffic flows
-
-Clear BRCMF_FEAT_FWAUTH on the chips in Apple's T2 Macs, so the host
-runs the handshake.
+  pm2_sleep_ret 2000 ms: 11.2 W system power
+  pm2_sleep_ret  200 ms:  9.2 W
+  WLAN off:               8.8 W
 
 Tested-by: Yossef Osman <Yossef.Osman@proton.me>
 Tested-by: Aditya Garg <aditya.garg@linux.dev>
@@ -93,34 +88,30 @@ Signed-off-by: Andre Eikmeyer <dev@deq.rocks>
 The KaiT2en community runs this patch with its kernels, no regression
 was reported.
 
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 488364e..05e9750 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -318,6 +318,20 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 					BIT(BRCMF_FEAT_WOWL_GTK);
- 		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 46714d87126..e7b21703e34 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -88,6 +88,7 @@
+ #define BRCMF_ND_INFO_TIMEOUT		msecs_to_jiffies(2000)
+ 
+ #define BRCMF_PS_MAX_TIMEOUT_MS		2000
++#define BRCMF_PS_DEFAULT_TIMEOUT_MS	200
+ 
+ /* Dump obss definitions */
+ #define ACS_MSRMNT_DELAY		80
+@@ -3378,6 +3379,9 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
+ 			bphy_err(drvr, "error (%d)\n", err);
  	}
-+	/* The Apple firmware for these chips lists "idauth", but in AP mode
-+	 * its authenticator never completes the 4-way handshake and the
-+	 * station is dropped after about 8 s. Leave the handshake to the host.
-+	 */
-+	switch (drvr->bus_if->chip) {
-+	case BRCM_CC_4355_CHIP_ID:
-+	case BRCM_CC_4364_CHIP_ID:
-+	case BRCM_CC_4377_CHIP_ID:
-+		ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_FWAUTH);
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	/* MBSS does not work for all chips */
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_4330_CHIP_ID:
--- 
-2.56.0
+ 
++	/* cfg80211 passes -1 when userspace asks for no particular timeout */
++	if (timeout < 0)
++		timeout = BRCMF_PS_DEFAULT_TIMEOUT_MS;
+ 	err = brcmf_fil_iovar_int_set(ifp, "pm2_sleep_ret",
+ 				min_t(u32, timeout, BRCMF_PS_MAX_TIMEOUT_MS));
+ 	if (err)
 
+base-commit: 991a73f4909f1348ffb4b38765cdb522a775e4c2
