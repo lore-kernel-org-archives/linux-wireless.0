@@ -1,78 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793814503;
-	b=vvi23XfEZerXMPZvHkonw212SGvqvj+o1whj8nJ8q8e0zCVH95rf8JIDsWwRXv1+54qi
-	 Mx41D+Iez/ftCgsYhUvgtz5L81XP7mrpFNwOeq2TTKHSxLsgUbBEeajG1nPlgpWRNnZhl
-	 DQVIQPmDLyyW2L5oslyNzGQya+cnyeZ/LB7Fesa/8wWGXaRJGgXys555tquNOt9uIW/x7
-	 5lhuY0iiaVdoSLcdwoi9uwi9RWZ1pEmF0yS7Notd3kLhwfOs4OtAZY5pO/WbDa8+WK5O3
-	 emGwtBDOh26qhLgT/opHa1atVd0hiMcsuWg1YiGZDqHVO/N90HXG72R3v9HcpGqfEug==
+	t=1793814488;
+	b=c7cHNwmaXjlJlojtvVBXY5mMWCLkrpSKIrZDhcat1tbrKgLV1wKqZFPLwUzfLvyGFZwY
+	 QDhJsMVJzaTPBog8qOBsEE4hnQRfaV3n16Fb8QCfQlZ7+nFty1oLYYDMe50TX9UYBRKQT
+	 ibNwIC26XrSO/LORMWfo+dpd7mwA/tySO/ExO3o+JUPuxpqpk9MjDMH95iwqA/HhrJtSZ
+	 dyqxbwn8HqBVP3UHeEH+fmL7HuHB4I2mhUyfiIoFMyJbSkZsQSSkT7ErzLLh5OjWC1Fa0
+	 NWO08OxIyj1ebrGMwY8+w8Ma/V1OYp7Lg/NDbua87J/Hp0gVWO6LyvjeJ43NPYoTyjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793814503;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=tq7IoD6yji3CA3UfNNagARQUoCp3JvhYDQlnNNTxN8M=;
-	b=A3uSyNRHiZu1rGt4bCzmZEr4DoVsWFwgu/Wp5W3L+Ntmo9wRmjaf/qXUgz6Mhq5AOohS
-	 FOkO/x8xlm9ctLmtUnMT/Gq7pb7PPtYzas+Qu4pJ9tSU7hNaEXo8Jd2Df+u406qnuf4wz
-	 e+FiEwkaL7wZk/Hzi3+nZzfkoSH+nOmNJHo7OvBseIgfDlmHICwEkCIBuE1yy7virXPXn
-	 SE9JklA6g5IUTrZke/wFBhlBhghOm32PRTJeaJdn/X3hY43q2k5Jav4ukSflPPRIhIMji
-	 Z5S7EpeG8ulYcQZNBeEBGjFlTt0Zjtl7CNrv2sAEzkoJ3ARze+G6CMYAALT62qrFPSw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793814488;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=+QMuJvtMuQ+CXnn6xLeWoxU7H9VJY0mzKEyTXi76/+M=;
+	b=s4jk7OESovVO/5e90NI+zzQ3NqhtLIhsJqzRszvhHQPbcm5d8E0lUQVDnnufzwPAiDIS
+	 avkwQNq8hqjcBDiJG4stPXxwZGOmWH1QcdTNmXiQhhu33RbxRBGm/57XhfyHfN6B7HrFp
+	 CYaeJ+JCTdLVPcG5SZiDR98P0USRPXROykZ01q2j6x8cVyhc7S9V79UBv6n/vJfBDboej
+	 fafTvUWDa66Nf+759eIa1TsJ3DL6hELgXxSZyVHDAW61/pijfzkqRu7dzvndeFizTUl94
+	 fUx70AD2SO82tVa1yXVo1WfqETo8dqqinqJOZldkNAlP++V892YVxt9pU9zlqyy/X5Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Zgmzsxe6;
-	arc=none smtp.remote-ip=198.175.65.19
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DVG35mDd;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF90E606A331
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 17:48:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF90E606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE995606A31B;
+	Wed,  4 Nov 2026 17:48:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Zgmzsxe6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793814502; x=1825350502;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=icpdKJ+0niq0nYCtA2vfEffSOgXeLUS0eW9q5qpYy3g=;
-  b=Zgmzsxe633hVy3wBh2TB0SyyuX6yxW8CAPFHXnTqn2UTWLYFssO2LU/Z
-   Zmju4TA2dseMZqzOwFCR3g94TzOaEjdNNd65ebO7MkeHI2JHMcDifQYdL
-   1MmnGKtYwnB4bgbJveNGrbQ0KbO19rCJsmosy0Yt4vwUxP9KbhvNM+O+1
-   //WOatY4oAgINo/dCcwi/BCAlnAY5h5Hx1osWbLpM1wGwb206bfuuXiwK
-   h48retZ+LFH6z2hcaKrJxGaeGxa9IdCuk4Yn9BhVY1NfpS3h5/xXkE8W3
-   OARVGJBnOJXP4aEgGvzLxtnZ/7rGEUNwyQ04eLla4zHSFfr3cMyMLyRDq
-   w==;
-X-CSE-ConnectionGUID: I1Y1qlodT2Ky4a5QBO9a5g==
-X-CSE-MsgGUID: vMo71TsISIGeK/s6Fqj46A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11956"; a="2613997"
-X-IronPort-AV: E=Sophos;i="6.27,195,1787036400"; 
-   d="scan'208";a="2613997"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2026 09:48:21 -0800
-X-CSE-ConnectionGUID: FVoAJvDaShGaiBQw/PTi+A==
-X-CSE-MsgGUID: e1y7x+ebSaOaXSGNPUYquQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,195,1787036400"; 
-   d="scan'208";a="7138092"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 04 Nov 2026 09:48:21 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xOf5t-00000000knv-3fqd;
-	Wed, 04 Nov 2026 17:48:17 +0000
-Date: Thu, 5 Nov 2026 01:47:26 +0800
-From: kernel test robot <lkp@intel.com>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, johannes@sipsolutions.net
-Subject: Re: [PATCH wireless-next 08/18] wifi: cfg80211: add KUnit tests for
- the SCS classifier
-Message-ID: <202611050107.DAV4Z5Au-lkp@intel.com>
-References: <86f50b8e75254418218c0c32399d272dea638cac.1793722802.git-series.nbd@nbd.name>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DVG35mDd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E9FB1F00919;
+	Wed,  4 Nov 2026 17:47:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793814487;
+	bh=+QMuJvtMuQ+CXnn6xLeWoxU7H9VJY0mzKEyTXi76/+M=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=DVG35mDdrJ+w70lYp9CqgpxTuoGTpj4temyLsY3vuBl9elVVBnmHrviotaVGY/ppP
+	 UdOgypZXpDWtJ7enRd3iIIX4vWx3xyqPaHPzOZWq/P4JUJrwgIpI4MwtSTSz/6po8R
+	 Yvz02Y/vDREj2xNfVXWxFSvrw7Bvuiwjqz0knxKP5rsjzaWDW5qaKyJ9F3yEnh+EWh
+	 A3TtW5nyoi8NpYae3YAaKFmJ3QPX5Rij2cVvQ/1JMiWehFHBZSo4em6YfVuXhfiqDi
+	 JqHLo3hhdvujnwykhoFrIyHzHBnGpPwJgUwVLui5mJv4lfTVDRPXKF7pOVu2XHYste
+	 DuNdex110TFZw==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>,
+	stable@vger.kernel.org
+Subject: [PATCH v2 13/51] sched/psi: don't drop the last byte of a trigger write
+Date: Wed,  4 Nov 2026 18:46:59 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-13-bbf7d5546809@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
+References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -82,33 +115,48 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86f50b8e75254418218c0c32399d272dea638cac.1793722802.git-series.nbd@nbd.name>
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1310; i=brauner@kernel.org; h=from:subject:message-id; bh=/5ST8groFWC3ZYrB9+5K2L5OtN8hrslkTr6MpvXzbng=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zjv/59LFdb+4Nqzr+cU3P2cS7+L2yauySvlfWb8/9 eufsCjT0o5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJmJkw/FM9sG/u0ochUvwi r25NnfqcY/Wv3m+1Rk6yc5TfvmHn3j+V4X8gx3Wx2Wp7OP7b/lW+zLTMQ+Qde1X2zk2aTqESmTX LCxkA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-Hi Felix,
+psi_write() copies at most 32 bytes of the write into its buffer and
+terminates the buffer by overwriting its last byte. For a write shorter
+than 32 bytes that is the last byte the writer sent. A trigger written
+without a trailing newline loses its last digit then, "some 150000
+1000000" turns into "some 150000 100000", and a shorter one like
+"some 150 10000" fails with -EINVAL because the window doesn't fit
+anymore. Only writes that end in a newline parse as intended.
 
-kernel test robot noticed the following build errors:
+Copy at most 31 bytes and terminate behind them.
 
-[auto build test ERROR on 991a73f4909f1348ffb4b38765cdb522a775e4c2]
+Fixes: 0e94682b73bf ("psi: introduce psi monitor")
+Cc: stable@vger.kernel.org
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ kernel/sched/psi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Felix-Fietkau/wifi-cfg80211-add-the-TCLAS-element-parsers/20261103-172334
-base:   991a73f4909f1348ffb4b38765cdb522a775e4c2
-patch link:    https://lore.kernel.org/r/86f50b8e75254418218c0c32399d272dea638cac.1793722802.git-series.nbd%40nbd.name
-patch subject: [PATCH wireless-next 08/18] wifi: cfg80211: add KUnit tests for the SCS classifier
-config: x86_64-randconfig-1015-20261104 (https://download.01.org/0day-ci/archive/20261105/202611050107.DAV4Z5Au-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261105/202611050107.DAV4Z5Au-lkp@intel.com/reproduce)
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index 7c5381423334..8b59635e95d4 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -1566,11 +1566,11 @@ static ssize_t psi_write(struct file *file, const char __user *user_buf,
+ 	if (!nbytes)
+ 		return -EINVAL;
+ 
+-	buf_size = min(nbytes, sizeof(buf));
++	buf_size = min(nbytes, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, buf_size))
+ 		return -EFAULT;
+ 
+-	buf[buf_size - 1] = '\0';
++	buf[buf_size] = '\0';
+ 
+ 	seq = file->private_data;
+ 
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611050107.DAV4Z5Au-lkp@intel.com/
+-- 
+2.53.0
 
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
->> ERROR: modpost: net/wireless/tests/cfg80211-tests.ko: symbol 'cfg80211_mscs_desc_valid' undefined!
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
