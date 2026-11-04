@@ -1,79 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793810772;
-	b=SrjUxMdbb2u1IF6ufCB7JYBxCtyWnfrPjL6kbqiNskiCC0poahaIs+fdQ55T6JvspB2u
-	 j7smluVFpBebPN82k4KxMqe+IneuZLMeYSIwdDG5i/Szk6Kar2ZaHFMDH6W75SRsgzqsS
-	 ldWloi7ul1LttN+s4BChbdKAj5QIqK5Ni58re9Vl/8QdazPSkuK8MGBQv5McJ7VQsv7vI
-	 U2EhV+qRZVDbKLl6WGdeknp/LR6A2ROdlzBe4TjItq13jKmVQbZRiRZFlDR4NL6g1kf6M
-	 otCzk94EWKiT8Enh3GlSCmEchae7srNhrd+zuWb+Sj1p01PsxneVVCi7p6eFTT7naEw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793810772;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=qpGfeXkUPyVgiJPHOasmVtEAkaBGujxSnkBJd7ovLic=;
-	b=ZYB+UobFV3a7jCj5MTvr0bq5bljSpOK9auDz7nhUVNBVYdd/21LJirJpW0Eqo1o7QN76
-	 yXwndVLNkhg6Qx82BKSfd8sC3hJn1YBgGIQ2pPNUhROvZfmSQULVQSkIODu2ZmFkcMA8Y
-	 CJgvVH26xzBW2ozs6hv9qTHxGsutlSPjo0sPaywv3vcEa3f5p9U0FJ4sUJpOEQZjxsU53
-	 QVMeig3p/x8KAd3b3cf/8ky3Fji1z106udNNOMibbknr5OGIWz38F3vY9rnRYgS1AM9i+
-	 FE4KA0176R+cl3qjcgETKsLbTZaNh5KdPMiny27nx9vPOzKR/4/DUDJmLW8crWnAX2Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nok36Eik;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7BB0606A33D;
-	Wed,  4 Nov 2026 16:46:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nok36Eik
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793810771;
-	b=EeFSyjZpMEVh/SRBDAObzKGpL/skScq2mglWzLnEOkFRFtmu36oLVi+Ax7519zN+H2LL
-	 NPx8HIK+lfv9455boD8Rw4aN/YRTtno9KP/9jVP3D1UgX/Mb/d1TfARVmfXktZoYxi/8C
-	 saqV/eTTv7HUJg8TCqDrz1tNfbc2pSuhdDsUlKUFMYjEwpCTvowj2uGoPDsFTR6O8Jc93
-	 NXBASKwycIc+yhqqqQZ5dgqEF0athHria6IHoOKb3HqlcgbVfU49AO/ZgLKQMJQgetcqQ
-	 JhQoP99+e5lyLVR3kTcBm/02wI3IMYrWUxOXoRBLqIo9H951B1IXquOFSwmCnKId9hQ==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793810771;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=qpGfeXkUPyVgiJPHOasmVtEAkaBGujxSnkBJd7ovLic=;
-	b=B6rg3XFz1O5yoRznU5uj6FVcgsIuEaE0ht7RwETgdXG4bzCP0iduNdgFM9W0wKGjeNN0
-	 MUzmWxGCLwnnJ93hC7FAseDYallLIKnC4gj02gTRxhFNKQTcu+F34REvIIEXnq89u155Y
-	 E1o84QjnqZ8AFGWeF1iRf3L5NZ8Wvi+UHlkWWHG4CZ2QB33AQD7dq2LB2VgX3DDHZug4n
-	 bgjQc1ZOx7AP0fwGpwbvnvSQz8lxFdpomHxt2qLa3YcPSDZ52wsFM/02O2Xqv40nlAg7t
-	 OUv68VaNcPGcTn6oNg04gtc48R+QDvUY11IcYwaOE7vD8IGQKeHAIUbA8O99ky7JgRw==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.45
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793811872;
+	b=yHf+i51mL2NzqugabawOMXPL5zVMw0jm2KLoDrMf+ycHsUViNLged+LGJKFoEMu/9Y2T
+	 H1RwcEZZwrZRT9ChtsnAjuiBweZZPsgbbivMbd1aRE8SneJP99DoF6EQr5lcj/4jhHJ/9
+	 8ZiuM8w2cXx2jV8gLafy5kUknMuh7tapDM3Q+MzX0N0McnXelzKVuFWphOS6gup/sWKaT
+	 4HIoPZAm5fINW4eEq4H5FF6zpDDIB8xPCAIZ/nefAjITLbreHVf8ICiJFRM/zIzGO2lym
+	 DoUbQ40GkHV+jtB8ayIrulcDwOq5jRy69g+qQ5nKl6YymwcZH1E2SPtYayWBBfnLG6g==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793811872;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=F8uAXRtGsSienYNkaab0cXktgUbGtmZejNsezC1QQio=;
+	b=GOjxkV4lkSygXRST7FGzC/oK6jKj6iTHBKmPwtsJaZo5emrE/RHi7v8ywhJrH2ZOTO9t
+	 k16bHY8TmiAa7+UakQTj1kiOzKtL8ZHHCWKGFor7qQixrYY6m03XopDJg///Ys1IG1Lly
+	 QIhOKAzpbDc50ijH3dmQAkfP7RCvWbhZOm7nTXMyzZ4/bgZ9meJPCxYcXio/FhpMJJOZd
+	 8Qsj8wJiK0/RpgOq4lOQTARsgalc+dFccC32Bdf0caGoe8IOz9nLkm+yvnPg30vWEdAVx
+	 lsSWSJI4N1iZ3KQIILTYTs0ZJFY44htdbJkjw6iF4miFnyWzVacnp8hL1V7JSxOc2cA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ot3IjQ+j;
+	arc=none smtp.remote-ip=209.85.221.45
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id E92F61F00A1B;
-	Wed,  4 Nov 2026 16:46:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793810771;
-	bh=qpGfeXkUPyVgiJPHOasmVtEAkaBGujxSnkBJd7ovLic=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=nok36EikDIy3YLKhPY22SniFKlj0EIl6pNTQDQo9UmCbn+DHkYKAzshpLY2M+a6jG
-	 5A1rVew4nsPcURhe/nSsY8Sjv2zzl/O73ALByu6Te7I8vlIv1UhVsC+ysw8Tyc7SXI
-	 sEFx2+CqE1lm7V/j9AfRNd9iJjTK7znzOwwxcKMNr+3YkKJU0ebiRyAGJfPKbdf1/G
-	 q5mPhM2s9e8A9xLbiZT+1CD1glcGqa5vcTaT72fYuRwncm2Y/a/3jXIAUmtJxKtbRs
-	 vFICZPHgoC+hZQuZXU2qqlJlpiXloBt0he6MbjswdmM5ibDu7QagsgJ0BqT1LeqbbK
-	 k5y45P5oRSUFA==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 5A6D046EC1;
-	Wed,  4 Nov 2026 16:46:09 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 04 Nov 2026 08:46:01 -0800
-Subject: [PATCH net-next v5 1/4] net: qrtr: Allow the host QRTR to assign a
- unique node id
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98811606A331
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 17:04:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 98811606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ot3IjQ+j
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-48af4d4e61fso705501f8f.2
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 09:04:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793811870; x=1794416670; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=F8uAXRtGsSienYNkaab0cXktgUbGtmZejNsezC1QQio=;
+        b=ot3IjQ+jG2FOxRpDI5geJv/xMcVJs9tpGafAakIEQWj6jZgIhemPS9HE8xJn80Al1O
+         MNm7EwScNB108UwfZ1uBUGyk0ZW76lxRHh9HNGYTlyRhqHF8Qn9TUByemFfIzm2mZhwD
+         DjKhTmdZKsdpqpDdbCYCUfjnD9XhKVj6uD1Ccmt75PIHdi/GnaXzxBDoALNkuH859hcP
+         l6XeymxFNsCxLHi8D/8TD4U5vf+AOj7fUkzG5t7N4FaXeciLHVuKMZtrJvl1iyqoo4hs
+         CqS8Pljcq11wXHopu0VxKU4vMniQtUjbhBKWzfSFIi+Ng45gAdicbuw0muD/nkLqtf4R
+         Nqwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793811870; x=1794416670;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=F8uAXRtGsSienYNkaab0cXktgUbGtmZejNsezC1QQio=;
+        b=TI6JAqBETSUsehCs+mI43hLgJuw6UariUAVHHHJ9u9XdQ9iQc85KF5DSZjYRlN/Y9H
+         UK1OaA36dwCFNaUGN67TcQ6U2tlVurDdH9ksuo6vX8NcBGYFExDXuR7XXsw6LezDGQ9I
+         BQFtXd322A9jAfoY6e1F3w6E63mU1TLfRXcBOGHZQhdSoUajGYuUimKt0PXGwCK0lVQR
+         26hQrv4nljcM9jLwe6jmbrJaoQnfVTHCljkMzS7Agck+coiKJnxsPbhsRC5DBngRGGRS
+         hY2ymrO1RI6wU9SK6vsAD3C71JzgprOa9Dv5bH6MlqNsoIwcQ3UnpXcQc+SgI1xZsxtW
+         VNtA==
+X-Gm-Message-State: APuU4Z+g+913zthXeDl4n+8mMFkfGXc1fwijuPubsrgShYPQHNNvIu+w
+	29Je5ogywewjhHS+rDHErM+AqI8hU5HmwPGGeAu5ft6b/bSWXy/tZojV
+X-Gm-Gg: AYBFou0ajqP0PvGJXB/0VbPiKzs/TomZFYh+cJNYGb9882ynQj9nh8bdYlP7hhPS1Qg
+	q1xNnBjKZRBUBE2juzMEKWssthWwHMzChNy8o7ilVXaFjOB+JmmxJNeWVPm1wrvdLYsY6Rf3tH5
+	okG4Of7nctJtWodQV7WlcRGcnYj47UhyetS+US8k2PFXtifgaB4oQ+NNY4IvyO0ow8ZLPALWyrh
+	gU4zZKsKkZSgwG2aPmVSBwU9Mpc8D5ZwLM+9Cnhrjqv8LWtjoJKiSkgPF+HHaRvaEZ/DwSS0yv9
+	HpxC2yffAbH2+p7f5WShzy5T3UeLMfKpaD9hzmnMDokdwlYKc/uX9DEjI9HU3Ej7WKKAE7J6cfP
+	3KsOyFfYOIHyc6Y1jH0tnBXGBFlvGtFOJOlgcgSiIGKibtjXheIK0zZuE3Ve4Xy5h29trzjwUJT
+	UbsAg6OIx2lT82EOkVzIyGyKiHiozyX7A98b2yJBA5gK7GSUSVVQ087phFptoc7FRblb+7pOJS5
+	csta64D28ix29um/6H0catg9tNr0VRgpIJJT7VdKN9ysmwRefJ3U1mY19P0CBbK7hP+KDbqx4IO
+	8iPPdtb9TfdDAf4J4MP2c2cI38J1jLBuKs2miebh9ezQLuSFL/PR7yeDDd7RQS9PO5moyF/sux+
+	rOC1ClI142Ec=
+X-Received: by 2002:adf:e19c:0:b0:490:ae2:b841 with SMTP id ffacd0b85a97d-4900ae2b9a7mr4474785f8f.30.1793811869589;
+        Wed, 04 Nov 2026 09:04:29 -0800 (PST)
+Received: from User-PC.localdomain (185-80-76-65.ptr185.nosmadeira.net. [185.80.76.65])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48fecac17c1sm4747263f8f.10.2026.11.04.09.04.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 09:04:28 -0800 (PST)
+From: Jeff Campbell <inca.jeff.campbell@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next] wifi: brcmfmac: enable 2.4 GHz VHT on BCM4366 before AP bring-up
+Date: Wed,  4 Nov 2026 17:04:26 +0000
+Message-ID: <20261104170426.4129715-1-inca.jeff.campbell@gmail.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,328 +95,97 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261104-qrtr-multi-ep-v5-1-4cdb2b4f1920@oss.qualcomm.com>
-References: <20261104-qrtr-multi-ep-v5-0-4cdb2b4f1920@oss.qualcomm.com>
-In-Reply-To: <20261104-qrtr-multi-ep-v5-0-4cdb2b4f1920@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>, 
- "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
- Jeff Johnson <jjohnson@kernel.org>, Eric Dumazet <edumazet@kernel.org>, 
- Eric Dumazet <edumazet@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
- ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
- Bjorn Andersson <andersson@kernel.org>, 
- Chris Lew <christopher.lew@oss.qualcomm.com>, 
- Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>, 
- Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, 
- Juha-Matti Tilli <juha-matti.tilli@iki.fi>, 
- Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9537;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=UbLsQcHXs5fB3lH4xRZFyPFqjEdySNlLHyo1kxA0IsQ=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq62FPb2CTzV5djZzMzq2CrjWpVjODCmRIYZK69
- qPehugQ0ZeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauthTwAKCRBVnxHm/pHO
- 9RkZB/0XgslZ9sf/3G7tRgu/aI7K/0e5efLwcIlxWdATZZ1SVbs3aWhmsuLPnHA3DX/k4ZRWR83
- tt2JalNIxisTDtUrHznnb1ZzA/2WCWl+24S8mXnjeTteUV2YaA/XNTLPaB3zRs5lqW45WRMmDYX
- 5b4M/HhB0QTZfQZy6dVqKE+Jd9IiY+MigdH5D/Vt4TiKunn1eeV8xnAk51KDBmz2rjG7QJ3p4/F
- mZ1uWK+Z3dGp7NktoEars2WOaLFv55cxrXXmCJ7LEETlei+rGZTSnEp5lW7MIAnYGRFlNsBY6eL
- GZxfnu8yEtskaNRBGC2Mc4cy/vjWveKpQM0P7yRZ2KsaRVUr
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On BCM4366 firmware 10.28.2 (r769115) the 2.4 GHz radio defaults to
+vht_features 6: proprietary rates and 1024-QAM on, 2.4 GHz VHT off.
+brcmfmac never sets this iovar. As an AP the d11 PSM watchdog then fires
+repeatedly once a client passes traffic, the client disassociates and
+never completes DHCP.  This renders the radio unusable as an AP.
 
-Currently, QRTR identifies each remote node by the value of the
-'src_node_id' field in the received packet and uses the node id as the key
-to store the node to the internal 'qrtr_nodes' radix tree.
+On an ASUS RT-AC86U (BCM43666 2.4 GHz radio), with every other bring-up
+setting held fixed, values 0 and 6 fail and values 1 and 7 are stable,
+so bit 0 alone decides it. The ASUS firmware for this router sets 7.
 
-But this approach comes with a limitation. When more than one remote node
-share the same id, then QRTR can only add the first node to the radix tree
-and has to drop the successive nodes with the same node id as the 'key' in
-radix tree has to be unique. This prevents connecting identical Qcom PCIe
-WLAN devices to a single host at the same time.
+Set bit 0, keeping the other bits, on the primary 2.4 GHz BSS of the
+4366 family while the radio is still down. 5 GHz is left alone: it
+keeps 6 and is stable.  This stabilizes 2.4GHz AP and clients now
+associate, DHCP and pass traffic at normal levels.
 
-To fix this limitation, allow the host QRTR to use the node id (nid)
-received from the endpoint driver during qrtr_endpoint_register() as the
-unique node id and use it as the 'key' for the internal radix tree. Also,
-store the received 'src_id' in a new 'qrtr_node->ep_nid' field and replace
-the 'ep_nid' with the unique 'nid' in the QRTR control packets if both
-differ i.e., an endpoint driver has passed a unique 'nid' during
-qrtr_endpoint_register(). To maintain symmetry, replace the 'nid' with the
-'ep_nid' while sending the packet back to the remote node if both differ.
-
-A node can also bridge other distant nodes, so the source id of an
-incoming packet is not always the id the endpoint advertises for itself.
-Keep adding such ids to the radix tree as additional keys for the same
-node, as it was done before this change. Otherwise the bridged nodes would
-lose their route and qrtr_sendmsg() would start failing with -ECONNRESET
-for them.
-
-Currently, all QRTR endpoint drivers pass 'QRTR_EP_NID_AUTO' as the 'nid'
-during qrtr_endpoint_register(). So 'ep_nid' and 'nid' are same and the
-routing behavior is not changed.
-
-Finally, since qrtr_node_rewrite_ctrl() dereferences the control packet for
-DEL_SERVER and DEL_CLIENT as well, extend the existing length check in
-qrtr_endpoint_post() to cover both types.
-
-Reviewed-by: Simon Horman <horms@kernel.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Signed-off-by: Jeff Campbell <inca.jeff.campbell@gmail.com>
 ---
- net/qrtr/af_qrtr.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 116 insertions(+), 16 deletions(-)
+Tested on an ASUS RT-AC86U, firmware 10.28.2 (r769115), AP mode, 2.4 GHz
+channel 1 at 20 MHz, one client. The router runs OpenWrt on 6.12, so this
+is wireless-next brcmfmac at 991a73f49 built as a module with a small
+local shim for the older cfg80211 API (not part of this patch), not a
+wireless-next kernel. The two builds differ only by this patch:
 
-diff --git a/net/qrtr/af_qrtr.c b/net/qrtr/af_qrtr.c
-index e7b3647424b8..b95ffb98ec23 100644
---- a/net/qrtr/af_qrtr.c
-+++ b/net/qrtr/af_qrtr.c
-@@ -118,7 +118,8 @@ static DEFINE_XARRAY_ALLOC(qrtr_ports);
-  * @ep_lock: lock for endpoint management and callbacks
-  * @ep: endpoint
-  * @ref: reference count for node
-- * @nid: node id
-+ * @nid: node id assigned by the host QRTR
-+ * @ep_nid: endpoint's own node id as received
-  * @qrtr_tx_flow: xarray of qrtr_tx_flow, keyed by node << 32 | port
-  * @qrtr_tx_lock: lock for qrtr_tx_flow inserts
-  * @hello_sent: hello packet send successful
-@@ -131,6 +132,7 @@ struct qrtr_node {
- 	struct qrtr_endpoint *ep;
- 	struct kref ref;
- 	unsigned int nid;
-+	unsigned int ep_nid;
- 
- 	struct xarray qrtr_tx_flow;
- 	struct mutex qrtr_tx_lock; /* for qrtr_tx_flow */
-@@ -347,6 +349,7 @@ static int qrtr_node_enqueue(struct qrtr_node *node, struct sk_buff *skb,
- {
- 	struct qrtr_hdr_v1 *hdr;
- 	size_t len = skb->len;
-+	unsigned int dst_node;
- 	int rc, confirm_rx;
- 
- 	mutex_lock(&node->ep_lock);
-@@ -369,10 +372,14 @@ static int qrtr_node_enqueue(struct qrtr_node *node, struct sk_buff *skb,
- 	hdr->src_node_id = cpu_to_le32(from->sq_node);
- 	hdr->src_port_id = cpu_to_le32(from->sq_port);
- 	if (to->sq_port == QRTR_PORT_CTRL) {
--		hdr->dst_node_id = cpu_to_le32(READ_ONCE(node->nid));
-+		hdr->dst_node_id = cpu_to_le32(READ_ONCE(node->ep_nid));
- 		hdr->dst_port_id = cpu_to_le32(QRTR_PORT_CTRL);
- 	} else {
--		hdr->dst_node_id = cpu_to_le32(to->sq_node);
-+		/* Put back the endpoint's own node id */
-+		dst_node = to->sq_node;
-+		if (dst_node == READ_ONCE(node->nid))
-+			dst_node = READ_ONCE(node->ep_nid);
-+		hdr->dst_node_id = cpu_to_le32(dst_node);
- 		hdr->dst_port_id = cpu_to_le32(to->sq_port);
- 	}
- 
-@@ -422,23 +429,72 @@ static struct qrtr_node *qrtr_node_lookup(unsigned int nid)
- 	return node;
+  with patch:    vht_features 7, three speed test runs on one association,
+                 no watchdog, DHCP completes, 560/155917 tx failed
+  without patch: vht_features 6, 16 PSM watchdogs in the first 102 s after
+                 boot, client retries DHCP and gives up
+
+5 GHz stays at 6 in both builds. One speed test run there was clean, with
+no tx failures and no watchdog.
+
+The chip check covers the 4366
+family, but only the 43666 2.4 GHz radio on this board has been tested.
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 32 +++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 46714d871..e971057fb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5253,6 +5253,36 @@ brcmf_parse_configure_security(struct brcmf_if *ifp,
+ 	return err;
  }
  
--/* Assign node id to node.
-+/* Add 'nid' as a lookup key for 'node', and adopt it as the node's own id if
-+ * the node does not have one yet.
-+ *
-+ * Callers must hold 'qrtr_nodes_lock'.
-  *
-- * This is mostly useful for automatic node id assignment, based on
-- * the source id in the incoming packet.
-+ * Return: 0 on success; negative error code on failure
-  */
--static void qrtr_node_assign(struct qrtr_node *node, unsigned int nid)
-+static int __qrtr_node_assign(struct qrtr_node *node, unsigned int nid)
- {
--	unsigned long flags;
-+	int rc;
- 
- 	if (nid == QRTR_EP_NID_AUTO)
--		return;
-+		return 0;
++#define BRCMF_VHT_FEATURES_2G_ENAB	BIT(0)
 +
-+	if (radix_tree_lookup(&qrtr_nodes, nid) == node)
-+		return 0;
-+
-+	rc = radix_tree_insert(&qrtr_nodes, nid, node);
-+	if (rc)
-+		return rc;
- 
--	spin_lock_irqsave(&qrtr_nodes_lock, flags);
--	radix_tree_insert(&qrtr_nodes, nid, node);
- 	if (node->nid == QRTR_EP_NID_AUTO)
- 		WRITE_ONCE(node->nid, nid);
-+
-+	return 0;
-+}
-+
-+/* Assign node id to node.
-+ *
-+ * Return: 0 on success; negative error code on failure
-+ */
-+static int qrtr_node_assign(struct qrtr_node *node, unsigned int nid)
++static void brcmf_cfg80211_4366_2g_vht(struct brcmf_if *ifp,
++				       const struct cfg80211_chan_def *chandef)
 +{
-+	unsigned long flags;
-+	int rc;
++	u32 chip = ifp->drvr->bus_if->chip;
++	u32 val, want;
++	s32 err;
 +
-+	spin_lock_irqsave(&qrtr_nodes_lock, flags);
-+	rc = __qrtr_node_assign(node, nid);
- 	spin_unlock_irqrestore(&qrtr_nodes_lock, flags);
-+
-+	return rc;
-+}
-+
-+/* Replace the node id in the control packet with 'node->nid', if both are
-+ * different.
-+ */
-+static void qrtr_node_rewrite_ctrl(struct qrtr_node *node, unsigned int type,
-+				   struct sk_buff *skb)
-+{
-+	unsigned int ep_nid = READ_ONCE(node->ep_nid);
-+	unsigned int host_nid = READ_ONCE(node->nid);
-+	struct qrtr_ctrl_pkt *pkt;
-+	__le32 *nid;
-+
-+	if (host_nid == ep_nid)
++	if (chandef->chan->band != NL80211_BAND_2GHZ)
 +		return;
-+
-+	pkt = (struct qrtr_ctrl_pkt *)skb->data;
-+	if (type == QRTR_TYPE_DEL_CLIENT || type == QRTR_TYPE_RESUME_TX)
-+		nid = &pkt->client.node;
-+	else
-+		nid = &pkt->server.node;
-+
-+	/* Rewrite only the endpoint's node id, not those of bridged nodes */
-+	if (le32_to_cpu(*nid) == ep_nid)
-+		*nid = cpu_to_le32(host_nid);
- }
- 
- /**
-@@ -457,9 +513,12 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
- 	struct qrtr_sock *ipc;
- 	struct sk_buff *skb;
- 	struct qrtr_cb *cb;
-+	unsigned long flags;
- 	size_t size;
- 	unsigned int ver;
-+	unsigned int nid;
- 	size_t hdrlen;
-+	int rc = 0;
- 
- 	if (len == 0 || len & 3)
- 		return -EINVAL;
-@@ -521,6 +580,8 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
- 		goto err;
- 
- 	if ((cb->type == QRTR_TYPE_NEW_SERVER ||
-+	     cb->type == QRTR_TYPE_DEL_SERVER ||
-+	     cb->type == QRTR_TYPE_DEL_CLIENT ||
- 	     cb->type == QRTR_TYPE_RESUME_TX) &&
- 	    size < sizeof(struct qrtr_ctrl_pkt))
- 		goto err;
-@@ -531,16 +592,46 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
- 
- 	skb_put_data(skb, data + hdrlen, size);
- 
--	qrtr_node_assign(node, cb->src_node);
-+	nid = cb->src_node;
-+
-+	spin_lock_irqsave(&qrtr_nodes_lock, flags);
-+
-+	if (node->ep_nid == QRTR_EP_NID_AUTO)
-+		WRITE_ONCE(node->ep_nid, nid);
-+
-+	/* Add the source id to the lookup table only if 'node->nid' is auto
-+	 * assigned or the packet came from a bridged node.
-+	 */
-+	if (node->nid == QRTR_EP_NID_AUTO || nid != node->ep_nid)
-+		rc = __qrtr_node_assign(node, nid);
-+
-+	spin_unlock_irqrestore(&qrtr_nodes_lock, flags);
-+
-+	if (rc)
-+		goto err_nid;
- 
- 	if (cb->type == QRTR_TYPE_NEW_SERVER) {
- 		/* Remote node endpoint can bridge other distant nodes */
--		const struct qrtr_ctrl_pkt *pkt;
-+		const struct qrtr_ctrl_pkt *pkt = data + hdrlen;
-+
-+		nid = le32_to_cpu(pkt->server.node);
- 
--		pkt = data + hdrlen;
--		qrtr_node_assign(node, le32_to_cpu(pkt->server.node));
-+		if (nid != READ_ONCE(node->ep_nid)) {
-+			rc = qrtr_node_assign(node, nid);
-+			if (rc)
-+				goto err_nid;
-+		}
- 	}
- 
-+	if (cb->src_node == READ_ONCE(node->ep_nid))
-+		cb->src_node = READ_ONCE(node->nid);
-+
-+	if (cb->type == QRTR_TYPE_NEW_SERVER ||
-+	    cb->type == QRTR_TYPE_DEL_SERVER ||
-+	    cb->type == QRTR_TYPE_DEL_CLIENT ||
-+	    cb->type == QRTR_TYPE_RESUME_TX)
-+		qrtr_node_rewrite_ctrl(node, cb->type, skb);
-+
- 	if (cb->type == QRTR_TYPE_RESUME_TX) {
- 		qrtr_tx_resume(node, skb);
- 	} else {
-@@ -558,6 +649,8 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
- 
- 	return 0;
- 
-+err_nid:
-+	pr_err_ratelimited("qrtr: cannot route node id %u: %d\n", nid, rc);
- err:
- 	kfree_skb(skb);
- 	return -EINVAL;
-@@ -647,6 +740,7 @@ EXPORT_SYMBOL_GPL(qrtr_endpoint_hello);
- int qrtr_endpoint_register(struct qrtr_endpoint *ep, unsigned int nid)
- {
- 	struct qrtr_node *node;
-+	int rc;
- 
- 	if (!ep || !ep->xmit)
- 		return -EINVAL;
-@@ -659,6 +753,7 @@ int qrtr_endpoint_register(struct qrtr_endpoint *ep, unsigned int nid)
- 	mutex_init(&node->ep_lock);
- 	skb_queue_head_init(&node->rx_queue);
- 	node->nid = QRTR_EP_NID_AUTO;
-+	node->ep_nid = QRTR_EP_NID_AUTO;
- 	node->ep = ep;
- 
- 	node->hello_sent = false;
-@@ -667,7 +762,12 @@ int qrtr_endpoint_register(struct qrtr_endpoint *ep, unsigned int nid)
- 	xa_init(&node->qrtr_tx_flow);
- 	mutex_init(&node->qrtr_tx_lock);
- 
--	qrtr_node_assign(node, nid);
-+	rc = qrtr_node_assign(node, nid);
-+	if (rc) {
-+		pr_err("qrtr: cannot assign node id %u: %d\n", nid, rc);
-+		kfree(node);
-+		return rc;
++	if (chip != BRCM_CC_4366_CHIP_ID && chip != BRCM_CC_43664_CHIP_ID &&
++	    chip != BRCM_CC_43666_CHIP_ID)
++		return;
++	err = brcmf_fil_iovar_int_get(ifp, "vht_features", &val);
++	if (err < 0) {
++		brcmf_dbg(INFO, "vht_features get failed (%d)\n", err);
++		return;
 +	}
- 
- 	mutex_lock(&qrtr_node_lock);
- 	list_add(&node->item, &qrtr_all_nodes);
++	if (val & BRCMF_VHT_FEATURES_2G_ENAB)
++		return;
++	want = val | BRCMF_VHT_FEATURES_2G_ENAB;
++	err = brcmf_fil_iovar_int_set(ifp, "vht_features", want);
++	if (err < 0)
++		bphy_err(ifp->drvr, "vht_features 2.4 GHz enable failed (%d)\n",
++			 err);
++	else
++		brcmf_dbg(INFO, "vht_features 0x%x -> 0x%x\n", val, want);
++}
++
+ static s32
+ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 			struct cfg80211_ap_settings *settings)
+@@ -5397,6 +5427,8 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 				goto exit;
+ 			}
+ 		}
++		if (!mbss)
++			brcmf_cfg80211_4366_2g_vht(ifp, &settings->chandef);
+ 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
+ 		if (err < 0) {
+ 			bphy_err(drvr, "BRCMF_C_UP error (%d)\n", err);
 
+base-commit: 991a73f4909f1348ffb4b38765cdb522a775e4c2
 -- 
-2.43.0
-
+2.47.3
 
