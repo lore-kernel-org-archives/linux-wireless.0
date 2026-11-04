@@ -1,65 +1,118 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793818375;
-	b=KWf4mCiLorsjN1M3UdXWJP0sC6ODp9DOIkpisn8UxdAKbbG+0SNGh4JMHtjlHQvz+j1w
-	 HJhfAwRrBfCLIf6nCu9rVNX5NbVZFV4WahyqiCUAlzHgmJgAm1dWeRji+jX4vI+4nCeGk
-	 t+KbsyOgJ4Bmnb/usdP6BwSCG7YTKnlBwij5bIAtKk5T2CK7wJ5Z3NHhg738x/kU/tlQh
-	 zp8LTd6d6pviD2TPIo9UHNSVH7yc5M0W2qlaDNp/6d1Fy2ma6WbKRedLwUoWy7HWcJA/N
-	 ItZdsbksrd+kzlWJenQhZ+5WloORl74gPz5jR4pl2hjDv9N2KAJOMqsQYaC1jO+qcmA==
+	t=1793818794;
+	b=N4BKMCLjBTzxjjhW2RCY0l46vCnNCVm4oEPg8+9qqyYhUbd5zFEs+jxKtHlBN0kexgBy
+	 HUFWVWfJh2fEOvZxYQn8H0zgwWMhg/vThh292JkcUGW3C4++P42dFnnb8Axp8/ELKSHul
+	 d6XSNpfIIuC3fEcuAr8HMnanYTfW4J0Jw5lMGrMfF4PU0ak4ijobmKX/kQN01swwdIH+h
+	 f4U9pD7qsGAIvmBS4/NfH6AiC41fVJidDSpT720rsn+Lbm+xpwPcPV+bk97NEzsKY3/3/
+	 15SOfs2QyDxzfVYLV/vxvKKxRvyteRUuPztEFeP89kFMf9FRPCDILu98N22XRugcTew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793818375;
-	h=DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:Date:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:
-	 User-Agent:MIME-Version:X-malware-bazaar;
-	bh=8s2k07FQdZqvBG4+w8fcrRxTTsdtO2EIYmQq9Y8ugos=;
-	b=olTreThChjO2570Htg7o4zpo2vARtsYlXFz/9dE62EcWOwYRn8c1cqHGaoTnpnKszEgi
-	 EqIC2GffMGYJEEtjqSz1dIGJjCmX69q2t2zNArrSenFa69MGJmL2z6nm8l/fs17vtiXDF
-	 2xBUVsl8PV8Ti1qQo92+wlL7UgBJpehFJLzfILJ3+psGXS5yp7+33I/rJCeuThVISTvNy
-	 vHtqTrVfvXrpwRQVkH6MP8ozWPXdWEaZvTKCPUEW0mSHwZwB3B95vpPZGlXWr0RTSBEjl
-	 l1e9Z1owl9D3DMNKu6i8ZREogsOVyZkY+Q6eEUa4JMqLJmAGUTOk+Hc7nl+OLLqgwfQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793818794;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:From:To:Cc:In-Reply-To:References:
+	 Subject:Message-Id:Date:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-Mailer:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=+AL3vVJujoQWo6KzL6QcnfTX/uMtvYEe2+sDd+kjwIo=;
+	b=hBevkra0cNLzLimlTVOw0fzF99GgLhtPfYCv52IEVRbIoyWdJRR859KtCIoadADjx3EW
+	 7YvDd83jUjuBgeoGaxVGbFlD73nd42ZIY8x0KsWD96zmuLaAowFfzKjIvEmlhWYevICyH
+	 Iau4MmeBMRVuC8TGwbsF5MIEfjAMsdUf9QlqRLe+jCOdIAYni8zRWp0KQlemfCODYqz8V
+	 RZy7VDKz63RWhIQTUyxPzV0Miq/E/OV2prgdOwX+0yUDHuKFQKp6zSufxIX3Z7GQcDKqy
+	 ggJ5R5P8wjh0aQPRT2bgQJj2wffoxAQ2Tc6eg1lNxn4m5AKNz11RwRwBhFmnF9FDt4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=LWBF4EoC;
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=oL0yYGPA;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=IvQjAGpi;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D13B3606A33E
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 18:52:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B52606D80C
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 18:59:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 22B52606D80C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=LWBF4EoC
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=8s2k07FQdZqvBG4+w8fcrRxTTsdtO2EIYmQq9Y8ugos=;
-	t=1793818373; x=1795027973; b=LWBF4EoCISCDIunu/4MWJ3EJH4Arc6mYW9KjQogXzKAAMGu
-	2E6jici4oD5fGnWp54+pSIqCvt+UbIHIDE/s/KX4d6PUjg2CQ6knqjxp8bo93stY24/36p4PHDl0H
-	ZqAvNWQsu9Aeq2Dc36oBP+LVlAzAwaBnLiFd4GTqqnpZawrdDtrK/Lapd3ouETBDn4EcnxPzPnbr9
-	ytbR2fRAq9/3iyYcZki06cnGywLKCSZvVHMGOWJCz0EUqJv+tXFjQGq+P50Z226y6Cw82+O2qgDSh
-	CSgMvgSogeSDHt8Qd56RflKLdVjyOh1UUxF0H6NOpLFDAZ9mw99sAAXXdgXszf0g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xOg6L-000000060kY-3XIQ;
-	Wed, 04 Nov 2026 19:52:50 +0100
-Message-ID: <82be41a24029d6a1a569591b7adfa0dc609a51d2.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 6/7] wifi: mac80211: track
- sta->active_links
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Date: Wed, 04 Nov 2026 19:52:49 +0100
-In-Reply-To: <20261102224349.756ad7919f4d.I14d08fa299816470230189bc7f6f604b447b78a0@changeid>
-References: <20261102214348.1104849-9-johannes@sipsolutions.net>
-	 <20261102224349.756ad7919f4d.I14d08fa299816470230189bc7f6f604b447b78a0@changeid>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=oL0yYGPA;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=IvQjAGpi
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A4Fj6YZ3208773
+	for <linux-wireless@vger.kernel.org>; Wed, 4 Nov 2026 18:59:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	+AL3vVJujoQWo6KzL6QcnfTX/uMtvYEe2+sDd+kjwIo=; b=oL0yYGPAouoaNo8S
+	qM1vUmyDp2purnoBDMraK0tUmAiatZo0Cz4/YPxbeAhPWg7ERgppywjMs9HOnGuX
+	RaqRHfCSOXp/GR0vUsuS7nButWWuHFgNse4gPobVoOI5hNlowWwqSLF1XtJoAt+T
+	C9VQ9q4UM/SNPqZfAMg7m2R9XFNNFGpaZfN3Ibf6aZ+9Autil478sirtJufV3wM+
+	hPSGjUWVAVXzT8KA1/O+R1zAHSyvawZpJ1CaVzfWmDs6zxThXChrW/uC8bobaeWR
+	IzebhghazIQxwaK09eWiMeBrsMsVbI13KCt32j2pyYjsBexEgt5uUQ2fu7PO3ljn
+	pSkwDw==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hr6bj167n-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 18:59:53 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-36cec75d8caso963118eec.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 10:59:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793818793; x=1794423593; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+AL3vVJujoQWo6KzL6QcnfTX/uMtvYEe2+sDd+kjwIo=;
+        b=IvQjAGpi6BQO5ds99yE/w+6gBlsAoddhxclkj3dJMAKCdm/swIXQud/5mmvuJMmf8a
+         bBFhjJs6hKlrJY7FqanjDEcnxZb24kBDNNFVo1hT1PBrrHmhOPC/uXx3JtpHG/piNgyC
+         QFNEWLSJI1CtuSW2Ois9CTHrFxhD7gRgtNBJ6yquhdvgIsD0ozvzZbeEIAQTSOj/dB5s
+         8YjaEgD3Ocdbv9OZyff9Xw7CGnGCeOFahnoN6Vk0fdpIc6QbQHxWqcBoOxM7qfa9Y3X8
+         B4BHkLDijedWRWg9qdiy1nY2bgn/JEXqd0vpghSWIT57DWXyI9EwN9l2Q2A0g1v38Tko
+         PbDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793818793; x=1794423593;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+AL3vVJujoQWo6KzL6QcnfTX/uMtvYEe2+sDd+kjwIo=;
+        b=IaoQdKiz+T7iPxv6jgLH9biFzRUnDKYLVoNOJLzCkybRvjfR3MizcdVar60nmJlh4U
+         fncN9bQS+/aDhbcHKxURGGkR/3ADu6O/ovzVO7HEdKuGqVCVg7PlS3TIc7bZVo7+jC1y
+         Vnna68c4/EYCSAy1LKnhQNOfKBX4DFVJzv94LjSJOyjYP6srmkC9KjZiuzv9u2nKsWoB
+         kq3h9TNW1UdI8N1ZQsZab9FjttGeqBcui+NvxqAKTscUUhzI+TuMM7oawwbQTL8ea66E
+         TLwDi8bx1hdOtNDzBPjQxUdxFwPs96qznORTbUwfW0/iU9WAaAnAN6piiOqMGEWGK6FA
+         XJgQ==
+X-Gm-Message-State: APuU4Z+fa+yakR0SR2etfaZr8o4M3N12i8TvJBZDAlkNVJnTxZUafEbl
+	kll4Xg3dcwYqY/ymvjVwLjccQOSQ17DQeIZ+CP15w/9nDNCEjh4WxYg+19XiniMPbG84WCQWmRa
+	uDvXFpGEpBn9evMsZnqyAua4ZyLnZPAPuQpBElEWhTMGQg13aa+sEMJPkxMzE8qLKyEG2Gw==
+X-Gm-Gg: AYBFou1uiffBQMzWCvx+NrkjTHpJynb1a8qGzEq9vqaEQ0zwwOu62ZLs/mOSav41Peb
+	j08zpKrkBomM3szdLe2K+Ap/YsHD/woltlMdQ1UqECapJq2qflDLQTMltt3V6DP51Icjqfn44pA
+	0yIKu2SzDHDYq6WxbfIIbqiElRVhzYfSBWY+tZe7ddm7B/cuWYt23xpDtmssj1KwWpF9WmOZ8De
+	RyM+PsFB115F9aTeW21l3Sj3jv/5zi2EjFllFa3/mtAeVfH4I0CuWX10Nbp2J6yQHEwWj3XjGFg
+	cBqwc2PMhYygyFZHf5L6CpmiG/1EpOohhot4xSs5jrLUSd5q7CZK6XHcI9gYd1CrPqh6ej6hzEd
+	LQzyNwJ1EElXZeM2x4BJL9N4sjeMX3FrOuWXdRbnkYnhFB0+kQJRe6mwc26kcCEO9dPQtQ9VLRl
+	Bz25liNvlosxRiZiFAZijJTJW14Vc=
+X-Received: by 2002:a05:7301:4710:b0:36a:79cd:12df with SMTP id 5a478bee46e88-36de4d892a6mr413656eec.9.1793818791904;
+        Wed, 04 Nov 2026 10:59:51 -0800 (PST)
+X-Received: by 2002:a05:7301:4710:b0:36a:79cd:12df with SMTP id 5a478bee46e88-36de4d892a6mr413608eec.9.1793818791183;
+        Wed, 04 Nov 2026 10:59:51 -0800 (PST)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36ca38d36besm14596861eec.11.2026.11.04.10.59.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 10:59:50 -0800 (PST)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: Jeff Johnson <jjohnson@kernel.org>,
+        Madhavan Ganesan <madhavan.ganesan@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+In-Reply-To: <20261104-m3_and_aux_ucode-v2-0-b6c335c14dfe@oss.qualcomm.com>
+References: <20261104-m3_and_aux_ucode-v2-0-b6c335c14dfe@oss.qualcomm.com>
+Subject: Re: [PATCH ath-next v2 0/2] wifi: ath12k: refactor m3/aux_uc
+ firmware memory handling
+Message-Id: <179381879048.1666903.4827075101285181405.b4-ty@b4>
+Date: Wed, 04 Nov 2026 10:59:50 -0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -69,44 +122,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
-
-On Mon, 2026-11-02 at 22:42 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->=20
-> We've always assumed that a station has active_links
-> that are simply sta->valid_links & vif->active_links,
-> and while this should be true most of the time, during
-> SMD transition the target AP MLD will have a different
-> (set of) active link(s) than the vif, and needs to be
-> added so the state can be transferred over.
->=20
-> Add and track sta->active_links, and use it in a few
-> places. Upon allocation, a sta initially has no active
-> links, it's up to the caller to fix that; document it.
-> During link switch, the active links change with the
-> interface ones, do that in the drv_change_sta_links()
-> wrapper.
-
-This has a bug in HW restart and needs a fix like this:
-
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2123,6 +2123,11 @@ int ieee80211_reconfig(struct ieee80211_local *local=
-)
-                                active_links =3D sdata->vif.active_links;
-                                link_id =3D ffs(active_links) - 1;
-                                sdata->vif.active_links =3D BIT(link_id);
-+
-+                               list_for_each_entry(sta, &local->sta_list, =
-list) {
-+                                       if (sta->sdata =3D=3D sdata)
-+                                               sta->sta.active_links =3D B=
-IT(link_id);
-+                               }
-                        }
-=20
-                        drv_change_vif_links(local, sdata, 0,
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16.0
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA0MDA3NSBTYWx0ZWRfX1uWMb59w82iK
+ ybvLB8YNCMqoKNtpKhZN3cRXxEc6pEy+ETKMgLi8WoTxu7cI/Rik2QKL/NBy0pl4Ff6yEEoQ5k8
+ Qz0Ta0Aj+sy8GkwYh5N3jNz3u/nmbW4fB9MCnuAvP4Yk+nuiYblJ3MqTAU3US3EGwuMSaf5NGSP
+ +gqEjCixfFmPutOddXOgMDxGcVihd5pLJL/d6fyQ7aY8oKFcAr1S0c6IJ4cRxCjiCcEnsWI6fTD
+ dYLFRPh2f2laxYsGksPoeTLkyXYzUEtnoNbSFBuQIBEpwAHDnGv4Uw6GokkcE3TCJxN6vg/0Hk2
+ DPt1pxKUHvMEHy7aXe/y3J9Ii9AQ7lizV2HcAyaoxtuITOfcAfclrUjKLhoQRW+uD+4MXqDn5fr
+ Wecv3BGK9uFSbPMIzPhIn54ebmBTu/iNbXBIFjdZP7OnOSy9Bvsotq8j/oPq4VMYw0dl9/2lP+i
+ W/ErA4ElnYMReziYv6Q==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA0MDA3NSBTYWx0ZWRfX6HwSaQrZeG5P
+ 5slpAJyM6b8vhmLI1oXoiY4bZXv3TZqv1BmTAiCxetGy9w2D3oxpK+FnktI5ggN52TBxZMPv7sZ
+ gKkWTZAbIvvuiV0FSOhkFPor3zp7HTQ=
+X-Proofpoint-ORIG-GUID: gvl5Iuv2f0CltZshlk4seUy9JZF5Hl9z
+X-Proofpoint-GUID: gvl5Iuv2f0CltZshlk4seUy9JZF5Hl9z
+X-Authority-Analysis: v=2.4 cv=N/u8hG9B c=1 sm=1 tr=0 ts=6aeb80a9 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=EUspDBNiAAAA:8 a=ZdJ8wbgfcnfs_pdWuegA:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-04_05,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 suspectscore=0 bulkscore=0 lowpriorityscore=0
+ malwarescore=0 priorityscore=1501 phishscore=0 spamscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611040075
 
 
-johannes
+On Wed, 04 Nov 2026 12:00:06 +0530, Madhavan Ganesan wrote:
+> ath12k_qmi_m3_free()/ath12k_qmi_m3_load() and
+> ath12k_qmi_aux_uc_free()/ath12k_qmi_aux_uc_load() carry near-identical
+> logic for freeing a DMA-coherent firmware memory region and loading
+> firmware into it. Factor the shared logic into common helpers.
+> 
+> Patch 1 is a preparatory, no-functional-change rename of
+> struct m3_mem_region to struct ath12k_fw_mem_region, since the type
+> is also used for the aux_uc region and the old name no longer
+> reflects its purpose.
+> 
+> [...]
+
+Applied, thanks!
+
+[1/2] wifi: ath12k: rename m3_mem_region to ath12k_fw_mem_region
+      commit: 8a2640239052145072d1ee53d014b4a544b011b9
+[2/2] wifi: ath12k: refactor m3 and aux_uc firmware memory handling
+      commit: 5c8eab13e391aaabd5a1ad58f3ee4bb10ce7573e
+
+Best regards,
+-- 
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+
