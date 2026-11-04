@@ -1,112 +1,113 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793773826;
-	b=OHSUjoZlc0qwrPGjnMwoMR42nSPH3hd14QOwUbbx4L4Xrvd5xu0bPKv36FjPkhXzeaad
-	 G+TJWmqlJELX9BawvjolQz7v5MmvxqOhTL9WF0G3X45gRbzVIsGc3LRycM3Tyou2MiiO/
-	 W7MMAW5kZNUvJOnXNv9gMAcsu6EQg9DLBoBuw/l0zKRPKEbMTLetEtJ8MO6R9FpFYr+A7
-	 JWyjHhDrPDE0/o3wI/Ip4Y9PFW1jKr8hKv85/iu5Wz1qV2CysyzKVXU1f9EGkhqiRohze
-	 vkkH9dzKBYFaUn7vQrG2XJyWMNiWZa4FadlMBt5zJBcLKEYxdEOaFFgSertrb9rDE2g==
+	t=1793773828;
+	b=peYqmWDJmuwMV/BKfYdpJjShZW/z4zeh3Lyixs2EaftVwlsVqDhFgsfU8vZ6iE/DbLpT
+	 gUl+SKnuwpORKWGjb/+jZpNPAB4449X6aoTweHRxv6OXBFSDsLdwGF9h1VIA63xK+boyM
+	 A6r4T5KcStjVmV05Pk6aDu/YUtadkPYBd+0OJOl7rxBVGiQqLYY4SvwwQZCfpRpVDSGEk
+	 Lo8fy9EcP/pmDYHr5FmZqu4igfMITiml3wSPXT7oQVkdrizh6fYoTd++O9JMzwgnSDWMh
+	 jyahTN1tWna3KCMMhUpCvQJ6oar2YgFoft6N5EcuHxmN6KztGdOCtGlpvrZHVcZ9qcQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793773826;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793773828;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
-	 X-Received:X-Received:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Authority-Analysis:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=O8cdky/dUq4o/+8BqqMciuYE3yifM3kH+XYEckRYZPA=;
-	b=3sGK6R59xeU5Dru2v0dLWxD8Qc9quizKn9iEzOrF+P06yVLzy8+0Nh9MutUdvWuqvQGY
-	 xjwEY9omh+Lof+l086WxCDCdUp0OxU/DIY17yuFnDWNgzrV1mYLReg1pdPi+FJyQIilms
-	 nC2gDX/8gqXDjK2cbo7+lxjaGv5o8hWxgad7qXP6BoXzakuMZEt4L/N6XJ4SlDUEp57qr
-	 s/znkaAroHMfzIdFt2IsgJgAeh/EHywCwURwhmI19l9Ey1Eg/IQGQkl6iSynD5u3VbOwr
-	 p5oJjOOaJXfbVhUtNqhqPdx93b3nNgtYmA+r2LvSo2JMQE9XNZ5Ln416nPEecIi/K2Q==
+	 X-Received:X-Received:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
+	 In-Reply-To:To:Cc:X-Mailer:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=4AMJnvFK8SwRYDl+HuoIp6UsfOovvQiFEHmiINggHuA=;
+	b=4AWlB/t5HrzJ8laHjxgu9NIT3VOrUMN+nlvTlH0dvs6nN5IbWZOgGAdhOmaL24rDwUcI
+	 nu7GekNyHm0oEh/HW9zZcu0UnegspWcTwfdccT3lLutszT+QGi4zmErGhyjmtuX0gXsQk
+	 ixT3cGo1+jeym59hTfVXOPE2tzT1xLoc9FXWHgJufdC/EYdKCmfUI5Fq7HUhA6xrEALW5
+	 lnf2AabDcngfCrfTZpIpom0fvfibuijUNFSHQlCUaaJojqMoAfjbUCbXptT7scYkgDBLU
+	 ct4ZT8PEfVMU0nUWVby5OqAH+RJkQGa64f2Or/RfiRjEgws9PCbcZptu0pHpEkI/o4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Fs1GCgGD;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=IQ8bQCOa;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=AEpwSuDB;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Y0Cq44EM;
 	arc=none smtp.remote-ip=205.220.168.131
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ABC3606A31B
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 06:30:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3ABC3606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59387606A32E
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 06:30:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59387606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Fs1GCgGD;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=IQ8bQCOa
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A40RFcm1248584
-	for <linux-wireless@vger.kernel.org>; Wed, 4 Nov 2026 06:30:24 GMT
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=AEpwSuDB;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Y0Cq44EM
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A40R11M1191097
+	for <linux-wireless@vger.kernel.org>; Wed, 4 Nov 2026 06:30:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=O8cdky/dUq4o/+8BqqMciu
-	YE3yifM3kH+XYEckRYZPA=; b=Fs1GCgGD/ycySmrQoZfYVeRePW0fDDhNA03IyB
-	KamdjQ9o9qlyBQ5ad2VEOngi+296N5jBIsthiYH+Sw/mgvM4/O06B7OzDkkL+CHi
-	aGRsgmrR2Q/YVABudGor5KY6wLe6p15Eogv9v7F/gI4DQnBIgu00cNoMJshxXwm0
-	3RItuhLoNnrnKGU/juSL4903NpGt3PpBmU7VJCHQoZ6UUeiPwVGvLllIefqRztsW
-	OZ6eJbzl0X6M1l5e+HwSveTrq2fb5kdEyo4AClRzmCA4/kreCioVls6HRLNkm0eF
-	ObzUOacu/Qh8LcKFPNApDUDP7W1VeQDSz8bwaQQqjp40lkOQ==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hqpuv9wvn-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	4AMJnvFK8SwRYDl+HuoIp6UsfOovvQiFEHmiINggHuA=; b=AEpwSuDBXBr893DP
+	ptRuIdI3D8LXLves0VONr22OECRU+8fQ6tQXNqmQRhEon144OlZYFQTyYVpngLRG
+	CnakAe2vXFdx8O3hW3OHDa/opRpxnyjxrWmDnMqfWcXTQNyPy9927WWd8dY1FrMi
+	ur8WtKlyQ507Y3UmMNPE/Nm15ZHbMN+wN3Het9ttmrMaZwcQ9mS7Yb50HXJKKAYl
+	Xmkn+QkhgIrpXGaKkicVDsHI0dDkG+CB8KL8+TmHCF6ZrTvJUF48M6JbqUFXV5HT
+	3X2Skc2RLUXmVete/9zZEHj3yDJd7IlYptco/tyzQPOUTqGaRdg/l5akxbdyySWm
+	I6QDZg==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hqm2pjnj6-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 06:30:24 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3ad30487d55so877192a91.2
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 22:30:24 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 06:30:27 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cc7d2ff0087so330734a12.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 22:30:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793773824; x=1794378624; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=O8cdky/dUq4o/+8BqqMciuYE3yifM3kH+XYEckRYZPA=;
-        b=IQ8bQCOad75JFw1EBrkB4SiTACw5Y23fI/mu0Jc3niOdXEDpDWcyb3cRHjW70woAai
-         iZKzoLkUVplvrlKOsZYcAxqUlOgWx4WY5LuS/L/2uJwTBdLA1l1yLViTYfeMtaCoE1n3
-         skFfOet3go+SnFS0dXpQEM84IQgcOPJI5eslYw3JlTyRA6/DOR5hp+qOUEB37xFc7lQK
-         AMvdEabuvOt0Bh02xNdtxFdfxQVfZX2YFfDyoYu/ZwkV32/ugPm+zYCTpNeWTJ1lo08G
-         0dfkzUdGmlqSAnaY3PkYKioSbNfxzKoAZ683lYVeFIB6aZBwjMiPkqzIpz5EXHICkoLV
-         3gbQ==
+        d=oss.qualcomm.com; s=google; t=1793773827; x=1794378627; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4AMJnvFK8SwRYDl+HuoIp6UsfOovvQiFEHmiINggHuA=;
+        b=Y0Cq44EM4wFtZNpR+jEooBpqfjrtWXKmhR5jxgZWVKYAtfhyphkYjoY/V4ooinuwnB
+         +/UIRr2egxQRPtK/+NbO3xuCEp4gtTq+ycxixG92XdtMj439PqGhCIgPTuNEtLZNbaUd
+         5zatXcPRqk2Csqoo8kMW7CDS2F0Mx3viq+VpzVHmIIp+nIUJOWe2JOoMmvZdHZ4cY5YJ
+         EJf3QH7vt0/OvjxGRWg8a9njvjFRXeUWyDEeF9O/+23dTsEDET0wZrYCWRAyNQbDSti9
+         kTBCzLVkr3z7/y54qt9XwlowXmaQQdEvsmG/pgNGfPv3ovolzW3MoBL8D4w0MLLl/07j
+         21Vw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793773824; x=1794378624;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=O8cdky/dUq4o/+8BqqMciuYE3yifM3kH+XYEckRYZPA=;
-        b=YXqexChXGcbuAgRludSd9FeKKSUie7KPXyU+xsMf/hIhEsVt+r2TT9GaiUzqIvAo6c
-         sdBfdaB6FkEDM1fgZpVs1OAC87m0v3T8+C8iR3WrITTg/5UqjGeEuUBNYKUa5pfXn8YZ
-         uwNV6tHxcvfFLWQ3Fctb7k5mRXXVico8q3QKdhLoOq8nf0zgEOVOBMyEPKGD9cYqChJG
-         jLHvxQ6K4y7ESkXHaejOGmh1yEuBMzE4TyZpfWc46lE0XbuCiuyFZaqiYmNTUEnnh0MD
-         YQeb/gxb1zBVGF1KpZVgXM/Z3kpuUlCtjcE0gkpOQPCzBxaQ/DuOIWHrb49v9/pWfiPp
-         1M3w==
-X-Gm-Message-State: APuU4Z/IZzvUaA7yoHOHnaxjtbaVq/ZSF/6i+6wmAE9VAztzut9ufr8b
-	YywNiOIflfURKOVsAAWz61qCFqiC1bAB2eW0I92P4lQChkobiq6Lbm2An1g848iLm1rVwHnm35F
-	d8GmKtiIfnkDq1MyUotMXvIm5gc3bxt00UqvGh8HBHvF3nYJLNcyIZDpTdlS83R0LcHZ56Ymq2e
-	62Xg==
-X-Gm-Gg: AYBFou0SrHjS4w0l7U0kO6sluZpJiHPMasVXEz8H3nfajzwnaLY/OZV7394TPtmQ6t+
-	Xmf39swE4ocJchOTFmkhly/xkw8Mw5Xn7xm3Sx4C/InaJ2mnVNYBA/yaKk/ArJXuWzaxrbzYIt8
-	reSvgwKu3Gp8L/riFLvKur3GtyQlzuPbQPXL+81tnhckIkQPi8rwZVRaSirOBDZr0dF5u7Lm+E/
-	IhOG4BoZPprxouTCbnl+lIDpqAPwhLl5zg+ll/JWclvpNeBR/tXYRkjSiVB9DJotAqIYnPEe3m+
-	HUg0b0mRH9QOEn7M8ZmQGZIvmSOBWKlbELx/HVLULabmD4SoqJyXy5ALUpGmGnNxyNfdaUoo/Q4
-	McYgdRNaOH/pgNN9WIVsHCuDC29zEp4gMiIGFExBl/+1abiVjStlWcG2CbB3fdo8ggItOf0TkN2
-	t7vnEdDGv5V/AUszunTzlW5hWUB9cEpZPQigdxe9p0kJL2F80GLRtPk/DJyio4DmcUL+4+aqgta
+        d=1e100.net; s=20260707; t=1793773827; x=1794378627;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=4AMJnvFK8SwRYDl+HuoIp6UsfOovvQiFEHmiINggHuA=;
+        b=VTqL356ccP4KbmRbDyKO7+QNN+IwevMGeO4PtbdvSJx6IDv3LMB9umHvDFr467ZEnz
+         +oF0INo8PLoxzLPUDT8b1N/9PZHrfwoNIB9D0whLojcuZArhKXLrk3JvDoia2sCkgrr1
+         Z1hrPmt6DZKE6pqoXJlPZZc1avRsHiOHsiACvWb2v4Lcvgrl2cWlTN/gEECRuto2kbBm
+         3AHK6mNh9o7e82ppR8f2KyJT8rq0LvmKK2HS6v6loWXl/6vYSdda+3S0AeNzfmOeMl/d
+         CbSDbEArARi0aOL6UhxxSzlVoRbBqhEU9W96rlDXBgxrN+gZ+8L1yMjMzP6y7u8H4+Ha
+         XCQg==
+X-Gm-Message-State: APuU4Z+cYdDOfB0IUrawSzNWG0ybR2mFsoFLUP0cKdeHd8+mTUW1RFqT
+	2pv6UrmAF2IoJzXJxmi1iBcKI2GZCH1a2axqHajz7/7fNKY7uU79G/uq8Z12GkZKtnMyw2SF/hZ
+	tw4hlQMpTRHE/HtyQd3z+hb+5msDrc9SVPY5PZ5FDOyAZ7QO+KGNiyf9yxQad+0jPe94K6c/Yyh
+	qnFw==
+X-Gm-Gg: AYBFou0oLeqmMObBo7Qw6iRlV+ni7XgHW8LdJUVooRHGi3EqlqF9DAgtqgiWK3Zw9oC
+	CjQW+nepwE/AV4Cg0jwNj32DARjpd6W7Io8Dg3kz8/pC6Iraen65PAvVXHlWScl1oxj42LzAJMy
+	UYek8BbiTjsJABhesIrpgAQeyZrIWG5lzroIzUNMvvzRQpS5v4nIbM0QXbl3tERWh+dUFrsL1Xn
+	YmL8BxSlQWSx3y1KEaYhV+5RT681wEzR/YWrgkKM2I9LN7kxk6dkKhEff/V8vkZ5GJR++7xgm7T
+	LQ7CAdJFxDIri6O0Q7aTl4keozRxxo+xmY4WolY0JAj6pG+TfenT823MGRaIGKIJXKtRh/+tlWY
+	rVLcCdJbUUxCH/nzynbhawA9yMiSUoAV3Bn+AbDgvvn5nrqlrIO0Kk0le8lariIodTMwKgjGkBz
+	KFVf/jxgPlQLBLAuGprXFeCEAF8P/xW9xhgoL4bXCST0YTJCigeqBqPssakYj0k5KPgfoh/fakw
 	Q==
-X-Received: by 2002:a17:90a:da86:b0:3ae:533e:7e40 with SMTP id 98e67ed59e1d1-3ae897eb0c2mr12837028a91.23.1793773823706;
-        Tue, 03 Nov 2026 22:30:23 -0800 (PST)
-X-Received: by 2002:a17:90a:da86:b0:3ae:533e:7e40 with SMTP id 98e67ed59e1d1-3ae897eb0c2mr12837005a91.23.1793773823150;
-        Tue, 03 Nov 2026 22:30:23 -0800 (PST)
+X-Received: by 2002:a17:90b:1a88:b0:3ae:3f20:7056 with SMTP id 98e67ed59e1d1-3ae89746c9cmr13784752a91.31.1793773826563;
+        Tue, 03 Nov 2026 22:30:26 -0800 (PST)
+X-Received: by 2002:a17:90b:1a88:b0:3ae:3f20:7056 with SMTP id 98e67ed59e1d1-3ae89746c9cmr13784734a91.31.1793773826046;
+        Tue, 03 Nov 2026 22:30:26 -0800 (PST)
 Received: from hu-madhgane-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b09445f7b3sm2420646a91.5.2026.11.03.22.30.20
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b09445f7b3sm2420646a91.5.2026.11.03.22.30.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 22:30:22 -0800 (PST)
+        Tue, 03 Nov 2026 22:30:25 -0800 (PST)
 From: Madhavan Ganesan <madhavan.ganesan@oss.qualcomm.com>
-Subject: [PATCH ath-next v2 0/2] wifi: ath12k: refactor m3/aux_uc firmware
- memory handling
-Date: Wed, 04 Nov 2026 12:00:06 +0530
-Message-Id: <20261104-m3_and_aux_ucode-v2-0-b6c335c14dfe@oss.qualcomm.com>
+Date: Wed, 04 Nov 2026 12:00:07 +0530
+Subject: [PATCH ath-next v2 1/2] wifi: ath12k: rename m3_mem_region to
+ ath12k_fw_mem_region
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -118,70 +119,141 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAO7Q6moC/3WNTQ6CMBCFr2JmbQlDQYkr72EIKe1UaqTVthAM4
- e4WXLt5yZf3t0AgbyjA5bCAp8kE42yC4ngA2Qt7J2ZUYijy4oSYczbwVljVinFuR+kUsZrzc1f
- XiFUlIdVenrSZ98kbiNgzS3OE5ueEsXuQjNvilu1NiM5/9vcJ98b/owlZzghLjVwrLUq8uhCy9
- yie0g1DlgSadV2/CiWCctMAAAA=
-X-Change-ID: 20261103-m3_and_aux_ucode-8337b881155c
+Message-Id: <20261104-m3_and_aux_ucode-v2-1-b6c335c14dfe@oss.qualcomm.com>
+References: <20261104-m3_and_aux_ucode-v2-0-b6c335c14dfe@oss.qualcomm.com>
+In-Reply-To: <20261104-m3_and_aux_ucode-v2-0-b6c335c14dfe@oss.qualcomm.com>
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
         linux-kernel@vger.kernel.org,
         Madhavan Ganesan <madhavan.ganesan@oss.qualcomm.com>
 X-Mailer: b4 0.15.2
-X-Authority-Analysis: v=2.4 cv=O6SsLx9W c=1 sm=1 tr=0 ts=6aead100 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA0MDAyNSBTYWx0ZWRfXwTs67e1qG9tj
+ HikrbDoCB5l+bh+zAd9U9/TSpW32XiQi9qsqK0nlUcWLfOjDBFysOftrIofl1fMzUROM7jCCrjO
+ v/7J7orwzsVV/bl0YeSmJQ39BoLctT329rsphldnmeW3ODeQV3Ro02HiohIy4Uw4DwX1KQ0BTxw
+ HXTSuUZmyfx9SadBb8N5iY+XcEki2ajb6aOVOki/43hvKjjhjhhYVkbNaECYuiHcjt5Lo83ZPsc
+ ofHkeK2oni6wguCEBom4yNrO0m/A1vsGPq2ncpd9Uq23pcCJAMhh+swJXXHNrGbflFxLPowtrgj
+ dxntuNGOSA2nJABhGx0U8Kjd/99o8W50q0RBB1WApcpttmgOzwCMgm+RbEGXHuC7kGuo7r3/Ogu
+ F3at4AxVuDMMhGiMIyDNuw5ViNHLrHWH1knE+ix/mSDZ3XNTPiE1l9PUNiZmeRreOUG0hy8pG7I
+ 3oFD6l8MYSx+O9uglcw==
+X-Proofpoint-GUID: QNY2Aa1CHfGqoa-U9o0aVM3BFnaoYe9D
+X-Proofpoint-ORIG-GUID: QNY2Aa1CHfGqoa-U9o0aVM3BFnaoYe9D
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA0MDAyNSBTYWx0ZWRfX8ebW45R2/fTm
+ /mDPpwXA72BR65jPhqsU0Js+3RyYsaz6GV9Wb9Lif4dhW9zOuMmeNMhRoC6oP4TtBmUsGWq+5OC
+ jlqiKrLfCFzO+P30i3UpJBnWnyjx6Gk=
+X-Authority-Analysis: v=2.4 cv=c64+0h9l c=1 sm=1 tr=0 ts=6aead103 cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=xzHXWKMcZAd5FHHA1I4A:9 a=QEXdDO2ut3YA:10 a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-ORIG-GUID: Z35j19ZlZ2nt93WEj3A1_Wl_V0V0Mmvn
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA0MDAyNSBTYWx0ZWRfXxinVDYuylr6I
- 9BqxoFkHl0jkkUKmaSVlWsnoGWfx9yC+hq+bVOGMcx7BK1txdWNZCwkSRIKlPrpVueCWb476yH2
- j+oRv01XBEirFkb7GjU2+An3vpM/QJg=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA0MDAyNSBTYWx0ZWRfX8OhTXyIyrP5w
- y5hT/g9s1VSDFJmqBKFR2efb0fCDA1epA+2/th5uNn5cAhZJg6JzKSEyCTVPgHa2LGRE/Z/29u4
- iSUG9pgIWNpp9SGo3Iba/jhqbURPfq5giz2ISBXT0HB3cWd0wa9kW1NQvYaG8tCHQfOlxM5KS5N
- WyfHePuyTEQqLjMb7+XxLNNyI+i15HV7kGgT6/mhqzhLS3KbTgWUdlVdSoLcYgKDZ8jMH1oE+54
- ZncKaD6Aj4FS2KcVUrwXN598fNXnVEXFNBWqeyfnXE8uW4VIe1B9AML7FOMLG1T63EiQPYd2h9m
- /5DgyGSDfdFuISkG0R1wyM+XyN/oUzYk0ej+eiZUqiqxJO7UaHEzUfjExCpFzW2aEM4p2fS7o9j
- Bgk/3mcDTqtWXOXnV+ZfhfXkaTuZr95xXCyvcvG5ilgqX9iaIj/fFTx3d6yjWX/KLXd7OeGPUi0
- cjOMur/3lrQWGfnAceg==
-X-Proofpoint-GUID: Z35j19ZlZ2nt93WEj3A1_Wl_V0V0Mmvn
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=EUspDBNiAAAA:8 a=J5wuaM5RjebvB5ep-PMA:9 a=QEXdDO2ut3YA:10
+ a=bFCP_H2QrGi7Okbo017w:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-04_01,2026-11-03_04,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 impostorscore=0 clxscore=1015 spamscore=0 suspectscore=0
- priorityscore=1501 lowpriorityscore=0 phishscore=0 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611040025
+ impostorscore=0 spamscore=0 adultscore=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 phishscore=0 suspectscore=0 clxscore=1015
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
+ definitions=main-2611040025
 
-ath12k_qmi_m3_free()/ath12k_qmi_m3_load() and
-ath12k_qmi_aux_uc_free()/ath12k_qmi_aux_uc_load() carry near-identical
-logic for freeing a DMA-coherent firmware memory region and loading
-firmware into it. Factor the shared logic into common helpers.
+struct m3_mem_region is also used for the aux_uc firmware memory
+region, so the name no longer reflects its purpose. Rename it to
+ath12k_fw_mem_region to make clear it is a generic firmware memory
+region descriptor shared across m3 and aux_uc.
 
-Patch 1 is a preparatory, no-functional-change rename of
-struct m3_mem_region to struct ath12k_fw_mem_region, since the type
-is also used for the aux_uc region and the old name no longer
-reflects its purpose.
+No functional change.
 
-Patch 2 refactors the shared free/load logic into
-ath12k_qmi_free_mem_region() and ath12k_qmi_fw_mem_load(), and
-rewires the m3 and aux_uc wrappers to use them.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
 
+Signed-off-by: Madhavan Ganesan <madhavan.ganesan@oss.qualcomm.com>
 ---
-Changes in v2:
-- Addressed the review comments.
+ drivers/net/wireless/ath/ath12k/qmi.c | 12 ++++++------
+ drivers/net/wireless/ath/ath12k/qmi.h |  6 +++---
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+index 817bd820623d..b1efed1702cb 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.c
++++ b/drivers/net/wireless/ath/ath12k/qmi.c
+@@ -3227,7 +3227,7 @@ int ath12k_qmi_load_bdf_qmi(struct ath12k_base *ab,
  
----
-Madhavan Ganesan (2):
-      wifi: ath12k: rename m3_mem_region to ath12k_fw_mem_region
-      wifi: ath12k: refactor m3 and aux_uc firmware memory handling
+ static void ath12k_qmi_m3_free(struct ath12k_base *ab)
+ {
+-	struct m3_mem_region *m3_mem = &ab->qmi.m3_mem;
++	struct ath12k_fw_mem_region *m3_mem = &ab->qmi.m3_mem;
  
- drivers/net/wireless/ath/ath12k/qmi.c | 168 ++++++++++++----------------------
- drivers/net/wireless/ath/ath12k/qmi.h |   6 +-
- 2 files changed, 60 insertions(+), 114 deletions(-)
----
-base-commit: a2da7677eb9a12e7860814b70a1f6f5b0e347d7d
-change-id: 20261103-m3_and_aux_ucode-8337b881155c
+ 	if (ab->hw_params->fw.m3_loader == ath12k_m3_fw_loader_remoteproc)
+ 		return;
+@@ -3244,7 +3244,7 @@ static void ath12k_qmi_m3_free(struct ath12k_base *ab)
+ 
+ static int ath12k_qmi_m3_load(struct ath12k_base *ab)
+ {
+-	struct m3_mem_region *m3_mem = &ab->qmi.m3_mem;
++	struct ath12k_fw_mem_region *m3_mem = &ab->qmi.m3_mem;
+ 	const struct firmware *fw = NULL;
+ 	const void *m3_data;
+ 	char path[100];
+@@ -3309,7 +3309,7 @@ static int ath12k_qmi_m3_load(struct ath12k_base *ab)
+ static noinline_for_stack
+ int ath12k_qmi_wlanfw_m3_info_send(struct ath12k_base *ab)
+ {
+-	struct m3_mem_region *m3_mem = &ab->qmi.m3_mem;
++	struct ath12k_fw_mem_region *m3_mem = &ab->qmi.m3_mem;
+ 	struct qmi_wlanfw_m3_info_req_msg_v01 req = {};
+ 	struct qmi_wlanfw_m3_info_resp_msg_v01 resp = {};
+ 	struct qmi_txn txn;
+@@ -3359,7 +3359,7 @@ int ath12k_qmi_wlanfw_m3_info_send(struct ath12k_base *ab)
+ 
+ static void ath12k_qmi_aux_uc_free(struct ath12k_base *ab)
+ {
+-	struct m3_mem_region *aux_uc_mem = &ab->qmi.aux_uc_mem;
++	struct ath12k_fw_mem_region *aux_uc_mem = &ab->qmi.aux_uc_mem;
+ 
+ 	if (!aux_uc_mem->vaddr)
+ 		return;
+@@ -3373,7 +3373,7 @@ static void ath12k_qmi_aux_uc_free(struct ath12k_base *ab)
+ 
+ static int ath12k_qmi_aux_uc_load(struct ath12k_base *ab)
+ {
+-	struct m3_mem_region *aux_uc_mem = &ab->qmi.aux_uc_mem;
++	struct ath12k_fw_mem_region *aux_uc_mem = &ab->qmi.aux_uc_mem;
+ 	const struct firmware *fw = NULL;
+ 	const void *aux_uc_data;
+ 	char path[100];
+@@ -3435,7 +3435,7 @@ static int ath12k_qmi_aux_uc_load(struct ath12k_base *ab)
+ static noinline_for_stack
+ int ath12k_qmi_wlanfw_aux_uc_info_send(struct ath12k_base *ab)
+ {
+-	struct m3_mem_region *aux_uc_mem = &ab->qmi.aux_uc_mem;
++	struct ath12k_fw_mem_region *aux_uc_mem = &ab->qmi.aux_uc_mem;
+ 	struct qmi_wlanfw_aux_uc_info_req_msg_v01 req = {};
+ 	struct qmi_wlanfw_aux_uc_info_resp_msg_v01 resp = {};
+ 	struct qmi_txn txn;
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.h b/drivers/net/wireless/ath/ath12k/qmi.h
+index 1b1c88906f1e..e43e4a42aad7 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.h
++++ b/drivers/net/wireless/ath/ath12k/qmi.h
+@@ -118,7 +118,7 @@ struct target_info {
+ 	char bdf_ext[ATH12K_QMI_BDF_EXT_STR_LENGTH];
+ };
+ 
+-struct m3_mem_region {
++struct ath12k_fw_mem_region {
+ 	/* total memory allocated */
+ 	u32 total_size;
+ 	/* actual memory being used */
+@@ -152,8 +152,8 @@ struct ath12k_qmi {
+ 
+ 	u8 num_radios;
+ 	struct target_info target;
+-	struct m3_mem_region m3_mem;
+-	struct m3_mem_region aux_uc_mem;
++	struct ath12k_fw_mem_region m3_mem;
++	struct ath12k_fw_mem_region aux_uc_mem;
+ 	unsigned int service_ins_id;
+ 	struct dev_mem_info dev_mem[ATH12K_QMI_WLFW_MAX_DEV_MEM_NUM_V01];
+ 	u8 dynamic_ddr_support;
+
+-- 
+2.34.1
 
