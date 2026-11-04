@@ -1,110 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793826875;
-	b=ki2sg9oAuKrq+As+a8F+tEswMMEqWyTko9auO9G8kT4stdSaWjpR/pTRC3gI13ubPn8J
-	 NoOx6JNC6jXS8DBSpLfx+nzgDpf79FGYf/+VR/6OEUB3afYUBs2shtGYu4HB7SJPrY1lX
-	 bBul9oFtjPy1dgy26HSi4wNH/1j3XHOS6LbomIXET0yCu2Q1g6rpJOrmyyJjwg6oscG85
-	 MCajehKnp47xWZ2O1xCaxjRPsT+r7ay3NskQqH8pPcWp3vx/fLh4IyfuNtsyQAwkQOQnQ
-	 n3Mn04XSoKSxzqYzQZG1mUm1tvQHp+Q7+f7PEqy6FuKdAOJpCKPlkWKYdclL++7RQzw==
+	t=1793826901;
+	b=emyucWc86W3GcwWkmIafp0LyHnazEyc8o1BLbRbk+L+3+TaVDNUDvXMIbix7XMs3Oyhr
+	 +elPBEMhYDCfG/UlW6GAYFyK/JZIOSq5eiZkFqTKkkNG5UXEzqcVLzDta5xQmIkddM6lm
+	 NGQeG4cbyPXLQKhRVzF7zXy275te3Tf3l0I22WaktHiwci5ZYYrLh5Iu2MXvsdOrGlMwp
+	 SSJRQ4bFyODJw6KkD2m5DLSM7dZ2tgqgalr/B1tk91hoKmWGADuQyZDlQ3YEiIZlKdr0e
+	 eCMB5tcZh9sHjdWvG09rCv3Yf954mlPFo6WojcDPhE0xJJmcqHtYwH2oSDhAC/WqOmw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793826875;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=e4hWAYy+9h5Ws1+QsnOeSYUee4W4bqw00qwXFyYDM2Q=;
-	b=sxKxn5XHTMyAvnBX3tvMHfm1ymsd918g3D5yeFT8p8aUo2fveZEPX38EHg23fauyzWWE
-	 wT5cO3PHZ/kPiXdRLzmK2tZnYeT32kSCW/eoYF4ADTA/w+YKJQttD/6OoTJZZf6oJOhUC
-	 Du5rJC+UCfo8RZlGil+wlZ79fOR13d4E6x9on6H6Mgieb3eDsMk8K7xx5TQXcZ+Fz1nwy
-	 Jkj8RQcn3Zv4ry73s0SHDgo40qiZM/XVtvgWucxJMdxkfTIa6twg1UAMmA+b4XBYm4Oqf
-	 Gcyd+fqW4srJ4fhAjvW9jr4bEbczncPw4/7aiSWL12biHMP/tUkFULyjDNrCP/HMdrQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793826901;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=z0W2Jd6uVsBM+uJxiCKZYftIMEndVFv4A/cqc5ME9Wg=;
+	b=i2rq//1ZMWe6wvzp87FbiKBlPwrQoEoFwthMuJNMCPPmLDBo4JqRlLKea3Gc4SfXBJKp
+	 kjCfXTOpsdYIOqFHhO6CmASl6NjHdmFXV+rJbbXNBeEAfk7LrjsyG9jfDoOq2gu9zdMqV
+	 4VgN5VoRla4cA0EYXADCvSAFl/rsaa+6qmnO3mM39y0jsFKzKtZBT8rmiYWjEfm1OtTmY
+	 N1zimmrCTGUPqkGKQGZ6YqAyhHhYIHRY8A4heUZaocYtXB2x5I5afm6CqujxfNps3tyhv
+	 H8w+LSOU76ot/BBkAZzcTLMbB6C2Ge26CDNFS24akt+VawJOIwfPy8PggxxEtUbX4jg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fINV72S8;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Q1GWblou;
+	arc=none smtp.remote-ip=74.125.82.52
+Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51296072663;
-	Wed,  4 Nov 2026 21:14:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6306D6084B40
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 21:15:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6306D6084B40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fINV72S8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 032A61F00A02;
-	Wed,  4 Nov 2026 21:14:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793826874;
-	bh=e4hWAYy+9h5Ws1+QsnOeSYUee4W4bqw00qwXFyYDM2Q=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fINV72S8bDDNAGDfuVdNkKEJ8IkqVCRv+9pBI3vQ5asq9IiLLozzE0QdmmFli8th5
-	 X4s5LvAfCGJyYoNEE5Wh/0hw46DJ/gYX99FhVUKbbQ9fpJN7vbIOTm0BON4CFe267M
-	 fjt8RFAd/brjcqiBtefp8sO8lO8+Jk10nEbQ6PlyE/7KlVHDLViBB+q3BjfLDENgvu
-	 +cfDHNU9ti/Im92D+yfRD+3y/UeJe2pfCEzwWfnk7g5gX1KGx3F4JUPAldHuRmAzQX
-	 R9u5jYwMUj2KA/fDxFq3B1ucLCU5hIL1w9JynYqO9s8HhX0xdmUp1Rax8ITizcXngq
-	 K4fOq7xS0CHnQ==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 13/13] selftests/proc: check that removing a polled entry wakes its pollers
-Date: Wed,  4 Nov 2026 22:14:20 +0100
-Message-ID: <20261104-work-procfs-net-v2-13-221e2437fed1@kernel.org>
-In-Reply-To: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
-References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Q1GWblou
+Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-1a3c08d6928so1873372c88.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 13:15:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793826900; x=1794431700; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=z0W2Jd6uVsBM+uJxiCKZYftIMEndVFv4A/cqc5ME9Wg=;
+        b=Q1GWblous/4WJwNpcq9vQcNJKyJUh++qAyNJqKHRdZ45zsrPRiHqBE6fZxUoWPK8l4
+         QD0ld/SJHKYS/b5vzDAUh5QVS4Ky8qpTpZloSHYNpR2BXv7QKJGhvZyS1o5t1om9FfVf
+         +75z+7zsmLvjuahsq38Bo0D1hQGGa9C8PwJRI2QfysJ56xY9zXqY53jKNxjqP+IIj8gb
+         llEVwBiH33Vu88+WTjnO6ccWhk2K3MdnasBEWr1nOUqtWYCNlG/EFuKijqH03k2UT6+j
+         OBR5MJZ2++M5JMHciycVsDIZjAq5kP+EyHNaKf2j5Eav6nMVXU9JyPZdV/Q9yl+veONR
+         Xw5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793826900; x=1794431700;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=z0W2Jd6uVsBM+uJxiCKZYftIMEndVFv4A/cqc5ME9Wg=;
+        b=ZRldxj0ayG6SKRYm9VJXCSYreIh6U9Pm6wja4Vj5Xo/wDUZoXgAh7sLcKSR9JL8YhJ
+         AYotX/Hqx8aiw/pUgcZ2mYqGlmuzM0Y9Kh974zosaUgRRqzmuj/A2iDgCy+nahRMrtNt
+         n+2Zt8hIklODp5FdMgmXFDr95avuP2jJ59cu3D0Vv61EFvY3aLAhj5JVGDVYSGI0gQy8
+         LhgswAfdozCI5GGJZQAaih8OzsjvEjKiwYdAYB46CzPEVSysUF1g3k6qbESnh8gmkgjV
+         RrFBdO4FPDc4aJqSjm730YdCnxugif2HRfRZFKgXUDLCCO0pYG9t9G15QoSm0d81ecm9
+         oCLQ==
+X-Gm-Message-State: APuU4Z9Nz61S/j7Ca02rXh2Jzu4WbrC2rXLlXq6j6Ob1WXPc64t8TRfK
+	buip8vj8qnUQ4L739FEELIhbtAwineNaDTVtFfZRtcmTouNvwqKd3JvQ
+X-Gm-Gg: AYBFou2UGIW/XXD2pogsLubjPIXNLKoYF/nndoUEqCJwH0kkVhhqYxTjWzMWTgVE7y/
+	lE44L316EuatRwJLCmeSZcRy28M31EUyI8FqoLnEznx9b70tkgbi3Pf7UjYUx16Zcaw2856Zx5b
+	FEp3TTlc7k12waUj6tkoQEUWdav+OLaLsDQdmGChHJnHFVOhRXJuxqfdWwAD79jsB9IKN1LJWCk
+	XpT+PljO4IyVCvdF9GxepAzIIQrsS0d9YPo+LFnO3ksOGIw4aSERYCI1Z5/RlyyYMzKIbSr+uH+
+	mHRVDFsm7i7tap3atElV+03egvDnD47w0DfJE6rbmczn59gIZPSNSGVbAjIIiTPclyp8vI/Sc8G
+	RVSM8a+4z6blj+CV4SjbzJGLuS0J/PWcdj4CeFYmhreh9+20sFH0ZVAeTDw5/VPRelPPtUJQvT4
+	0sfJ6zxkCPDMjVxefuZj4POeDwmR/XdNes39Jk/4H1CNIWkVRahjni/bPJTG+U7OxiJEiZfG8Cn
+	SROXzU0yoS+qtnD+yCN3m9Pq1nY9KgFUk+s6V8Z7yFz5C2FxWN+VgWEGpDSFI3dVxEQjaBNV8nJ
+	ScW7b30oUXI7CzpFG5JyqkpS0da8TFGVvMUqIbaj2HrYdMBSKVEW2fPWkz9+FnNzsg==
+X-Received: by 2002:a05:701b:4244:10b0:149:1b5b:1f25 with SMTP id a92af1059eb24-1ac5b211405mr26311162c88.15.1793826900133;
+        Wed, 04 Nov 2026 13:15:00 -0800 (PST)
+Received: from anon-laptop ([103.187.196.159])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b245c2c2f7sm10606078c88.9.2026.11.04.13.14.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 13:14:59 -0800 (PST)
+From: Wahid Khan <wahidzk0091@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	sara.sharon@intel.com,
+	luciano.coelho@intel.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless 2/2] wifi: cfg80211: test a split MBSSID profile longer than 255 bytes
+Date: Thu,  5 Nov 2026 02:44:51 +0530
+Message-ID: <20261104211451.693451-2-wahidzk0091@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261104211451.693451-1-wahidzk0091@gmail.com>
+References: <20261104211451.693451-1-wahidzk0091@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -114,265 +98,141 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7551; i=brauner@kernel.org; h=from:subject:message-id; bh=fkaoStBZv6n90Leh8+p5gt2ttSaWSW3wQWIJomPzMyw=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97jO6eabzQ8af0CCncwxiapUmjm9LO9ZX+8151WM8/ 0fHlH+xHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABMpiWJkWD31e+bEH6H98r+P hcf+KTFovSdbka6jnFTV2m3yOt4ygeGvZHu0Ve0uR+XXvqyXA8Nqj7+7aLx20bk/219c3a4dcte SEQA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Poll the channel file of a sunrpc cache in /proc/net of a network
-namespace of its own and let the namespace die while the poller sleeps:
+Add a KUnit test with a non-transmitted BSSID profile that is split over
+two Multiple BSSID elements and is 300 bytes long once merged. The last
+element of the profile must show up in the generated BSS. Before the
+previous change the profile length was cut to 44 bytes and the test
+failed.
 
-- the poller wakes up and gets POLLERR | POLLPRI
-
-- so does an epoll with an item on the entry
-
-- a poll of the removed entry keeps reporting POLLERR, and a read of it
-  fails with -EIO
-
-The namespace is torn down from a workqueue, so a regression stalls the
-test for ten seconds before it fails.
-
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Signed-off-by: Wahid Khan <wahidzk0091@gmail.com>
 ---
- tools/testing/selftests/proc/.gitignore           |   1 +
- tools/testing/selftests/proc/Makefile             |   1 +
- tools/testing/selftests/proc/config               |   2 +
- tools/testing/selftests/proc/proc-remove-polled.c | 189 ++++++++++++++++++++++
- 4 files changed, 193 insertions(+)
+ net/wireless/tests/scan.c | 104 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
 
-diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
-index ed863db1688f..d06bb704d29d 100644
---- a/tools/testing/selftests/proc/.gitignore
-+++ b/tools/testing/selftests/proc/.gitignore
-@@ -31,5 +31,6 @@
- /self
- /setns-dcache
- /setns-sysvipc
-+/proc-remove-polled
- /proc-sysctl-readdir-churn
- /thread-self
-diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
-index 95c9212fb670..e4f5142da47d 100644
---- a/tools/testing/selftests/proc/Makefile
-+++ b/tools/testing/selftests/proc/Makefile
-@@ -30,6 +30,7 @@ TEST_GEN_PROGS += setns-sysvipc
- TEST_GEN_PROGS += thread-self
- TEST_GEN_PROGS += proc-multiple-procfs
- TEST_GEN_PROGS += proc-fsconfig-hidepid
-+TEST_GEN_PROGS += proc-remove-polled
- TEST_GEN_PROGS += proc-sysctl-readdir-churn
- TEST_GEN_PROGS += proc-pidns
- TEST_GEN_PROGS += proc-remove-slow-sysctl
-diff --git a/tools/testing/selftests/proc/config b/tools/testing/selftests/proc/config
-index 15b307189392..3cc12e91e5a7 100644
---- a/tools/testing/selftests/proc/config
-+++ b/tools/testing/selftests/proc/config
-@@ -6,6 +6,8 @@ CONFIG_NET_NS=y
- CONFIG_IPV6=y
- CONFIG_TUN=y
- CONFIG_USERFAULTFD=y
-+CONFIG_USER_NS=y
-+CONFIG_SUNRPC=y
- CONFIG_SOUND=y
- CONFIG_SND=y
- CONFIG_SND_DUMMY=m
-diff --git a/tools/testing/selftests/proc/proc-remove-polled.c b/tools/testing/selftests/proc/proc-remove-polled.c
-new file mode 100644
-index 000000000000..e313d22be43f
---- /dev/null
-+++ b/tools/testing/selftests/proc/proc-remove-polled.c
-@@ -0,0 +1,189 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * A poll() or epoll on a /proc entry must wake up when the entry is removed,
-+ * and report the removed entry as an error. The channel file of a sunrpc
-+ * cache lives in /proc/net of a network namespace and goes away with it.
-+ */
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <poll.h>
-+#include <pthread.h>
-+#include <sched.h>
-+#include <stdarg.h>
-+#include <stdio.h>
-+#include <string.h>
-+#include <sys/epoll.h>
-+#include <sys/wait.h>
-+#include <unistd.h>
-+
-+#include "../kselftest_harness.h"
-+
-+#define CHANNEL_FMT	"/proc/%d/net/rpc/auth.unix.ip/channel"
-+#define TIMEOUT_MS	10000
-+
-+struct netns_child {
-+	pid_t pid;
-+	int go;		/* closing it lets the child exit, and its netns die */
-+};
-+
-+struct poller {
-+	int fd;
-+	int done;
-+	int ret;
-+	short revents;
-+};
-+
-+static int write_file(const char *path, const char *fmt, ...)
+diff --git a/net/wireless/tests/scan.c b/net/wireless/tests/scan.c
+index 8c20278b5d3a..01dcabf9dbfe 100644
+--- a/net/wireless/tests/scan.c
++++ b/net/wireless/tests/scan.c
+@@ -402,6 +402,109 @@ static void test_inform_bss_ssid_only(struct kunit *test)
+ 	cfg80211_put_bss(wiphy, bss);
+ }
+ 
++static void test_inform_bss_mbssid_long_profile(struct kunit *test)
 +{
-+	char buf[64];
-+	va_list ap;
-+	int fd, len, ret;
++	struct inform_bss ctx = {
++		.test = test,
++	};
++	struct wiphy *wiphy = T_WIPHY(test, ctx);
++	struct t_wiphy_priv *w_priv = wiphy_priv(wiphy);
++	struct cfg80211_inform_bss inform_bss = {
++		.signal = 50,
++		.drv_data = &ctx,
++	};
++	const u8 bssid[ETH_ALEN] = { 0x10, 0x22, 0x33, 0x44, 0x55, 0x60 };
++	const u8 marker[] = { WLAN_EID_VENDOR_SPECIFIC, 6, 0x00, 0x11, 0x22,
++			      0x77, 'M', 'K' };
++	struct cfg80211_bss *tx_bss, *bss;
++	const struct cfg80211_bss_ies *ies;
++	u8 *input, *pos;
++	size_t len;
 +
-+	va_start(ap, fmt);
-+	len = vsnprintf(buf, sizeof(buf), fmt, ap);
-+	va_end(ap);
-+	fd = open(path, O_WRONLY | O_CLOEXEC);
-+	if (fd < 0)
-+		return -1;
-+	ret = write(fd, buf, len) == len ? 0 : -1;
-+	close(fd);
-+	return ret;
++	wiphy->support_mbssid = 1;
++	w_priv->ops->inform_bss = inform_bss_inc_counter;
++
++	inform_bss.chan = ieee80211_get_channel_khz(wiphy, MHZ_TO_KHZ(2412));
++	KUNIT_ASSERT_NOT_NULL(test, inform_bss.chan);
++
++	input = kunit_kzalloc(test, 1024, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, input);
++	pos = input;
++
++	/* transmitting BSS SSID */
++	*pos++ = WLAN_EID_SSID;
++	*pos++ = 2;
++	*pos++ = 'T';
++	*pos++ = 'X';
++
++	/*
++	 * First MBSSID element: a 200 byte non-transmitted profile start,
++	 * the profile continues in the next MBSSID element.
++	 */
++	*pos++ = WLAN_EID_MULTIPLE_BSSID;
++	*pos++ = 1 + 2 + 200;
++	*pos++ = 1;			/* max BSSID indicator */
++	*pos++ = 0;			/* nontransmitted BSSID profile */
++	*pos++ = 200;
++	*pos++ = WLAN_EID_NON_TX_BSSID_CAP;
++	*pos++ = 2;
++	*pos++ = 0x34;
++	*pos++ = 0x12;
++	*pos++ = WLAN_EID_SSID;
++	*pos++ = 2;
++	*pos++ = 'N';
++	*pos++ = 'T';
++	*pos++ = WLAN_EID_MULTI_BSSID_IDX;
++	*pos++ = 1;
++	*pos++ = 1;
++	*pos++ = WLAN_EID_VENDOR_SPECIFIC;
++	*pos++ = 187;
++	*pos++ = 0xaa;
++	*pos++ = 0xbb;
++	*pos++ = 0xcc;
++	pos += 184;
++
++	/* second MBSSID element: continuation of the profile, 100 bytes */
++	*pos++ = WLAN_EID_MULTIPLE_BSSID;
++	*pos++ = 1 + 2 + 100;
++	*pos++ = 1;
++	*pos++ = 0;
++	*pos++ = 100;
++	*pos++ = WLAN_EID_VENDOR_SPECIFIC;
++	*pos++ = 90;
++	*pos++ = 0xaa;
++	*pos++ = 0xbb;
++	*pos++ = 0xcc;
++	pos += 87;
++	memcpy(pos, marker, sizeof(marker));
++	pos += sizeof(marker);
++	len = pos - input;
++
++	tx_bss = cfg80211_inform_bss_data(wiphy, &inform_bss,
++					  CFG80211_BSS_FTYPE_PRESP, bssid,
++					  0x1000, 0x1234, 100,
++					  input, len, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, tx_bss);
++
++	bss = cfg80211_get_bss(wiphy, NULL, NULL, "NT", 2,
++			       IEEE80211_BSS_TYPE_ANY, IEEE80211_PRIVACY_ANY);
++	KUNIT_ASSERT_NOT_NULL(test, bss);
++
++	/* the 300 byte merged profile must not be cut at 300 % 256 */
++	rcu_read_lock();
++	ies = rcu_dereference(bss->ies);
++	KUNIT_EXPECT_NOT_NULL(test, ies);
++	if (ies)
++		KUNIT_EXPECT_NOT_NULL(test,
++				      cfg80211_find_vendor_elem(0x001122, 0x77,
++								ies->data,
++								ies->len));
++	rcu_read_unlock();
++
++	cfg80211_put_bss(wiphy, bss);
++	cfg80211_put_bss(wiphy, tx_bss);
 +}
 +
-+/*
-+ * A child in a network namespace of its own, owned by a user namespace that
-+ * maps us to root, so that we may open the files in its /proc/net. The child
-+ * is the only thing that keeps the namespace alive.
-+ */
-+static int start_netns_child(struct netns_child *c)
-+{
-+	uid_t uid = getuid();
-+	gid_t gid = getgid();
-+	int ready[2], go[2];
-+	char ch = 'f';
-+
-+	if (pipe2(ready, O_CLOEXEC) || pipe2(go, O_CLOEXEC))
-+		return -1;
-+	c->pid = fork();
-+	if (c->pid < 0)
-+		return -1;
-+	if (c->pid == 0) {
-+		close(ready[0]);
-+		close(go[1]);
-+		if (!unshare(CLONE_NEWUSER) &&
-+		    !write_file("/proc/self/setgroups", "deny") &&
-+		    !write_file("/proc/self/uid_map", "0 %d 1", uid) &&
-+		    !write_file("/proc/self/gid_map", "0 %d 1", gid) &&
-+		    !unshare(CLONE_NEWNET))
-+			ch = 'r';
-+		if (write(ready[1], &ch, 1) == 1 && ch == 'r')
-+			(void)!read(go[0], &ch, 1);
-+		_exit(0);
-+	}
-+	close(ready[1]);
-+	close(go[0]);
-+	c->go = go[1];
-+	if (read(ready[0], &ch, 1) != 1 || ch != 'r') {
-+		close(ready[0]);
-+		close(c->go);
-+		waitpid(c->pid, NULL, 0);
-+		errno = EPERM;
-+		return -1;
-+	}
-+	close(ready[0]);
-+	return 0;
-+}
-+
-+static void end_netns_child(struct netns_child *c)
-+{
-+	close(c->go);
-+	waitpid(c->pid, NULL, 0);
-+}
-+
-+static int open_channel(struct netns_child *c, char *path, size_t len)
-+{
-+	snprintf(path, len, CHANNEL_FMT, c->pid);
-+	return open(path, O_RDONLY | O_CLOEXEC);
-+}
-+
-+static void *poll_thread(void *arg)
-+{
-+	struct poller *p = arg;
-+	struct pollfd pfd = { .fd = p->fd, .events = POLLPRI };
-+	ssize_t ret;
-+
-+	p->ret = poll(&pfd, 1, TIMEOUT_MS);
-+	p->revents = pfd.revents;
-+	ret = write(p->done, "x", 1);
-+	return (void *)ret;
-+}
-+
-+TEST(poll_wakes_on_removal)
-+{
-+	struct netns_child c;
-+	struct poller p = {};
-+	struct pollfd pfd;
-+	char path[64], buf[16];
-+	pthread_t pt;
-+	int done[2];
-+
-+	if (start_netns_child(&c))
-+		SKIP(return, "network namespace: %s", strerror(errno));
-+	p.fd = open_channel(&c, path, sizeof(path));
-+	if (p.fd < 0)
-+		SKIP(return, "%s: %s", path, strerror(errno));
-+
-+	/* A fresh channel has nothing to read and no error. */
-+	pfd = (struct pollfd){ .fd = p.fd, .events = POLLIN | POLLPRI };
-+	ASSERT_EQ(poll(&pfd, 1, 0), 0);
-+
-+	ASSERT_EQ(pipe2(done, O_CLOEXEC), 0);
-+	p.done = done[1];
-+	ASSERT_EQ(pthread_create(&pt, NULL, poll_thread, &p), 0);
-+
-+	/* The poller sleeps on the entry, now its namespace goes away. */
-+	end_netns_child(&c);
-+	pfd = (struct pollfd){ .fd = done[0], .events = POLLIN };
-+	EXPECT_EQ(poll(&pfd, 1, TIMEOUT_MS), 1) {
-+		TH_LOG("removing %s didn't wake its poller", path);
-+	}
-+	ASSERT_EQ(pthread_join(pt, NULL), 0);
-+	EXPECT_EQ(p.ret, 1);
-+	EXPECT_EQ(p.revents & (POLLERR | POLLPRI), POLLERR | POLLPRI);
-+
-+	/* The removed entry stays an error, and there is nothing to read. */
-+	pfd = (struct pollfd){ .fd = p.fd, .events = POLLIN };
-+	EXPECT_EQ(poll(&pfd, 1, 0), 1);
-+	EXPECT_TRUE(pfd.revents & POLLERR);
-+	EXPECT_EQ(read(p.fd, buf, sizeof(buf)), -1);
-+	EXPECT_EQ(errno, EIO);
-+}
-+
-+TEST(epoll_wakes_on_removal)
-+{
-+	struct epoll_event ev = { .events = EPOLLPRI };
-+	struct netns_child c;
-+	char path[64];
-+	int fd, epfd;
-+
-+	if (start_netns_child(&c))
-+		SKIP(return, "network namespace: %s", strerror(errno));
-+	fd = open_channel(&c, path, sizeof(path));
-+	if (fd < 0)
-+		SKIP(return, "%s: %s", path, strerror(errno));
-+
-+	epfd = epoll_create1(EPOLL_CLOEXEC);
-+	ASSERT_GE(epfd, 0);
-+	ASSERT_EQ(epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev), 0);
-+	ASSERT_EQ(epoll_wait(epfd, &ev, 1, 0), 0);
-+
-+	/* The item sits on the entry's queue, now its namespace goes away. */
-+	end_netns_child(&c);
-+	EXPECT_EQ(epoll_wait(epfd, &ev, 1, TIMEOUT_MS), 1) {
-+		TH_LOG("removing %s didn't wake epoll", path);
-+	}
-+	EXPECT_EQ(ev.events & (EPOLLERR | EPOLLPRI), EPOLLERR | EPOLLPRI);
-+}
-+
-+TEST_HARNESS_MAIN
-
+ static void test_get_bss_miss_reason(struct kunit *test)
+ {
+ 	struct inform_bss ctx = {
+@@ -973,6 +1076,7 @@ kunit_test_suite(gen_new_ie);
+ 
+ static struct kunit_case inform_bss_test_cases[] = {
+ 	KUNIT_CASE(test_inform_bss_ssid_only),
++	KUNIT_CASE(test_inform_bss_mbssid_long_profile),
+ 	KUNIT_CASE(test_get_bss_miss_reason),
+ 	KUNIT_CASE_PARAM(test_inform_bss_ml_sta, inform_bss_ml_sta_gen_params),
+ 	{}
 -- 
-2.53.0
+2.56.0
 
