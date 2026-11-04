@@ -1,110 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793827021;
-	b=PNUOLaGZ+bmtcj2aomMyQxJEOo2PR+9oXReT48TytTZt04vhK46XfJnjwGg9XgGPCKF4
-	 CEUqsyfC7YwzCU1z3bt+z/oM68vOnNQjgp4cxC7s2TjsV3imb1cYa0XafQ2xr49QXDWky
-	 OEkGNYBl92nCAZvHa23Y9gwClDfRWW4l9Dseurga1iwKP6Q9D0lL5ryqCWwx9JKvATdN0
-	 hSE4GSGrWHgtjBTV0qOf/nO3Es66DTsojH9I94OwaqC4UF9KESHWeiJuXRaSaoCPXsnFk
-	 qIYo2Lszcg18HnbLfckPvLYiWK2bCoFlTLHjRrl1AId5A3jrP68a3rEK2nV5u1THCag==
+	t=1793828573;
+	b=oqxuqrDV8+VTn4WUgtJjWJM9H3Wf1pr7rjXNIlbe/jnA9bJDif5DGSrZZItInqOVMTuZ
+	 8cOt7LKSwXgCtJyYqhlQNGvMql8yVgR6/m0jKsvZEiMh6VbCtoKTNuL8Oty2wz4txUsbF
+	 92GOfgwecqEI2gH1C+Pj0l3+8hVNogda9iWrrLgONTL2zbGJQ4ovi85NHgRxBVj+UGKkX
+	 4jx7fmeFVdueSocsDvmkmHax4Fp6Znlk3llhdf3VQOsxoyTX6FSw/7GWZ6EwhK3J1BeRZ
+	 Iaa73yEaeCaDIg8kljg/SfwbIuvsFX/qBsO8cwCpx3RYwRHtOw343oh8hv7/PFahn9Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793827021;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=zeHs9UAP7YIb3jk19VW8WXuXpSby7HHZ4SLZ7Ya7qeg=;
-	b=NJug/H7Ioiu5StT7XnG/xBB9AEC2kOTlGoMob8Jmh/2hAWFJv9eFF/HjTSOj3p8o0RZn
-	 QwuxbQB0wrAhKAh+mOOXdn7TpaL8o9H6IiglnwCyq73yjziWdXZHQ5LtOLYZc7s8uFT6h
-	 6ROcD5HYmmHxibKVXD7UGQ2RlHXHwEfU6mZYgN6uy+lboOaWBt83jtle4WPOwH3hgUw0o
-	 tszlQt1iivaDWQHF+O+k3D6Hyv+qZR+RNjuDds+htZGDL9esajIPovSox2MAKnFrAE+j+
-	 DeJ/e+PI56jhGWfySq14GTzUOGzee0Qyk0xdI/GGuWh5UmuM7LziPNS0s+tI9mAqLJw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793828573;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Content-Language:To:Cc:From:Subject:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=HPzHB/dtrJsMY9VojaEjPnmFQ6c2G5pM0qhP1qv18Xo=;
+	b=rISpJsmr8zwikpc92jYtjSBm29VNSd27zF/UyTfIxxYtd+4tDvCaQPASZYOESoVhhr+U
+	 TOqgXUwrIDbeuI9lE7mvGAPwDJ31uci6pFLCalDkVyzm8Y+dxuHkQXSLeJXfhy0ZvDNL/
+	 xEx0S0Ib2RI+cBX187hTEOndFmcp+SVGCVuFxP3WHaAFVlhpxxXlQSYIhpxse/FWKGYTS
+	 l8oblIrmbvKAJZoPd4x9gGbNjQN0So0Dc6ChP5AqQsG+UcrOwvEqPplrIwjMxyEHmgzRD
+	 wIC19Go/l/zUii2M+8d8Ten67MfksEQFYiBdbfl0TR2Gr+JBp53QLUujRs30E21lyEA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S3SzdWSz;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RJBi1jx7;
+	arc=none smtp.remote-ip=209.85.128.42
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31780606A863;
-	Wed,  4 Nov 2026 21:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76BF9606A331
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 21:42:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76BF9606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S3SzdWSz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07AC31F00A02;
-	Wed,  4 Nov 2026 21:16:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793827021;
-	bh=zeHs9UAP7YIb3jk19VW8WXuXpSby7HHZ4SLZ7Ya7qeg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=S3SzdWSzW86Oi7IX1tUBoRNN3T1qaKpCsD195aJc0q3DFSVT8WBvY060bSLKhgobb
-	 ozqt92gwXbw5PQb0azuNQvXlPB7WnJ6cBECkdsTADqTj+zV4KFstm2CIoVK3RnyKHw
-	 qukYCNAdRUYdRI6RQkFYFD46MOjD+1c8YqXVIsSOalpjdzN976W0rXYKybUDWkvkIa
-	 rfbNpjRPuRxsQxtxAfSij5iqz5tsGOkFhdPq9CXCzRhQ5vabAbm6JESEBXYkE7I8Zz
-	 Xcw2dOWqmhnKSnz+HejYopwm49XOlRK/JAYtCOxhFx3vpJFr7q8EZmlKY7qc7HALif
-	 bf0zrDFVpbYqg==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 6/6] proc: drop the poll_table from ->proc_poll()
-Date: Wed,  4 Nov 2026 22:16:46 +0100
-Message-ID: <20261104-work-procfs-cleanup-v2-6-1e6687e226b1@kernel.org>
-In-Reply-To: <20261104-work-procfs-cleanup-v2-0-1e6687e226b1@kernel.org>
-References: <20261104-work-procfs-cleanup-v2-0-1e6687e226b1@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RJBi1jx7
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a549cd7fd2so432655e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 13:42:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793828572; x=1794433372; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=HPzHB/dtrJsMY9VojaEjPnmFQ6c2G5pM0qhP1qv18Xo=;
+        b=RJBi1jx7/wrC66yF2tBxbba97Q36jRjEygz9/V4qM0PFuzbcQvwMvTk8xpAx6oKGq+
+         qnqTQTxAbPV+3ICHG2jQOeeYkzAeQRWyHeQ+u27ldzV+iimbjVofrWCluhlzHuhndl8d
+         a5nHB4wIz8Sotd5VDbudQBxp9wlaBcXAyjCm+nGiW3BbAmcLus1vtOcrY7RE2g/7FDJi
+         c8KRGWyTI+J8xAC7ua5QPAHoLfBeyuDx+QkfdXDnff8ZTiKch15+GIXKzdU6nkxyOjTl
+         Ww1bP63P7zyKaqPr5cJszrWNoetWBu4S3hoxYwCkgMBGXOObx0MDHFwsXrIh1s2gpCPv
+         Ilcg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793828572; x=1794433372;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=HPzHB/dtrJsMY9VojaEjPnmFQ6c2G5pM0qhP1qv18Xo=;
+        b=F+eu4OzjBOnTLRGCk5/gNF8kOVL1Cm7vM2xspeS5E0YsdyiQoiYrgDyPj3l729wpPb
+         flyiZzIIIsSnMZcd0LuwYeRFEirhVs1TAUrONZdAQ3Al6wPWzaMbGWq1pWcGEtbm2w25
+         m9GdoH7tdGS1RlSkmE5VRbMGtA4tdU74ABY/zwJkAbLC9lVIMs72Gk4fFCxdfb3p/XQg
+         sL+x8aTNjVSlvb6FD5V8PnemumgX9Iz/5Yk90/LOZhdyrIIh40Y07DS3w17AzJzX7MA1
+         bGUsH4CWxgb3LYqzu6FOhoIPq2b5IQKUQL9An8Ep5Kz2f4r/DW1GsPax8RgRgMO9NUbd
+         PEYA==
+X-Gm-Message-State: APuU4Z/Lnc6lTY4f5XJqMMdNdTXlc2pw+IVM6MvKo8Zedty1ih4Kp9Qt
+	rUyIP7GTyTTBYR+BRhj2CefA4+iq8B6BgRAq2NDbLXM8esUIpaHWyePku4iil7zi
+X-Gm-Gg: AYBFou0YAB/XvCiURuuhNTtksbPWSO1PFqwhzTmXBO+5r1KgnqL52QeOce4Z1/9UzPO
+	QAwCKmRSBejxKLwz9F66KXF35367SSxgr7WmIJ05ksTAjJphSVNgqIAeeKxCrQ70DqBkjx7tSVG
+	tB8SidkEgoOuPvEt7mmrbHoOAgct8vtUB9ZulWOj7w+Oy9RmCtSmfeguUEq4lIuiCrejPeucs18
+	4Xh/g2gZAwh4yE9WSYlvIHP8PdTHmD6yL1swtU4dPrM9qMkvofnKnX9AEEYh2W6h9HvKCdODtbq
+	93b7Xdxrd5AbONz05sHFwnzgMx33RaTYSu3UyYc6Z0mNU0P92bfUdE/WQltvfZFkTq1AyrATo+d
+	gszgwlhjmF3r4lGMOZOR7fES2CW1FVKVEjrtTkBgPDBTIZ2jmT1ruyPZp1I8AIcul44PyYepAqs
+	Azuj68tO1ijKsi+qYiJVoaP1D1AMnhSBCU40zJQDGYS7/PBJoHa4BgNuquwhGJbW/YwuhLEwy5H
+	EDGPv8KIY4+5BjMl2b1jYgsq96z2TYH47QSWE3UFoInSFpAyj8BJnjrNrQoPakOCLC5pkxNIiyN
+	fdmpHzd6TyOwqnVLnJnlRGZftSJuyVhqm18=
+X-Received: by 2002:a05:600d:82e2:b0:4a1:c27d:e1a8 with SMTP id 5b1f17b1804b1-4b55d7d7a2amr11134305e9.10.1793828571681;
+        Wed, 04 Nov 2026 13:42:51 -0800 (PST)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b4104d600fsm79563535e9.0.2026.11.04.13.42.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Nov 2026 13:42:49 -0800 (PST)
+Message-ID: <428324ed-59e2-4c7b-ac97-e3e431a17788@gmail.com>
+Date: Wed, 4 Nov 2026 23:42:47 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -114,161 +89,152 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5605; i=brauner@kernel.org; h=from:subject:message-id; bh=xctjOvW/3SEZoVIWJreYFKvLSI3LgHd/aggSpp1K3Wc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9XpDCwWfSYe8eveS8yHFO7St6c86UqkTd43v8XXbxs eORD9pDOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACYivoGRYdl9h7P19TJf4stb 3x3lv8VUfL7o3Cmvh99vBMo/PlY8S4bhn/KGbxquT4Jf+f7xcV3IcHfqg01FBpdsX2pJecw75bG miBMA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: rtw89: Did a8188bb7644f change the behaviour for MLO?
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Every entry sleeps its pollers on the wait queue procfs owns for it
-now, so take the poll_table away from the method. An entry can't hand
-procfs a queue of its own anymore then, which is what went wrong for
-sunrpc, and the method only reports the mask.
+a8188bb7644f ("wifi: mac80211: change public RX API to use link stations")
+does this:
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- arch/powerpc/kernel/rtasd.c | 2 +-
- drivers/input/input.c       | 2 +-
- drivers/md/md.c             | 2 +-
- fs/proc/inode.c             | 2 +-
- include/linux/proc_fs.h     | 9 +++++----
- kernel/sched/psi.c          | 4 ++--
- mm/swapfile.c               | 2 +-
- net/sunrpc/cache.c          | 2 +-
- sound/core/info.c           | 2 +-
- 9 files changed, 14 insertions(+), 13 deletions(-)
-
-diff --git a/arch/powerpc/kernel/rtasd.c b/arch/powerpc/kernel/rtasd.c
-index 49036790b67c..34705234db57 100644
---- a/arch/powerpc/kernel/rtasd.c
-+++ b/arch/powerpc/kernel/rtasd.c
-@@ -343,7 +343,7 @@ static ssize_t rtas_log_read(struct file * file, char * buf,
- 	return error;
- }
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 397ebbfcac09af..454d876aeb8861 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3073,10 +3073,8 @@ static void rtw89_vif_rx_stats_iter(void *data, u8 *mac,
+ 	struct rtw89_vif *rtwvif = vif_to_rtwvif(vif);
+ 	struct rtw89_rx_desc_info *desc_info = iter_data->desc_info;
+ 	struct sk_buff *skb = iter_data->skb;
+-	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct rtw89_rx_phy_ppdu *phy_ppdu = iter_data->phy_ppdu;
+-	bool is_mld = ieee80211_vif_is_mld(vif);
+ 	struct ieee80211_bss_conf *bss_conf;
+ 	struct rtw89_vif_link *rtwvif_link;
+ 	const u8 *bssid = iter_data->bssid;
+@@ -3110,11 +3108,6 @@ static void rtw89_vif_rx_stats_iter(void *data, u8 *mac,
+ 	if (!ether_addr_equal(target_bssid, bssid))
+ 		goto out;
  
--static __poll_t rtas_log_poll(struct file *file, poll_table * wait)
-+static __poll_t rtas_log_poll(struct file *file)
- {
- 	if (rtas_log_size)
- 		return EPOLLIN | EPOLLRDNORM;
-diff --git a/drivers/input/input.c b/drivers/input/input.c
-index a984810eb80d..5a0547296c6c 100644
---- a/drivers/input/input.c
-+++ b/drivers/input/input.c
-@@ -1097,7 +1097,7 @@ struct input_seq_state {
- 	int input_devices_state;
- };
+-	if (is_mld) {
+-		rx_status->link_valid = true;
+-		rx_status->link_id = rtwvif_link->link_id;
+-	}
+-
+ 	bb = rtw89_get_bb_ctx(rtwdev, rtwvif_link->phy_idx);
+ 	pkt_stat = &bb->cur_pkt_stat;
  
--static __poll_t input_proc_devices_poll(struct file *file, poll_table *wait)
-+static __poll_t input_proc_devices_poll(struct file *file)
- {
- 	struct seq_file *seq = file->private_data;
- 	struct input_seq_state *state = seq->private;
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7560dcf0f5c8..94926a7c3d6f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9176,7 +9176,7 @@ static int md_seq_open(struct inode *inode, struct file *file)
- 	return 0;
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7bb4618065b672..cba7cdf61ce8a5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5389,14 +5389,18 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw);
+  * mixed for a single hardware. Must not run concurrently with
+  * ieee80211_tx_status_skb() or ieee80211_tx_status_ni().
+  *
++ * For data frames, when hardware has done address translation, a link station
++ * has to be provided and the frequency information may be skipped.
++ *
+  * This function must be called with BHs disabled and RCU read lock
+  *
+  * @hw: the hardware this frame came in on
+- * @sta: the station the frame was received from, or %NULL
++ * @link_sta: the link station the data frame was received from, or %NULL
+  * @skb: the buffer to receive, owned by mac80211 after this call
+  * @list: the destination list
+  */
+-void ieee80211_rx_list(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
++void ieee80211_rx_list(struct ieee80211_hw *hw,
++		       struct ieee80211_link_sta *link_sta,
+ 		       struct sk_buff *skb, struct list_head *list);
  
--static __poll_t mdstat_poll(struct file *filp, poll_table *wait)
-+static __poll_t mdstat_poll(struct file *filp)
+ /**
+@@ -5414,14 +5418,18 @@ void ieee80211_rx_list(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
+  * mixed for a single hardware. Must not run concurrently with
+  * ieee80211_tx_status_skb() or ieee80211_tx_status_ni().
+  *
++ * For data frames, when hardware has done address translation, a link station
++ * has to be provided and the frequency information may be skipped.
++ *
+  * This function must be called with BHs disabled.
+  *
+  * @hw: the hardware this frame came in on
+- * @sta: the station the frame was received from, or %NULL
++ * @link_sta: the link station the data frame was received from, or %NULL
+  * @skb: the buffer to receive, owned by mac80211 after this call
+  * @napi: the NAPI context
+  */
+-void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
++void ieee80211_rx_napi(struct ieee80211_hw *hw,
++		       struct ieee80211_link_sta *link_sta,
+ 		       struct sk_buff *skb, struct napi_struct *napi);
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 31dc6f83781b1d..0ddd0b8ea12a05 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -5556,7 +5556,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+  * This is the receive path handler. It is called by a low level driver when an
+  * 802.11 MPDU is received from the hardware.
+  */
+-void ieee80211_rx_list(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
++void ieee80211_rx_list(struct ieee80211_hw *hw,
++		       struct ieee80211_link_sta *link_pubsta,
+ 		       struct sk_buff *skb, struct list_head *list)
  {
- 	struct seq_file *seq = filp->private_data;
- 	__poll_t mask;
-diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-index 7f6c63885f53..c35e13b44eed 100644
---- a/fs/proc/inode.c
-+++ b/fs/proc/inode.c
-@@ -546,7 +546,7 @@ static __poll_t proc_reg_poll(struct file *file, struct poll_table_struct *pts)
- 	poll_wait(file, &pde->open->poll, pts);
- 	if (!pde_pin(pde))
- 		return DEFAULT_POLLMASK | EPOLLERR | EPOLLPRI;
--	rv = pde->proc_ops->proc_poll(file, pts);
-+	rv = pde->proc_ops->proc_poll(file);
- 	pde_unpin(pde);
- 	return rv;
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -5564,6 +5565,7 @@ void ieee80211_rx_list(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_sta *pubsta;
+ 
+ 	WARN_ON_ONCE(softirq_count() == 0);
+ 
+@@ -5694,8 +5696,15 @@ void ieee80211_rx_list(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
+ 		}
+ 	}
+ 
+-	if (WARN_ON_ONCE(status->link_id >= IEEE80211_LINK_UNSPECIFIED))
+-		goto drop;
++	/* FIXME: Emulate the old driver behaviour for now */
++	if (link_pubsta) {
++		status->link_valid = 1;
++		status->link_id = link_pubsta->link_id;
++		pubsta = link_pubsta->sta;
++	} else {
++		status->link_valid = 0;
++		pubsta = NULL;
++	}
+ 
+ 	status->rx_flags = 0;
+ 
+@@ -5727,7 +5736,8 @@ void ieee80211_rx_list(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
  }
-diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-index 872f3bd54c11..6e2bcdf3c1b5 100644
---- a/include/linux/proc_fs.h
-+++ b/include/linux/proc_fs.h
-@@ -84,11 +84,12 @@ struct proc_ops {
- 	int	(*proc_release)(struct inode *, struct file *);
- 	/*
- 	 * procfs owns a wait queue for an entry with a ->proc_poll() and
--	 * does the poll_wait() on it before it calls the method. The owner
--	 * wakes the pollers with proc_poll_notify(). A poll on a removed
--	 * entry reports EPOLLERR | EPOLLPRI.
-+	 * does the poll_wait() on it before it calls the method, which only
-+	 * reports the mask. The owner wakes the pollers with
-+	 * proc_poll_notify(). A poll on a removed entry reports
-+	 * EPOLLERR | EPOLLPRI.
+ EXPORT_SYMBOL(ieee80211_rx_list);
+ 
+-void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
++void ieee80211_rx_napi(struct ieee80211_hw *hw,
++		       struct ieee80211_link_sta *link_pubsta,
+ 		       struct sk_buff *skb, struct napi_struct *napi)
+ {
+ 	struct sk_buff *tmp;
+@@ -5740,7 +5750,7 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
+ 	 * receive processing
  	 */
--	__poll_t (*proc_poll)(struct file *, struct poll_table_struct *);
-+	__poll_t (*proc_poll)(struct file *);
- 	/*
- 	 * procfs pins the entry around ->proc_mmap() and wraps the
- 	 * vm_operations of the mapping so that ->open(), ->fault(),
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index 9362c27d47ab..ecb9028b5c49 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -1606,11 +1606,11 @@ static ssize_t psi_cpu_write(struct file *file, char *buf, size_t nbytes,
- 	return psi_write(file, buf, nbytes, PSI_CPU);
- }
+ 	rcu_read_lock();
+-	ieee80211_rx_list(hw, pubsta, skb, &list);
++	ieee80211_rx_list(hw, link_pubsta, skb, &list);
+ 	rcu_read_unlock();
  
--static __poll_t psi_fop_poll(struct file *file, poll_table *wait)
-+static __poll_t psi_fop_poll(struct file *file)
- {
- 	struct seq_file *seq = file->private_data;
- 
--	return psi_trigger_poll(&seq->private, wait);
-+	return psi_trigger_poll(&seq->private, NULL);
- }
- 
- static int psi_fop_release(struct inode *inode, struct file *file)
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 1d063a1cef43..e7c019871e35 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3315,7 +3315,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- }
- 
- #ifdef CONFIG_PROC_FS
--static __poll_t swaps_poll(struct file *file, poll_table *wait)
-+static __poll_t swaps_poll(struct file *file)
- {
- 	struct seq_file *seq = file->private_data;
- 
-diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
-index b8f70d8c3b0c..4854a42d43a2 100644
---- a/net/sunrpc/cache.c
-+++ b/net/sunrpc/cache.c
-@@ -1588,7 +1588,7 @@ static ssize_t cache_write_procfs(struct file *filp, char *buf, size_t count,
- 	return ret ? ret : count;
- }
- 
--static __poll_t cache_poll_procfs(struct file *filp, poll_table *wait)
-+static __poll_t cache_poll_procfs(struct file *filp)
- {
- 	struct cache_detail *cd = pde_data(file_inode(filp));
- 
-diff --git a/sound/core/info.c b/sound/core/info.c
-index 3439ae341e26..8e64d8e3e5b2 100644
---- a/sound/core/info.c
-+++ b/sound/core/info.c
-@@ -184,7 +184,7 @@ static ssize_t snd_info_entry_write(struct file *file, char *buffer,
- 	return size;
- }
- 
--static __poll_t snd_info_entry_poll(struct file *file, poll_table *wait)
-+static __poll_t snd_info_entry_poll(struct file *file)
- {
- 	struct snd_info_private_data *data = file->private_data;
- 	struct snd_info_entry *entry = data->entry;
+ 	if (!napi) {
 
--- 
-2.53.0
+rtw89_core_rx_to_mac80211() calls ieee80211_rx_napi() with link_sta = NULL,
+so it's not getting the emulated old behaviour in ieee80211_rx_list().
 
+Is this something that needs fixing?
