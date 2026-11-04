@@ -1,101 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.46
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793772898;
-	b=dN/voTlt6OVhI6zz/wNXSj513KUO4hYUkJzH9f5WGOlT4lfQC6gqA1ZlEOQ8iO19LVem
-	 v2ifMCQxpniL8QrEB/UuUn65ysX6Nfn7ShhSWkv4bFsAeEWH42o5sfUcb/+TJHGx3Uynv
-	 aKoJFwTfcsROLeFnN14ETDyCXMA0uE15+OGM1xvDMRf/REsxuS8Yw3pxl4W8ND3xWZj6C
-	 V9TrLNjW7FySiQGmq0IwSuqDdKNBRsnW+F+sBkVW6/tQcUjkZOo1hsIXq0ouHXf7Gcz81
-	 S/wWNDtr6UpEw9zdkiwXhasR9h2g8yqf5HFgvFaI1PbHiGCChZmV3Ec8LWIefdKeQAA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793772898;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=WXtfI0CtVUis1DTLl6ZkWUkR91YI6KmmXqM/+fvN/qM=;
-	b=zU9bMWHmEebvslWGG3ZuO1kteHPBJSUNrLSjf7eLM0e2R67MDbfoy0c920jjdXnIrJu+
-	 rsBNnqG9PiAIN32QtLOUpEiMfR3CoRUVH2C+BDKlCH+4cyrWphcTucK+ZDbTXQHQ0xpxR
-	 xtwPN6ODedm/Hw7bh63vhCy1UxaVpihKu/3DhvSjhP6z+orQwalJSTa398VUD3s9H3hnu
-	 oAqyCL92/fJDHxBT4V2AgGnwRW6VzOlSJ6Byth6S44k9uox/BC9rNZvcuwJ0qXEvgPzJn
-	 m7uoevbQeVN0Kn6rBpy38gAZtK4gVf8QOZ/Qm1qeCvoSviiPaZS6qR4N5Wn4LbToorQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O5V9G3Z8;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.46
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793773268;
+	b=ePRdNmWfj6oOCmC0YvQJvwrdGqPz9iVPw9VBbZ17E29QK/OScSyfFgYpGXB8nE/lj3hi
+	 9BnvU7aFGoZBx2LUkqGeyUvonkqEcjP+2ZmjvLd9pUzBThYBC3BDwCGJTnpQnMBzAagcK
+	 kJu3bDIgqGO55ON5Sa1pnrivPKe+egJq+8ZWMeiTceG29En/S5E+A2AfhHwMRfc+JcXVq
+	 LPt3oup14EJsaTZ2zzHLtOt2EadSwtr5R7G5KIvh44aiZm+xWP3n8bOLgDEX4ZOheDbQC
+	 vfMMzOi9d8vUcOuIkcL/HSo2K+OTzoGOQpeccJWcDjLK0ylVvFSOZTENew/dKXkjyBw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793773268;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:
+	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
+	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=4fMAFa78wnwcnmnyVC7AmCvIGyES08QBsJdHu4XHLOo=;
+	b=OD/kKBeFQuk42tnk/db1LnT8yo/OWTuaPokJo0TYeYxRfPB38MPyEDoZgpdrPTdlBITB
+	 hshqnKbBzceezvhsOfc1vtyIQ4JZfGA+QjI/56IJCw1EI4AMGW/PPFtSQ5dtBjbuRx71i
+	 A1MS3f7DLQj8r9Iy7274/P81vLOJyCxOH196lSyRBrIzPN0wT5sLD/xBcvsz4iGe5QROe
+	 UabdwyeiC1RQrHAHF29arw0IOCUJr38e1HdGKwOw5FdVfhm7o3aJVtybLXMe1CJhjkVwY
+	 fz9SXKmUX8ye8r4//LwmyZ/kRwM7EupPheSpbGthPHDeDOXhczQpm1v+w3/jRCBWZ9w==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=HlZqPn0e;
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F9B3606A31B
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 06:14:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1F9B3606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 540A5606A31B;
+	Wed,  4 Nov 2026 06:21:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 540A5606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O5V9G3Z8
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6ae305e3bd9so536819a12.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 22:14:57 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793772896; cv=none;
-        d=google.com; s=arc-20260327;
-        b=l0rmdTiX0Sf5RYgNGb9xBN+V6NWtyImqjpoKtaw/zuoW4hbPxSkaeodpa3Dz6LbZU1
-         6/TiYCLwU0qlX1H6LWusXWALtFHHauw6tlKwuc+v9hl4GayJTpAlzHDrvbpWAe2oTkRt
-         BEoJIA7F91RfIpO41xT9FxeNXGzQa8gCtx4SipS+UJgoUImv4Nji+7QsW+ZZg7jmgM26
-         aoN9K17TROx14giXk8Bn/SeaUCrcbq6TPB37MpenQljH1qwljpBY5xEvBHf694mQz/sU
-         qOk3PSZhAFjQP58I/0lo33nZH32v1Dbz3qPs8ZE3T16MHVXUPTssEu1bolMb3kJfkNjP
-         w+Tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=WXtfI0CtVUis1DTLl6ZkWUkR91YI6KmmXqM/+fvN/qM=;
-        fh=tA/qOmjbHMAFsRsDEhDLXK2o0U0MdkZ/FQgef05ZCVc=;
-        b=URmZbz43TXrBm9PlmPAFS4neiI6JealH0PlY9Fh3fLZzWoRiH4cBaTal/fec6BcMkk
-         ImYV81keur0NhE6Dq6TOp6Ki1ub3DsjVMPMzOpkOBXih/RTYmXXYUPyaofb/PRcu4Mrt
-         /LXSC1GZIgUlrs580PRVit8j1GVg0e/yKTSHti2X4ciIEEpNcPgmj6MC+1fgjUxUSfJZ
-         +OjGGUD2i8HUB8BELekc/QTw9v8IYpHP808sqKauHCO398wAmDzVLNZnrUs6tChDJ6IJ
-         ddSmZbwLWPurFv2/dZwfjQDcxR0IyyUCx4F8e2q9N6441HDiGLjgkNqswTtG4lgeRnYY
-         cX9A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793772896; x=1794377696; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=WXtfI0CtVUis1DTLl6ZkWUkR91YI6KmmXqM/+fvN/qM=;
-        b=O5V9G3Z8P+hZrzxtaR5wh4mx+r3d7HqKen9KoLNKmpLsaYappQ57NB4dhMhe6Ji3cI
-         mIG+5HfgJUMiw6hEH2jVPyvkiNYrc5FXkpUwjhPMg6jebi+EtQ4H6Jugu8o8YEwdrdJG
-         ucMo3Wcz6H4X8enRqO/M4/Kut/f3wYaN5LHuUrp5Nd7tW+NRi1MqSyyEJ08kMHTjQGuo
-         bFBU9vLvynCZcj3SR9x/RpKBWoCQFbNG/vOAL2zOkLgAi/kPFp0hP7CmbbjwDImdS8ev
-         NnGVAlXrcW43CXsvh4qt2PbIchrMG4Lq7qbxt45I57m6OCLg6wKMplwJSsXhdem5pUPA
-         6U/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793772896; x=1794377696;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=WXtfI0CtVUis1DTLl6ZkWUkR91YI6KmmXqM/+fvN/qM=;
-        b=CUVDxNG5Io0vELXHu2kVTQzab2kYgZu4r5Cfp8mG2tRHZRNyTyFLmQeuxwNIhSHY0H
-         lr0qrWHoPdr21p6g7d/CAHYdWTc2iLPoqbinUjaGKlBHvgRsP8u2SdX4BrvzeMlxZ8Yi
-         SvIiwz0OJi0ppBxGs6qQxUz+EQTkwsJP5AytCfd5cge/F4qyM2TGhpL5XxY6wvsDAgup
-         rr2HUVD0nX70aFhpAQ7o3Y1vIWkHjP8gfIMW5supL1FC/H05vhJM4N+vrRVnSLErNvIY
-         rJYaA9Dcz5Ry66rcYMUTjJQmpYDC4k6m7oT7VS81GBaYANTDPVEwYvtNZtPbEyMBt2Zv
-         gfJA==
-X-Gm-Message-State: APuU4Z+xKA4DK1ukjvpux+FajOzZRYAUWv0katiawL5FzPGtP09fWyhv
-	XzT5cCBbIkeKUnW6dRMo4uvFsAhm4HlRl/Nol23pSyQqZZp3qiM26Qv4+TFkpnAuy3JgD2Lh2oo
-	WGGp2lyj9q/nkP65rLM439/251uWOFgY=
-X-Gm-Gg: AYBFou1DPaxKUauHH9I0oIPv9Ex8DzaxrKRgesiFBxFqqqLF+q/k+dNcq9+xXt+EKZ+
-	5+uIoMQaRwNkIFvWEh4Q9BchhwUfOWkWClMlAQf25cTloS0Amyob2OKqzZOS6xhAiyYlLdmKo/K
-	ZTeVIPZfkkPuDg6C1WrmEwAb/wrHJG7jyremfWiFmi8kHx/rb7MVRwAYkmH42SvCh9FVry8/FtB
-	9vgFjz4VWSag7L1vSVxGVh6QPQEq/hFvDSMQOGMaw7A47xaoC68tpo0o+dMNVz0GLa9bZhfVnLd
-	9ovSW09mVQP/eG2ku+SomfF3t/ZLKD09/NjJLWshLfHJy+5IP7PpXej25e9lhsqNZpNwvft+HfN
-	vf3Cg+DGFRwfGRvZ5FipP0GHpeMdbwHpASkW5eW3XpQLBAky5qzKSjUJGE+BawivOL2d+0KgtG7
-	VhnByQ+FFKiU9o7PRtXH6H1QAlW/MtEN7AFJEtrxomsrvbgLIwZxH2hRkuRmSD0QWnjUs1X+qjU
-	cmSuo9QLAtcLShxz1BBOJLhdmzYa+fNCGkl4OwDtEMVNN2LFA==
-X-Received: by 2002:a05:6402:378c:b0:6b5:4cde:9115 with SMTP id
- 4fb4d7f45d1cf-6b54cde93f1mr2124654a12.14.1793772896441; Tue, 03 Nov 2026
- 22:14:56 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=HlZqPn0e
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A46L25w83773804, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1793773263; bh=4fMAFa78wnwcnmnyVC7AmCvIGyES08QBsJdHu4XHLOo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=HlZqPn0e/jx8wilKcVgtGEdQqeRpJuuYQvvu1fKyDQq9ZCTSMroxEeSjonxh8lPrV
+	 3u5KYy8Z5FAQQQEapuXrRSKMPrmNBxF4fqO7TQIAlNJPmRCFB1CiHbo0GjD44Ou9I3
+	 RrFHkzJ/kI9RFgb8hzyXY0VFWkBsewHII9z4HlSm3dTDZYV0b3RcFb7iXfam22vbyy
+	 3Jivs284okrLThl1K4StiynoQ8QJla3pkA6g34TsLjIrw8pA144uSHlEOyOSI4OmMz
+	 CHwuHGjFIN2TrbuSIBbCwSuJvKNk/hdsCOYLhBWcwTqAPMQ8Xy/MxNmdB5p+zN3D7u
+	 dRlK/UHcOloMQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A46L25w83773804
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 4 Nov 2026 14:21:02 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Wed, 4 Nov 2026 14:21:03 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Wed, 4 Nov 2026 14:21:03 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::eeeb:c765:ca73:5eef%10]) with mapi id
+ 15.02.2562.056; Wed, 4 Nov 2026 14:21:03 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Rosen Penev <rosenp@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "open
+ list" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v2] wifi: rtw89: acpi: check for _DSM function
+ support before evaluating it
+Thread-Topic: [PATCH rtw-next v2] wifi: rtw89: acpi: check for _DSM function
+ support before evaluating it
+Thread-Index: AQHda94e8ktfMF9qOEe8mjt2M2R0LbcdE7IQ//+/FACAAIx78P//inmAgACHohA=
+Date: Wed, 4 Nov 2026 06:21:03 +0000
+Message-ID: <652c4e96dc2549ceb977fffe3707b269@realtek.com>
+References: <20261103215557.183459-1-rosenp@gmail.com>
+ <a5f044a803a64a1eb68815f075bda2ee@realtek.com>
+ <CAKxU2N9OpxoKF6M5rJpNOJ1HWXx8oJ3wXHpfyGGVgQpZaMi+uA@mail.gmail.com>
+ <55e67132a79243cc9e214f9de7788132@realtek.com>
+ <CAKxU2N_JCRjWXkD8SNGf-LJGOHfCsAMM1JU+AoTD6cfZZYJ03g@mail.gmail.com>
+In-Reply-To: <CAKxU2N_JCRjWXkD8SNGf-LJGOHfCsAMM1JU+AoTD6cfZZYJ03g@mail.gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -105,79 +90,38 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261103215557.183459-1-rosenp@gmail.com> <a5f044a803a64a1eb68815f075bda2ee@realtek.com>
- <CAKxU2N9OpxoKF6M5rJpNOJ1HWXx8oJ3wXHpfyGGVgQpZaMi+uA@mail.gmail.com> <55e67132a79243cc9e214f9de7788132@realtek.com>
-In-Reply-To: <55e67132a79243cc9e214f9de7788132@realtek.com>
-From: Rosen Penev <rosenp@gmail.com>
-Date: Tue, 3 Nov 2026 22:14:45 -0800
-X-Gm-Features: AclHuK-R8dd2PGCMhHI3LZJWK6ZO8cOlM0h83Q1-A6jK8aBloOQEDV_UIvp2u9g
-Message-ID: <CAKxU2N_JCRjWXkD8SNGf-LJGOHfCsAMM1JU+AoTD6cfZZYJ03g@mail.gmail.com>
-Subject: Re: [PATCH rtw-next v2] wifi: rtw89: acpi: check for _DSM function
- support before evaluating it
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 3, 2026 at 9:21=E2=80=AFPM Ping-Ke Shih <pkshih@realtek.com> wr=
-ote:
->
-> Rosen Penev <rosenp@gmail.com> wrote:
-> > On Tue, Nov 3, 2026 at 4:47=E2=80=AFPM Ping-Ke Shih <pkshih@realtek.com=
-> wrote:
-> > >
-> > > Rosen Penev <rosenp@gmail.com> wrote:
-> > > > When the WiFi device has no ACPI companion, or the firmware does no=
-t
-> > > > implement a given rtw89 _DSM function, rtw89_acpi_evaluate_dsm() ca=
-lls
-> > > > acpi_evaluate_dsm() anyway. ACPI core then warns on every probe:
-> > > >
-> > > >   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe860780=
-3aa7 rev:0 func:10 (0x1001)
-> > > >   ACPI: \: failed to evaluate _DSM e8c3a8d2-694b-004f-82bd-fe860780=
-3aa7 rev:0 func:6 (0x1001)
-> > > >
-> > > > Here the handle is NULL, and acpi_evaluate_object() returns
-> > > > AE_BAD_PARAMETER. All callers already treat failure as "no policy
-> > > > provided by the platform", so this is only noise.
-> > > >
-> > > > Bail out early when there is no ACPI handle, as acpi_check_dsm() wo=
-uld
-> > > > otherwise hit the same warning while querying function 0. Then use
-> > > > acpi_check_dsm() so that functions the firmware does not advertise =
-fail
-> > > > quietly at debug level, as rtw89_acpi_evaluate_method() already doe=
-s.
-> > >
-> > > Adding this check is fine to me. But my question in v1 is that
-> > > acpi_check_dsm() checks func 0 to determine if BIT(func) is existing.
-> > > Is it possible func 0 not existing, but BIT(func) existing?
-> > Shouldn't happen, but who knows.
->
-> I don't mind taking this patch, but this is the only one point I don't kn=
-ow.
->
-> > I can drop the acpi_check_dsm() part.
->
-> If you drop the part, what will this patch do? almost nothing.
-The !handle check is the big one that silences it.
->
-> >
-> > 7bf2dfccc2dd70821104d15cbab7b6fca21872be
-> >
-> > is effectively the same as this.
->
-> Since rtw89_acpi_evaluate_dsm() is called at probe stage, I don't mind
-> acpi_check_dsm() being called on every call.
->
-> >
-> > Note that this specific card was taken out of a laptop and placed in a
-> > desktop, hence the warning.
->
-> So, the warnings really bother you?
-Yeah why not.
->
->
->
+Um9zZW4gUGVuZXYgPHJvc2VucEBnbWFpbC5jb20+IHdyb3RlOg0KPiBPbiBUdWUsIE5vdiAzLCAy
+MDI2IGF0IDk6MjHigK9QTSBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4gd3JvdGU6
+DQo+ID4NCj4gPiBSb3NlbiBQZW5ldiA8cm9zZW5wQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4gPiBP
+biBUdWUsIE5vdiAzLCAyMDI2IGF0IDQ6NDfigK9QTSBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFs
+dGVrLmNvbT4gd3JvdGU6DQo+ID4gPiA+DQo+ID4gPiA+IFJvc2VuIFBlbmV2IDxyb3NlbnBAZ21h
+aWwuY29tPiB3cm90ZToNCj4gPiA+ID4gPiBXaGVuIHRoZSBXaUZpIGRldmljZSBoYXMgbm8gQUNQ
+SSBjb21wYW5pb24sIG9yIHRoZSBmaXJtd2FyZSBkb2VzIG5vdA0KPiA+ID4gPiA+IGltcGxlbWVu
+dCBhIGdpdmVuIHJ0dzg5IF9EU00gZnVuY3Rpb24sIHJ0dzg5X2FjcGlfZXZhbHVhdGVfZHNtKCkg
+Y2FsbHMNCj4gPiA+ID4gPiBhY3BpX2V2YWx1YXRlX2RzbSgpIGFueXdheS4gQUNQSSBjb3JlIHRo
+ZW4gd2FybnMgb24gZXZlcnkgcHJvYmU6DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiAgIEFDUEk6IFw6
+IGZhaWxlZCB0byBldmFsdWF0ZSBfRFNNIGU4YzNhOGQyLTY5NGItMDA0Zi04MmJkLWZlODYwNzgw
+M2FhNyByZXY6MCBmdW5jOjEwICgweDEwMDEpDQo+ID4gPiA+ID4gICBBQ1BJOiBcOiBmYWlsZWQg
+dG8gZXZhbHVhdGUgX0RTTSBlOGMzYThkMi02OTRiLTAwNGYtODJiZC1mZTg2MDc4MDNhYTcgcmV2
+OjAgZnVuYzo2ICgweDEwMDEpDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBIZXJlIHRoZSBoYW5kbGUg
+aXMgTlVMTCwgYW5kIGFjcGlfZXZhbHVhdGVfb2JqZWN0KCkgcmV0dXJucw0KPiA+ID4gPiA+IEFF
+X0JBRF9QQVJBTUVURVIuIEFsbCBjYWxsZXJzIGFscmVhZHkgdHJlYXQgZmFpbHVyZSBhcyAibm8g
+cG9saWN5DQo+ID4gPiA+ID4gcHJvdmlkZWQgYnkgdGhlIHBsYXRmb3JtIiwgc28gdGhpcyBpcyBv
+bmx5IG5vaXNlLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gQmFpbCBvdXQgZWFybHkgd2hlbiB0aGVy
+ZSBpcyBubyBBQ1BJIGhhbmRsZSwgYXMgYWNwaV9jaGVja19kc20oKSB3b3VsZA0KPiA+ID4gPiA+
+IG90aGVyd2lzZSBoaXQgdGhlIHNhbWUgd2FybmluZyB3aGlsZSBxdWVyeWluZyBmdW5jdGlvbiAw
+LiBUaGVuIHVzZQ0KPiA+ID4gPiA+IGFjcGlfY2hlY2tfZHNtKCkgc28gdGhhdCBmdW5jdGlvbnMg
+dGhlIGZpcm13YXJlIGRvZXMgbm90IGFkdmVydGlzZSBmYWlsDQo+ID4gPiA+ID4gcXVpZXRseSBh
+dCBkZWJ1ZyBsZXZlbCwgYXMgcnR3ODlfYWNwaV9ldmFsdWF0ZV9tZXRob2QoKSBhbHJlYWR5IGRv
+ZXMuDQo+ID4gPiA+DQo+ID4gPiA+IEFkZGluZyB0aGlzIGNoZWNrIGlzIGZpbmUgdG8gbWUuIEJ1
+dCBteSBxdWVzdGlvbiBpbiB2MSBpcyB0aGF0DQo+ID4gPiA+IGFjcGlfY2hlY2tfZHNtKCkgY2hl
+Y2tzIGZ1bmMgMCB0byBkZXRlcm1pbmUgaWYgQklUKGZ1bmMpIGlzIGV4aXN0aW5nLg0KPiA+ID4g
+PiBJcyBpdCBwb3NzaWJsZSBmdW5jIDAgbm90IGV4aXN0aW5nLCBidXQgQklUKGZ1bmMpIGV4aXN0
+aW5nPw0KPiA+ID4gU2hvdWxkbid0IGhhcHBlbiwgYnV0IHdobyBrbm93cy4NCj4gPg0KPiA+IEkg
+ZG9uJ3QgbWluZCB0YWtpbmcgdGhpcyBwYXRjaCwgYnV0IHRoaXMgaXMgdGhlIG9ubHkgb25lIHBv
+aW50IEkgZG9uJ3Qga25vdy4NCj4gPg0KPiA+ID4gSSBjYW4gZHJvcCB0aGUgYWNwaV9jaGVja19k
+c20oKSBwYXJ0Lg0KPiA+DQo+ID4gSWYgeW91IGRyb3AgdGhlIHBhcnQsIHdoYXQgd2lsbCB0aGlz
+IHBhdGNoIGRvPyBhbG1vc3Qgbm90aGluZy4NCj4gVGhlICFoYW5kbGUgY2hlY2sgaXMgdGhlIGJp
+ZyBvbmUgdGhhdCBzaWxlbmNlcyBpdC4NCg0KSSdtIG5vdCBhd2FyZSBvZiB0aGF0LiBMZXQncyBk
+byB0aGlzIG9ubHkgYnkgdjMuDQoNCg0K
