@@ -1,90 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.43
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793823183;
-	b=bwl7HNRCQkTPKLRa5APBTt3mUcxrpHqWAbPQwRKFor4X+WRkS48A54r1WaLGPJbdg+GZ
-	 pKYUU7k7qlv1HMObpWqnPm89alDgcWYd1tz6B8Z4QGoQiBYG1V24AZn3tVJuSe+G4sqoy
-	 ga9H5YuF4dDJxn2iEX1Rt9nSGr/WCmA4u2xtBUpQ1fSdGAKEqr4x2jnsNhroGoCnDJG0E
-	 cW0ok229Xz73xugqCgQMm/on6RsnGoDGBZ8qZYevnBRDloZ5qCHd/gMYv6sAoI6zfWcGi
-	 S2hDFoZoasHyveWh67TIKpuFlsPCYXd3GRNndjRKMKYsIUnKE2QoKiGuYvAwy1s8woA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793823183;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:X-Forwarded-Encrypted:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
-	b=f5+N9UYc+5wXhQArIyjgyEfewqbf9/ZNgSNOlJv+idPmXlGGgukKNTptln0Pg7dWlrr9
-	 nTupQnjk9VvUuw2F5Y8l1xkWT1ZFkRIAfgJ7GIoK2TMVrrZhBPXphcBen+crA8nUd1y8T
-	 wfnO1BZDTXO03H0gGOtM5aHA6evgWKkZQJrWerYUv5VM9+t+N0xlQbA615EcM3btAw3sC
-	 0bCJChlB5QP0u2TPjpScyabU15MKX/HfxbVqUoiXHdjrW0hHQR0V+SJEz4/KkCPrlQsuh
-	 rvlBfu/plWF/uVoB7Pn4/egJRDy47d1C+c+99VPbRwIphZrPSS1vONcOQn4GBDLHmNA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=linux-foundation.org;
-	spf=pass smtp.mailfrom=linuxfoundation.org;
-	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b="E95/DjOz";
-	arc=none smtp.remote-ip=209.85.208.43
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.54
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793824269;
+	b=0Kq1LesNJFZzXFxtlBppb7I9VxDH7hUFYABNogSGZv82/Z9Pv71C/vjAR8XqF/E+eem3
+	 FW6XjOfK7NeT5PCVWsAZfgMu4iHFSrMmJFwrmoOSbDxCEbipOKjwkMEzqEBYBsy7Pc8nB
+	 r4bUaCkRsPABQKE8vk0WiI9joKGbj97aZMBxRNIRIt6oupytMDnTZG3A7EKA+55vExZ/Y
+	 0JoF6mf9mmvPOr6U/rHfWdulnyHvc2In2IknpS86FWNHkWKwA0/KuxS2cjeKURDmHL8xA
+	 TdRYrxm3Ey7/TnLXTEc/IX5mCXST60duWusGCF1ESbdGxBfidBVhPSbYNirCZQ1nOeQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793824269;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-ZohoMailClient;
+	bh=U4L4/KbrFieS+0UXgWqlk7B9bXIXbAaNfkWea0yLlQ8=;
+	b=wAaXD7osfHnD9L4UQRpbIf5eUZx28sisfPlfnUg3cIoFwO6cEWEaAasrGHN73khYXyGP
+	 dNru62KvrYuXqxHYF2aej1Lw0rkxTr/ga1lhtdFcr6Z1+Wa6gIcljpEUpLMtFqAhJCT+Y
+	 RMTM1OxO+1i6gxJ3DNH1szE/uQXK/wbIqbS/tK1yrk6+VYMTN5DmHDIyfGxoKnojl0TU/
+	 xjqDhMCWTtXK+k1YR2krgZcD0psuoTWNk6Wq3Sn+FXdyO7KIIEiOYGgnPnMlJCVFKBWgj
+	 1OI89i+KckX41216wObwxVTUeOawO6U4VwM0O2EH6zj91sYliq7mltt9BgWIjfnwsyA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=ph4ntom-rev.uz;
+	spf=pass smtp.mailfrom=ph4ntom-rev.uz;
+	dkim=pass header.d=ph4ntom-rev.uz header.i=@ph4ntom-rev.uz header.a=rsa-sha256 header.s=zoho header.b=svDicBJE;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.54
+Received: from sender5-of-o54.zoho.com (sender5-of-o54.zoho.com [165.173.182.54])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8EB608079B
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 20:13:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2B8EB608079B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 920E2606AE05;
+	Wed,  4 Nov 2026 20:31:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 920E2606AE05
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ph4ntom-rev.uz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ph4ntom-rev.uz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=E95/DjOz
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6b579003f29so83061a12.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 12:13:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1793823181; x=1794427981; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
-        b=E95/DjOzx1wi9jv7V9s/sfuu0rRfvFJ8K5JkcF6uHzdvwVQ8j6YdXq2ilI8Pcwll3q
-         GGymSn9yhWXKxZezb1o4P4MtUErWar0lWLU4XH7OrNo1HOTaHeHzU7qFjCgqTQNxs8YA
-         Up/vv4lT13XOf7H7yOxFHZtLIDxEtbMS4i2QM=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793823181; x=1794427981;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
-        b=eSJY0LSCXPQXH0QsKLSa9DanSDaSGOVHTAS+dy+3Q+zlfeLMeW7Cmk1vRAM1NHY6mv
-         4piO4rbKR00hzswut7nqobMdoM4w8Ub7GNamhTkEOvVzKsrLj1jadPCIlNqNwiszL1hS
-         Bd6hjzx8ivvpovWEqLcQgtAXz0Es5b0Bgd8X3YNuKFZxrOi4E4IM3uBeuTqNc9g0luWq
-         MHdqZFVzhFatTuWXmq2dmR9aIzXZG1PpcjlJUaPH1DpYAKZQMaSraU8CpKM0T1PywDWW
-         rxXDDEvuNL7PyMcVoLZb9eIaoZl8ml2wJW5IEF8y4Oi6H0V/SDBjmROnNrQIvTqeaAer
-         +7vQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwEq+1xssLHH81Fby5iJLcGhlIG9xGdTG/Vo3p18d/5KKBzK+lZ7qlscd3tCdOaoUOjC5/tEUEjxIIBiXhOhg==@vger.kernel.org
-X-Gm-Message-State: APuU4Z9QEyBmNsDHsvlq/WLbXQELTyr2OxFiAVxPjtxvXM0n0u470shT
-	LaAHjzSggd6oLhd776GWvjcjeqf2kddlZS8PfApaKIn13+tLJ7krxatBVmQy705KzNQGObY1PM0
-	tQfqcJg2IIg==
-X-Gm-Gg: AYBFou2AB9o9sB2x+tz054sa/UMWTkyGiPdwRVNMEbisasJBbyVHHMImvYqP+YYfzbJ
-	inpGe/wlGrgP8+72KOOr1+DUw+YB3U6enpVWHpWDzlBzTLkbGPfnJZh9u71DdjibAMdz4oFpK8v
-	QjrV2mzQabVSDroh4YHVs6VUrVwAzMpks+cwBmDSeeBNi8abxhDvbuIKB0+5+erXBDQGnCyisGv
-	tgSBuwBgjdxXRg3NErXjofcXRYamW1dZkhlMgY048tFJHPzpTBra0K2bBUWIfbSiW3kvknR3FBe
-	c+j6D+5KxySr0GUSN6XN1PIy0+a5JaihlYqeJ54d7slMPvG+b+0qVMV1xoMOC66yfonH1bxA4s3
-	3pIBKuzu4x/iqJQvqgZcvzuSUCdM8MMVVTUKf+FtPtIwqTdTu/M6nzigjEzYHlFSefJXL1nG7HZ
-	fephXHZutIFm1uTlsR6q/gTTIN/cCcoQGuQg48NCw+ZG+zSy4L9hrRI2AN1YGHMq4KkvjySZUBi
-	gWCdanUl7unohhBEyQ6X8wph14ELHJby6vbEAUADqUDB+qpa3OI1EYGknQUIN1kFzp0fgXFiAst
-	TNMuV8VjdY4Vem7lBwuXVjC5Vp727PYcd4Wbinu2+gxsGe9/l5o2KIvRRrYR5D+No/hUuB218W7
-	HgQ==
-X-Received: by 2002:a05:6402:52d9:b0:6b3:f891:c2d4 with SMTP id 4fb4d7f45d1cf-6b4d4d7fd67mr13113766a12.29.1793823181609;
-        Wed, 04 Nov 2026 12:13:01 -0800 (PST)
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com. [209.85.208.54])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b574e00988sm299548a12.10.2026.11.04.12.13.01
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Nov 2026 12:13:01 -0800 (PST)
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6b566cf56c1so863166a12.2
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 12:13:01 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBzI8+2OwJPnToo8qZZJGwA1gziZ1ustR9qdmft6eG7lAYedcnoHWL2blCOJvfDNC7CKHm2dHmurimPM7BgGcw==@vger.kernel.org
-X-Received: by 2002:a17:907:60c8:b0:c49:a4b1:9cb1 with SMTP id
- a640c23a62f3a-c4ca795fa50mr1973235866b.3.1793822725121; Wed, 04 Nov 2026
- 12:05:25 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=ph4ntom-rev.uz header.i=@ph4ntom-rev.uz header.a=rsa-sha256 header.s=zoho header.b=svDicBJE
+ARC-Seal: i=1; a=rsa-sha256; t=1793824260; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=WTQgkwmxQCnVladPaclBCcO6R7KEAzRweReUOxNlbvWGqKjSfuJSfCTmzrZq3XQ4AfAdzRSiR29yFYK91AxhmiVLEX9lVf7mvmAMFzE640uctSo6EYkdM1OJ5n/3K/TbLg3fe0CGKmI7Xq4Ky3OaiSoskOE4ww87txBUXdrM2L0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1793824260; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=U4L4/KbrFieS+0UXgWqlk7B9bXIXbAaNfkWea0yLlQ8=; 
+	b=eu7xexcKlNTbDlFmQCfxi1kmIKLByX6VoOaRPhBiB38PbFPANuCspBDdcdpoHWsqxi3Z0KzasivOS7P0h1dmc6nLw0kr31xUKyqFHLRLNm8eBVQWiiVTD9H6XG20D1Cqp6puIJvIqlCdSxajuQ2tWa5oaoeoaBgN2Maa5tZbKIc=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=ph4ntom-rev.uz;
+	spf=pass  smtp.mailfrom=owner@ph4ntom-rev.uz;
+	dmarc=pass header.from=<owner@ph4ntom-rev.uz>
+DKIM-Signature: a=rsa-sha256; b=svDicBJEiPu6BCxyyNEhad72cl3N/Ue3fqcTNo7paY6aXWxm6M1fyNFmfmp2Qrc6dd4DzCZoNRYFioUbyRnlXBZtDMbPkkO/bTCxdvmLflxZIwzk3mdukJQx1Zq2hq4cKSuHBN0EpmeGAPKf0ndSK2PfQMl5XeLBOzz6dc3WmlrmnyiGQ3B9zL8OOFovXD2Hy70hZuQgyR5NYWU+Ty9F+2ELU1X90SJhKcmZCOJlY3zEZZ5o0evugitmmGSO+BmOPcYggssq5VhVmT1UvD+xFOoQkNoXIZvW5ynlW2/51+4dHoybw9K5pKQE7jxbUBIKcnVSbYb3D6TzFigNtZY/qg==; c=relaxed/relaxed; s=zoho; d=ph4ntom-rev.uz; v=1; bh=U4L4/KbrFieS+0UXgWqlk7B9bXIXbAaNfkWea0yLlQ8=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zohomail.com with SMTPS id 1793824257718589.5105838531466;
+	Wed, 4 Nov 2026 12:30:57 -0800 (PST)
+From: Enver <owner@ph4ntom-rev.uz>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com,
+	kvalo@kernel.org,
+	linux-kernel@vger.kernel.org,
+	Enver <owner@ph4ntom-rev.uz>
+Subject: [PATCH v3 0/3] wifi: rtw89: monitor RX filtering, raw injection and channel restore
+Date: Thu,  5 Nov 2026 01:30:48 +0500
+Message-ID: <20261104203051.564-1-owner@ph4ntom-rev.uz>
+X-Mailer: git-send-email 2.56.0.windows.4
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -94,51 +66,61 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-work-procfs-v2-0-b45cd5789ac5@brauner> <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
-In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 4 Nov 2026 12:05:08 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
-X-Gm-Features: AclHuK9j_YIgrwhhpWOlnull6heAULBd4dgTqoOhUQQjFm_MgoIgrL1vgPfefvI
-Message-ID: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 00/30] proc: convert the fs, kernel and mm
- entries (Part 5/7)
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
-	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
-	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
-	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
-	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
-	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
-	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-On Wed, 4 Nov 2026 at 11:49, Christian Brauner <brauner@kernel.org> wrote:
->
-> Part 5/7 of "proc: move procfs to what kernfs does", on top of part 2
+This series supersedes the v2 monitor-mode series:
+https://lore.kernel.org/linux-wireless/179371849554.20972.16232816164394690660@ph4ntom-rev.uz/
+https://lore.kernel.org/linux-wireless/179371849554.20972.4737532522625772373@ph4ntom-rev.uz/
 
-Christian - way too many patches, re-sent much too often, cc'd to way
-too many people.
+Changes in v3:
+- remove redundant RX filter, sleep-register and scheduler operations;
+- add rollback and error reporting for monitor firmware join state;
+- restore channel and RF calibration after monitor interface recreation;
+- disconnect the firmware role if channel restoration fails, while
+  preserving the original error and protecting VIF teardown with RCU.
 
-Nobody is going to read these repeated resends, and all you are doing
-is clogging up peoples mailboxes.
+The post-stress RX failure was traced to missing channel restoration
+after stop/start. When monitor_chanreq is unchanged, mac80211 does not
+issue a channel-change callback, so rtw89_set_channel() is not called.
+Forcing a different channel and then restoring it confirms that RX
+recovers without reloading the driver.
 
-             Linus
+Patch 3/3 identifies the commit that introduced monitor-specific RF
+calibration and completes its restart lifecycle.
+
+Validation on RTL8852AE, Linux 7.1.5+kali-amd64:
+- 25 monitor recreate cycles with raw TX: 16,670 post-stress frames,
+  225 beacons and 30/30 injection responses from one AP;
+- 25 recreate cycles without raw TX: 20,517 post-stress frames;
+- no new kernel alerts in the normal stress runs;
+- managed scanning and association work;
+- forced -EINVAL rollback testing verifies join_info(true) before
+  link cleanup and returns the original error to mac80211;
+- sequential application of all three patches succeeds;
+- full Linux 7.3.0 build, W=1, sparse and checkpatch pass.
+
+Both APs responded at baseline. In the final post-stress injection run,
+one AP answered 30/30 probes; the other AP is not listed as answering
+in the parsed report, so this is not claimed as a 30/30 result from
+both APs.
+
+Earlier review requested the default R_AX_CTRL_FLTR value and a real
+raw-socket reproducer. The measured default value is 0x55555555.
+The actual reproducer is scripts/verify_hardware.py, including raw
+AF_PACKET injection, monitor recreation and PCAP/dmesg collection.
+The NULL-VIF path is reached through ieee80211_xmit(sdata, NULL, skb);
+it is not asserted that every injection supplies a NULL VIF.
+RCU publication, reader locking, clearing and synchronize_rcu() are
+used to protect monitor VIF lifetime during TX and teardown.
+
+Only RTL8852AE has been tested. Other rtw89 chips, DBCC/MAC 1
+configurations, long-term operation and historical runtime of the
+Fixes commit have not been verified. No claim is made for successful
+over-air injection of every control-frame subtype.
+
+Development and validation assistance: Kimi Code (Moonshot AI).
+The assistant helped analyze the failure, inspect firmware, draft the
+patch and run the validation. The submitter reviewed the final changes
+and takes responsibility for the submission.
+---
