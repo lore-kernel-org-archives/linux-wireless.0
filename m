@@ -1,93 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793755695;
-	b=5qa4/wksi5I/a1iLu5xbndZT8l2wZu/8/7KO23D5xzhsR+O/lYei/J1r5/STSrJp7M5t
-	 Gi2VOASAkpdUQ9g2er/mSGtYkNFUwVZ22mePz1udHDzcI2950m0NPFte58CQeRvnBshIc
-	 SM4cPLR+H4i9StQ/ZscMumDbLKw/3INhs0jZTVghJHyARBqO5Vp4RzLUdK3OHmvITuZaf
-	 S8C8QIa9rkXeGiXHO3Htw2unWm1WeboBko+Ku4WCoOeL0zZlo++OHVg33Fbkn0M35xz6y
-	 2LMa3xxbvzcUbhLcNP5o9zh3R8wKHpSExfeOyFGX+wr8sq/Plyfg9PKjdBLsulKbRFQ==
+	t=1793755698;
+	b=zqncVYsoxAc3rh9YvIk58WMgLB+hCWxVMO5TY+FyWgHLH39lHG+WrmmkY7VTOipK0LKf
+	 7UEZcl6L/TOAu79oWVidyOUl4+r3cJKiJHLWbH4BW8RbLgE6fer1lopjHiQMYvN5v6aaT
+	 6j1/MKmG/V/ZfxRRSM8sa5giKqHoX52k+FU5mi3T0QrdgVE0tLoklt91aHW9QJouikIqE
+	 PGQAJ2NJ/x+CNk8JBB7eReNPT5G0exMR7dF09r8zmADn58YAWbdHQU7e/sMFzDsCK8Xdc
+	 jDc2K2MayB/4no8gM2/vwn97ToaFIgZ3w8RIqM76monSKqZTbLqubwOxYGB5Q5qP4TQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793755695;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793755698;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=tu7JNDGi5iw89BTtRDC1OGkscf8qRs9hJIzv+IbdBVc=;
-	b=gxHvVQuUqoidXlFhlHyc49f7l8ZVBSv/45hPVNPBaVw68AeV52eSNe9sOBG+K5R7f2PU
-	 ReTJF617xJthSnMYzj9KChIQMXAuyz1WWC04t6WaCNTtqXQW7KCEU1Cjfl3MJFSleWvOV
-	 CxY4dM7hMPjIGpo09/lWNKB14H/Jt0eAf8OF80wsSEfsX0aV49vroSV217KY7rjK/uKm1
-	 Ub2IHWfOS4T3EKCF4vi/xek70pFqyCACUk4MpoKiQsU5Qnxo30anDbM6B4WGAUke71p/p
-	 eYqKXaCUGedMMItCoIFk5mWCs2fo1SKvt3qU2osQph5D7T9c+yEqjyp1fWjgJMp9p+A==
+	bh=OkbMXVkZ3Y5eO0yM0h+yc4cmF9qGDNZtNTGdXOSbZDU=;
+	b=JImRoNqr4WBoM6ExxIIH2r7IHatlJTa0iSmbH3blkL5t0XAVm/Z2cgu2xTxWG9OXBw/B
+	 vqsvmq10KXMpf98q1KanIJrHQGiCTaKRHxsdk8BgQk5mqOMaEA73Visiu10lIRNBwmh4c
+	 g0tygWXJtGJv+HQqsePhpais6EknC8ye/9esnRaKQ8KU339B4s7K0dU3RZIAuhfCksZNw
+	 jHdRaW0lGDLVKfTkXkoMJWyyXw0mfFGm2Tz7w7fEziEbJb/KiUhlCQlRBF0gZKTHQ2rBp
+	 /UbpwwulD5EyvYMeJFYD8JxRUFJggH2QqUnafbFCxp+7eWc/Fl9irrPkn+cpwp6b5vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=morsemicro.com;
 	spf=pass smtp.mailfrom=morsemicro.com;
-	dkim=pass header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=tLWrXpWc;
-	arc=none smtp.remote-ip=209.85.210.170
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	dkim=pass header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=C3tTwDdA;
+	arc=none smtp.remote-ip=209.85.214.176
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 113B2606A31B
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 01:28:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 113B2606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5E8B606A31B
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 01:28:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B5E8B606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=tLWrXpWc
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-8a9f9473029so174958b3a.2
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 17:28:14 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20260707.gappssmtp.com header.i=@morsemicro-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=C3tTwDdA
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2e987a2ba0cso716035ad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2026 17:28:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20260707.gappssmtp.com; s=20260707; t=1793755694; x=1794360494; darn=vger.kernel.org;
+        d=morsemicro-com.20260707.gappssmtp.com; s=20260707; t=1793755697; x=1794360497; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=tu7JNDGi5iw89BTtRDC1OGkscf8qRs9hJIzv+IbdBVc=;
-        b=tLWrXpWcouMlfsYv+T6RakaKHvV4QVuLCRFU2Yz83zgTHWa12KDYsexa/NfLXuJkSA
-         07n1A5m+VpxZxFk4wm+4amyfFfzDV+NfttHXcbi9C1MwwjvjvhR6uOC3Bx1B9wuJn5Hj
-         hxHwhRBqCDSAXRRuBxFcwvDMs059rKrUUZimqay7KLOPFRWjTkPXjbYoBGo5fcO5HPOn
-         RPjpoxR3vUH21OgbZwYSqTzUgYCbrljSg4BFcm0+1/FE6ZTm8mGLJJVbKy0DLbrAL7Wr
-         orKlTS8CiAzM7c4tulRaqGyCGLjhQMtMMkjRAa44HH7KMM/JTANnR3EXNSdpHKIJ82gn
-         MMkw==
+        bh=OkbMXVkZ3Y5eO0yM0h+yc4cmF9qGDNZtNTGdXOSbZDU=;
+        b=C3tTwDdAQuS36JDfHF0HKKcrOff9GwOKIfH/3XseoPebeoxkK0LhYvosGgr5hkI215
+         jWYikG6uujuJFLXjlAZsLlVd0haij4ZzF63s4U06Hqj15wk4lo8X8U16FuJByc5MWXoU
+         fvUQJGJM8tFubmnGfVYWM/+r2fcHq7DuZ/DUwQAE8J9F694u8mrCHfBqAdGSWCumC3Sp
+         5vE8pgMuXJInt4iiflc4YEARYBieDF+vBwR5LIrV6OgJ4dW6MiKU/qpGeEUJkx2ihju3
+         AewCF+jY2pd30wX9jhjRWfK6/bqfLtsTpryLARJxb+1+kdYNfYtwKGBp6mBePZvAOQ/X
+         NaAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793755694; x=1794360494;
+        d=1e100.net; s=20260707; t=1793755697; x=1794360497;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=tu7JNDGi5iw89BTtRDC1OGkscf8qRs9hJIzv+IbdBVc=;
-        b=woGxgOMhWVft4i64c89q0u3e3sJnZX7aLcUZ3os5o6+pyedhtS2LNsQG6NidQSUs7a
-         /iv3zROV+Alft2VpTZkS93UrWafV7sS/hEME/s/WPkHYZaavVy7aWubPrfXbX5fZOWrN
-         U2mweZY4Hp7Di71BKhZp61WWxUf2gCaFAd+z0PrPdnYgpgO3pXjreB2HHMwi+2YBwC4i
-         oiETX+ETl6Uh+QMe5ZQ6r425kdqoi5ouC4PSs9WQisYjCQL9pFAcbe6TbFXAXTVJOH/a
-         aa7xSa+vVaf4rhpOfKAdKEbto7vPOVDjTHvAjUC00B/bOf+w3dBrBcJ3RyMINCov+SuE
-         PNmw==
-X-Forwarded-Encrypted: i=1; AKwUvBwG5Rn57HSNY5kxJL/Bbu82EAsLmlyYWZxI55knthgAixvnQ5qxvP5IcAXKpzNwDiamzSpPQCeHD4XG1qu09A==@vger.kernel.org
-X-Gm-Message-State: APuU4Z8RNt5ULObcIP3EoVGw8dWhp5O1gmrRNOSN+l4vuOpNjyrSmV0n
-	CJmtAS+HpmM2L4ZN3RzNYGVjLPECH8C6EM9g+LmNGyIQeTZ1JNe0cAPCdF6PNXjeirI=
-X-Gm-Gg: AYBFou3rn8obMtYuY3FoA3tg9cCWu90KkfAYfoxhpQqqYAbjpbNy1nv9sqQjSrvIvgb
-	GUSDr/9befovinhuqCpYCihperf+Ui1BgyH2hiYZgrgFS1LAFSBaiTPWzgTUjeTzWPJN8DCdGel
-	znlbe3F8RlZlvPiRuTfNQNbBdKfM7tXmYF3i8kQ5maDanB2hmUk7XMVxHTyHS6Um9kw9dENA/Ym
-	TaVadV6r/H3DN9tNN2+8s91b0wsJrsM0Hbh40plHXZ1tWMg5PwfJT/Oq3s1osOc+OdADkwFYehb
-	E23of/QfVjQct8ujt7iTnasqL31ciIcqcEdRWiqoOdV00FbLMqU+yMj82vzciU1OKOv0na9igkl
-	ACLFE3JZCr5QxTBSNKx6sZnxtaSdOfkVLs0RgwpY9Sy6pkKDAvDAqYrzYkX22ktAS/BmoqpVqGF
-	iWatDjS/2cYXTFWaUyXQZ5wWEBQDMzKvSpXVeSyESdlNFdtHNvs/ksFn9Bl6aS8JLLRTXA1ZdXk
-	R2dHxGLUEfxCA131Xo5ChDg2oqR/Ee16W+MmGn1eBTrgxp6ljwW13vF0VHs5DLSJiDYjwifxyZK
-	FdGjydRyEUtjoemAXnlTwYRkRQ6u7zCshVl+sJP/0+3+RyXohhiYHyIYsPxFUIxOzHWVCRJdmT+
-	2GmD/tF40Vts7Hfn0+KBar2XfDl/4TsF5hn8xNF4TVGcV3ODC
-X-Received: by 2002:a05:6a20:918f:b0:3e8:b7fd:6286 with SMTP id adf61e73a8af0-3e92898ebb7mr13348708637.34.1793755694464;
-        Tue, 03 Nov 2026 17:28:14 -0800 (PST)
+        bh=OkbMXVkZ3Y5eO0yM0h+yc4cmF9qGDNZtNTGdXOSbZDU=;
+        b=aMkkw57UuVsPcehtEImNj3nZHpr7rOYL/qAZ4VZIcLWs4VCrZ3o1R18Tfy4wUsZc0O
+         8N+O65WhA6M6HNqm49sIBWZdw4oNk2DAZKPQhZCSK7E6uf1owLq+ZGwBA1sqtJT09TpY
+         Y/Jb8wisVFqqs7DwH7AyOcXXm0gI69mfRmfta3HUk/tZm2iSF1VOEGNqeUkByKhpPFPk
+         hL5rrDjofmnBPirGIuCxbmCB/n3wPk64cWToDLw1VlT8cHi6z3xCtMduBnK4+s52+Plr
+         CG7v2oQLphYDhjzIO+0ivTUSBNgIyFKaUx3OuXIEbxE6iqjVBRYm/Al+eNTW7vhJ/24Z
+         Crbw==
+X-Forwarded-Encrypted: i=1; AKwUvBzzgdJz6fr8pPeK89uUPOQOsgZigVBJMdvIWt24WlJPTtlKjtThVLbWTNqfsWY3GkryBLwpCyzwu5v0LC5VqQ==@vger.kernel.org
+X-Gm-Message-State: APuU4Z+PVkYwUOT7QOhzJHN8Y2Bt+rCpV9CYv6pbtj2HVAyBRiCc5wR8
+	TbmO9SdpBk5XMb5AM83HiprunG3rdgNuVx39zmXmZ7kyCGB7EYIjzbRyH+yIoYHPu3g=
+X-Gm-Gg: AYBFou3ydU/RWIXsrD3rvMF5R9LwEjWylAvE+0RhCZT8Trn0igZcZ1MqyDfT0waKcrr
+	/LhrFnCuKym1dMvaA7qDNyH/2A9Np08ZaEs6TtsBfbD8FJM5uxj+9e2jTe/lNLRHnSX4FIMLV9w
+	6XBwU/OYZcFX0wP4h9RbUv6iZ4iDSvPehndwcfyFBq2PvGW/JK/3Z1XTGqCHI+jn6ttusx6SJoY
+	kALDiWzYiwR5t+7N0NVgpkMFyFuGRup6wwaFnMttQBi6VEC0t65MM+nB+64kF0iGxoz41WJwHpk
+	aj/hlwFuRkMetUPxX2fbrb20P+FSBXVhcEPdbdmYbFWh9RwNAVKW0/jXD4V/15kYlbHKkRikd/B
+	d2IuQYLw13OqDOlLkTydwBhWAh3COUaS9UpEI/hW3nFNeHCW9Lm2vYy5OWBT6HJ/0IWNop0cmjx
+	+uff2OX+XgXUsolGEHyLDiTkibf4rrSB/58oW7h8rbNcQkRVctWPM9qdSp2cXDbUpZ37AOy1LYi
+	Rm2ytfrbSpOwG0LXfPx+cFIqqGlY7bqgMYzBZ7gz+3q6cPsLRJ6H2qawGgliXHmgWk+KKyq2Omh
+	6Mm7TVavsCRxHprzxs0wwuMzBmiaLE3/yMthkMgmcQHD+TBioD9Rk31lVQugI7UZnyh+EgRigbM
+	0Bd0TPyW+qCTPDU3sPRx1LxtPNykd5KJiUUIyhmhhUugIC80=
+X-Received: by 2002:a17:90b:2551:b0:3ac:9d26:5532 with SMTP id 98e67ed59e1d1-3ae8957cf94mr13250091a91.3.1793755697054;
+        Tue, 03 Nov 2026 17:28:17 -0800 (PST)
 Received: from mma-H9MHD44.sydney.mm.lcl (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdb469814b4sm300794a12.26.2026.11.03.17.28.12
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdb469814b4sm300794a12.26.2026.11.03.17.28.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 17:28:14 -0800 (PST)
+        Tue, 03 Nov 2026 17:28:16 -0800 (PST)
 From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 To: lachlan.hodges@morsemicro.com,
 	dan.callaghan@morsemicro.com
 Cc: arien.judge@morsemicro.com,
 	linux-wireless@vger.kernel.org,
-	Sam Chapman <sam.chapman@morsemicro.com>
-Subject: [PATCH wireless-next 2/7] wifi: mm81x: mmrc: don't credit failed frames as successes
-Date: Wed,  4 Nov 2026 12:27:51 +1100
-Message-ID: <20261104012756.510424-3-lachlan.hodges@morsemicro.com>
+	Nev Young <neville.young@morsemicro.com>
+Subject: [PATCH wireless-next 3/7] wifi: mm81x: mmrc: update evidence only for processed rates
+Date: Wed,  4 Nov 2026 12:27:52 +1100
+Message-ID: <20261104012756.510424-4-lachlan.hodges@morsemicro.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261104012756.510424-1-lachlan.hodges@morsemicro.com>
 References: <20261104012756.510424-1-lachlan.hodges@morsemicro.com>
@@ -102,145 +102,95 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Sam Chapman <sam.chapman@morsemicro.com>
+From: Nev Young <neville.young@morsemicro.com>
 
-mmrc_feedback() walks the returned retry chain using the total attempt
-count and unconditionally credits one success to the rate the walk ends
-on. A frame that exhausted the whole chain without being acknowledged is
-therefore recorded as a success on its final rate, inflating the success
-probability of fallback rates and leads to misinformed future
-rate selections.
+When only one packet is sent at the sample rate, its stats are
+processed but its evidence (a measure of whether the rate has recent
+stats) stays at zero, because the evidence is updated before the
+final decision on whether to process the stats for that rate. With
+zero evidence the rate is skipped as a candidate for best rate, so
+the rate never increases.
 
-To fix, make sure we only count a success if the frame was acked to
-prevent failing rates from being picked when they shouldn't be.
+To fix, update the evidence only after deciding to process the stats
+for a rate, so a sampled rate with valid stats is considered for best
+rate.
 
-Signed-off-by: Sam Chapman <sam.chapman@morsemicro.com>
+Signed-off-by: Nev Young <neville.young@morsemicro.com>
 Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- drivers/net/wireless/morsemicro/mm81x/mmrc.c | 47 ++++++++++----------
- drivers/net/wireless/morsemicro/mm81x/mmrc.h |  2 +-
- drivers/net/wireless/morsemicro/mm81x/rc.c   | 14 +++---
- 3 files changed, 33 insertions(+), 30 deletions(-)
+ drivers/net/wireless/morsemicro/mm81x/mmrc.c | 38 ++++++++++++--------
+ 1 file changed, 23 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/net/wireless/morsemicro/mm81x/mmrc.c b/drivers/net/wireless/morsemicro/mm81x/mmrc.c
-index 6bedcdbcb61f..3f87b50ce391 100644
+index 3f87b50ce391..bad4fec03d86 100644
 --- a/drivers/net/wireless/morsemicro/mm81x/mmrc.c
 +++ b/drivers/net/wireless/morsemicro/mm81x/mmrc.c
-@@ -1212,37 +1212,38 @@ void mmrc_update(struct mmrc_table *tb)
+@@ -1067,6 +1067,13 @@ static void mmrc_process_variation(struct mmrc_table *tb, u16 current_success,
+ 	}
  }
  
- void mmrc_feedback(struct mmrc_table *tb, struct mmrc_rate_table *rates,
--		   s32 retry_count, bool was_aggregated)
-+		   bool was_aggregated, bool was_acked)
++static bool enough_stats(struct mmrc_table *tb, u32 min_stats, u32 index,
++			 u32 attempts_for_stats)
++{
++	return attempts_for_stats >= min_stats ||
++	       (attempts_for_stats > 0 && tb->table[index].prob > 0);
++}
++
+ void mmrc_update(struct mmrc_table *tb)
  {
--	s32 ind = retry_count;
-+	s32 last_index = -1;
  	u32 i;
+@@ -1078,6 +1085,7 @@ void mmrc_update(struct mmrc_table *tb)
+ 	u32 success_for_stats;
+ 	u32 min_stats;
+ 	u32 throughput;
++	bool process_this_rate;
+ 	u32 evidence_sent;
  
-+	/*
-+	 * Every attempt reported by the firmware is accounted as sent. Only
-+	 * the final attempt of an acknowledged frame counts as a success; a
-+	 * frame that exhausted its retry chain must not credit the last rate.
-+	 */
- 	for (i = 0; i < MMRC_MAX_CHAIN_LENGTH; i++) {
-+		if (!rates->rates[i].attempts)
-+			break;
-+
- 		rate_update_index(tb, &rates->rates[i]);
- 		tb->table[rates->rates[i].index].have_sent_ampdus |=
- 			was_aggregated;
+ 	tb->cycle_cnt++;
+@@ -1111,19 +1119,6 @@ void mmrc_update(struct mmrc_table *tb)
+ 
+ 		scaled_ewma = scale * EWMA / 100;
+ 
+-		/*
+-		 * Only count new packets for evidence if we will process
+-		 * them
+-		 */
+-		evidence_sent =
+-			tb->table[i].sent >= min_stats ? tb->table[i].sent : 0;
+-		tb->table[i].evidence = calc_ewma_average(
+-			tb->table[i].evidence, evidence_sent * EVIDENCE_SCALE,
+-			scaled_ewma);
 -
--		if ((s32)rates->rates[i].attempts < ind) {
--			ind = ind - rates->rates[i].attempts;
--			tb->table[rates->rates[i].index].sent +=
-+		tb->table[rates->rates[i].index].sent +=
-+			rates->rates[i].attempts;
-+		if (was_aggregated)
-+			tb->table[rates->rates[i].index].back_mpdu_failure +=
- 				rates->rates[i].attempts;
--			if (was_aggregated) {
--				tb->table[rates->rates[i].index]
--					.back_mpdu_failure +=
--					rates->rates[i].attempts;
--			}
--		} else {
--			tb->table[rates->rates[i].index].sent += ind;
--			tb->table[rates->rates[i].index].sent_success += 1;
--			if (was_aggregated) {
--				tb->table[rates->rates[i].index]
--					.back_mpdu_success += 1;
--				tb->table[rates->rates[i].index]
--					.back_mpdu_failure +=
--					ind > 1 ? ind - 1 : 0;
--			}
--			return;
--		}
-+		last_index = i;
-+	}
-+
-+	if (last_index < 0 || !was_acked)
-+		return;
-+
-+	tb->table[rates->rates[last_index].index].sent_success += 1;
-+	if (was_aggregated) {
-+		tb->table[rates->rates[last_index].index].back_mpdu_success += 1;
-+		tb->table[rates->rates[last_index].index].back_mpdu_failure -= 1;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/mmrc.h b/drivers/net/wireless/morsemicro/mm81x/mmrc.h
-index a4c7d941ad55..f4a90a50e4bf 100644
---- a/drivers/net/wireless/morsemicro/mm81x/mmrc.h
-+++ b/drivers/net/wireless/morsemicro/mm81x/mmrc.h
-@@ -184,7 +184,7 @@ size_t mmrc_memory_required_for_caps(struct mmrc_sta_capabilities *caps);
- void mmrc_get_rates(struct mmrc_table *tb, struct mmrc_rate_table *out,
- 		    size_t size);
- void mmrc_feedback(struct mmrc_table *tb, struct mmrc_rate_table *rates,
--		   s32 retry_count, bool was_aggregated);
-+		   bool was_aggregated, bool was_acked);
- void mmrc_update(struct mmrc_table *tb);
- bool mmrc_set_fixed_rate(struct mmrc_table *tb, struct mmrc_rate fixed_rate);
- u32 mmrc_calculate_theoretical_throughput(struct mmrc_rate rate);
-diff --git a/drivers/net/wireless/morsemicro/mm81x/rc.c b/drivers/net/wireless/morsemicro/mm81x/rc.c
-index 28dd293df966..c1a334f7846c 100644
---- a/drivers/net/wireless/morsemicro/mm81x/rc.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/rc.c
-@@ -341,8 +341,8 @@ void mm81x_rc_sta_fill_tx_rates(struct mm81x *mors,
- }
- 
- static void mm81x_rc_sta_set_rates(struct mm81x *mors, struct mm81x_sta *msta,
--				   struct mmrc_rate_table *rates, int attempts,
--				   bool was_aggregated)
-+				   struct mmrc_rate_table *rates,
-+				   bool was_aggregated, bool was_acked)
- {
- 	struct list_head *pos;
- 
-@@ -352,8 +352,8 @@ static void mm81x_rc_sta_set_rates(struct mm81x *mors, struct mm81x_sta *msta,
- 			list_entry(pos, struct mm81x_rc_sta, list);
- 
- 		if (&msta->rc == mrc_sta) {
--			mmrc_feedback(msta->rc.tb, rates, attempts,
--				      was_aggregated);
-+			mmrc_feedback(msta->rc.tb, rates, was_aggregated,
-+				      was_acked);
- 			break;
+-		if (tb->table[i].evidence > EVIDENCE_MAX)
+-			tb->table[i].evidence = EVIDENCE_MAX;
+-
+ 		/* Try to use statistics from acknowledged AMPDUs first */
+ 		attempts_for_stats = tb->table[i].back_mpdu_success +
+ 				     tb->table[i].back_mpdu_failure;
+@@ -1142,8 +1137,21 @@ void mmrc_update(struct mmrc_table *tb)
+ 			success_for_stats = tb->table[i].sent_success;
  		}
- 	}
-@@ -410,9 +410,11 @@ void mm81x_rc_sta_feedback_rates(struct mm81x *mors, struct sk_buff *skb,
- 		msta->last_sta_tx_rate.guard = rates.rates[0].guard;
- 	}
  
--	mm81x_rc_sta_set_rates(mors, msta, &rates, attempts,
-+	mm81x_rc_sta_set_rates(mors, msta, &rates,
- 			       !!(le32_to_cpu(tx_sts->flags) &
--				  MM81X_TX_STATUS_WAS_AGGREGATED));
-+				  MM81X_TX_STATUS_WAS_AGGREGATED),
-+			       !(le32_to_cpu(tx_sts->flags) &
-+				 MM81X_TX_STATUS_FLAGS_NO_ACK));
- 
- 	ieee80211_sta_register_airtime(sta, tx_sts->tid, tx_airtime, 0);
- 
+-		if (attempts_for_stats >= min_stats ||
+-		    (attempts_for_stats > 0 && tb->table[i].prob > 0)) {
++		process_this_rate =
++			enough_stats(tb, min_stats, i, attempts_for_stats);
++
++		/*
++		 * Only count new packets for evidence if we will process
++		 * them
++		 */
++		evidence_sent = process_this_rate ? tb->table[i].sent : 0;
++		tb->table[i].evidence = calc_ewma_average(
++			tb->table[i].evidence, evidence_sent * EVIDENCE_SCALE,
++			scaled_ewma);
++		if (tb->table[i].evidence > EVIDENCE_MAX)
++			tb->table[i].evidence = EVIDENCE_MAX;
++
++		if (process_this_rate) {
+ 			new_stats = 1;
+ 			this_success =
+ 				(100 * success_for_stats) / attempts_for_stats;
 -- 
 2.43.0
 
