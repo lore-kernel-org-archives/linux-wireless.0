@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820377;
-	b=vOgVdsoAX65kkxtA5sBsilBBKzvzBwhaupybT+RXa2F0woEm73gzPMeKgO7aotMzQNCQ
-	 SY26q/HA2fGevXddX5VHZAPGoljxCJmLYySkqSDDSTntoyQElR/Avdv1adyPCISxwelIG
-	 raZubTQ0gxgERLOuKw62KChoU19QOfbWJ1/UeCNOccpTlPva2FKp/tDltPnGH0B08rAf2
-	 RBksm5FwqnrYcTACF+hLuVyHWJA7+gKCd5HWGyYcIpFuKaDvxTWTAVtjZ0PKCKG7aE0Ed
-	 AJpHlkp9e5LKWkc/6OlmFrL9o1GMn4dY0oJP7CTPi17RD95SDI/zmItXuibGDS9DtxQ==
+	t=1793820406;
+	b=arFUJcQz48TkIaHwUy+T8uwujsF3LlTBtqAXLBtNcJQcGbUpwhMAGENz+KndOuY4B0gA
+	 XUI7pZqrYkkZTARDG/lHjye1ak3Xyr56ULeK/IcCIxCYzU9xVVvFD7XfMjxG6vSbK3hMk
+	 WhXbIIADc25TSBq8lwZvlcmtQTEJ4A7Bjr4zpm2lrlLox5kwJN+AAVdj0BwV5qRUPp2a9
+	 L9Otg31c8emD3hO5a52RSYrPBys6WPu5JKlzvpdqZINnJZJYyTnmOPrYmDIwir2T8lm4T
+	 eEWScJrmkSDQP+e9ULGjd2A442hAAjHCpCsmJLbtcsinzrZ1xTr1AJCLMevlfWua2Wg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820377;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820406;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=XnpcpCSyDLdfO+af8k17UBoE0jHP5SM09VNPrTlP5mU=;
-	b=fPQId6cNy9TeRmztXIeIGIHy+bwD5oKlDeG/330OC2FTAvNMoqnlLooJBBxucLPRQOW8
-	 5Cho0Uu0PtVmafu3SrjBSxxXkZD/rQZ4x8yS/4gaXAgoF29iM52BIOrgMP7icfGzEKezR
-	 ndMTrCOQdEaVhmD5E9ZgA6G4JJufUtyfMNgnGijv0jj5piBzSDGMJVwSpIErwsgzSglNm
-	 zHZh+M6vv2bO2NvSe8Iv1u77Fr+z5CAZ3mfOTtlyAcqCFGIyfJXYClBFZ4fHek87khJ1I
-	 tf1dZ/rNcqYrbB7GLv06L11woG+gt/6UCR2VBNXr3AKclNFr6tJH2gBpXHjaL6C5VVQ==
+	bh=cd2dCZjA0tUhyc+igqHnY6+9OAULLk3Gm7203fq742M=;
+	b=tahlq7FxQm7LIj2vBJ6IBHQq+LmPg5DgXVeqqAzlvD8gZVWLUoDCL5/mOroZA7G8BS02
+	 ZqjP+e4Uy4XlQJQ7Tgbo2HcZZ1Ow3/I7kH9Ik4mrpe51A4qm2yEO9s0lyghax86YIHXvu
+	 DuJzU8mhalpNtVU1qhU7bLwmjYEj+UC4jK2u65IzNFHiP8XegglWwegzW85JuDId0CMQe
+	 F7P3o3yyYe/+lCxA+e03KkF/8pPIP/6XBncppsTEXMngy5Et0eM7qPSFMKuWo7znAE4to
+	 E1RWvTx9VhI+V8ZjwGDL7KXQxjYYbWggriW+NiSTSBBpLIZ43suhrsKQvyFdJobzL0g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fe+qeY3o;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ok0iN6uZ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA026606D812;
-	Wed,  4 Nov 2026 19:26:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C145607030B;
+	Wed,  4 Nov 2026 19:26:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fe+qeY3o
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72DAD1F000C1;
-	Wed,  4 Nov 2026 19:26:04 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ok0iN6uZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5BE81F000C1;
+	Wed,  4 Nov 2026 19:26:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820376;
-	bh=XnpcpCSyDLdfO+af8k17UBoE0jHP5SM09VNPrTlP5mU=;
+	s=k20260515; t=1793820405;
+	bh=cd2dCZjA0tUhyc+igqHnY6+9OAULLk3Gm7203fq742M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Fe+qeY3o8miJBk7XZvXWRPJiLnP1GdJPOqLtWaz6J/8VQem5/V0ND1YF0y/caRLDt
-	 DgMyPqaYb8QP/iR50E51P8bLvmgXDHfJQAP+4NJ3uCNVkwg8J4gXwnwNVy6o82qXxc
-	 G4M//wQeR0/W9Y+xsP86unflMsj2VnJzFCD6/c4qwO8PIZgOw5+bi09ifndSMUg6Pu
-	 SBcZj+IhaDAR0z3bc6SfeGcPmjQvgoRYlFKz/iKxUED/8QkGs8uB9cNmos93pL495J
-	 NXdA035THee9lHe8V5hdzJBAPFs5jWlBFKpe5bzr3vs+R1j21omP9eJIItBPXuLVUe
-	 AfP65GL9MMizQ==
+	b=Ok0iN6uZQVSYaoCJ8QVSJT8l0lXYmNP35ncQljCwM9H9v59k+rKBWDwXyFuH6JO+M
+	 V+A/kQXQfWgbGohORmoO87IV8G5a3EeicQ9/77UKK7TnPSNtklntEWp/u4+8ZixD0c
+	 bRD3pYtw6zhIWR1FS+A6aVjGwZINr1WSqex7QK4NXh4aMIjo3IjIJsUG8/xkIzVtfH
+	 6o2/KO4Dtfl777uLHIT6W89DNE9MAKgRdxN0CGLmaTZrAGaPjU++EC952vB7Nwp+HX
+	 +JJQg7IqWsBi5yUZmEzjETxgVGZ58lqdaOlqsnXdyQP64dFRJssogaTbhl3zVphWpc
+	 sA8Q19qZfKV8A==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -101,9 +101,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 41/51] scsi: esas2r: bound the lengths of the HBA, SMP and firmware ioctls
-Date: Wed,  4 Nov 2026 20:26:02 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-41-021c84d852e0@kernel.org>
+Subject: [PATCH RESEND v2 43/51] powerpc/pseries/lparcfg: return h_get_ppp()'s status as a long
+Date: Wed,  4 Nov 2026 20:26:31 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-43-021c84d852e0@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -117,181 +117,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6672; i=brauner@kernel.org; h=from:subject:message-id; bh=2aMnK188zalc9NOhuhHvIjnHW4mP6VOaoGggC08Jevg=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bvw38ZaPqVai5VQBfePvMdFLldYLB/4OlJ7R5jbN+ cnWF7WVHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNx2czIcNZ6Tv0XfyY9Wfn1 Dz4wh21XeGn22GPftdT+xljFz2cVORkZNr9fFHrlp67vsf/hjvXt0SfXTw4XF5NakZJvybXowMa J/AA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1751; i=brauner@kernel.org; h=from:subject:message-id; bh=sCHTY4Gek8l3mLAy0sLNwHA69+qK9OBjRO3AuZdnaeo=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bmJIPL5OsslnfcA9hxcbt6X7Pli9ZcIKN0trZ+9tW 8ub7XmfdpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEykQojhn5Lb2YKPu5tvWS/Q sTtlvpG7vLPqxuJNXEniS7v7VbrqjRkZ/oRc3st548nj6x0rtvtHXl6Vli/7IVk4c/HNJ0nM2So V7AA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-esas2r_ioctl_handler() copies in a struct atto_express_ioctl, a bit over
-512k, and hands the union member for the command to the handlers. For
-EXPRESS_IOCTL_HBA and EXPRESS_IOCTL_SMP the length of the buffered ioctl
-is the size of the member plus lengths that come straight from
-userspace:
+h_get_ppp() returns the status of the H_GET_PPP hcall as an unsigned
+int. update_ppp() hands it on as its ssize_t result, and
+lparcfg_write() turns the hcall statuses it knows into an errno and
+returns anything else as it is. So when H_GET_PPP fails, say with
+H_PARAMETER (-4), the status comes back as 4294967292 and a write to
+/proc/powerpc/lparcfg reports that many bytes written.
 
-  bi.length = sizeof(struct atto_ioctl) + ioctl_hba->data_length;
-
-  bi.length = sizeof(struct atto_ioctl_smp)
-	    + le32_to_cpu(si->req_length)
-	    + le32_to_cpu(si->rsp_length);
-
-handle_buffered_ioctl() copies bi.length bytes from the member into a
-DMA buffer and, once the adapter is done, copies the DMA buffer back
-over the member. Nothing checks that the lengths fit into the struct
-that was copied in. So a large data_length makes it read past the
-struct and then write the DMA buffer back over the memory behind it.
-
-The firmware commands pass sizeof(struct atto_express_ioctl) to
-esas2r_{read,write}_{fw,fs}() as the length of data.fwrw.image, which
-starts 28 bytes into the struct. So they can read and write 28 bytes
-past it as well.
-
-The handler is reachable through /proc/scsi/esas2r/ATTONode. It is
-created with mode 0, which procfs turns into 0444, and esas2r doesn't
-check for a capability anywhere. So any local user can do this on a
-machine with such an adapter.
-
-Bound all of these by the room from the member to the end of the
-struct. read_hw() passes handle_hba_ioctl() a single struct atto_ioctl
-and only ever returns that, so there the data length has to be zero.
+Return the status as the long it is. lparcfg_write() then treats it
+like the status of H_SET_PPP: an unknown error status is at least
+negative, and one of the positive long-busy statuses comes back as a
+byte count, as it does for H_SET_PPP already. Before commit
+11529396ea31 ("powerpc/pseries: Split processor entitlement retrieval
+and gathering to helper routines") a failed H_GET_PPP turned into -EIO.
 
 Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
+Fixes: 11529396ea31 ("powerpc/pseries: Split processor entitlement retrieval and gathering to helper routines")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/scsi/esas2r/esas2r.h       |  2 +-
- drivers/scsi/esas2r/esas2r_ioctl.c | 41 ++++++++++++++++++++++++--------------
- drivers/scsi/esas2r/esas2r_main.c  |  3 ++-
- 3 files changed, 29 insertions(+), 17 deletions(-)
+ arch/powerpc/platforms/pseries/lparcfg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
-index a763edd05fe4..10101f50b282 100644
---- a/drivers/scsi/esas2r/esas2r.h
-+++ b/drivers/scsi/esas2r/esas2r.h
-@@ -967,7 +967,7 @@ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
- int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg);
- int esas2r_ioctl(struct scsi_device *dev, unsigned int cmd, void __user *arg);
- u8 handle_hba_ioctl(struct esas2r_adapter *a,
--		    struct atto_ioctl *ioctl_hba);
-+		    struct atto_ioctl *ioctl_hba, size_t room);
- enum scsi_qc_status esas2r_queuecommand(struct Scsi_Host *host,
- 					struct scsi_cmnd *cmd);
- int esas2r_show_info(struct seq_file *m, struct Scsi_Host *sh);
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index c93d9265e100..80ae5b9d45db 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -311,17 +311,27 @@ static int smp_ioctl_callback(struct esas2r_adapter *a,
- 	return true;
- }
- 
-+/* The room from @member to the end of a struct atto_express_ioctl. */
-+#define EXPRESS_IOCTL_ROOM(member)				\
-+	(sizeof(struct atto_express_ioctl) -			\
-+	 offsetof(struct atto_express_ioctl, member))
-+
- static u8 handle_smp_ioctl(struct esas2r_adapter *a, struct atto_ioctl_smp *si)
+diff --git a/arch/powerpc/platforms/pseries/lparcfg.c b/arch/powerpc/platforms/pseries/lparcfg.c
+index 9882f98c0efb..4f6b2975c6e9 100644
+--- a/arch/powerpc/platforms/pseries/lparcfg.c
++++ b/arch/powerpc/platforms/pseries/lparcfg.c
+@@ -113,7 +113,7 @@ struct hvcall_ppp_data {
+  *	          XXXXXX - Entitled procs capacity % available to the
+  *			   partitions pool.
+  */
+-static unsigned int h_get_ppp(struct hvcall_ppp_data *ppp_data)
++static long h_get_ppp(struct hvcall_ppp_data *ppp_data)
  {
- 	struct esas2r_buffered_ioctl bi;
-+	u64 length = (u64)sizeof(struct atto_ioctl_smp) +
-+		     le32_to_cpu(si->req_length) +
-+		     le32_to_cpu(si->rsp_length);
-+
-+	/* The request and the response follow @si in the same buffer. */
-+	if (length > EXPRESS_IOCTL_ROOM(data.ioctl_smp))
-+		return IOCTL_INVALID_PARAM;
- 
- 	memset(&bi, 0, sizeof(bi));
- 
- 	bi.a = a;
- 	bi.ioctl = si;
--	bi.length = sizeof(struct atto_ioctl_smp)
--		    + le32_to_cpu(si->req_length)
--		    + le32_to_cpu(si->rsp_length);
-+	bi.length = length;
- 	bi.offset = 0;
- 	bi.callback = smp_ioctl_callback;
- 	return handle_buffered_ioctl(&bi);
-@@ -1221,11 +1231,16 @@ static void hba_ioctl_done_callback(struct esas2r_adapter *a,
- 	}
- }
- 
-+/* @room is the size of the buffer that starts with @ioctl_hba. */
- u8 handle_hba_ioctl(struct esas2r_adapter *a,
--		    struct atto_ioctl *ioctl_hba)
-+		    struct atto_ioctl *ioctl_hba, size_t room)
- {
- 	struct esas2r_buffered_ioctl bi;
- 
-+	/* The data follows @ioctl_hba in the same buffer. */
-+	if (ioctl_hba->data_length > room - sizeof(struct atto_ioctl))
-+		return IOCTL_INVALID_PARAM;
-+
- 	memset(&bi, 0, sizeof(bi));
- 
- 	bi.a = a;
-@@ -1349,31 +1364,27 @@ int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
- 			err = esas2r_write_fw(a,
- 					      (char *)ioctl->data.fwrw.image,
- 					      0,
--					      sizeof(struct
--						     atto_express_ioctl));
-+					      EXPRESS_IOCTL_ROOM(data.fwrw.image));
- 
- 			if (err >= 0) {
- 				err = esas2r_read_fw(a,
- 						     (char *)ioctl->data.fwrw.
- 						     image,
- 						     0,
--						     sizeof(struct
--							    atto_express_ioctl));
-+						     EXPRESS_IOCTL_ROOM(data.fwrw.image));
- 			}
- 		} else if (ioctl->data.fwrw.img_type == FW_IMG_FS_API) {
- 			err = esas2r_write_fs(a,
- 					      (char *)ioctl->data.fwrw.image,
- 					      0,
--					      sizeof(struct
--						     atto_express_ioctl));
-+					      EXPRESS_IOCTL_ROOM(data.fwrw.image));
- 
- 			if (err >= 0) {
- 				err = esas2r_read_fs(a,
- 						     (char *)ioctl->data.fwrw.
- 						     image,
- 						     0,
--						     sizeof(struct
--							    atto_express_ioctl));
-+						     EXPRESS_IOCTL_ROOM(data.fwrw.image));
- 			}
- 		} else {
- 			ioctl->header.return_code = IOCTL_BAD_FLASH_IMGTYPE;
-@@ -1441,9 +1452,9 @@ int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
- 		break;
- 
- 	case EXPRESS_IOCTL_HBA:
--		ioctl->header.return_code = handle_hba_ioctl(a,
--							     &ioctl->data.
--							     ioctl_hba);
-+		ioctl->header.return_code =
-+			handle_hba_ioctl(a, &ioctl->data.ioctl_hba,
-+					 EXPRESS_IOCTL_ROOM(data.ioctl_hba));
- 		break;
- 
- 	case EXPRESS_IOCTL_VDA:
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index ada278c24c51..75a70ae9441b 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -178,7 +178,8 @@ static ssize_t read_hw(struct file *file, struct kobject *kobj,
- 	if (!a->local_atto_ioctl)
- 		return -ENOMEM;
- 
--	if (handle_hba_ioctl(a, a->local_atto_ioctl) != IOCTL_SUCCESS)
-+	if (handle_hba_ioctl(a, a->local_atto_ioctl,
-+			     sizeof(struct atto_ioctl)) != IOCTL_SUCCESS)
- 		return -ENOMEM;
- 
- 	memcpy(buf, a->local_atto_ioctl, length);
+ 	unsigned long retbuf[PLPAR_HCALL9_BUFSIZE] = {0};
+ 	long rc;
 
 -- 
 2.53.0
