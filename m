@@ -1,61 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.216.248.212
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793805391;
-	b=C5lXn5Qb4HNRqias+ZB+dhYqYCfCh3dg6/X03b6XyLfak9EtEnaazlEbdRzKUOFgdfsD
-	 hfqoHMP8JzM2gVfi/sf2xx0mAWlArRYvTmqgwOgg7heqEWs1drgh/PHGcEU3upNgJxPjh
-	 nd6LfeNlSWHurzllBwpIrnIJoT/sdlhW2Imo/nsC9KuBckMwbGeFIWQZXHnL9HvgXPBCz
-	 iwFZoib1FF1Xmly4J6IHKrrTbXMoYEuyijFzW7wLKa56l/KvekJATE7Ea9FSzA4iO5ub5
-	 /wapp0WirvHqtApGaxaxiJbgTD+HQV7NxZlE0hqeHjhZsAX5H5+zuhbTaSPcM6I+WMA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793805391;
-	h=DMARC-Filter:From:X-Lima-ML-UUID:DKIM-Signature:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=BC2BTMGT0MonLeNLnYUzQ8CslpdJa2459jbN4UryEuY=;
-	b=5lIu6ZlqcxcwYKcjV0nNldvFTbV7LvtH9NR83e3IWbitiWObB4x387p4voWVtAtsN+uT
-	 oxSGKvbgY2ZJIC+4OHf5HWJOmHTHSOG883JQFY/CHTITch7sAKhcnpQYCDWhwIOg2jd/a
-	 MLcTD9QrcrntW7G+EYpHT3WpMlPXiTynJdQoOHI74faae1xC0pf9VxImTEH/p/wPw1Qsn
-	 zAZdMxwuV5faClIKFYAquRAzC/i26B8owX8Fa9yIkvuS6yYGe81KbzqrdkFmmbH/XAMaI
-	 2mzsX2EKS4tPxVPgzo33wxWpMXxSJf/GLAbcltk/LqK8lACTgnawh+GyQrKpYFnvKqg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=deq.rocks;
-	spf=none smtp.mailfrom=deq.rocks;
-	dkim=pass header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=uZbzD2we;
-	arc=none smtp.remote-ip=91.216.248.212
-Received: from bulk0.mail-out.lima-city.de (bulk0.mail-out.lima-city.de [91.216.248.212])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793806611;
+	b=HJs2eEuJha98m0QabwdceFl0R4TpNWaRSkIRZLc2Wb3scQykx2Sr2wvstZow8eirxLx1
+	 ZisRZFRB03nbKZXcFnn9MVfa4MUvN11YLGtqoSAwOdQTQZRQV7CLF1dYlowwlwxXXLHbJ
+	 M/97C/5jvHt4SbmaxAQF5lyTN6vSfqw4KVKmzmLFbncPHIGy2tATClx/FipTdeqoSe0qq
+	 IAgxERsSNiBBHzcU3gggOC9DNBeEQqHVDeIupRiLPa2/ANdcB8pBAVYG18+wsQGXsnBg/
+	 mUSqv+P/OA5fu7VJzTOAYq7gUxh4sOfhZnZzxMa7QPUART3bwxncJChU2TqM2PJ1NdA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793806611;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=/80aGJ82gVECqlmDwN+VdInnRDZREun7wkOwr++IDM4=;
+	b=HtVywuWAqVHgW5XEhHcPEvfxCEt8NUsf6a5V22I6ooCBE7uBw+pWdpyi+X5Qb49Afk30
+	 aTUCO+quTZRo0Bq6hrl6EyflBvo3rtIz8LnODwdaMlIAX9t/JlSA3wPrkRxPTHmA3+G5R
+	 z/cekAXrOSp9MHEOSq1xKxQ3n24L4mAC0ZT4wrs7XY5qJeCqheyaTqViG+QXsXRQkEtCj
+	 2IZvQhH1lCx0riGixeVd3c+7uhgvG7y40KOicJhvR1Lex8wUt1cB3w97wuO3SHiPsT/3z
+	 rPdCggsC8X9GsfcmwHCNsvHVRUaW5FIF8Hl6ji0VzIjpa70tCwMiUCAL1bRghsV0lLg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Bur9vrPV;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1846860A5BE0;
-	Wed,  4 Nov 2026 15:16:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1846860A5BE0
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=deq.rocks
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=deq.rocks
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A70C606A31B;
+	Wed,  4 Nov 2026 15:36:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=uZbzD2we
-From: Andre Eikmeyer <dev@deq.rocks>
-X-Lima-ML-UUID: f567161f-405e-4b88-98a9-490ae3628851
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=deq.rocks;
-	s=securedbylima-20251205; t=1793805389;
-	bh=P+W/pFLHzJaOD2sQaIiUr8QFTt02Y7Pu/LNFlzocG2Q=;
-	h=From:To:Cc:Subject:Date:From;
-	b=uZbzD2wejnwmt+sxQhFszdEdLV8jk+Y7izKkU9YHpxbwsZOvyA1UBdkIB73shZLAY
-	 kQrepDqVEPs47qLGYFTHIOUdLxvC66ljFVzLaFsh8jOsUvpSH2siknwemGPaVM94wb
-	 XU6aP1ytgL26/WedyOIWldTrAoOEzjA0KnWW/5rgsaaHxLYRI8+Fu5gGTRXgE9dZNk
-	 OHKpoX/2DZreYphPde3aH0Cw04DG6n5pTGj5QlpO9FYlb/CpH1yPG1uFOIkg6/3No2
-	 2lSGLpiifaMI5i0XKwgOCoS+nNdMP2L3vWuMqpQsHcvfitAVpP4toIlM2YMTt7/ybC
-	 cbpRKKn7yXmOg==
-To: arend.vanspriel@broadcom.com
-Cc: linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel@vger.kernel.org,
-	Andre Eikmeyer <dev@deq.rocks>,
-	Yossef Osman <Yossef.Osman@proton.me>,
-	Aditya Garg <aditya.garg@linux.dev>
-Subject: [PATCH] wifi: brcmfmac: use a 200 ms power save timeout by default
-Date: Wed,  4 Nov 2026 16:16:26 +0100
-Message-ID: <20261104151626.70737-1-dev@deq.rocks>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Bur9vrPV
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793806611;
+	b=RG1DuCanGA9UZzrePpRO1olSQAfB0GzKMLfjhadCbdQKEGVMZvpqJoGWmEY5IHK7L4ca
+	 F3LkcV7VbS9CM+03XH9iqzcBBieaiF45fBOwW5nsgUOefmT+HsnunPKEuUZFEoGUvHdAX
+	 5PnCiHm4OwjUYmRclHrvxuDpuRBWpsmhxqkbhGZiM1cPVZNAjC5gxbg9yjusr8Zr4CZRm
+	 1nuTTOE/3Pm1S2dt/PlG9g+z+YIPJ/au9O6CppjZFvscl9H/CJoi0ss7dgIMzUruCaMh1
+	 jdmfOEszy48Kf1YiBS+RgsVhobpi4+RKHYEi3ybrIl+lH2z5ylt9JF8TsrjcT8fPd8w==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793806611;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=/80aGJ82gVECqlmDwN+VdInnRDZREun7wkOwr++IDM4=;
+	b=rao2mjmVc9pHnjEGtbHy0ThoygYpXdAIVrI2lM5Ss+IyCuvY9+tzQ5LMwpGtwKuFicbS
+	 HxixQT5ybR7zQidVxPAqmn2HwTwk9SPXw3kkKFIAOLem543ZnN4AFbWw83svhIuncpp1n
+	 hbeZluGddbfOqJA8Q5w9lPV/yquMe0JMUNgDBjpDd5rtNrZ5DJG1CCTOo4XFHWZg59Bs7
+	 1yRg23XnaqbGnj1BhncOQw3MolzjsxkrBu2xXr5F0TWgtGX3CfS0ob4wQhLzFCzINELv/
+	 QY1DTkqeF1G+TdVt+C9U6MdSbZtlAd/u63HHaOsLjcBTK1j32iZ6zCREeBOgK6BL8vw==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id ABCBC1F000C1;
+	Wed,  4 Nov 2026 15:36:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793806611;
+	bh=/80aGJ82gVECqlmDwN+VdInnRDZREun7wkOwr++IDM4=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=Bur9vrPVFZ1XO0155NQWTfJ41aK/uHBFCEqQ6JlyobhIP731WzpZOa68RP0h1Ezyk
+	 rq4gDWzE2M5xM/G6rNK1kiRafV+kfPu5RDzFTBev8Oqrhb/UBlIPWp9zF7BzlOVofI
+	 SP3Tz074/Ff92VxmY3Z8anlLcw2UiA9MWJPrNGB5dhq2rRsIh2s9F2ClVsdbXXpiG7
+	 hGbBeFWMRnBiVLM8b1nED1tQB5o1VQlb+6EDRdC+O43Jv0dyqXYxBdg2339pyt5O6R
+	 /z+e6dIhSvuII/F0EOALKQeTzGL1m5dgjAqnOg/u/C6cwukbFS9m8xiMTmSCPbB1uN
+	 n216DmVRUIR0Q==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 0A31046E89;
+	Wed,  4 Nov 2026 15:36:50 +0000 (UTC)
+From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
+Date: Wed, 04 Nov 2026 09:36:50 -0600
+Subject: [PATCH ath-next] wifi: ath10k: don't warn about a pdev param the
+ firmware lacks
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -65,53 +83,107 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261104-b4-ath10k-unsupported-pdev-param-v1-1-b3973cef8a72@gmail.com>
+X-B4-Tracking: v=1; b=H4sIABFR62oC/yWNWwrCMBQFt1Lutxdy2yDoVsSPpDm1UUxDHqVQu
+ nejfg6HM7NTRvLIdO12Slh99ktoIKeOxtmEB9i7xtSr/iyiNFvNpsyiXlxDrjEuqcBxdFg5mmT
+ erI3YCwZYmUBNExMmv/0SN2pXDtgK3f9LrvaJsXwLdBwf/fZNAY4AAAA=
+X-Change-ID: 20261104-b4-ath10k-unsupported-pdev-param-4a1b9e3eb1fe
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, 
+ Christopher Griffin <christophergriffin05@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793806609; l=3220;
+ i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
+ bh=FSA292u5sCTcbszeVed2MuneSQSw8t2SoCteAKWPoU8=;
+ b=EBX0Q4NJ1xPErZiJJT39EEgLp79tCgdRVMqeWXrewECTgvMS4XI2mTCB3cMf+g6u3Kji10nhZ
+ oYl0MGyNh20DLNAa9lOPEe5XSuU04DL9z5gt7mA4/hJT7E4zzZGjrDv
+X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
+ pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
+X-Endpoint-Received: by B4 Relay for
+ christophergriffin05@gmail.com/20261024 with auth_id=1309
+X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
+Reply-To: christophergriffin05@gmail.com
+Content-Transfer-Encoding: 7bit
 
-cfg80211 calls set_power_mgmt with timeout -1 when userspace leaves the
-dynamic power save timeout to the driver, as NetworkManager does. brcmfmac clamps that to BRCMF_PS_MAX_TIMEOUT_MS, so the firmware
-stays awake for 2 s after every frame in PM_FAST mode and rarely sleeps
-with the background traffic of a typical network.
+From: Christopher Griffin <christophergriffin05@gmail.com>
 
-Use 200 ms for -1. macOS 15.4.1 sets pm2_sleep_ret to 200 ms on the
-BCM4377 of a MacBookAir9,1, seen in a trace of its iovar calls across a
-sleep and wake cycle. Measured on a MacBookPro15,1, idle with WLAN
-associated:
+On firmware other than WMI-TLV, every start of the radio logs
 
-  pm2_sleep_ret 2000 ms: 11.2 W system power
-  pm2_sleep_ret  200 ms:  9.2 W
-  WLAN off:               8.8 W
+  ath10k_pci 0000:01:00.0: pdev param 0 not supported by firmware
 
-Tested-by: Yossef Osman <Yossef.Osman@proton.me>
-Tested-by: Aditya Garg <aditya.garg@linux.dev>
-Signed-off-by: Andre Eikmeyer <dev@deq.rocks>
+and every association of a station interface logs it again, followed by
+
+  ath10k_pci 0000:01:00.0: failed to enable peer stats info: -95
+
+ath10k_start() sets idle_ps_config and ath10k_bss_assoc() sets
+peer_stats_info_enable; only the WMI-TLV pdev param map has them, the
+others hold WMI_PDEV_PARAM_UNSUPPORTED, and the set returns -EOPNOTSUPP
+after the warning. ath10k_start() already takes -EOPNOTSUPP as no
+error, so the warning tells nothing.
+
+Report an unsupported pdev param at debug level, as an unsupported
+vdev param already is, and let ath10k_bss_assoc() take -EOPNOTSUPP as
+no error too. A caller that needs the param still warns with the
+error.
+
+Seen with QCA9882 radios on 10.1 firmware used as scanning and test
+stations: 204 "pdev param 0" and 62 "peer stats info" warnings in ten
+hours on one access point.
+
+Tested-on: QCA988X hw2.0 PCI 10.1-ct-8x-__fW-023-23ea9f8e
+Tested-on: IPQ4019 hw1.0 AHB 10.4b-ct-4019-fW-14-fcb240f0
+Assisted-by: Claude:claude-opus-5-5
+Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
 ---
-The KaiT2en community runs this patch with its kernels, no regression
-was reported.
+Tested with ath10k-ct's copy of these two functions, which carries the
+same lines (OpenWrt's default ath10k driver for these chips), on a
+QCA9882 scan radio and the IPQ4019 radios of an Arista W-118: before,
+each firmware start and each station association logged the warnings;
+with the change, none in two firmware starts of each radio and an
+association of the QCA9882 as a station. This patch itself is
+compile-tested on ath-next (wmi.o, mac.o, W=1).
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 46714d87126..e7b21703e34 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -88,6 +88,7 @@
- #define BRCMF_ND_INFO_TIMEOUT		msecs_to_jiffies(2000)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8e604697d6c20..20b91e8abb5be 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3158,7 +3158,7 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
  
- #define BRCMF_PS_MAX_TIMEOUT_MS		2000
-+#define BRCMF_PS_DEFAULT_TIMEOUT_MS	200
+ 	ret = ath10k_wmi_pdev_set_param(ar,
+ 					ar->wmi.pdev_param->peer_stats_info_enable, 1);
+-	if (ret)
++	if (ret && ret != -EOPNOTSUPP)
+ 		ath10k_warn(ar, "failed to enable peer stats info: %d\n", ret);
  
- /* Dump obss definitions */
- #define ACS_MSRMNT_DELAY		80
-@@ -3378,6 +3379,9 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
- 			bphy_err(drvr, "error (%d)\n", err);
+ 	ret = ath10k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index e57588c19c800..a2efd2188d111 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -6544,8 +6544,8 @@ ath10k_wmi_op_gen_pdev_set_param(struct ath10k *ar, u32 id, u32 value)
+ 	struct sk_buff *skb;
+ 
+ 	if (id == WMI_PDEV_PARAM_UNSUPPORTED) {
+-		ath10k_warn(ar, "pdev param %d not supported by firmware\n",
+-			    id);
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "pdev param %d not supported by firmware\n", id);
+ 		return ERR_PTR(-EOPNOTSUPP);
  	}
  
-+	/* cfg80211 passes -1 when userspace asks for no particular timeout */
-+	if (timeout < 0)
-+		timeout = BRCMF_PS_DEFAULT_TIMEOUT_MS;
- 	err = brcmf_fil_iovar_int_set(ifp, "pm2_sleep_ret",
- 				min_t(u32, timeout, BRCMF_PS_MAX_TIMEOUT_MS));
- 	if (err)
 
-base-commit: 991a73f4909f1348ffb4b38765cdb522a775e4c2
+---
+base-commit: a3ddbb45768717b5c9f923489387cf55c838d1ad
+change-id: 20261104-b4-ath10k-unsupported-pdev-param-4a1b9e3eb1fe
+
+Best regards,
+--  
+Christopher Griffin <christophergriffin05@gmail.com>
+
+
