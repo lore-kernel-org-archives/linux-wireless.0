@@ -1,64 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793824336;
-	b=s56kXZ1I0ZOhexKm8L2KIQbmMt0LmJKSvewelTJnC3qbKKtgLr+N2QGEdWtwTREncjp8
-	 av7Pv58XQ4nDKR4A78P/mOjSHvzNN6H+zlDmfydFMR5sVWcsKhRfWJhYd4Q2ypSfnT96w
-	 E/yYywnc6zwLMeunE/MbwB7lQMG4Ffvvu0aTLUNzUZba/uXmrkWavBdgtCkVVuxDAMy0B
-	 D68ihLuyKLEvrUG8HbW6MinNLQkPpiQ49AhBGhJGYmhO3L2FiP9eCQcl67sAq4P91yseA
-	 8EX3F6GN5t3uO95u90wQcVaZDdY0HE5qJ+S/Qyp96JJ1Z5cN/pe143hXfUb5WiYpdng==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793824336;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-ZohoMailClient;
-	bh=D8EPv1iZVj0e7JdeDiAc2KXRHYoRaI6ZUJiuMbKDElg=;
-	b=VNclHvydQwJMEbjKWH+EmAhLZxPa7qflsBx8ypnTaEJsuzgROoDY4NxQTRweOzJ3OFWU
-	 lHNrv8lmHqFxcSnF208QgTc8Vcudq9O8Lie6g8jdF8uUGCXz/ZENIV3LuDfQQTco7hw5H
-	 mIx1vJtnXjvVzFyBnHYYKz8Q1RoN977FY/TF4lR5vlqxOgc2PpDBD8nATFp5NVHMoEK9E
-	 3gsb/c0cf60M/HWv2bBaeh7akWAMlBrSRpm6lZ1uPUg6Ud3ZN5agX1Z9hh6JgPJFvg394
-	 Xj+HqyKnLRNTBTJmyOJknMmMqPWVPNNiOm9dDzpl2patCyaJMgJdnIo1pvHVUIsvHzw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=ph4ntom-rev.uz;
-	spf=pass smtp.mailfrom=ph4ntom-rev.uz;
-	dkim=pass header.d=ph4ntom-rev.uz header.i=@ph4ntom-rev.uz header.a=rsa-sha256 header.s=zoho header.b=u2boLiBe;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.54
-Received: from sender5-of-o54.zoho.com (sender5-of-o54.zoho.com [165.173.182.54])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793826818;
+	b=iqnGXupxUviPY33zD1FStVk1VbklsJlNPmE2dcB5ghAM/EayDDG484DcqZ145NmQUzc5
+	 SvKHFiI/usLpwrK3ASDLRNgOlB5Ko6IbrvKGWJzjV26Bx4IEMrRNLwNavinG1q3IPCFmT
+	 hPxdQGv0MiQihLfOTbXL+P+HFXfdEhz7rkytigDiWh4ZEGQLHoVpvteMZKdgVLbkO5xvQ
+	 P5KloNFQfebP8yaVQMezRc0kML+Alylswhg1URIKfGXvYfUZEhJoo59PkLRuD/ynO9WRu
+	 FryAhV8Ndu489sXcgEJfrOi+fZUcxlFTf1dVshtTWmFIQnLFmCVq7E5tq3JK/lxPEBw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793826818;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=jcn7jVvcEygiBPhKNySOIoE9F539N91xJ4TgqDQUCP0=;
+	b=xce7UO9Ek68T2WDZy46lxQ9ZbL/7rTxo9NcksIk0g2NIiPdKgfb4kPS8aG/r+M4iCs+A
+	 x0bXNcoqWn6cxxtBQPBlXDFOIFdlH1AnmLj9047bXZvOIfx5+A3xKkGhKkhogD9jUwiwi
+	 g9fKVtx0bFI4CXN8xBt3KwB5/jifga0mVw77MkD36djqDo91rH+4yCwV5afE2dx+63od9
+	 Y4J4HBEkUFCgwpZo1EqHoruz3VXAmXVsAxfLvA1oRlIdHatl86FDD8vNWfSZuyVdn0j4k
+	 jhCJYe0eLpjjM4QAcMC9v9A4m8bmPdmumA5DzPimuFHzjrdJHEJf21D3KTEnsUmPNBQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V7uflGoo;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF18E606A852;
-	Wed,  4 Nov 2026 20:32:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF18E606A852
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ph4ntom-rev.uz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ph4ntom-rev.uz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 963DD6070300;
+	Wed,  4 Nov 2026 21:13:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ph4ntom-rev.uz header.i=@ph4ntom-rev.uz header.a=rsa-sha256 header.s=zoho header.b=u2boLiBe
-ARC-Seal: i=1; a=rsa-sha256; t=1793824266; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=los6XWqWlSlswbx/xyWJcSkqnA9Kx2xDrcPMPnH/QN9/wqeWKVE3dIdY07llbIRdfHS48t7mH3ZylvvRdeFRO0EWCgyzGbPPm364xc3H/a/0PX+ooAQYmAk8CGGc0L9lD1Z9DJa+idCHkicsLxtZUwGfhTIxAskTStjF+zBCl0s=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1793824266; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=D8EPv1iZVj0e7JdeDiAc2KXRHYoRaI6ZUJiuMbKDElg=; 
-	b=bjONy6es/OYGFUa5p0g8TI91cj22A2LjnStUnA1gYnom3e7Dm0edC+mKAbsEkE6bNcLiRAUmrHTJKe5okk3D1qLBwOcJHR+BtsmmzW5OT8dQ8IY16YHwwW1zF0Xj1ABU39xP0/CeXMj2OQD5rtR1dI4TPLyxOhg5C/P5LS1nKds=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=ph4ntom-rev.uz;
-	spf=pass  smtp.mailfrom=owner@ph4ntom-rev.uz;
-	dmarc=pass header.from=<owner@ph4ntom-rev.uz>
-DKIM-Signature: a=rsa-sha256; b=u2boLiBeGD/mFMlMok0sflPDIyab4X4BGeSXQssFePqXfaJFN/4WxNCS2fbzWbpjVE2wn3Af6980+hdu0QUVvwcOXKdras3X8TRyXXP29XIRv0PqdfQEVkM+ry1BV5Hoz13jlDQUrzaj7r/U88/AH3dNrfGlDOV3dntnRK7FOiQnxuIT/09po23nNwgEHcFfLV/XEkdL8CRqmc2wT5aQAhh9oyZCvDppASgDfP8AVs/A0BtPtnH8PsqpmRuVG2gdVEaycInG0FjDRsdedtEEV/shgYcn5+gy4igUasj/vjqRrbAW31pIOLW1UtcFkaf0Xo0VLMxOJbrU2dDxLT6hkg==; c=relaxed/relaxed; s=zoho; d=ph4ntom-rev.uz; v=1; bh=D8EPv1iZVj0e7JdeDiAc2KXRHYoRaI6ZUJiuMbKDElg=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
-Received: by smtp.zohomail.com with SMTPS id 1793824265463463.39423035620416;
-	Wed, 4 Nov 2026 12:31:05 -0800 (PST)
-From: Enver <owner@ph4ntom-rev.uz>
-To: linux-wireless@vger.kernel.org
-Cc: pkshih@realtek.com,
-	kvalo@kernel.org,
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V7uflGoo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 890731F000C1;
+	Wed,  4 Nov 2026 21:13:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793826817;
+	bh=jcn7jVvcEygiBPhKNySOIoE9F539N91xJ4TgqDQUCP0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=V7uflGoo2J6W0Pkam2p2NQ2ygDWILS85YrEGrtDhRX9LSpjax7FTdN9yNxg/1nr/F
+	 V+6mFIzh3/JJOAXY6DVlJDG4EpV1IqKbiDMaZqe2+mP/VD4uYvDHSHZdC+YPnvDk4p
+	 B+fx/mBspdALJuO5S6++QQQg+yaKZfyhFe96p7DkhDOmjrSDCUkzL7D2l6jIRx9hog
+	 t02UJbdl2o8LcfstRp/uZbtHAIBJlVxjfK6tVrDPho366mZ6VCIHILqfMZVkkl7EFn
+	 VcPqHyjXoZJ1/HnO4R2TW6BDouO7Vr2s8cHixo92YGxXCqi5rLrqQLQrblFCpmhTUC
+	 1HY2L3LLxnrag==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
 	linux-kernel@vger.kernel.org,
-	Enver <owner@ph4ntom-rev.uz>
-Subject: [PATCH v3 3/3] wifi: rtw89: restore channel after monitor interface restart
-Date: Thu,  5 Nov 2026 01:30:51 +0500
-Message-ID: <20261104203051.564-4-owner@ph4ntom-rev.uz>
-X-Mailer: git-send-email 2.56.0.windows.4
-In-Reply-To: <20261104203051.564-1-owner@ph4ntom-rev.uz>
-References: <20261104203051.564-1-owner@ph4ntom-rev.uz>
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 09/13] SUNRPC: drop the ioctl of the procfs channel files
+Date: Wed,  4 Nov 2026 22:13:23 +0100
+Message-ID: <20261104-work-procfs-net-v2-9-221e2437fed1@kernel.org>
+In-Reply-To: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -68,68 +114,55 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1562; i=brauner@kernel.org; h=from:subject:message-id; bh=I+ev37oI2qOnQB50E4hs4C0vKquyHn0mn+uzhhuE9es=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97tO7MzO6bl7rnYiJS+98LnRI2rB8SW+2zhcm6VmdL mnzZE2COkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACaimsHIsCL/pkeQ2tMV86Sm GCnwci6xzri2a8OqYh1BgwP67+/djmP4Z6MoeGKi/4+z3/fFeyZzP/p6Min5j4995fEbyvr+l0+ ZMwEA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-X-ZohoMailClient: External
 
-After the last monitor interface is removed, the hardware is stopped.
-When monitor_chanreq remains unchanged across the next stop/start cycle,
-mac80211 does not issue IEEE80211_CONF_CHANGE_CHANNEL, so
-rtw89_set_channel() is not called. Hardware initialization completes, but
-monitor-specific channel and RF calibration state is not restored,
-leaving monitor RX and injection unusable.
+do_vfs_ioctl() answers FIONREAD for regular files with i_size - f_pos
+before it gets to the file's ->unlocked_ioctl(). The channel files are
+regular files, so cache_ioctl_procfs() has never seen FIONREAD and only
+ever failed other commands with -EINVAL. Drop it. Other commands fail
+with -ENOTTY now.
 
-Restore the channel after successful monitor VIF creation, once
-pure_monitor_mode_vif has been published, so RF calibration sees the
-monitor role. If channel restoration fails, disconnect the firmware role,
-clear the pointer and synchronize RCU before unwinding the link. Preserve
-the original error while logging any disconnect failure separately.
+The rpc_pipefs channel files are regular files as well.
 
-Tested on RTL8852AE with 25 monitor delete/recreate cycles, both with and
-without concurrent raw injection. Post-stress RX and injection succeed,
-with no new kernel alerts. A forced -EINVAL test verified the rollback
-sequence and disconnect before link cleanup.
-
-Fixes: d9204e99b696 ("wifi: rtw89: do RF calibration once setting channel when running pure monitor mode")
-Signed-off-by: Enver <owner@ph4ntom-rev.uz>
+Acked-by: Chuck Lever <cel@kernel.org>
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw89/mac80211.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ net/sunrpc/cache.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index 5404e03..caaf817 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -189,7 +189,7 @@ static int rtw89_ops_add_interface(struct ieee80211_hw *hw,
- 	struct rtw89_vif *rtwvif = vif_to_rtwvif(vif);
- 	struct rtw89_vif_link *rtwvif_link;
- 	u8 mac_id, port;
--	int ret = 0;
-+	int ret = 0, disconnect_ret;
+diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
+index 81a3f0068f36..d242b6f33cbc 100644
+--- a/net/sunrpc/cache.c
++++ b/net/sunrpc/cache.c
+@@ -1596,15 +1596,6 @@ static __poll_t cache_poll_procfs(struct file *filp, poll_table *wait)
+ 	return cache_poll(filp, wait, cd);
+ }
  
- 	lockdep_assert_wiphy(hw->wiphy);
- 
-@@ -245,6 +245,9 @@ static int rtw89_ops_add_interface(struct ieee80211_hw *hw,
- 		if (ret)
- 			goto remove_link;
- 		rcu_assign_pointer(rtwdev->pure_monitor_mode_vif, rtwvif);
-+		ret = rtw89_set_channel(rtwdev);
-+		if (ret)
-+			goto remove_monitor;
- 	} else if (rcu_access_pointer(rtwdev->pure_monitor_mode_vif)) {
- 		rcu_assign_pointer(rtwdev->pure_monitor_mode_vif, NULL);
- 		synchronize_rcu();
-@@ -252,6 +255,14 @@ static int rtw89_ops_add_interface(struct ieee80211_hw *hw,
- 	rtw89_recalc_lps(rtwdev);
- 	return 0;
- 
-+remove_monitor:
-+	rcu_assign_pointer(rtwdev->pure_monitor_mode_vif, NULL);
-+	synchronize_rcu();
-+	disconnect_ret = rtw89_fw_h2c_join_info(rtwdev, rtwvif_link, NULL, true);
-+	if (disconnect_ret)
-+		rtw89_warn(rtwdev,
-+			   "failed to disconnect monitor vif during rollback: %d\n",
-+			   disconnect_ret);
- remove_link:
- 	__rtw89_ops_remove_iface_link(rtwdev, rtwvif_link);
- unset_link:
+-static long cache_ioctl_procfs(struct file *filp,
+-			       unsigned int cmd, unsigned long arg)
+-{
+-	struct inode *inode = file_inode(filp);
+-	struct cache_detail *cd = pde_data(inode);
+-
+-	return cache_ioctl(inode, filp, cmd, arg, cd);
+-}
+-
+ static int cache_open_procfs(struct inode *inode, struct file *filp)
+ {
+ 	struct cache_detail *cd = pde_data(inode);
+@@ -1624,7 +1615,6 @@ static const struct proc_ops cache_channel_proc_ops = {
+ 	.proc_write_buf	= cache_write_procfs,
+ 	.proc_write_size = CACHE_DOWNCALL_MAX,
+ 	.proc_poll	= cache_poll_procfs,
+-	.proc_ioctl	= cache_ioctl_procfs, /* for FIONREAD */
+ 	.proc_open	= cache_open_procfs,
+ 	.proc_release	= cache_release_procfs,
+ };
+
+-- 
+2.53.0
+
