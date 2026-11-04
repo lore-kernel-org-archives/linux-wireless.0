@@ -1,110 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.19
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793814381;
-	b=5MG+YJQ/uiSIWSjn5832Gc5BjqKYg9WlsvLRGUgdDKNF1hl84DFb2hCAnLXBJ90sxHZr
-	 d9e8na6YKC/XxQG0EFlV58L6s30au7D4/VRxsYacxXiqUTQbQ8YIFVW0gGHxPlQP9OU1Z
-	 FtTF3bmt7m9UGoa9ymsKxM6jOzvk9dHPM+EORe9WgjD8byZJ7r0RDsEGjpb/pj/BnR+AG
-	 qcSjLzkvWOxo1wBje/B9dl5MIWfQ+/bgnQgJLgUcIdLqveXWCXPywrAWMs+PtmaH11vDy
-	 ioitRQMnG6EszUF3w+b235RqezPhZZddO9263Hzmgmy4hb+BP7VuOjmdpY6MNkn1fTQ==
+	t=1793814503;
+	b=vvi23XfEZerXMPZvHkonw212SGvqvj+o1whj8nJ8q8e0zCVH95rf8JIDsWwRXv1+54qi
+	 Mx41D+Iez/ftCgsYhUvgtz5L81XP7mrpFNwOeq2TTKHSxLsgUbBEeajG1nPlgpWRNnZhl
+	 DQVIQPmDLyyW2L5oslyNzGQya+cnyeZ/LB7Fesa/8wWGXaRJGgXys555tquNOt9uIW/x7
+	 5lhuY0iiaVdoSLcdwoi9uwi9RWZ1pEmF0yS7Notd3kLhwfOs4OtAZY5pO/WbDa8+WK5O3
+	 emGwtBDOh26qhLgT/opHa1atVd0hiMcsuWg1YiGZDqHVO/N90HXG72R3v9HcpGqfEug==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793814381;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=mdnthwMs9LvqnLJy6kPpeiwqrlhi6ADC7izliWiN2IE=;
-	b=E/6EnKvKHE11CYhPPq9/x8sL5n8zZ+0rf37Ey6EqLwXNZJQKSK4WBnK673H4F4WKTgb5
-	 SOxlGN/PmgVcH2lY3TKsoK/j+9DfEwvK0wLVWehG2r5KtfwfDD2KG2ORJ7cKCYWgiVfSz
-	 JC7Oh5HZVnfiiE8lVDRQDkE0rTq0RqHMw9rTGp6aWr4LJ//Ue6+wwsNOLO5d7QFJu5KDq
-	 g3SxGjC41iwsz79QHiYzYd6cV6qAKzzzxLpsNcfSQHuzSGQp3zcc0ToYYsmYiZDbBT3Ia
-	 EjKR8BlZRSuwn2V5EntSvPWAE4E/31hF45IyTC3NuqGb21EJgQa5hu3y5elgnvDwj5A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793814503;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=tq7IoD6yji3CA3UfNNagARQUoCp3JvhYDQlnNNTxN8M=;
+	b=A3uSyNRHiZu1rGt4bCzmZEr4DoVsWFwgu/Wp5W3L+Ntmo9wRmjaf/qXUgz6Mhq5AOohS
+	 FOkO/x8xlm9ctLmtUnMT/Gq7pb7PPtYzas+Qu4pJ9tSU7hNaEXo8Jd2Df+u406qnuf4wz
+	 e+FiEwkaL7wZk/Hzi3+nZzfkoSH+nOmNJHo7OvBseIgfDlmHICwEkCIBuE1yy7virXPXn
+	 SE9JklA6g5IUTrZke/wFBhlBhghOm32PRTJeaJdn/X3hY43q2k5Jav4ukSflPPRIhIMji
+	 Z5S7EpeG8ulYcQZNBeEBGjFlTt0Zjtl7CNrv2sAEzkoJ3ARze+G6CMYAALT62qrFPSw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="IUyU/T8J";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Zgmzsxe6;
+	arc=none smtp.remote-ip=198.175.65.19
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECDCD606A328;
-	Wed,  4 Nov 2026 17:46:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF90E606A331
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 17:48:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF90E606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IUyU/T8J
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A0831F00919;
-	Wed,  4 Nov 2026 17:46:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793814380;
-	bh=mdnthwMs9LvqnLJy6kPpeiwqrlhi6ADC7izliWiN2IE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IUyU/T8JanEUeWb8OLvnBOF7mcsDaYX0yn50MMyhywpzR+Xd73lI68b+Z0EjhqK7z
-	 bkEkttde6fJvRPVGGA2MZkA0GbASE8FC1nT+84ODvZFzTbBCjYw8IWtatNsrtMoyrH
-	 KXUF53QFRfDUagwA56DH/VxXp+wT5/pJfjV3gzlKef2KUiN1HSYpnfrnWdn1nbnNKf
-	 O/7xCRN+TNpny8Le4H87j8uBb2tQPjPggOwQvaiPHTFrUkQgsfx/jAR3vQ6vrxrWe7
-	 JaBxG35YdcKRtCdLtOxgMygQkmiRV8AYLKhLlP/iKh/wi1njtDUmOUna6ss0EP8ecg
-	 vvOH1vOWWni9g==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH v2 12/51] powerpc/rtas: consume the whole write to /proc/powerpc/rtas/progress
-Date: Wed,  4 Nov 2026 18:45:55 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-12-bbf7d5546809@kernel.org>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
-References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Zgmzsxe6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793814502; x=1825350502;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=icpdKJ+0niq0nYCtA2vfEffSOgXeLUS0eW9q5qpYy3g=;
+  b=Zgmzsxe633hVy3wBh2TB0SyyuX6yxW8CAPFHXnTqn2UTWLYFssO2LU/Z
+   Zmju4TA2dseMZqzOwFCR3g94TzOaEjdNNd65ebO7MkeHI2JHMcDifQYdL
+   1MmnGKtYwnB4bgbJveNGrbQ0KbO19rCJsmosy0Yt4vwUxP9KbhvNM+O+1
+   //WOatY4oAgINo/dCcwi/BCAlnAY5h5Hx1osWbLpM1wGwb206bfuuXiwK
+   h48retZ+LFH6z2hcaKrJxGaeGxa9IdCuk4Yn9BhVY1NfpS3h5/xXkE8W3
+   OARVGJBnOJXP4aEgGvzLxtnZ/7rGEUNwyQ04eLla4zHSFfr3cMyMLyRDq
+   w==;
+X-CSE-ConnectionGUID: I1Y1qlodT2Ky4a5QBO9a5g==
+X-CSE-MsgGUID: vMo71TsISIGeK/s6Fqj46A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11956"; a="2613997"
+X-IronPort-AV: E=Sophos;i="6.27,195,1787036400"; 
+   d="scan'208";a="2613997"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2026 09:48:21 -0800
+X-CSE-ConnectionGUID: FVoAJvDaShGaiBQw/PTi+A==
+X-CSE-MsgGUID: e1y7x+ebSaOaXSGNPUYquQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,195,1787036400"; 
+   d="scan'208";a="7138092"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa006.fm.intel.com with ESMTP; 04 Nov 2026 09:48:21 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xOf5t-00000000knv-3fqd;
+	Wed, 04 Nov 2026 17:48:17 +0000
+Date: Thu, 5 Nov 2026 01:47:26 +0800
+From: kernel test robot <lkp@intel.com>
+To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, johannes@sipsolutions.net
+Subject: Re: [PATCH wireless-next 08/18] wifi: cfg80211: add KUnit tests for
+ the SCS classifier
+Message-ID: <202611050107.DAV4Z5Au-lkp@intel.com>
+References: <86f50b8e75254418218c0c32399d272dea638cac.1793722802.git-series.nbd@nbd.name>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -114,45 +82,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1217; i=brauner@kernel.org; h=from:subject:message-id; bh=uNEn+pHXbIRRMkqtNF6NnFXDW3eMy9Pk3SJ7wJuNwck=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zjsreObfmrOX1obn3tw0N6WpU3RvwOStvn2i0U5yp rEGLx+odpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwk8Agjw1Z5rj/rEq/Xb9Zi nJlScTdg1ruoGZHGhW11TVmdwqnc0xgZOpo+NM6qs41edOyOUPc3kzd2G/9GyxwJqc6SeXR2q9J OfgA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <86f50b8e75254418218c0c32399d272dea638cac.1793722802.git-series.nbd@nbd.name>
 
-ppc_rtas_progress_write() shows the first 255 bytes of a write and
-returns that many, so a writer that loops until everything is written
-shows the rest as a second message. Return the whole count, the rest is
-ignored.
+Hi Felix,
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- arch/powerpc/kernel/rtas-proc.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+kernel test robot noticed the following build errors:
 
-diff --git a/arch/powerpc/kernel/rtas-proc.c b/arch/powerpc/kernel/rtas-proc.c
-index f38df72e64b8..89b165986851 100644
---- a/arch/powerpc/kernel/rtas-proc.c
-+++ b/arch/powerpc/kernel/rtas-proc.c
-@@ -311,6 +311,7 @@ static int ppc_rtas_poweron_show(struct seq_file *m, void *v)
- static ssize_t ppc_rtas_progress_write(struct file *file,
- 		const char __user *buf, size_t count, loff_t *ppos)
- {
-+	size_t len = count;
- 	unsigned long hex;
- 
- 	if (count >= MAX_LINELENGTH)
-@@ -324,7 +325,7 @@ static ssize_t ppc_rtas_progress_write(struct file *file,
- 	hex = simple_strtoul(progress_led, NULL, 10);
- 
- 	rtas_progress ((char *)progress_led, hex);
--	return count;
-+	return len;
- 
- 	/* clear the line */
- 	/* rtas_progress("                   ", 0xffff);*/
+[auto build test ERROR on 991a73f4909f1348ffb4b38765cdb522a775e4c2]
 
--- 
-2.53.0
+url:    https://github.com/intel-lab-lkp/linux/commits/Felix-Fietkau/wifi-cfg80211-add-the-TCLAS-element-parsers/20261103-172334
+base:   991a73f4909f1348ffb4b38765cdb522a775e4c2
+patch link:    https://lore.kernel.org/r/86f50b8e75254418218c0c32399d272dea638cac.1793722802.git-series.nbd%40nbd.name
+patch subject: [PATCH wireless-next 08/18] wifi: cfg80211: add KUnit tests for the SCS classifier
+config: x86_64-randconfig-1015-20261104 (https://download.01.org/0day-ci/archive/20261105/202611050107.DAV4Z5Au-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261105/202611050107.DAV4Z5Au-lkp@intel.com/reproduce)
 
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611050107.DAV4Z5Au-lkp@intel.com/
+
+All errors (new ones prefixed by >>, old ones prefixed by <<):
+
+>> ERROR: modpost: net/wireless/tests/cfg80211-tests.ko: symbol 'cfg80211_mscs_desc_valid' undefined!
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
