@@ -1,11 +1,11 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793784236;
-	b=be4Ng0U9ZWBJXnCSsA8xi1rq34ZfzEUfG99aLYnVyBr0/rYT+KkIZ1mLFLQ3aNk8IXla
-	 NbnoSVhyQZbkzQPcE+M48LAq6AUL3IbxYWpDj5Kud2qT0MShxMfM9V81VCPRITtRo2mr5
-	 jRjkvzDjLKlphz4t4qRTxv49DQQXVMQW5hevKT42D7QRO1pEfniaErrsauWefI/6IewJL
-	 cKK57vV8M69IB1fRoywHxanD9L6xe0HJx9+ijXEL4YwX5BKJwKyJeFmeZct0g3pNZdQ49
-	 UTH0k8iXnhfjGNUqO2q/Trt9JSDpXhQGZgLd11rYds0A8RkQuHPXcNd/gIDMlaLtfJA==
+	b=Z9glxS7o67VHEWLUVvYf890v1CQ/oY+1I1AtoskOn3082Cpu9Gjth6n/W6uJX2zcHSnj
+	 9LHlpqq/VGrN1eRpNoernyBHHbNl8wEUs0O5djLku2OJpFNGj/a4BnUJ+HTIhwiFrfvhR
+	 gCG1GvUWtAzz4/5qYPoCslK938zkpbpqsvfpAehAlEADX1WqYNsYgogI8I+/rKOQMZExK
+	 McY46kXjSkls/h9DRNnUR9BHeygrY+uvOdyKPBGtwN+/w7qKvmlYhQrFTuN9zt5RZEqNu
+	 qNXiudnTn7j4OjjJuspWDeUoonFh79nWbSq6Y+PhxLQjgBYRwOIdvLTOeOaWicf4c6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793784236;
 	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
@@ -13,64 +13,64 @@ ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
 	 Content-Type:X-MTK;
-	bh=RniTSC7vYIpPzGUbyDp7Fd8gv+ddi2hOHsrrNHe4dKc=;
-	b=fDcnr3NurlMcLVNv8llhtyKs4El7xDkwlqp3jLGdxOJySsPkMZSdyJoh9A3mnlAlGhk+
-	 BM9mWzvX2BIE3gW4oOR1Kw8h7rH7xoI6naVU6ziIVM1BYCbza8CyOhcSJjTWSpjyZMVOO
-	 l4c5T/3o1S3kEuKwiCwxFXNAJx1tPJ3F2WztnEYZ8z/+b31HetP4JQqsWNpFflCP9KpP/
-	 t5a9Pr51ahwge+27VGAQ7dLQztzfG3mFL1NVWz7lJa8K/M976WDw7uYEYFWX1A29pyTWt
-	 x3HCGS5niqyZWm3nKCxClE5BdqfuSJFOKm1AUlY5ZBekGtJvtwnlKPffDuHB+rsKRAQ==
+	bh=VLzlU5bROcg6hrBZF9apevX7FimRJFoFnBnz7zak1KE=;
+	b=4YjYKu9e6Ql+k6M3q8R9+cp+9aGUOKFUPucfG5VmqdJtDRxIAqtMmRWtyTE/8fizIMSa
+	 Csepspk23tFtESizCvs/QEjWjgqk5Be0RaliYBKE7aFHkbNFbqgLuR4U0wyLSoIvWVn6G
+	 KpVqSNlYNjcaqvf4nPq4WfpqYCtHd064U/HkvqY6Gq0gNDGrOnwgNbJZdTQgHhtr4UhKJ
+	 wchwpkkxZuzqj+AbqEDJhu/6c0NCRCBUNnuCI/rmo5a57CeHr+65fAi8F2X4M22BeB50j
+	 fnj0vRWNRYlVPai9r2hAcw/K9jya8OimeV+GtcHWITupVnaw3p1oR6z8cKBgYTX93ZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=mediatek.com;
 	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=Zi9JYyyg;
-	arc=none smtp.remote-ip=60.244.123.138
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=Y8oqCR7J;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4716E606D809
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 09:23:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4716E606D809
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EC60606D811
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 09:23:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9EC60606D811
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=Zi9JYyyg
-X-UUID: 71ac2f88d83111f1b1788b6acf885367-20261104
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=Y8oqCR7J
+X-UUID: 734ae276d83111f18dc8c9802ae25ab1-20261104
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=RniTSC7vYIpPzGUbyDp7Fd8gv+ddi2hOHsrrNHe4dKc=;
-	b=Zi9JYyyghtu7rur6oNzLfDXdjHH/rm5Hc0qfnSgAyMNSX754/U5rGNEX8Bky5a0/Bbzw1anBK27q8BqiDYgbE/QayIJdq6OYT4X9Io5wUAZWNvMI19BlY1zjlNB+6qt0MGJhJrqq0WyFnNJaTHZ0C9IWypWEE2gKaYMTo1vDguY=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=VLzlU5bROcg6hrBZF9apevX7FimRJFoFnBnz7zak1KE=;
+	b=Y8oqCR7JDseyXBM2FgHY4VNq5vL+VN7xJaNubqIWve3ZUYSxZhjKKR/395rY4Mdv+azMuDrzCq3TtdcDbLt4Yl6aL97LeakVZYyQ2tUNcoQRDc0a8bocNfiLpSAcHFBWtqosjFptsTK0315af2IiZREMiDNcqC5wICBOSCg2T5o=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:a770c840-72de-460e-a0d0-d3c898d2b159,IP:0,U
+X-CID-O-INFO: VERSION:1.3.21,REQID:bf7101a5-89d1-46c6-ba6e-63ef971b55b5,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:c5fd16ee-6961-456c-adce-6d277e14e6ad,B
-	ulkID:nil,BulkQuantity:0,SF:81|82|102|136|836|865|888|898,TC:-5,Content:0|
-	15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,CO
-	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:db0ec7ce-02bc-447e-ab88-2baec399874a,B
+	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
+	0|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0
+	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 71ac2f88d83111f1b1788b6acf885367-20261104
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+X-UUID: 734ae276d83111f18dc8c9802ae25ab1-20261104
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
 	(envelope-from <jb.tsai@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1798022471; Wed, 04 Nov 2026 17:23:49 +0800
+	with ESMTP id 2120480072; Wed, 04 Nov 2026 17:23:52 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 4 Nov 2026 17:23:49 +0800
+ 15.2.2562.29; Wed, 4 Nov 2026 17:23:51 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Wed, 4 Nov 2026 17:23:49 +0800
+ 15.2.2562.29 via Frontend Transport; Wed, 4 Nov 2026 17:23:51 +0800
 From: JB Tsai <jb.tsai@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<Sean.Wang@mediatek.com>, <James-LY.Huang@mediatek.com>,
 	<jb.tsai@mediatek.com>, james-ly huang <james-ly.huang@mediatek.com>
-Subject: [PATCH 6/9] wifi: mt76: mt7925: request the channel before programming a GO BSS
-Date: Wed, 4 Nov 2026 17:23:41 +0800
-Message-ID: <20261104092344.1932406-6-jb.tsai@mediatek.com>
+Subject: [PATCH 8/9] wifi: mt76: mt7925: track BSS absence and drop stale GO probe responses
+Date: Wed, 4 Nov 2026 17:23:43 +0800
+Message-ID: <20261104092344.1932406-8-jb.tsai@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20261104092344.1932406-1-jb.tsai@mediatek.com>
 References: <20261104092344.1932406-1-jb.tsai@mediatek.com>
@@ -89,275 +89,296 @@ X-MTK: N
 
 From: james-ly huang <james-ly.huang@mediatek.com>
 
-Mirror the STA JOIN channel-grant handshake for a P2P GO
-coming up. Without an ACQUIRE, mconf->mt76.band_idx stayed
-at the 0xff auto value that only a ROC grant fills in, so
-the BSS_INFO_BASIC always guessed the DBDC band:
+The FW tells the host with a BSS_IS_ABSENCE event when a P2P GO's
+BSS currently has no channel
 
-  - .start_ap runs ACQUIRE (GO_START_BSS reqtype, which CNM treats
-    as the BSS-owning request) -> add_bss_info with the granted
-    band_idx -> ABORT, with per-role hold times (3s P2P GO /
-    200ms SAP). Falls back to a JOIN request once on FW that
-    predates GO_START_BSS; a refused grant is not fatal;
-  - gate .change_chanctx on p2p: the RLM-only BSS_INFO_UPDATE
-    that mac80211 issues BEFORE the grant reaches CNM with a
-    guessed band - skip it, both roles send a full BASIC+RLM
-    update once the grant supplied the real band_idx
-    (mt7925_p2p_chanctx_bss_programmed in p2p.c);
-  - P2P GC join: hold the channel for 4s instead of the 1s
-    mac80211 default, so the whole auth/assoc exchange fits in
-    one grant (a GO only listens part of the time);
-  - renumber the channel-privilege reqtypes to match the FW CNM
-    interface (OFFCHNL_TX / GO_START_BSS / DFS_CAC);
-  - add mt792x_phy::roc_is_mlo so the grant handler can tell an MLO
-    ROC apart from a plain remain_on_channel request.
+  - latch the absent / free-quota state per bss_conf
+    (mt7925_p2p_mcu_bss_is_absence_event in p2p.c), and kick the
+    TX path (tx_worker) on the absent->present edge so whatever
+    piled up while the BSS had no channel is dequeued
+    immediately;
+  - clear the latched state where the BSS index is (re)assigned:
+    a GO stopped while absent and restarted on the same netdev
+    would otherwise come back with absent still latched and drop
+    every Probe Response until the FW sends a presence event
+    for the new bss_idx;
+  - the TX path (mt792x_tx) drops a GO Probe Response while the
+    BSS is absent - by the time the FW comes back the requester
+    has moved on, so the response is stale and only costs airtime
+    and a TX-abort.
 
 Signed-off-by: james-ly huang <james-ly.huang@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7925/main.c  | 65 ++++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 10 +--
- .../wireless/mediatek/mt76/mt7925/mt7925.h    | 16 ++++-
- .../net/wireless/mediatek/mt76/mt7925/p2p.c   | 35 ++++++++++
- .../net/wireless/mediatek/mt76/mt7925/p2p.h   |  2 +
- drivers/net/wireless/mediatek/mt76/mt792x.h   |  1 +
- 6 files changed, 119 insertions(+), 10 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  1 +
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 12 +++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  3 +
+ .../net/wireless/mediatek/mt76/mt7925/p2p.c   | 97 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/p2p.h   | 20 ++++
+ drivers/net/wireless/mediatek/mt76/mt792x.h   | 25 +++++
+ .../net/wireless/mediatek/mt76/mt792x_core.c  | 16 +++
+ 7 files changed, 174 insertions(+)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 817554ffb9d8..2acaae9830fb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1102,6 +1102,7 @@ enum {
+ 	MCU_UNI_EVENT_SAP = 0x1c,
+ 	MCU_UNI_EVENT_ROC = 0x27,
+ 	MCU_UNI_EVENT_MBMC = 0x28,
++	MCU_UNI_EVENT_BSS_IS_ABSENCE = 0x29,
+ 	MCU_UNI_EVENT_TX_DONE = 0x2d,
+ 	MCU_UNI_EVENT_THERMAL = 0x35,
+ 	MCU_UNI_EVENT_RSSI_MONITOR = 0x41,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-index b82360da9791..cfdb736f53ca 100644
+index cfdb736f53ca..25e981e38ea9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-@@ -2050,11 +2050,51 @@ mt7925_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
- 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-+	struct mt792x_bss_conf *mconf = &mvif->bss_conf;
-+	bool roc_taken = false;
-+	u32 hold_time;
- 	int err;
+@@ -401,6 +401,18 @@ static int mt7925_mac_link_bss_add(struct mt792x_dev *dev,
+ 			       0 : mconf->mt76.idx;
+ 	mconf->mt76.band_idx = 0xff;
  
- 	mt792x_mutex_acquire(dev);
- 
--	err = mt7925_mcu_add_bss_info(&dev->phy, mvif->bss_conf.mt76.ctx,
-+	/* Mirror the STA JOIN channel-grant handshake for a GO/AP coming up.
-+	 * mt7925_mac_link_bss_add() leaves mconf->mt76.band_idx at 0xff (auto)
-+	 * and mt7925_mcu_roc_iter() - reached only from a ROC grant event - is
-+	 * the ONLY writer of it. A GO had no ROC at all, so the BSS_INFO_BASIC
-+	 * below always carried band_idx=0xff: the host never learned which DBDC
-+	 * band the FW parked the GO on, TXD1 TGID stayed FW-auto, and the
-+	 * host-built IEs could end up describing a different channel than the
-+	 * one the radio actually ended up on.
-+	 *
-+	 * The request type is GO_START_BSS, not JOIN: CNM treats
-+	 * GO_START_BSS as the BSS-owning request, so it is allowed to
-+	 * create a new channel context rather than only joining an
-+	 * existing one.
++	/* A freshly configured BSS is on channel until the FW says otherwise.
++	 * mt792x_bss_conf lives in vif->drv_priv / mvif->link_conf[], which
++	 * mac80211 only zeroes when the interface is created - a GO that is
++	 * stopped while absent and restarted on the same netdev would come back
++	 * with absent still latched, and then drop every Probe Response until
++	 * the FW happens to send a presence event for the new bss_idx. Clear it
++	 * here, where the BSS index is (re)assigned.
 +	 */
-+	if (mconf->mt76.ctx) {
-+		hold_time = vif->p2p ? MT7925_P2P_CHNL_HOLD_TIME_MS :
-+				       MT7925_SAP_CHNL_HOLD_TIME_MS;
++	mconf->absent = false;
++	mconf->free_quota = 0;
++	mconf->absence_tstamp = 0;
 +
-+		err = mt7925_set_roc(mvif->phy, mconf, mconf->mt76.ctx->def.chan,
-+				     hold_time, MT7925_ROC_REQ_GO_START_BSS);
-+
-+		/* FW that predates the GO_START_BSS reqtype rejects the ACQUIRE
-+		 * outright. JOIN is understood by every branch and produces the
-+		 * same band_idx update, so fall back to it once. -EBUSY and
-+		 * -ETIMEDOUT mean the command itself WAS accepted (another ROC
-+		 * holds the flag / CNM never granted), so do not burn a second
-+		 * 4s wait on those.
-+		 */
-+		if (err < 0 && err != -EBUSY && err != -ETIMEDOUT)
-+			err = mt7925_set_roc(mvif->phy, mconf,
-+					     mconf->mt76.ctx->def.chan,
-+					     hold_time, MT7925_ROC_REQ_JOIN);
-+
-+		if (!err)
-+			roc_taken = true;
-+	}
-+
-+	err = mt7925_mcu_add_bss_info(&dev->phy, mconf->mt76.ctx,
- 				      link_conf, NULL, true);
- 	if (err)
- 		goto out;
-@@ -2069,6 +2109,14 @@ mt7925_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- out:
- 	mt792x_mutex_release(dev);
+ 	if (is_mt7927(&dev->mt76)) {
+ 		struct ieee80211_channel *chan;
  
-+	/* Release the grant now that the BSS is programmed. The GO keeps its
-+	 * channel through the BSS_INFO RLM TLV, not through the ROC, and the FW
-+	 * CNM arms a band-abort watchdog on GRANTED that asserts if the host
-+	 * never sends the abort. Also covers the error paths above.
-+	 */
-+	if (roc_taken)
-+		mt7925_abort_roc(mvif->phy, mconf);
-+
- 	return err;
- }
- 
-@@ -2156,8 +2204,10 @@ mt7925_change_chanctx(struct ieee80211_hw *hw,
- 			struct ieee80211_bss_conf *link_conf;
- 
- 			link_conf = mt792x_vif_to_bss_conf(vif, mconf->link_id);
--			mt7925_mcu_set_chctx(mvif->phy->mt76, &mconf->mt76,
--					     link_conf, ctx);
-+
-+			if (mt7925_p2p_chanctx_bss_programmed(vif, link_conf))
-+				mt7925_mcu_set_chctx(mvif->phy->mt76, &mconf->mt76,
-+						     link_conf, ctx);
- 
- 			if (changed & IEEE80211_CHANCTX_CHANGE_PUNCTURING)
- 				mt7925_mcu_set_eht_pp(mvif->phy->mt76, &mconf->mt76,
-@@ -2186,6 +2236,15 @@ static void mt7925_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	if (info->was_assoc)
- 		return;
- 
-+	/* P2P GC join: hold the channel for
-+	 * MT7925_P2P_GC_JOIN_CH_REQ_INTERVAL_MS (4s) instead of the 1s
-+	 * mac80211 default, because a GO is only listening on its operating
-+	 * channel part of the time and the whole auth/assoc exchange has to
-+	 * fit inside one grant.
-+	 */
-+	if (!info->duration && vif->p2p)
-+		duration = MT7925_P2P_GC_JOIN_CH_REQ_INTERVAL_MS;
-+
- 	mt792x_mutex_acquire(dev);
- 	mt7925_set_roc(mvif->phy, &mvif->bss_conf,
- 		       mvif->bss_conf.mt76.ctx->def.chan, duration,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 056f7e2f284e..6ec74d7bfd82 100644
+index d9a5b5f57fba..24de2ff3a15d 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -405,7 +405,9 @@ static void mt7925_mcu_roc_handle_grant(struct mt792x_dev *dev,
- 
- 	if (grant->reqtype == MT7925_ROC_REQ_ROC)
- 		ieee80211_ready_on_channel(hw);
--	else if (grant->reqtype == MT7925_ROC_REQ_JOIN)
-+	else if (grant->reqtype == MT7925_ROC_REQ_JOIN ||
-+		 grant->reqtype == MT7925_ROC_REQ_GO_START_BSS ||
-+		 dev->phy.roc_is_mlo)
- 		ieee80211_iterate_active_interfaces_atomic(hw,
- 						IEEE80211_IFACE_ITER_RESUME_ALL,
- 						mt7925_mcu_roc_iter, grant);
-@@ -1598,8 +1600,8 @@ int mt7925_mcu_set_mlo_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf
-  * The CNM channel-privilege request carries bw / center_chan / center_chan2 /
-  * sco, and for a BSS-bound request they must match the BSS's own channel.
-  * mt7925 only has a bare channel at this point, but for a BSS-bound
-- * request (JOIN) the BSS's own chanctx already describes exactly that
-- * channel, so use it.
-+ * request (JOIN / GO_START_BSS) the BSS's own chanctx already describes
-+ * exactly that channel, so use it.
-  *
-  * Everything else - an off-channel dwell (ROC / OFFCHNL_TX), or a request for a
-  * channel that is not the one this BSS is parked on - keeps the previous 20 MHz
-@@ -1611,7 +1613,7 @@ mt7925_mcu_roc_chandef(struct mt792x_bss_conf *mconf,
- 		       enum mt7925_roc_req type,
- 		       struct cfg80211_chan_def *chandef)
- {
--	if (type == MT7925_ROC_REQ_JOIN &&
-+	if ((type == MT7925_ROC_REQ_JOIN || type == MT7925_ROC_REQ_GO_START_BSS) &&
- 	    mconf->mt76.ctx && mconf->mt76.ctx->def.chan == chan) {
- 		*chandef = mconf->mt76.ctx->def;
- 		return;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-index 36cbeaedb7b2..e3eee41b22c3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-@@ -73,15 +73,25 @@ enum mt7925_fw_chan_width {
- 	MT7925_CW_320MHZ,
- };
- 
-+/* Channel-privilege request types. The values are part of the FW CNM
-+ * interface (CH_REQ_TYPE_*), so do not renumber.
-+ */
- enum mt7925_roc_req {
--	MT7925_ROC_REQ_JOIN,
--	MT7925_ROC_REQ_ROC,
--	MT7925_ROC_REQ_SUB_LINK,
-+	MT7925_ROC_REQ_JOIN,			/* CH_REQ_TYPE_JOIN */
-+	MT7925_ROC_REQ_ROC,			/* CH_REQ_TYPE_ROC */
-+	MT7925_ROC_REQ_OFFCHNL_TX = 2,		/* CH_REQ_TYPE_OFFCHNL_TX */
-+	MT7925_ROC_REQ_GO_START_BSS = 3,	/* CH_REQ_TYPE_GO_START_BSS */
-+	MT7925_ROC_REQ_DFS_CAC = 4,		/* CH_REQ_TYPE_DFS_CAC */
- 	MT7925_ROC_REQ_MLSR_AG = 10,
- 	MT7925_ROC_REQ_MLSR_AA,
- 	MT7925_ROC_REQ_NUM
- };
- 
-+/* CNM channel-privilege hold times, per role. */
-+#define MT7925_SAP_CHNL_HOLD_TIME_MS		200	/* SAP_CHNL_HOLD_TIME_MS */
-+#define MT7925_P2P_CHNL_HOLD_TIME_MS		3000	/* P2P_CHNL_HOLD_TIME_MS */
-+#define MT7925_P2P_GC_JOIN_CH_REQ_INTERVAL_MS	4000	/* P2P_GC_JOIN_CH_REQUEST_INTERVAL */
-+
- enum {
- 	UNI_EVENT_ROC_GRANT = 0,
- 	UNI_EVENT_ROC_GRANT_SUB_LINK = 4,
+@@ -738,6 +738,9 @@ mt7925_mcu_uni_rx_unsolicited_event(struct mt792x_dev *dev,
+ 	case MCU_UNI_EVENT_SAP:
+ 		mt7925_p2p_mcu_sap_event(dev, skb);
+ 		break;
++	case MCU_UNI_EVENT_BSS_IS_ABSENCE:
++		mt7925_p2p_mcu_bss_is_absence_event(dev, skb);
++		break;
+ 	case MCU_UNI_EVENT_RSSI_MONITOR:
+ 		mt7925_mcu_rssi_monitor_event(dev, skb);
+ 		break;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
-index 4e41ba9beca1..f41098b324ba 100644
+index d05c936d40ea..9be6891cc5d9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
-@@ -427,3 +427,38 @@ void mt7925_p2p_bmc_remove(struct mt792x_dev *dev,
- 	mt76_wcid_mask_clear(dev->mt76.wcid_mask, wcid->idx);
+@@ -603,3 +603,100 @@ void mt7925_p2p_mcu_sap_event(struct mt792x_dev *dev, struct sk_buff *skb)
+ 	}
  }
  
-+/* ------------------------------------------------------------------ */
-+/* .change_chanctx gate                                                 */
-+/* ------------------------------------------------------------------ */
++struct mt7925_bss_absence_data {
++	u8 bss_idx;
++	u8 is_absent;
++	u8 free_quota;
++};
 +
-+/* Is this link's BSS already programmed in FW on a granted channel, i.e. is an
-+ * RLM-only BSS_INFO_UPDATE from .change_chanctx a genuine *channel update*?
-+ *
-+ * mac80211 runs ieee80211_link_use_channel() -> ieee80211_assign_link_chanctx()
-+ * before .start_ap and before the auth exchange, and that path calls
-+ * ieee80211_recalc_chanctx_min_def() -> drv_change_chanctx(). For a P2P link
-+ * that is still coming up the resulting RLM TLV therefore reaches the FW
-+ * *before* the channel privilege request: CNM creates its channel-info entry
-+ * from a band it has to guess, because mconf->mt76.band_idx is still the 0xff
-+ * "auto" value that only the ROC grant fills in (mt7925_mcu_roc_iter).
-+ *
-+ * Nothing is lost by skipping it: once the grant has supplied the real
-+ * band_idx both roles send a full BASIC+RLM BSS_INFO_UPDATE anyway, and every
-+ * later .change_chanctx (bandwidth change, CSA) passes the test.
++/* Per-BSS handling of the BSS_IS_ABSENCE event: latch the absent /
++ * free-quota state, and on the absent->present edge kick the TX path so
++ * whatever piled up while the BSS had no channel gets dequeued
++ * immediately (the kick is the tx_worker).
 + */
-+bool mt7925_p2p_chanctx_bss_programmed(struct ieee80211_vif *vif,
-+				       struct ieee80211_bss_conf *link_conf)
++static void
++mt7925_mcu_bss_absence_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
 +{
-+	if (!vif->p2p || !link_conf)
-+		return true;
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++	struct mt7925_bss_absence_data *data = priv;
++	struct mt792x_bss_conf *mconf = NULL;
++	struct mt792x_dev *dev = mvif->phy->dev;
++	unsigned long valid_links, now = jiffies;
++	unsigned int link_id;
++	bool absent, was_absent;
 +
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_AP:
-+		return link_conf->enable_beacon;	/* P2P GO */
-+	case NL80211_IFTYPE_STATION:
-+		return vif->cfg.assoc;			/* P2P GC */
-+	default:
-+		return true;
++	if (ieee80211_vif_is_mld(vif)) {
++		valid_links = mvif->valid_links;
++		for_each_set_bit(link_id, &valid_links,
++				 IEEE80211_MLD_MAX_NUM_LINKS) {
++			struct mt792x_bss_conf *link_mconf;
++
++			link_mconf = rcu_dereference(mvif->link_conf[link_id]);
++			if (link_mconf && link_mconf->mt76.idx == data->bss_idx) {
++				mconf = link_mconf;
++				break;
++			}
++		}
++	} else if (mvif->bss_conf.mt76.idx == data->bss_idx) {
++		mconf = &mvif->bss_conf;
 +	}
++
++	if (!mconf)
++		return;
++
++	absent = !!data->is_absent;
++	was_absent = mconf->absent;
++
++	mconf->free_quota = data->free_quota;
++	if (was_absent != absent) {
++		mconf->absent = absent;
++		mconf->absence_tstamp = now;
++	}
++
++	/* From Absent to Present */
++	if (was_absent && !absent)
++		mt76_worker_schedule(&dev->mt76.tx_worker);
 +}
 +
++void mt7925_p2p_mcu_bss_is_absence_event(struct mt792x_dev *dev, struct sk_buff *skb)
++{
++	struct mt7925_uni_bss_is_absence_event *event;
++	struct mt7925_bss_absence_data data;
++	u32 tlv_len;
++	u8 *tlv;
++
++	skb_pull(skb, sizeof(struct mt7925_mcu_rxd));
++	if (skb->len < sizeof(*event))
++		return;
++
++	event = (struct mt7925_uni_bss_is_absence_event *)skb->data;
++	tlv = event->tlv;
++	tlv_len = skb->len - sizeof(*event);
++
++	while (tlv_len >= sizeof(struct tlv)) {
++		struct tlv *hdr = (struct tlv *)tlv;
++		u16 tag = le16_to_cpu(hdr->tag);
++		u16 len = le16_to_cpu(hdr->len);
++
++		if (len < sizeof(*hdr) || len > tlv_len)
++			break;
++
++		if (tag == MT7925_BSS_IS_ABSENCE_TAG_INFO &&
++		    len >= sizeof(struct mt7925_bss_absence_info_tlv)) {
++			struct mt7925_bss_absence_info_tlv *info =
++				(struct mt7925_bss_absence_info_tlv *)tlv;
++
++			data.bss_idx = event->bss_idx;
++			data.is_absent = info->is_absent;
++			data.free_quota = info->free_quota;
++
++			ieee80211_iterate_active_interfaces_atomic(dev->mt76.phy.hw,
++								   IEEE80211_IFACE_ITER_RESUME_ALL,
++								   mt7925_mcu_bss_absence_iter,
++								   &data);
++		}
++
++		tlv += len;
++		tlv_len -= len;
++	}
++}
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
-index 25b6c57749a2..f7af45ee4c1f 100644
+index 9afae222845f..e189f9e56e93 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
-@@ -51,5 +51,7 @@ int mt7925_p2p_bmc_add(struct mt792x_dev *dev,
- 		       struct mt792x_bss_conf *mconf);
- void mt7925_p2p_bmc_remove(struct mt792x_dev *dev,
- 			   struct mt792x_bss_conf *mconf);
-+bool mt7925_p2p_chanctx_bss_programmed(struct ieee80211_vif *vif,
-+				       struct ieee80211_bss_conf *link_conf);
+@@ -53,6 +53,24 @@ struct mt7925_uni_sap_event {
+ 	u8 pad[4];	/* fixed field */
+ 	u8 tlv[];
+ } __packed;
++
++/* BSS absence/presence event (FW event UNI_EVENT_ID_BSS_IS_ABSENCE) */
++#define MT7925_BSS_IS_ABSENCE_TAG_INFO		0
++
++struct mt7925_bss_absence_info_tlv {
++	__le16 tag;
++	__le16 len;
++	u8 is_absent;
++	u8 free_quota;
++	u8 pad[2];
++} __packed;
++
++struct mt7925_uni_bss_is_absence_event {
++	u8 bss_idx;
++	u8 pad[3];
++	u8 tlv[];
++} __packed;
++
+ /* TX/RX path overrides, BMC wcid bookkeeping and the P2P-only MCU event
+  * handlers.
+  */
+@@ -69,5 +87,7 @@ bool mt7925_p2p_chanctx_bss_programmed(struct ieee80211_vif *vif,
+ 				       struct ieee80211_bss_conf *link_conf);
+ 
+ void mt7925_p2p_mcu_sap_event(struct mt792x_dev *dev, struct sk_buff *skb);
++void mt7925_p2p_mcu_bss_is_absence_event(struct mt792x_dev *dev,
++					 struct sk_buff *skb);
  
  #endif /* __MT7925_P2P_H */
 diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
-index 66c8722220cc..94186e9f77c8 100644
+index 94186e9f77c8..6bfbeceaf026 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt792x.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
-@@ -242,6 +242,7 @@ struct mt792x_phy {
- 	wait_queue_head_t roc_wait;
- 	u8 roc_token_id;
- 	bool roc_grant;
-+	bool roc_is_mlo;
+@@ -163,6 +163,17 @@ struct mt792x_bss_conf {
+ 	struct ewma_rssi rssi;
+ 	struct ieee80211_tx_queue_params queue_params[IEEE80211_NUM_ACS];
+ 	unsigned int link_id;
++	/* FW BSS absence/presence state, updated by the BSS_IS_ABSENCE
++	 * event handler.
++	 */
++	bool absent;
++	u8 free_quota;
++	unsigned long absence_tstamp;
++
++	/* Dedicated BMC entry, only allocated for a p2p GO. Group-addressed
++	 * frames are transmitted on this wcid instead of the vif wcid, so
++	 * they no longer share the wcid
++	 */
+ 	struct mt792x_link_sta bmc;
+ 	bool bmc_valid;
  };
+@@ -407,6 +418,20 @@ mt792x_link_conf_to_mconf(struct ieee80211_bss_conf *link_conf)
+ 	return mt792x_vif_to_link(mvif, link_conf->link_id);
+ }
  
- struct mt792x_irq_map {
++/* TRUE only while the BSS has no channel, so nothing we hand to the FW
++ * for it can go on air. Callable from the TX path: reads a single byte
++ * updated by the BSS_IS_ABSENCE event handler.
++ */
++static inline bool mt792x_vif_is_absent(struct ieee80211_vif *vif)
++{
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++
++	if (ieee80211_vif_is_mld(vif))
++		return false;
++
++	return mvif->bss_conf.absent;
++}
++
+ static inline struct ieee80211_bss_conf *
+ mt792x_vif_to_bss_conf(struct ieee80211_vif *vif, unsigned int link_id)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+index fa29af8fff49..98fa46e85c1b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+@@ -178,6 +178,22 @@ void mt792x_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	u8 link_id;
+ 	int qid;
+ 
++	/* Drop a GO Probe Response outright when mt792x_vif_is_absent()
++	 * says the BSS has no channel right now: by the time the FW comes
++	 * back the requester has moved on, so the response is stale and
++	 * only costs airtime and a TX-abort in the FW.
++	 */
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) && skb->len >= 2) {
++		struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
++
++		if (vif && ieee80211_vif_type_p2p(vif) == NL80211_IFTYPE_P2P_GO &&
++		    ieee80211_is_probe_resp(mgmt->frame_control) &&
++		    mt792x_vif_is_absent(vif)) {
++			ieee80211_free_txskb(hw, skb);
++			return;
++		}
++	}
++
+ 	if (control->sta) {
+ 		struct mt792x_link_sta *mlink;
+ 		struct mt792x_sta *sta;
 -- 
 2.45.2
 
