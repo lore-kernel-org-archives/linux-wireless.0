@@ -1,94 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793826901;
-	b=emyucWc86W3GcwWkmIafp0LyHnazEyc8o1BLbRbk+L+3+TaVDNUDvXMIbix7XMs3Oyhr
-	 +elPBEMhYDCfG/UlW6GAYFyK/JZIOSq5eiZkFqTKkkNG5UXEzqcVLzDta5xQmIkddM6lm
-	 NGQeG4cbyPXLQKhRVzF7zXy275te3Tf3l0I22WaktHiwci5ZYYrLh5Iu2MXvsdOrGlMwp
-	 SSJRQ4bFyODJw6KkD2m5DLSM7dZ2tgqgalr/B1tk91hoKmWGADuQyZDlQ3YEiIZlKdr0e
-	 eCMB5tcZh9sHjdWvG09rCv3Yf954mlPFo6WojcDPhE0xJJmcqHtYwH2oSDhAC/WqOmw==
+	t=1793826898;
+	b=WYoiddvro5iXoki5VbY96vE9cQybr+/IESobnAP61FeQCOvYkT2uW1P9iyNElZAekmD9
+	 ZPcCEHi99xApFhFPb2X1vMJdJvASq+r2hQE5Bkkzaj0Jm0Y60CYvXZBDi/4QiuyXlDz1i
+	 NGG7iDrmXtbPL0aTK2G5j2XD+P1tJH00xEdvhgBmVmA7Ta0BrIK+e0bwkTNKSgn99kLUI
+	 fGckiHds+Ty2pqP4zxVP+akvaNCyQgIpMUxGCm9OTTITGy8G70YR2fZGd2NJuuSE11W2A
+	 /v4apJ0kVrax9vG9Gvvz7MsKuNMiQRcTiAZiMPvq2SXnMX+XnJUOPZU7TERr85Ka0EQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793826901;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793826898;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=z0W2Jd6uVsBM+uJxiCKZYftIMEndVFv4A/cqc5ME9Wg=;
-	b=i2rq//1ZMWe6wvzp87FbiKBlPwrQoEoFwthMuJNMCPPmLDBo4JqRlLKea3Gc4SfXBJKp
-	 kjCfXTOpsdYIOqFHhO6CmASl6NjHdmFXV+rJbbXNBeEAfk7LrjsyG9jfDoOq2gu9zdMqV
-	 4VgN5VoRla4cA0EYXADCvSAFl/rsaa+6qmnO3mM39y0jsFKzKtZBT8rmiYWjEfm1OtTmY
-	 N1zimmrCTGUPqkGKQGZ6YqAyhHhYIHRY8A4heUZaocYtXB2x5I5afm6CqujxfNps3tyhv
-	 H8w+LSOU76ot/BBkAZzcTLMbB6C2Ge26CDNFS24akt+VawJOIwfPy8PggxxEtUbX4jg==
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=f3BqD1OwVSoHT8EUbtaIi6oF8j+TF/48vKRJtgYYzW8=;
+	b=sBwi423G7qRJkh6tvjDTJ6Hrye/1x2epDXyRBRFIbiAXPNRyClRs+qofX44vXcbo4k9e
+	 mXWPP8wPPLdq766eECNEQqvKuvgvAQ+w4ABAjyhwSdopWanfWmwFWF8SgeYPsMPzqOiMg
+	 9tiJQ31GLAfQTLfPRwDw9zPmux4HUOwETkkKeSI8R8ZtLCMTGwVq9tABCzR1e046iDKAO
+	 Eby1+HZd+pFmmTW1RPeLx+1S8YR2K6TQRQuIcfY4o97B8gWW6PiDI0gUya8bjCA16z3Si
+	 KdxoYD/wkcBWNP+POeNIcnHaKswN490Ic7DeZTEOAxYZdrwaayn8FAEv7aV1NdRxFpw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Q1GWblou;
-	arc=none smtp.remote-ip=74.125.82.52
-Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=h2ZPue3G;
+	arc=none smtp.remote-ip=74.125.82.171
+Received: from mail-dy1-f171.google.com (mail-dy1-f171.google.com [74.125.82.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6306D6084B40
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 21:15:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6306D6084B40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F57160B478B
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 21:14:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6F57160B478B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Q1GWblou
-Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-1a3c08d6928so1873372c88.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 13:15:01 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=h2ZPue3G
+Received: by mail-dy1-f171.google.com with SMTP id 5a478bee46e88-33bf40b0c8bso2683495eec.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 13:14:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793826900; x=1794431700; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=z0W2Jd6uVsBM+uJxiCKZYftIMEndVFv4A/cqc5ME9Wg=;
-        b=Q1GWblous/4WJwNpcq9vQcNJKyJUh++qAyNJqKHRdZ45zsrPRiHqBE6fZxUoWPK8l4
-         QD0ld/SJHKYS/b5vzDAUh5QVS4Ky8qpTpZloSHYNpR2BXv7QKJGhvZyS1o5t1om9FfVf
-         +75z+7zsmLvjuahsq38Bo0D1hQGGa9C8PwJRI2QfysJ56xY9zXqY53jKNxjqP+IIj8gb
-         llEVwBiH33Vu88+WTjnO6ccWhk2K3MdnasBEWr1nOUqtWYCNlG/EFuKijqH03k2UT6+j
-         OBR5MJZ2++M5JMHciycVsDIZjAq5kP+EyHNaKf2j5Eav6nMVXU9JyPZdV/Q9yl+veONR
-         Xw5g==
+        d=gmail.com; s=20260707; t=1793826897; x=1794431697; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=f3BqD1OwVSoHT8EUbtaIi6oF8j+TF/48vKRJtgYYzW8=;
+        b=h2ZPue3GAkA3JRtKQGC492+Qb8gnc074iQDaQkTM2tmgKSXJVLp/iTkI/eT1JZwSdn
+         LgDvNhAZjQ3ERPkhlBCJ8U/nMje/dxi6+1yfveblQv4HiccV9mFM9zUXqF/3b2A2rj6k
+         dvyXKSyNdZfXW9JcCeljSsJRKiCVE+1K5Vc+7IRZHhFqGmkU56Kp/vlda58J1nxpVEw9
+         LSy4mYyKl8aiOSc8jP/dXFtDj3ElMWbKBkfBGDPfbQa6kMEZW1dDz4BcpcjZaDhCpzH5
+         jqJEsoBVq0obh/o4JGJ32Yetbje944HYNCWQhtS6oBLBEssKsz0boclZHUv8H9YuDNwk
+         Ge7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793826900; x=1794431700;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=z0W2Jd6uVsBM+uJxiCKZYftIMEndVFv4A/cqc5ME9Wg=;
-        b=ZRldxj0ayG6SKRYm9VJXCSYreIh6U9Pm6wja4Vj5Xo/wDUZoXgAh7sLcKSR9JL8YhJ
-         AYotX/Hqx8aiw/pUgcZ2mYqGlmuzM0Y9Kh974zosaUgRRqzmuj/A2iDgCy+nahRMrtNt
-         n+2Zt8hIklODp5FdMgmXFDr95avuP2jJ59cu3D0Vv61EFvY3aLAhj5JVGDVYSGI0gQy8
-         LhgswAfdozCI5GGJZQAaih8OzsjvEjKiwYdAYB46CzPEVSysUF1g3k6qbESnh8gmkgjV
-         RrFBdO4FPDc4aJqSjm730YdCnxugif2HRfRZFKgXUDLCCO0pYG9t9G15QoSm0d81ecm9
-         oCLQ==
-X-Gm-Message-State: APuU4Z9Nz61S/j7Ca02rXh2Jzu4WbrC2rXLlXq6j6Ob1WXPc64t8TRfK
-	buip8vj8qnUQ4L739FEELIhbtAwineNaDTVtFfZRtcmTouNvwqKd3JvQ
-X-Gm-Gg: AYBFou2UGIW/XXD2pogsLubjPIXNLKoYF/nndoUEqCJwH0kkVhhqYxTjWzMWTgVE7y/
-	lE44L316EuatRwJLCmeSZcRy28M31EUyI8FqoLnEznx9b70tkgbi3Pf7UjYUx16Zcaw2856Zx5b
-	FEp3TTlc7k12waUj6tkoQEUWdav+OLaLsDQdmGChHJnHFVOhRXJuxqfdWwAD79jsB9IKN1LJWCk
-	XpT+PljO4IyVCvdF9GxepAzIIQrsS0d9YPo+LFnO3ksOGIw4aSERYCI1Z5/RlyyYMzKIbSr+uH+
-	mHRVDFsm7i7tap3atElV+03egvDnD47w0DfJE6rbmczn59gIZPSNSGVbAjIIiTPclyp8vI/Sc8G
-	RVSM8a+4z6blj+CV4SjbzJGLuS0J/PWcdj4CeFYmhreh9+20sFH0ZVAeTDw5/VPRelPPtUJQvT4
-	0sfJ6zxkCPDMjVxefuZj4POeDwmR/XdNes39Jk/4H1CNIWkVRahjni/bPJTG+U7OxiJEiZfG8Cn
-	SROXzU0yoS+qtnD+yCN3m9Pq1nY9KgFUk+s6V8Z7yFz5C2FxWN+VgWEGpDSFI3dVxEQjaBNV8nJ
-	ScW7b30oUXI7CzpFG5JyqkpS0da8TFGVvMUqIbaj2HrYdMBSKVEW2fPWkz9+FnNzsg==
-X-Received: by 2002:a05:701b:4244:10b0:149:1b5b:1f25 with SMTP id a92af1059eb24-1ac5b211405mr26311162c88.15.1793826900133;
-        Wed, 04 Nov 2026 13:15:00 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793826897; x=1794431697;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=f3BqD1OwVSoHT8EUbtaIi6oF8j+TF/48vKRJtgYYzW8=;
+        b=PFFzPzI4KjXQXLMmJ4cH5bFq5NtT0gZ3Z2+wm1u+YtZPP3GQPlueW1C5wu3Gf+rUcX
+         p/J4FZyTK2LCLwsCV35U42DditTv4zu4UmQwSgn6nb3lPNAsJNiVYoFX+GC9Kh+sURJd
+         BlKE+RyyXBMVHiGqz3FhwhbiV8GrZ4ovkDJRKUcX0xTyEv/xx8nh/tWPqpXWNfxglwZM
+         wgKU9J8LtjNsw95ozd5HmyAnvFMow4trqPz7QEfD3G8ILBucseJFByO99oxjnOaWB+ti
+         OMO9ivmR5koWPZ52fvs1nt6bzS+4ULOpi/I/zoIJo2rk9UzFLv/4PwJaDJTL7tJ3pQj5
+         NzAA==
+X-Gm-Message-State: APuU4Z/LJV2dNhrz7Ez4tHh0RCMMdmO0kgmoiGo+tyjzZr7HANdXAqLY
+	sHLgnenQ2ia3QTfoZfQIdxTxAr43Q2a3ypxBt+wRsCrX6hqxtCuBRvg1JShiHvsp6yJIzb7U
+X-Gm-Gg: AYBFou1Syx9CplpEWP7UcgWbggd/L0ROco8fLNppZ0zyshRtD59tLSMtxsnQpf1yUid
+	YnPZSbz2qgmVdnwebCU4QsNOpuyc3vdQNZqCaNdSr2uckJqoEJu8I/95XaJlEIGFv1rbHzgDATo
+	2vR+lWu0YkUPR2xzNCPezwYJFQQjoSJU5IOznHXIHWNIH8dEfUWRvoY3r+kU+vghVq6bTgPb/Jx
+	yzkMu4Pbc/z3GCsqvXdIlUk22NViEiRtaxw8xnFylQMyZbp0ru80b3h530d3p4y4v5mIae9w97h
+	9QS5BGk6Qetd3LJzvSl6h543w5mUUbXitIdNCfycxed8EE330BZIQd3g22oijwIdnrnL/JAh9b6
+	KdLkZQ2/bNo5IMsEwVp/eGKC/fEURM1WcH4XCPwEIiQIpHj2nggXl38Y3gs7tK40i2irs+uC2fp
+	/vUngIShnDZffeXMrf1QXwZQf2yc9M2oUKoLkVwjX0e1IuxjQ5Y+/JQRyz7SQ0+T8VcKo275JkU
+	6a4Ol9RRwOPcoOm+fsPdaL3oAA7FcKJiN4bLW7nTynXn6e9sI3FFYdXmJ1Y4PvUmJ5rFRhf5ZNb
+	pBcyxZnMNB8vemwx4b0fEElyeDzIow6VWuJ7eTC+EunXHsspc8ug2glBZHpmbBOyJw==
+X-Received: by 2002:a05:701b:2806:b0:190:b2de:1549 with SMTP id a92af1059eb24-1ac557770c0mr23698408c88.1.1793826897202;
+        Wed, 04 Nov 2026 13:14:57 -0800 (PST)
 Received: from anon-laptop ([103.187.196.159])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b245c2c2f7sm10606078c88.9.2026.11.04.13.14.57
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b245c2c2f7sm10606078c88.9.2026.11.04.13.14.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Nov 2026 13:14:59 -0800 (PST)
+        Wed, 04 Nov 2026 13:14:56 -0800 (PST)
 From: Wahid Khan <wahidzk0091@gmail.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	sara.sharon@intel.com,
 	luciano.coelho@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless 2/2] wifi: cfg80211: test a split MBSSID profile longer than 255 bytes
-Date: Thu,  5 Nov 2026 02:44:51 +0530
-Message-ID: <20261104211451.693451-2-wahidzk0091@gmail.com>
+Subject: [PATCH wireless 1/2] wifi: cfg80211: don't truncate the merged MBSSID profile length
+Date: Thu,  5 Nov 2026 02:44:50 +0530
+Message-ID: <20261104211451.693451-1-wahidzk0091@gmail.com>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261104211451.693451-1-wahidzk0091@gmail.com>
-References: <20261104211451.693451-1-wahidzk0091@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -100,139 +96,42 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a KUnit test with a non-transmitted BSSID profile that is split over
-two Multiple BSSID elements and is 300 bytes long once merged. The last
-element of the profile must show up in the generated BSS. Before the
-previous change the profile length was cut to 44 bytes and the test
-failed.
+cfg80211_parse_mbssid_data() keeps the length of a non-transmitted BSSID
+profile in a u8. cfg80211_merge_profile() returns a size_t, and it
+concatenates a profile that is split over several Multiple BSSID
+elements, so the merged length can be well above 255 even though every
+single sub-element is at most 255 bytes long.
 
+The value is then cut to its low 8 bits. A 300 byte profile is handled
+as a 44 byte one: the elements after the cut are lost from the generated
+non-transmitted BSS, and if the Multiple BSSID-Index element lies past
+the cut the BSS is dropped altogether. Any AP in range can send such a
+profile.
+
+The multi-link code further down in the same file already uses a signed
+size type for the profile length. Do the same here, cfg80211_find_ie()
+and cfg80211_gen_new_ie() take a size_t anyway.
+
+Fixes: fe806e4992c9 ("cfg80211: support profile split between elements")
+Cc: stable@vger.kernel.org
 Signed-off-by: Wahid Khan <wahidzk0091@gmail.com>
 ---
- net/wireless/tests/scan.c | 104 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
+ net/wireless/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/tests/scan.c b/net/wireless/tests/scan.c
-index 8c20278b5d3a..01dcabf9dbfe 100644
---- a/net/wireless/tests/scan.c
-+++ b/net/wireless/tests/scan.c
-@@ -402,6 +402,109 @@ static void test_inform_bss_ssid_only(struct kunit *test)
- 	cfg80211_put_bss(wiphy, bss);
- }
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index ac56338f0f43..8e9ce8336876 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -2592,7 +2592,7 @@ cfg80211_parse_mbssid_data(struct wiphy *wiphy,
+ 		if (elem->data[0] < 1 || (int)elem->data[0] > 8)
+ 			continue;
+ 		for_each_element(sub, elem->data + 1, elem->datalen - 1) {
+-			u8 profile_len;
++			size_t profile_len;
  
-+static void test_inform_bss_mbssid_long_profile(struct kunit *test)
-+{
-+	struct inform_bss ctx = {
-+		.test = test,
-+	};
-+	struct wiphy *wiphy = T_WIPHY(test, ctx);
-+	struct t_wiphy_priv *w_priv = wiphy_priv(wiphy);
-+	struct cfg80211_inform_bss inform_bss = {
-+		.signal = 50,
-+		.drv_data = &ctx,
-+	};
-+	const u8 bssid[ETH_ALEN] = { 0x10, 0x22, 0x33, 0x44, 0x55, 0x60 };
-+	const u8 marker[] = { WLAN_EID_VENDOR_SPECIFIC, 6, 0x00, 0x11, 0x22,
-+			      0x77, 'M', 'K' };
-+	struct cfg80211_bss *tx_bss, *bss;
-+	const struct cfg80211_bss_ies *ies;
-+	u8 *input, *pos;
-+	size_t len;
-+
-+	wiphy->support_mbssid = 1;
-+	w_priv->ops->inform_bss = inform_bss_inc_counter;
-+
-+	inform_bss.chan = ieee80211_get_channel_khz(wiphy, MHZ_TO_KHZ(2412));
-+	KUNIT_ASSERT_NOT_NULL(test, inform_bss.chan);
-+
-+	input = kunit_kzalloc(test, 1024, GFP_KERNEL);
-+	KUNIT_ASSERT_NOT_NULL(test, input);
-+	pos = input;
-+
-+	/* transmitting BSS SSID */
-+	*pos++ = WLAN_EID_SSID;
-+	*pos++ = 2;
-+	*pos++ = 'T';
-+	*pos++ = 'X';
-+
-+	/*
-+	 * First MBSSID element: a 200 byte non-transmitted profile start,
-+	 * the profile continues in the next MBSSID element.
-+	 */
-+	*pos++ = WLAN_EID_MULTIPLE_BSSID;
-+	*pos++ = 1 + 2 + 200;
-+	*pos++ = 1;			/* max BSSID indicator */
-+	*pos++ = 0;			/* nontransmitted BSSID profile */
-+	*pos++ = 200;
-+	*pos++ = WLAN_EID_NON_TX_BSSID_CAP;
-+	*pos++ = 2;
-+	*pos++ = 0x34;
-+	*pos++ = 0x12;
-+	*pos++ = WLAN_EID_SSID;
-+	*pos++ = 2;
-+	*pos++ = 'N';
-+	*pos++ = 'T';
-+	*pos++ = WLAN_EID_MULTI_BSSID_IDX;
-+	*pos++ = 1;
-+	*pos++ = 1;
-+	*pos++ = WLAN_EID_VENDOR_SPECIFIC;
-+	*pos++ = 187;
-+	*pos++ = 0xaa;
-+	*pos++ = 0xbb;
-+	*pos++ = 0xcc;
-+	pos += 184;
-+
-+	/* second MBSSID element: continuation of the profile, 100 bytes */
-+	*pos++ = WLAN_EID_MULTIPLE_BSSID;
-+	*pos++ = 1 + 2 + 100;
-+	*pos++ = 1;
-+	*pos++ = 0;
-+	*pos++ = 100;
-+	*pos++ = WLAN_EID_VENDOR_SPECIFIC;
-+	*pos++ = 90;
-+	*pos++ = 0xaa;
-+	*pos++ = 0xbb;
-+	*pos++ = 0xcc;
-+	pos += 87;
-+	memcpy(pos, marker, sizeof(marker));
-+	pos += sizeof(marker);
-+	len = pos - input;
-+
-+	tx_bss = cfg80211_inform_bss_data(wiphy, &inform_bss,
-+					  CFG80211_BSS_FTYPE_PRESP, bssid,
-+					  0x1000, 0x1234, 100,
-+					  input, len, GFP_KERNEL);
-+	KUNIT_ASSERT_NOT_NULL(test, tx_bss);
-+
-+	bss = cfg80211_get_bss(wiphy, NULL, NULL, "NT", 2,
-+			       IEEE80211_BSS_TYPE_ANY, IEEE80211_PRIVACY_ANY);
-+	KUNIT_ASSERT_NOT_NULL(test, bss);
-+
-+	/* the 300 byte merged profile must not be cut at 300 % 256 */
-+	rcu_read_lock();
-+	ies = rcu_dereference(bss->ies);
-+	KUNIT_EXPECT_NOT_NULL(test, ies);
-+	if (ies)
-+		KUNIT_EXPECT_NOT_NULL(test,
-+				      cfg80211_find_vendor_elem(0x001122, 0x77,
-+								ies->data,
-+								ies->len));
-+	rcu_read_unlock();
-+
-+	cfg80211_put_bss(wiphy, bss);
-+	cfg80211_put_bss(wiphy, tx_bss);
-+}
-+
- static void test_get_bss_miss_reason(struct kunit *test)
- {
- 	struct inform_bss ctx = {
-@@ -973,6 +1076,7 @@ kunit_test_suite(gen_new_ie);
- 
- static struct kunit_case inform_bss_test_cases[] = {
- 	KUNIT_CASE(test_inform_bss_ssid_only),
-+	KUNIT_CASE(test_inform_bss_mbssid_long_profile),
- 	KUNIT_CASE(test_get_bss_miss_reason),
- 	KUNIT_CASE_PARAM(test_inform_bss_ml_sta, inform_bss_ml_sta_gen_params),
- 	{}
+ 			if (sub->id != 0 || sub->datalen < 4) {
+ 				/* not a valid BSS profile */
 -- 
 2.56.0
 
