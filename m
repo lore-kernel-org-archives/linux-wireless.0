@@ -1,127 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793882195;
-	b=HPAXYnVjVrRIAAAhkOA+dNuijL6VszJ9VBmwLymdaxatICUBU/U74bGPbooQg0iEjQjT
-	 pMAQwndP6BTvXnMr1wbXtumftJ8x2TFew/SOZaf69aIsV3jkBLVrsmNBeyEVI/nYI4jKp
-	 a8vEWTiLKcmc3KRDYNoWOHtK2Elhmu9MxfWEo86NoqhkYk/iHUQfu/EwgS67zEJKE/we7
-	 DCfHEJh7BNaZte6aj8pQRIq0Q7qrsKFQpvxD/6u44kNYRZOSK2Jz6sdjGWhVueRO6iYR8
-	 tetfQXOghAW/wyD5mxg+iQmPTAJpxm5h/q/Q4Qhjw8++fwg8BDOfUUS492aZ77Thezg==
+	t=1793882695;
+	b=2OXbzTSVYdkEo2yF3s7o68JHsrwfXLbe6IDutRjbWKi6xQC7+rg/VIQIh6hp08COxBJE
+	 O7StrlWXn9SZTWHd1xqFxacYbTcEyb0Si1+ik5spwltgzTmrdeDI+CKJIaQX6L7QHDaZ9
+	 z3pwje8FkWxGf5Cyj5PoJeVfE7QbSIbkU9AKSYXw6m/JZ8mIlDj225j7NdFTRSCAP4L8U
+	 HB49OMmIOe0muqDmJS+KfgmdmhNFeIxM7Y0FDJ4lzU6uvEV1KYVvRb/xSqwl0k5T/0iZz
+	 B76z1l2xgLBU2xwekBx7Sv0bzdACNmDIdow1P+5AZnBpVzyjknsV4aUm5Uh0JMp0hUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793882195;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spam-Flag:X-Spam-Level:X-Spamd-Result:X-Spam-Score;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=hBIqKO0nxA/MHaWcy76mBtJVLSG9rU1eaoReUnnbjhvPpepYWUyNnYQcg4jX41elhmt/
-	 SPtzqh32yj6kwhnAOGL373vTwpUPKcQNoznB4MR/nTrDa24YiKNEBlM6KxwSSN9ZL6UaB
-	 n18uRbaGGoqpby6b9Yaiy8f8Gwnkj2OEaFrqawagBayN2JeYhgf31/bXfsQDYpml50pJG
-	 ews98QY6kIlrtQkI3uG0A5iws7iFpjK+DUCLVMGmDxhoFdOdRAv18Qa0qVz107eJN/xQz
-	 2Y25e4sEFALy+4+LOIMDNXuC3gdp44F16Jo/Ha1qYCHROCI+XDCYXwi2x5owSTD5bqA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793882695;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 Mail-Followup-To:MIME-Version:Content-Type:Content-Disposition;
+	bh=EN58icMFCpbcVLH6YKbY/a+m/VHBVy+6pu1Ggzd7pvo=;
+	b=EwK6+ndqLoOlTG0WVhxy9/7/0OY1Uic6QKELgJ0+2s1aLILc9/oMHmC3zrTo+kqsE3MU
+	 9sLvy0j3d8tPxhVnpQIa8HD0RUazSH9ucmls7tnvxX1W4yQQS5wQVSTpxw4BQ93C3CvnO
+	 +sfEVLLj8YzWu7cLqPinuUgWPhiFWTE0XZEcnqdIc06PcHQ7+fycKLseSEcOdtOYvjR82
+	 58AQsBZTvDHT3T1nDRbg0tM7IAqXu75zHtbATko3sNrfwFMGJjr+zTAkodqxvIbbby8Jy
+	 CDOWRrVnPL5YVinWYsrUzetzmsKD0+TA1LCmxCjNZWlm9W554QnP84q5OH412eAkDfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=JZx76L+g;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="8/5XD6W9";
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=T3Jse+8w;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=BYgAZw+U;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J6+5Jcub;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14231606A326;
-	Thu,  5 Nov 2026 12:36:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 14231606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E099D606A326;
+	Thu,  5 Nov 2026 12:44:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=JZx76L+g;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=8/5XD6W9;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=T3Jse+8w;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=BYgAZw+U
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 6EE151F785;
-	Thu,  5 Nov 2026 12:36:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793882193; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=JZx76L+ggOq++v50JrM+txlftOOqxJaKF/tK8uhPwld5Q9GnNQfLXM1whyLb1DsMeHXH/C
-	/uTr5WEx4MoDADem0Lt2IRl8UnJCEvNjej74YyT5VZBSM782Vk2aNTEZTgyxnuBLnPZ/fS
-	Mhf/U17g3frl5lC6gN/6C/6ftmbFF2E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793882193;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=8/5XD6W9JBZBD7IT0Gng8T7errG+mfSR55zIjyH58gQPHLQ3a+6mBXLPeQK6OumZ9O/ASJ
-	a0+wPfZoC8vZgnDQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793882192; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=T3Jse+8wWvU2m0agalLdcO3u4gc4aSPygpqteqhLhNd/aBjFrhyiDCC1i0Lv+iYh3z1s6e
-	fnA2+Jf6Yg0jKvkbvYGo3ERh6eFq09U2ijwb8SlUT+DSbyddzL3tu06qm3Tz++uFh8zr+9
-	+TrYzUca/b6bladItMQ0Kk0+pK0H3fw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793882192;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=BYgAZw+Ujm4L/dnuxqWK1yrVNISlV/1cL+J702exe7XcXF17FVJLhwkbWz39x0ZpRyHhhI
-	iDaH9TFqNTx9SSCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1DBD9134F6;
-	Thu,  5 Nov 2026 12:36:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id AxmaAFB47Go4MAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 05 Nov 2026 12:36:32 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id 9532FB6E6; Thu, 05 Nov 2026 13:36:31 +0100 (CET)
-Date: Thu, 5 Nov 2026 13:36:31 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 37/38] proc: don't pin a symlink's entry while
- readlink() copies it out
-Message-ID: <krgvwwpug6brspfpubssohr6cknwd2wtkrxo6uqaoalfi2ay4v@3dtbsctwca3n>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-37-59422ed3e465@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J6+5Jcub
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 191831F000C1;
+	Thu,  5 Nov 2026 12:44:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793882694;
+	bh=EN58icMFCpbcVLH6YKbY/a+m/VHBVy+6pu1Ggzd7pvo=;
+	h=Date:From:To:Cc:Subject;
+	b=J6+5JcubBALvPUrzdrPf7+R0a9S1DLd9B9DjYk0DtTAR1REeJL+WecF2jhOZwQ6Cl
+	 raG9mDucYtphh2EFJQnxex9vFIX+R8L7Ehx5Q+m+07xdKACa8vqF8WNj4j07z/w4CN
+	 C+GSJzEFT9+d8tySRlnwJybXDG4iTk4j4klX76a1rd5JjvuI7LqxW4D8z/cufweYGj
+	 +j8tDQe0TEIexYkYmO7JPJ/RA5Ah8WrK7FAJv1JU+fF8XItJcHPgfhdi2pD9o95IqV
+	 zxftZFGHg6S2GhksRqXNUdBN7ARciL8uM+NiQXDuI/T0u/NXKl6mOXHY1IGrpLNZSL
+	 SyBpF8Mu9Rcpg==
+Date: Thu, 5 Nov 2026 12:44:49 +0000
+From: Mark Brown <broonie@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wireless <linux-wireless@vger.kernel.org>
+Cc: Aditya Garg <aditya.garg@linux.dev>, David Miller <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Jason Perlow <jperlow@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Next Mailing List <linux-next@vger.kernel.org>,
+	Michael Reeves <michael.reeves077@gmail.com>,
+	Networking <netdev@vger.kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>
+Subject: linux-next: manual merge of the wireless-next tree with the net tree
+Message-ID: <aux6QaenW3Eqb3vu@sirena.org.uk>
+Mail-Followup-To: Johannes Berg <johannes@sipsolutions.net>,
+	Wireless <linux-wireless@vger.kernel.org>,
+	Aditya Garg <aditya.garg@linux.dev>,
+	David Miller <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Jason Perlow <jperlow@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Next Mailing List <linux-next@vger.kernel.org>,
+	Michael Reeves <michael.reeves077@gmail.com>,
+	Networking <netdev@vger.kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -131,98 +73,183 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="IKYemmpn/JXyMcDm"
+Content-Disposition: inline
+
+
+--IKYemmpn/JXyMcDm
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-37-59422ed3e465@kernel.org>
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spamd-Result: default: False [-11.30 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[60];
-	RCVD_TLS_LAST(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:email]
-X-Spam-Score: -11.30
+Content-Transfer-Encoding: quoted-printable
 
-On Mon 02-11-26 15:43:28, Christian Brauner wrote:
-> proc_get_link() pins the entry with use_pde() and the delayed call
-> unpins it. vfs_readlink() copies the link to userspace in between. So a
-> page fault in that copy holds up remove_proc_entry() just like the
-> copies of reads and writes do, and the callers hold locks while they
-> wait. /proc/asound/<id> is removed with snd_card_mutex and info_mutex
-> held when a card changes its id.
-> 
-> The pin doesn't keep anything alive. proc_symlink() copies the target
-> and pde_free() frees it with the entry, and the inode holds a reference
-> to the entry. What the pin does is keep a removed symlink from being
-> followed. So check ->in_use instead and drop the delayed call. That
-> also takes an atomic pair off every traversal of /proc/net and
-> /proc/mounts.
-> 
-> Fixes: 7e0e953bb0cf ("procfs: fix race between symlink removals and traversals")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Hi all,
 
-Looks good. Feel free to add:
+Today's linux-next merge of the wireless-next tree got a conflict in:
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+  drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
 
-								Honza
+between commit:
 
-> ---
->  fs/proc/inode.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index 9933f03ab9fb..2d65f3c8ec03 100644
-> --- a/fs/proc/inode.c
-> +++ b/fs/proc/inode.c
-> @@ -629,19 +629,19 @@ static const struct file_operations proc_iter_file_ops_compat = {
->  };
->  #endif
->  
-> -static void proc_put_link(void *p)
-> -{
-> -	unuse_pde(p);
-> -}
-> -
->  static const char *proc_get_link(struct dentry *dentry,
->  				 struct inode *inode,
->  				 struct delayed_call *done)
->  {
->  	struct proc_dir_entry *pde = PDE(inode);
-> -	if (!use_pde(pde))
-> +
-> +	/*
-> +	 * No pin. The link lives with the entry, which the inode holds, and a
-> +	 * reader could fault while vfs_readlink() copies it out. Just don't
-> +	 * follow a removed one.
-> +	 */
-> +	if (unlikely(atomic_read(&pde->in_use) < 0))
->  		return ERR_PTR(-EINVAL);
-> -	set_delayed_call(done, proc_put_link, pde);
->  	return pde->data;
->  }
->  
-> 
-> -- 
-> 2.53.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+  7ed5dce55fa83 ("wifi: brcmfmac: map msgbuf RX packet IDs bidirectional")
+
+=66rom the net tree and commit:
+
+  09063ccd75da0 ("wifi: brcmfmac: Add BCM4388 support")
+
+=66rom the wireless-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+diff --combined drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index ff47d4827722e,5ad46d7ec663f..0000000000000
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@@ -12,6 -12,7 +12,7 @@@
+  #include <linux/netdevice.h>
+  #include <linux/etherdevice.h>
+ =20
++ #include <brcm_hw_ids.h>
+  #include <brcmu_utils.h>
+  #include <brcmu_wifi.h>
+ =20
+@@@ -47,9 -48,11 +48,11 @@@
+  #define MSGBUF_TYPE_RX_CMPLT			0x12
+  #define MSGBUF_TYPE_LPBK_DMAXFER		0x13
+  #define MSGBUF_TYPE_LPBK_DMAXFER_CMPLT		0x14
++ #define MSGBUF_TYPE_H2D_MAILBOX_DATA		0x23
++ #define MSGBUF_TYPE_D2H_MAILBOX_DATA		0x24
+ =20
+  #define NR_TX_PKTIDS				2048
+- #define NR_RX_PKTIDS				1024
++ #define NR_RX_PKTIDS				2048
+ =20
+  #define BRCMF_IOCTL_REQ_PKTID			0xFFFE
+ =20
+@@@ -218,6 -221,19 +221,19 @@@ struct msgbuf_flowring_flush_resp=20
+  	__le32				rsvd0[3];
+  };
+ =20
++ struct msgbuf_h2d_mailbox_data {
++ 	struct msgbuf_common_hdr	msg;
++ 	__le32				data;
++ 	__le32				rsvd0[7];
++ };
++=20
++ struct msgbuf_d2h_mailbox_data {
++ 	struct msgbuf_common_hdr	msg;
++ 	struct msgbuf_completion_hdr	compl_hdr;
++ 	__le32				data;
++ 	__le32				rsvd0[2];
++ };
++=20
+  struct brcmf_msgbuf_work_item {
+  	struct list_head queue;
+  	u32 flowid;
+@@@ -315,7 -331,6 +331,6 @@@ brcmf_msgbuf_init_pktids(u32 nr_array_e
+  	return pktids;
+  }
+ =20
+-=20
+  static int
+  brcmf_msgbuf_alloc_pktid(struct device *dev,
+  			 struct brcmf_msgbuf_pktids *pktids,
+@@@ -1319,6 -1334,15 +1334,15 @@@ brcmf_msgbuf_process_flow_ring_delete_r
+  	brcmf_msgbuf_remove_flowring(msgbuf, flowid);
+  }
+ =20
++ static void brcmf_msgbuf_process_d2h_mailbox_data(struct brcmf_msgbuf *ms=
+gbuf,
++ 						  void *buf)
++ {
++ 	struct msgbuf_d2h_mailbox_data *d2h_mb_data =3D buf;
++=20
++ 	brcmf_bus_d2h_mb_rx(msgbuf->drvr->bus_if,
++ 			    le32_to_cpu(d2h_mb_data->data));
++ }
++=20
+ =20
+  static void brcmf_msgbuf_process_msgtype(struct brcmf_msgbuf *msgbuf, voi=
+d *buf)
+  {
+@@@ -1362,6 -1386,10 +1386,10 @@@
+  		brcmf_dbg(MSGBUF, "MSGBUF_TYPE_RX_CMPLT\n");
+  		brcmf_msgbuf_process_rx_complete(msgbuf, buf);
+  		break;
++ 	case MSGBUF_TYPE_D2H_MAILBOX_DATA:
++ 		brcmf_dbg(MSGBUF, "MSGBUF_TYPE_D2H_MAILBOX_DATA\n");
++ 		brcmf_msgbuf_process_d2h_mailbox_data(msgbuf, buf);
++ 		break;
+  	default:
+  		bphy_err(drvr, "Unsupported msgtype %d\n", msg->msgtype);
+  		break;
+@@@ -1500,6 -1528,35 +1528,35 @@@ void brcmf_msgbuf_delete_flowring(struc
+  	}
+  }
+ =20
++ int brcmf_msgbuf_h2d_mb_write(struct brcmf_pub *drvr, u32 data)
++ {
++ 	struct brcmf_msgbuf *msgbuf =3D (struct brcmf_msgbuf *)drvr->proto->pd;
++ 	struct brcmf_commonring *commonring;
++ 	struct msgbuf_h2d_mailbox_data *request;
++ 	void *ret_ptr;
++ 	int err;
++=20
++ 	commonring =3D msgbuf->commonrings[BRCMF_H2D_MSGRING_CONTROL_SUBMIT];
++ 	brcmf_commonring_lock(commonring);
++ 	ret_ptr =3D brcmf_commonring_reserve_for_write(commonring);
++ 	if (!ret_ptr) {
++ 		bphy_err(drvr, "Failed to reserve space in commonring\n");
++ 		brcmf_commonring_unlock(commonring);
++ 		return -ENOMEM;
++ 	}
++=20
++ 	request =3D (struct msgbuf_h2d_mailbox_data *)ret_ptr;
++ 	memset(request, 0, sizeof(*request));
++ 	request->msg.msgtype =3D MSGBUF_TYPE_H2D_MAILBOX_DATA;
++ 	request->msg.ifidx =3D 0xff;
++ 	request->data =3D cpu_to_le32(data);
++=20
++ 	err =3D brcmf_commonring_write_complete(commonring);
++ 	brcmf_commonring_unlock(commonring);
++=20
++ 	return err;
++ }
++=20
+  #ifdef DEBUG
+  static int brcmf_msgbuf_stats_read(struct seq_file *seq, void *data)
+  {
+@@@ -1638,8 -1695,10 +1695,8 @@@ int brcmf_proto_msgbuf_attach(struct br
+  						     DMA_TO_DEVICE);
+  	if (!msgbuf->tx_pktids)
+  		goto fail;
+ -	/* BCM4388 firmware also reads from posted RX buffers. */
+  	msgbuf->rx_pktids =3D brcmf_msgbuf_init_pktids(NR_RX_PKTIDS,
+ -			drvr->bus_if->chip =3D=3D BRCM_CC_4388_CHIP_ID ?
+ -			DMA_BIDIRECTIONAL : DMA_FROM_DEVICE);
+ +						     DMA_BIDIRECTIONAL);
+  	if (!msgbuf->rx_pktids)
+  		goto fail;
+ =20
+
+--IKYemmpn/JXyMcDm
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmrsekAACgkQJNaLcl1U
+h9CExgf/U7n395A/1Og2jsPGJ/6oSYaK2Pefz9mRtyHE1To3P2n64rDEkQAaS/sy
+V0Kv0ldqEb5UfneN4cnfEUgIrMzsnQ8jUXq/tFEFxZJwubV0U/PUUnliGXNrYdwE
+cihRmJS7KuaQxAIuSsEaCaMZn3yGxUE0zvgBg4tJIyfI4Gs3rQdfkwN9yV0rh1hj
+Ce0vUzpIaTmyu0sQ1epVMTL/5RnIKtROk0PnJBKFfZf6vHZGR55dFY9GQXJA/gqb
+XJzUpdLNJJeteD1Rn+8fwythv8vyj4x7VsgpIzU2fXkD7SzlSy8gBHv/duZHWFWQ
+S8bdwMVTgsVFzHhDZ1TJcV50+i1VrA==
+=+e1x
+-----END PGP SIGNATURE-----
+
+--IKYemmpn/JXyMcDm--
