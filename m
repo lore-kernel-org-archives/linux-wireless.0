@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793863503;
-	b=pB9fTdAapvp+CFHUqo5dV9hMYxNgLtwxZdbNeqLU/RFeguj75aMwfTb/PUGp3qoUClDI
-	 FL2J4w3WRrnTBpvhwCshwmKp4fvtoHEZGvwHdSfjl0sQ5+g0WdUs662W1zWJ3TsB0HXml
-	 59iTHb7afRlzZQeqZacAuFgr/aTduOYSSa0lUG0p0grIirQknEMHTB6MSAw+mLkxXl4gZ
-	 nJyDvJurCxMT4cGqhB3+Snw/52gOCU6gt+A9zVCwtKRafpZ1PfbdqXiNOFWhKOuh+CgLo
-	 9TVzAu4Ve5ont2rTXlCRxu1sYemoMwPPNiMQ8rzJVRTJZbQg7VgrC8D8G8i9fp0B+/A==
+	t=1793863502;
+	b=HTg0ERI3ar0S65DiBxBBAOC182z5odYvdq1rJ+9QKA9WjcdWx+Ef5rNv/nB2xPSD34cW
+	 YLar0mhtdhUosFMmADKpp5jWom8o61v8b3ztMvqIAc6It7tIR02E4Rw0jk2btlSy3cd2k
+	 M7QDAtC/hqJhAVoEs6dmCOnX3d+2B5xh+w4Aj2uOR37CldbKcTcuhqFqemhSJG73k8JLk
+	 cQQux2sTlgbh4TybFcPNSCn2cidTb3s1oRQrHwUaoFrJxG9fZCKnFfh8jBeWfXBK/rw6Y
+	 4RoEKc+i1K4iIbRtu0Bsx23txZszDxfwSEMIctnMg3R0PDdVxe0LAV+zvMqlwKFTfSA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793863503;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793863502;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=UiGdZD80y37KqWu1IGFvaquLJHRJodWi0r37J76J66Y=;
-	b=a0BoK25YHKdfQn8oh4X0bIa0yMvldQm1vgsydLSVUuSGV2JYvg7XlpUY1tZTdnjsn3/m
-	 eiFWpn2sp6eb2c8zwGiubj2tgmZQUaXAwLtVE1ZNVjCqlLnOWrqoKtyW4WXyVvHGMUfIk
-	 4fcoLJwPoOE2RO46UTvtLi2j5VM85V/3VS5xECdOH0574l9qi574kzoJI5FP1fmyEqiOp
-	 qIQMrqUNeVjLQY8Z3Et5a7cKjcTWxrg86iGm3PKO0X4l5OjmY0FvttqiSeJ9jr7+xirJ9
-	 NbRqJ7ohFYfk6up2958s5y2G6Y2S2k/qUMGdf3ZdiErFJAP1iWzNH2ipFxVc/it53Ew==
+	bh=izv+cg0PeIJZ43wpA1dya6oPFW2BfC/SjBkpRPYT1r4=;
+	b=GA4iZqLHVksScEZXPCbU73ulPe0oKOxf+q1ggfGNIXtitq4cSEc52C0P7M5bHYK8/cJe
+	 cj2pioJuXLi+oz+4u7mnBBchpeDri+xRkBJy6NzGHUuI6zFDWNo7kK9oJGkopFaJuwQyT
+	 V5l9/rTM1J+iIJENpTllhSubkdvTNZfUBc0pPSJa938ihFrVZCsD+R0wiQH4JrddoJZdD
+	 ZS3iky6ULmkBdeYOeRDcfk6+N89ADc18CmOsbEMdwlkBdzzO6FYjiJvBWnDOmoKQLREFY
+	 +zokWnPg9Rz0zMCSqkYUHgUMJHiygBlNDdD+lEwEPcdYBQxFeZNg7ahZ9ncIQUHZ1rA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=kGayVkMs;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b="DuLjBcK/";
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D7B606D80C
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:25:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97454606A33A
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:25:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=kGayVkMs
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=DuLjBcK/
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=UiGdZD80y37KqWu1IGFvaquLJHRJodWi0r37J76J66Y=;
-	t=1793863502; x=1795073102; b=kGayVkMsoPnYwjXK5RCk+IyB4T0yxQzrIU0yQFNgnBhWpGo
-	/611HAmpRPdlpvfLEc4qqEY+hnbTA+0JNmoocnNA1AWNmx2sOk6W+XTktCCw4dmc2qwj6ei3/9/3J
-	1m49xc6r3dJql5ey0p5DMouNUr5jJX4coMoyleDlKq7Jje58v4k9L7iNb0uH4vtBNQKWFb46qxMip
-	MwpXTRi67IGpNFqNJLRCKvOC+lwf5MuDrW2ncUi4ueQzjvZY80KZb9MMiQlXVoJz63me95M06sl5b
-	SS23MOkMwSD2MvfOmDuq0C9HVJqWzx/OkxEIh0wJ/m6oVdKyggHIfo5y3/QRqDBw==;
+	Resent-Cc:Resent-Message-ID; bh=izv+cg0PeIJZ43wpA1dya6oPFW2BfC/SjBkpRPYT1r4=;
+	t=1793863501; x=1795073101; b=DuLjBcK/0ZWCBKIc3wuFWZtNKfY7Kep3eLHYBTEPaZ0OItL
+	4YV9W3lt3E3sSKgNltVoGATM58s1bm7ZGGQRWTaoGcrt7r/rwpNXi5gLihcActLrnpzJmm5iYT8+W
+	XbPHCqcWT7MwImpTEojXb9hGV1JBWA8x2JOk4Wps/eQPUwIlb0eOhT82FMAft5NTYhZI/L5SCkeEq
+	1O8rG1KpDOJM3VqKT+kf5KbtUAbrfhaxNDJhL7eV/mPErWrdUWKiv4YiRKsrXpY8DgJ6mHqlCe17L
+	BfnPVFWgoT7bP47KBhf9YhsLojfT85wp0h7V6D/rvgDXxl/YHybYhmxSlHDqchvA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xOrqF-00000007Ped-34r0;
-	Thu, 05 Nov 2026 08:24:59 +0100
+	id 1xOrqD-00000007Ped-2p5X;
+	Thu, 05 Nov 2026 08:24:57 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
 	Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next v2 6/6] wifi: cfg80211: fix regdomain vs. wiphy registration
-Date: Thu,  5 Nov 2026 08:23:54 +0100
-Message-ID: <20261105082451.ad7f9d872e6f.I68140f259882756698561ad3b94793b6ea57e5d8@changeid>
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Subject: [PATCH wireless-next v2 3/6] wifi: ath11k: register regulatory before wiphy
+Date: Thu,  5 Nov 2026 08:23:51 +0100
+Message-ID: <20261105072451.1710800-10-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261105072451.1710800-8-johannes@sipsolutions.net>
 References: <20261105072451.1710800-8-johannes@sipsolutions.net>
@@ -70,133 +70,49 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Setting the driver's self-managed regulatory domain is
-currently applied immediately, even if the wiphy isn't
-actually ever registered, and (for some broken drivers
-like iwlmld) might not update channels correctly since
-the regdomain is set before the channels are linked to
-the wiphy.
+This order is going to become required, since userspace
+can query the regulatory in the window between the two
+registrations.
 
-Regardless of broken drivers though, it doesn't really
-make sense to apply the regdomain on the spot, if the
-wiphy never registers we don't need to do this work,
-nor does it make sense to send a regdomain event for
-a wiphy userspace doesn't know about.
-
-Change it so that a regdomain set before the wiphy is
-registered doesn't cause any action yet and is just
-remembered and then apply it correctly when the wiphy
-is registered.
-
-Also WARN if a driver registers a self-managed wiphy
-without a regdomain, that just leads to confusion in
-userspace, and a later WARN in nl80211 can be hit if
-it queries for it quickly enough.
-
-Due to locking changes this also removes processing of
-self-managed hints for all wiphys when one registers,
-but that never really made much sense anyway.
-
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.c |  5 ++++-
- net/wireless/reg.c  | 45 ++++++++++++++++++++++++---------------------
- 2 files changed, 28 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f4153c249599..9d586a3e2b44 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1259,10 +1259,13 @@ int wiphy_register(struct wiphy *wiphy)
- 	rdev->wiphy.registered = true;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 1a237adaa37d..04acd526a3ab 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -10649,6 +10649,13 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	    ab->hw_params.bios_sar_capa)
+ 		ar->hw->wiphy->sar_capa = ab->hw_params.bios_sar_capa;
  
- 	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
--	wiphy_unlock(&rdev->wiphy);
- 
- 	/* set up regulatory info */
- 	wiphy_regulatory_register(wiphy);
-+	/* TODO: make this a hard failure when drivers are fixed? */
-+	WARN_ON(wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		!get_wiphy_regdom(wiphy));
-+	wiphy_unlock(&rdev->wiphy);
- 
- 	if (wiphy->regulatory_flags & REGULATORY_CUSTOM_REG) {
- 		struct regulatory_request request = {
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2bf3bcd8809b..c009ecfd15e9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3237,6 +3237,10 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
- 
- 	lockdep_assert_wiphy(wiphy);
- 
-+	/* not registered yet, apply later during registration */
-+	if (!rdev->wiphy.registered)
-+		return;
++	/* Apply the regd received during initialization. */
++	ret = ath11k_regd_update(ar);
++	if (ret) {
++		ath11k_err(ar->ab, "ath11k regd update failed: %d\n", ret);
++		goto err_free_if_combs;
++	}
 +
- 	spin_lock(&reg_requests_lock);
- 	regd = rdev->requested_regd;
- 	rdev->requested_regd = NULL;
-@@ -4146,7 +4150,8 @@ int regulatory_set_wiphy_regd(struct wiphy *wiphy,
- 	if (ret)
- 		return ret;
+ 	ret = ieee80211_register_hw(ar->hw);
+ 	if (ret) {
+ 		ath11k_err(ar->ab, "ieee80211 registration failed: %d\n", ret);
+@@ -10663,13 +10670,6 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 		 */
+ 		ar->hw->wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MONITOR);
  
--	schedule_work(&reg_work);
-+	if (wiphy->registered)
-+		schedule_work(&reg_work);
- 	return 0;
- }
- EXPORT_SYMBOL(regulatory_set_wiphy_regd);
-@@ -4174,30 +4179,28 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
- 	struct regulatory_request *lr = get_last_request();
- 
- 	lockdep_assert_held(&cfg80211_mutex);
-+	lockdep_assert_wiphy(wiphy);
- 
--	scoped_guard(wiphy, wiphy) {
--		/* self-managed devices ignore beacon hints and country IE */
--		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
--			wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
--						   REGULATORY_COUNTRY_IE_IGNORE;
-+	/* self-managed devices ignore beacon hints and country IE */
-+	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
-+		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
-+					   REGULATORY_COUNTRY_IE_IGNORE;
- 
--			/*
--			 * The last request may have been received before this
--			 * registration call. Call the driver notifier if
--			 * initiator is USER.
--			 */
--			if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
--				reg_call_notifier(wiphy, lr);
--		}
+-	/* Apply the regd received during initialization */
+-	ret = ath11k_regd_update(ar);
+-	if (ret) {
+-		ath11k_err(ar->ab, "ath11k regd update failed: %d\n", ret);
+-		goto err_unregister_hw;
+-	}
 -
--		if (!reg_dev_ignore_cell_hint(wiphy))
--			reg_update_cell_hint_num(wiphy, 1);
--
--		wiphy_update_regulatory(wiphy, lr->initiator);
--		wiphy_all_share_dfs_chan_state(wiphy);
-+		/*
-+		 * The last request may have been received before this
-+		 * registration call. Call the driver notifier if
-+		 * initiator is USER.
-+		 */
-+		if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
-+			reg_call_notifier(wiphy, lr);
- 	}
- 
--	reg_process_self_managed_hints();
-+	if (!reg_dev_ignore_cell_hint(wiphy))
-+		reg_update_cell_hint_num(wiphy, 1);
-+
-+	wiphy_update_regulatory(wiphy, lr->initiator);
-+	wiphy_all_share_dfs_chan_state(wiphy);
-+	reg_process_self_managed_hint(wiphy);
- }
- 
- void wiphy_regulatory_deregister(struct wiphy *wiphy)
+ 	if (ab->hw_params.current_cc_support && ab->new_alpha2[0]) {
+ 		memcpy(&ar->alpha2, ab->new_alpha2, 2);
+ 		ret = ath11k_reg_set_cc(ar);
 -- 
 2.56.0
 
