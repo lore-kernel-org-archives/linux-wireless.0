@@ -1,111 +1,111 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907620;
-	b=zDTg6KSvPL76SI7HW0fZHGE/gMYk/Hm4ecshCCgwy65UsYybaBFA2RiiCnNJjk3SiWSV
-	 N738z02WaU+Bayht1O8ErI4pBbT5kP22cQrkV8iHc5O0L+DRpK/etYZjhRWei1UHUt/VG
-	 EX3fvgP7HJ5uOZfAhDKCUjr0KlkmuVJg9L+RvOje0pFAryIYMsmfN25QEOJEuMvaJovnQ
-	 8simFRpo++lVGMxuPVVjdI7SsPIzlEAZsFtN0gu0cQRyx3uAcpx3+FxuKUz3vIOk1gMBA
-	 TrjhW66FnIg0+R13nwaVjg2mlTnOeCwXw6k4PI0RFBjq/MjyB6EVBgu9HflPtdx1KfA==
+	t=1793907627;
+	b=vw6Avi9wgaWQ8BGpLxtWthhSuF5gbwcWr39V7fHgPfkusPyPbmeEe7HxE+e5rAs+JliY
+	 +43I3RlGMx9kqPlfyudnBT4Cxz4Pjt+pL+774MJ1ySJGG7o8FEUSv6gabMik63SWgDJdH
+	 kBcq4HdTYvlg650BqYJgMIDe41KsXPKqagudgg8hYlrt+9EoDmv7LtPDZmtymJtiq1ryE
+	 AdygRQ0GeXj1YQC5LCelevBTYQUa5wW94R/DHPFaZgtL2P/fhybo56R3uU7goRaO++fw0
+	 wZ8bD6fYl/5nMEzE7bt/tErF1xdWKjxQi5X/2eKfcOD5/nrHu7ULFiZlyLtyrSrRBzw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907620;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907627;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
 	 X-Received:X-Received:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
 	 In-Reply-To:To:Cc:X-Mailer:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:
-	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
 	 X-Proofpoint-Spam-Details;
-	bh=Z8XHujJiBkcagFsfgBICSH9wnbIRlzmSj2ubDb+7t+w=;
-	b=eenfTVTkNI4OpUf/7vqLwFmX+wr7/O7dRirFzdWYdWu/xl7W0XGCPmpJwo0z+WYX8k7s
-	 OzgD6TU7xTSvpfNyQA7ZeD7s5pdIg0wi9xhF4XJ9cbaciE+DG0cuAo1yExlGICZbcjIC8
-	 noBlsJZDHLVI17XECZ5OGETaLIE9BGyzMQHha90mbNFveV7EMHwXBMM/Ch7xD0F0yRQhN
-	 UnlCnZ7PMMaEM/rCMJYDtfiK489CuDGY8BR1D7OxEbnMQAtEugwZfJDRRAZ3vmmpYECcu
-	 jBCTL/Lyi/MBTk5sz6BzZyIByvJaNCSGqCMuFR9rJ0m3w6OTph28LVwt6NG7IieyOKQ==
+	bh=XOOBmwb2awLC5YZHeWolkoldTxdZw54DrdIDJ8KDPFc=;
+	b=mJPkyxmZLi6DJTb6LSJXKXBqBGEbh9flUIC53Mrd8pud1UaNz3iUC/fLvtJNR6YmZzfs
+	 Iugpw402EJitaXYVrp6kNy2BtMudf6XZKBUw7CXC//XiSrs23sNIkmAp9FrOVsj/UGgZP
+	 /YLYvf2Fytf/v0skaNspBIHegJuYMd/mw8KNTo6iDPj3W/dZPJRg6werUBphbjyS9We6T
+	 boM6CsPK9YlQSoh6zYA6dEE9QfwRMutiQnG7w9O/SZ9tVtyVGJE5Y63YLKJAzEdo5Byil
+	 iYc8UEwBb/6UsArMKF5iQvWWE7csznHjVIXegUtFF2F0+fjxP5EttShi98K8nTZoWSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=kf8HthJ7;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=bLYmwftD;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=TNffLFtf;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KgTPdqG8;
 	arc=none smtp.remote-ip=205.220.180.131
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1453B6071FA9
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 19:40:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1453B6071FA9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 592D660741D3
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 19:40:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 592D660741D3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=kf8HthJ7;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=bLYmwftD
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5HeKIp1485061
-	for <linux-wireless@vger.kernel.org>; Thu, 5 Nov 2026 19:40:19 GMT
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=TNffLFtf;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KgTPdqG8
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5HeL3V2091030
+	for <linux-wireless@vger.kernel.org>; Thu, 5 Nov 2026 19:40:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Z8XHujJiBkcagFsfgBICSH9wnbIRlzmSj2ubDb+7t+w=; b=kf8HthJ755bsNh8g
-	VRlBb4h65hEIU3uhp6aGtB2U1sht2wcfKdy93BKZDzl+5SP+tEYj1qQ2SCxuv60Q
-	F9R2Cmqenn5YgVqEqhgPWT+aGZkTf3O3iYOWOrY1osB1Pa7TwSuGv8TDywVa0r+0
-	wVPlYe8nlc+6SOwUEqDdJgWPErlD1eV6yTo3Rv2gRCZZ5I/ETLXzSxSurFXyUeoN
-	3vMZLz07j8SwkCCrYia+on3M7/jq0HwLNhvZ2x6jnvohz7NZ7ZjjKnQA6xF1kc6L
-	3cG6WPOZirLwndRIdE8C1atQeONI2bL/lj6IGkTbEniw0HaUd7lRajDlyLWM5Kb+
-	oInqWA==
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hrpaajycn-1
+	XOOBmwb2awLC5YZHeWolkoldTxdZw54DrdIDJ8KDPFc=; b=TNffLFtfFqtm7+bD
+	mvI5Zi1WarPw+MG6PoyZbWf5/r1X2K6nvq6idQofGySSaXEBA15+HoNiidr92TDM
+	Xsll8jzUyOE4puSpq7nxqLuH9Dm7CtiW7HCLJgmEXG038jXfBUOXzbs0hZnztVJe
+	Scib48+71MBOYGYgovYCPdfx2JdsUfOcCIUi6G9G3MPu8NZTtcQPxK3yQeZF821v
+	TQjCGdR16N90lZtzc9pEN/pY14cycoMbtfRKWpehGR8FL0QGz8Y6yTV3RosAsWgR
+	BHwwc38Sewb6zGRwEatYsyXPnRiDyjCJMLZtYMXguHGDlkQ+9punn78YrVuDzc+o
+	nm4JxQ==
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hrq9fakx7-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 19:40:18 +0000 (GMT)
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-36cec75d8caso1164475eec.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 11:40:18 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 19:40:25 +0000 (GMT)
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-36a3451ea93so3101848eec.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 11:40:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793907618; x=1794512418; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1793907624; x=1794512424; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Z8XHujJiBkcagFsfgBICSH9wnbIRlzmSj2ubDb+7t+w=;
-        b=bLYmwftDcPeyJV3296LUEWq83YmXOpDY5w6qR6Yu6chRu43PP6uh4eKS/CQg+1y5fd
-         DOXTe0R/itIZGJ/GyIe/av90WuryIAVRmpmcIjQkwqL6rHgjQGro9NcK8pGzhN3m7C9K
-         G5lA4DJlMsYuYs1mg/G6NRDtLQXyqOSPnbk/ofqHDM+uA/K7ZSqkBiu/iBHLR3pdx+1b
-         3nLxcA8L8Pfa3wy50L2WMpXB9rHy7zGQGAVGnooENEFu+RqQjdweojA08JSXG/A4fVFV
-         7ni9GZqLSGKVSqAb9QC/Nq7aBYhBi+o0dtEvLZkczGXKUAQzyPQC/W6tegU/+O9AKe41
-         Wh5g==
+        bh=XOOBmwb2awLC5YZHeWolkoldTxdZw54DrdIDJ8KDPFc=;
+        b=KgTPdqG8TtxP5IZKoMvi8+jNKyMYanrALMccxABHxNl40VEKQhc+r+7NaLooRcCR24
+         gVPclqhz8LxWQf8PG6zakedWBaQYT13gQ8Ac5XLDJwRa9QwFa47qywk3ZxsG/mTXRPbo
+         //KfLP+kiXm1X6YeZmWjd6BPSivqkXS+dzP5Fz2rC4rdfDN87LbzVeVajLcpRrWElYyX
+         AgkTC9VPRWR72u00o1BX46PHdeJs+uUhOaa0R4zoj+96ldQ+rfrlSzTDHB/jgy/o+t89
+         aFMgLX2jA4LkUSXVIkmlrvdx1FNTnYW6H21CSaGLsRoQHHHj5WdylE+peYV/GVkMRCah
+         94hQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793907618; x=1794512418;
+        d=1e100.net; s=20260707; t=1793907624; x=1794512424;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Z8XHujJiBkcagFsfgBICSH9wnbIRlzmSj2ubDb+7t+w=;
-        b=vSdaQX0d6PmUF6S+I3PV4mBlIN0UZyFy1ar+AXPvYKEoY7q9Q6e3yjQzxMr6lDAn/p
-         stVEI4+x4yJ37cg3n118ABDifMhnngvgfFS+OlQua4E5jdyEAi2/q4mzsohv7o2UWld4
-         CyS9r/ujFox0qcKAWsalahPDUyCY1myo5rkm5ot2KgxcDSMO36/mRSfYgjb3qX3/gqxS
-         6kxAJIGCIfW9/YWXczrZbFjcX8XkRiWSV1yBss647p+jO0sl1WjWGTtOqOWRJgFCp964
-         9vdaljDdofJ1a7fABr1P2r4oL6D32tTz4j05qgpvJoU1+nQ0w+6PjT/229eupQCcQEtp
-         2Qxg==
-X-Gm-Message-State: APuU4Z9ycdwxe/Ben1dfYJvp6E8SetPpMvTmkw4EvtZKRpQQmz7U9TjN
-	zFpZKL5+mFBuuaTNMfsaPDLkarR5TqtZFuuSllsaofN+wkkwBOz6DQtd2uNBpVIFlZthjgaC+1+
-	Ip1u4Sa8dVO/3/TXd+qUMYz1VbYYugNuMY4/w9bLRYHtohKxUJUZoRlGmZ5q4+vOgD958
-X-Gm-Gg: AYBFou2CneYTiZOcCCMguZdNghrALR1bdmEZsQzOwSPn8bZzyNitxcnuqEWAwNMBWI+
-	Pvme51wetAMP0iCSWd4Ito26uv7UHy8vWJw4Am4FeFbxqsU1T2voLrl4TSzxqM9Z+Jj9XsvBihY
-	Evacf9zkCNlnxr4p6NdgS/UiSzj1lC0qUX76Is3vuK7PFPTm1QzztFJSdz/Jl9I+y2MRz/+LYFo
-	gn9RJyjiTyqWEiK/ZvI+e0mlF5aupwUPKfK7CEWlv+SqvcouqopnSKcWSiKSK5x65X28ES8UeZR
-	F9+CAGVoUB77FsjRFDJxDEJiNofjtbxGPpaVcsT8T+/OFQsI2ei3RSCRYnqw3Mf9xwDTWFZcwdp
-	/X1gL69OkTo9thQZcuVACpgoqLDwDdhq/zW2ZBsqzp/TwpKVfVrwJhwOeb1lzUvcwC3o91yRXlg
-	WbKXHEDR4FLWp6kUIpX/AT1zfEma6x8jGg4pvq2oG0rqA4xvnxctW+y0VVFKugVHFkRfdOLg==
-X-Received: by 2002:a05:7301:4208:b0:36c:a3ae:936e with SMTP id 5a478bee46e88-36de5f70a05mr4629961eec.5.1793907617801;
-        Thu, 05 Nov 2026 11:40:17 -0800 (PST)
-X-Received: by 2002:a05:7301:4208:b0:36c:a3ae:936e with SMTP id 5a478bee46e88-36de5f70a05mr4629928eec.5.1793907617220;
-        Thu, 05 Nov 2026 11:40:17 -0800 (PST)
+        bh=XOOBmwb2awLC5YZHeWolkoldTxdZw54DrdIDJ8KDPFc=;
+        b=Dvu1Xjt1zhBgXhnppk3FuVy1VCGtovMQHSAPSVIR5Auly/pHCjVmse86JKkVOZN2AI
+         UG4Xh68G65F/NsQfXKsYBtNI0xNEEyUrtB7OMC5mbPSG3kVC8FGqOzDWWRD8cv85FDSh
+         nNgjAZYncoG0RZVcJHW/Q1V9uc1uLGys0eq6yBbYjq9oVnzrMYFN7AlPwaQUHDjETv2c
+         VJYsnquTyAZKJPlqmSRWMeo2r49Ga/7CjDP+YkqzAjw5Ddff++LZ6dFOKsBvcP3RIJdd
+         MrY8EondsFLf3/bky8ponLvcpLu3e7DH2C3R2HI1a/pjoXa+N8UIBTNYgxYCwm/E/3Cu
+         J7Jg==
+X-Gm-Message-State: APuU4Z8Z8C/oSGzDRmc4tukHdh6Nsj6rEsdm5GRILCu8+T3wfGExkOFg
+	LQnhr7Yd7gcted+waaN4hQHb9l8wJhddO284tvCSD0oPTTP5moHcEdozJ2TDU8yjVnN8eF2Pr96
+	GBlWfUhtHLc6/w11SA+4eTIg403RJpmngJfX0jv6IqWh9mPgLhuSKN+SqXzj2R/83c8Cm
+X-Gm-Gg: AYBFou0bD4Ideaklw6QBROT79aZcUzeTosXoCUBUuN6LoKQDy4gobvNrkbJVa3aQnMz
+	n/U+B6ZoUOMxuzirw+PnEiGKpSBd/zPpVRV/K7zc9rsUV8DLOWyVQ3T6Htl8nDMNVglaTsIow5t
+	hnHseH+ZwrzglgU85NbguOObJsqnohGaiWqIGJav3azkfMwAmHqa2ffCJxuBD8XmMN4QkK9U7N3
+	0nGAbvryI3IjJ7lTKxh21mGEKHmGakUhJ8/1kGhh6CygP1SC2ojNaQIZB0IfKNAR3JVaqyy52ii
+	PnZ7FXHMy4+mzD1dmXv7YCk7uixUtrBWpP+Lod8SnILvt0WR9VQItq4H3CTcML4BsXos6wnndPk
+	Hcm2490orRv8dYZCzRVK7C1uaz6hWe6fNJwItAXR9qyycKmuxtpHrfFvS/On+t6cC2FEBi1dqYZ
+	3zvt2sRe1O4ozCGBvqhNohfmXG31sepomMgQbNw+u6ywv4GsaFzL8gB/3ks05Kmol1XxZ8Ug==
+X-Received: by 2002:a05:693c:62d1:b0:36d:3c0f:cc85 with SMTP id 5a478bee46e88-36f723e9d36mr196345eec.5.1793907624035;
+        Thu, 05 Nov 2026 11:40:24 -0800 (PST)
+X-Received: by 2002:a05:693c:62d1:b0:36d:3c0f:cc85 with SMTP id 5a478bee46e88-36f723e9d36mr196299eec.5.1793907623387;
+        Thu, 05 Nov 2026 11:40:23 -0800 (PST)
 Received: from hu-pooventh-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36f72cc9b88sm357284eec.14.2026.11.05.11.40.14
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36f72cc9b88sm357284eec.14.2026.11.05.11.40.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 11:40:16 -0800 (PST)
+        Thu, 05 Nov 2026 11:40:21 -0800 (PST)
 From: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
-Date: Fri, 06 Nov 2026 01:08:36 +0530
-Subject: [PATCH wireless-next v3 01/21] wifi: nl80211: define Seamless
- Mobility Domain (SMD) device capability
+Date: Fri, 06 Nov 2026 01:08:38 +0530
+Subject: [PATCH wireless-next v3 03/21] wifi: nl80211: add SMD BSS
+ Transition sub-state STA flags
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -117,159 +117,159 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261106-smd-v3-1-1723950e3cf8@oss.qualcomm.com>
+Message-Id: <20261106-smd-v3-3-1723950e3cf8@oss.qualcomm.com>
 References: <20261106-smd-v3-0-1723950e3cf8@oss.qualcomm.com>
 In-Reply-To: <20261106-smd-v3-0-1723950e3cf8@oss.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         pooventhiran.g@oss.qualcomm.com
 X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDA3OCBTYWx0ZWRfXyP/kbSLUDCN6
- SE+Fl7pTAxqZcbd4C8OP2KI9RVyAiZdTTCPIF3PgOIWCMr6NZXwOZzJ73f0ylPP8YtL6FLzPPEk
- QGJLHksuPsPkmKQLfSrEfo9eYLUBqDkZFeflrCMz64COLKISQSl3RD/qra77kiv2YiRouhrRDP6
- H3M9bC6Pi+Qdp0rfny2Cs5u5e1xpzkVD2GNO6XQDdJ22EsmkwGmjcEQghzlmFEyqlaUelTkS9NM
- smdHly8ZXMSIlYHh0aiH+pWlCZ6UVAdmLvtNZ7Kz1bH0FZUstgNN4TpMj6OP7n0Avje3mmYV8ij
- ckuwU/c/sp1DmX2A1OMu05sYOaUts0F+l/JpvdtfJPjPIxrXL0d7IUA+F7059EA1pvFSig3DlV5
- 6eYtCe87pK4J+2kZDe9hsivlpY/NWWO7ivxWyfz8XY30ecfe5VM2X3eTiLrDFl/UWL/KVJUWzJo
- iyPqkgmFwfOqpPsFMIA==
-X-Proofpoint-GUID: FUTKLH584XAtkEKXraI50qLS1SnEQd5B
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDA3OCBTYWx0ZWRfX0G051bF/VFLJ
- eu2fT1kvvAm+h1NVvKCNqtOXT0CtLcXfnjA2qiAJOGbWLsaR0vab3FuFLruQrLb7GDzIV8VDSKj
- jmxPBWPwtZ9F0VkgaeTuDTgtZOKsl6A=
-X-Proofpoint-ORIG-GUID: FUTKLH584XAtkEKXraI50qLS1SnEQd5B
-X-Authority-Analysis: v=2.4 cv=WOXqzXsR c=1 sm=1 tr=0 ts=6aecdba2 cx=c_pps
- a=cFYjgdjTJScbgFmBucgdfQ==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDA3OCBTYWx0ZWRfX2ouf8S5rhyJf
+ /mZdxYmpzmBk64Dogd9ZY20jnj9r+2fTp7A5iE4US1ciiZyr2RvvZy8JGBEMEeaUtC00NlyI7FZ
+ 2XWP5jSgXwHCNeXhSyVEZXPoeuNX0dQirDOtrXPVc6p8MTAdA67/VAJlM5OYcHFNqW16nAU9oRV
+ xBEwBylDEV3xJcJb86cS/K5phbwZYv7twTux0eFTpfDfmbFKQQjYhqq8b0D8mz+0ztt0RwaCCbO
+ 63a+Y57i3N6iYppzs1tXdANgJxc0iD1/1XoD5ROh8em97+i6HoIoLdN4V1Zf3llauKYAa2xUTFd
+ A1nR15gVsQlbWVM/wXgiJVZFgNS4J3pgbJLXEsGPuFUB8mLGADWYhOmdAdDJILXVy3DqEDKzofZ
+ A300osV5gGHR7Eln4PrLaLBEzVzHZPwACETo1xzB/v1oHj3n/tNq89MozIz7KFzof3IF7XYAqMu
+ mFjsAQoCs1Fx1KHYCsw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDA3OCBTYWx0ZWRfXwbHnACV3vyMj
+ nKMyHS4l13ihjvcNUOXidh1lg1hrzNv+4zrfEoKSUnchldL3FamYEHXKrE8mQDG0crLpQFZq+hl
+ lxfLPWvqovP4FZ1B9btHGS1xh7nsyJQ=
+X-Authority-Analysis: v=2.4 cv=Vdhir1p9 c=1 sm=1 tr=0 ts=6aecdba9 cx=c_pps
+ a=Uww141gWH0fZj/3QKPojxA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=EUspDBNiAAAA:8 a=mv3qBhzh20y5QnxvG48A:9 a=QEXdDO2ut3YA:10
- a=scEy_gLbYbu1JhEsrz4S:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=EUspDBNiAAAA:8 a=b90yJLNE8BgtmlcRjg0A:9 a=QEXdDO2ut3YA:10
+ a=PxkB5W3o20Ba91AHUih5:22
+X-Proofpoint-ORIG-GUID: EXL27y9XbCy4pULM-kJvprs7XBn7EPvx
+X-Proofpoint-GUID: EXL27y9XbCy4pULM-kJvprs7XBn7EPvx
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-05_05,2026-11-04_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 clxscore=1015 spamscore=0 phishscore=0 suspectscore=0
- impostorscore=0 adultscore=0 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
- definitions=main-2611050078
+ bulkscore=0 malwarescore=0 suspectscore=0 phishscore=0 priorityscore=1501
+ impostorscore=0 clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610300000 definitions=main-2611050078
 
-Per IEEE P802.11bn/D2.0, Aug 2026, subclause 37.16, an AP MLD can be
-managed by a Seamless Mobility Domain Management Entity (SMD-ME) along
-with partner AP MLDs to enable seamless transition of an associated
-non-AP MLD from the current AP MLD to a target AP MLD. A non-AP MLD
-advertising SMD supports association to an SMD-ME and SMD BSS
-Transition between AP MLDs within an SMD.
+IEEE P802.11bn/D2.0, Aug 2026, subclause 11.3.1, defines three new MLD
+state sub-states (4a, 4b, 4c) that apply when a non-AP MLD and its
+associated SMD-ME are in state 4 and an SMD BSS Transition is
+in progress.
 
-Userspace needs a way to be aware of the driver's SMD capabilities so that
-it can enable SMD configuration and operation only on capable devices.
-Define nl80211 and wiphy flag interfaces to advertise SMD support to
-userspace.
+Add the corresponding nl80211 STA flags to track the state changes:
+ - NL80211_STA_FLAG_SMD_PREP_TARGET - State 4a: non-AP MLD is prepared
+   with target AP MLD
+ - NL80211_STA_FLAG_SMD_EXEC_CURRENT - State 4b: ST execution active on
+   current AP MLD
+ - NL80211_STA_FLAG_SMD_DL_DRAIN - State 4c: DL draining period
 
-Co-developed-by: Rohan Dutta <drohan@qti.qualcomm.com>
-Signed-off-by: Rohan Dutta <drohan@qti.qualcomm.com>
 Signed-off-by: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
 ---
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 25 +++++++++++++++++++++++++
- net/wireless/nl80211.c       |  7 +++++++
- 3 files changed, 35 insertions(+)
+ include/uapi/linux/nl80211.h | 18 ++++++++++++++++++
+ net/wireless/nl80211.c       | 18 ++++++++++++++----
+ 2 files changed, 32 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 46ba0fb27b14..b4f384ade47a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5796,6 +5796,8 @@ struct cfg80211_ops {
-  *	STA) basis for station and P2P client interfaces.
-  *	(Note that if userspace doesn't give the MAC address, the AP's address
-  *	is substituted to allow for older userspace versions.)
-+ * @WIPHY_FLAG_SUPPORTS_SMD: The device supports Seamless Mobility Domain (SMD)
-+ *	setup and BSS Transition.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK		= BIT(0),
-@@ -5823,6 +5825,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
- 	WIPHY_FLAG_NOTIFY_REGDOM_BY_DRIVER	= BIT(24),
- 	WIPHY_FLAG_CHANNEL_CHANGE_ON_BEACON     = BIT(25),
-+	WIPHY_FLAG_SUPPORTS_SMD			= BIT(26),
- };
- 
- /**
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b56a96f57bec..3e71564ce87c 100644
+index cfc1bcad13f0..81c16ea2fd34 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -343,6 +343,26 @@
-  * processing of peer DH IE to generate PMK.
+@@ -366,6 +366,15 @@
+  *	the AP MLD. %NL80211_ATTR_SMD_ROAM_STA is also set on the target AP MLD
+  *	to indicate that it is part of ST Preparation; drivers must keep these
+  *	links in powersave at this point until successful ST Execution.
++ *
++ * When a non-AP MLD undergoes ST, userspace can indicate the current state of
++ * ST at the current AP MLD and target AP MLD using the STA flags
++ * %NL80211_STA_FLAG_SMD_PREP_TARGET, %NL80211_STA_FLAG_SMD_EXEC_CURRENT, and
++ * %NL80211_STA_FLAG_SMD_DL_DRAIN.
++ *	%NL80211_STA_FLAG_SMD_PREP_TARGET can be set in %NL80211_CMD_NEW_STATION
++ *	on the target AP MLD while creating the station entry.
++ *	%NL80211_STA_FLAG_SMD_{EXEC_CURRENT,DL_DRAIN}, on the other hand, can be
++ *	set using %NL80211_CMD_SET_STATION on the current AP MLD.
   */
  
-+/**
-+ * DOC: Seamless Mobility Domain (AP)
-+ *
-+ * Seamless Mobility Domain (SMD) is a mobility domain consisting of multiple
-+ * non-colocated AP multi-link devices where a non-AP MLD can perform SMD BSS
-+ * Transition (ST) between the AP MLDs without reassociation (hence, seamless).
-+ * ST is done in two phases:
-+ *	Preparation (where the target AP MLD sets up the links for the non-AP
-+ *	MLD but keep in powersave) and
-+ *	Execution (actual roaming where the non-AP MLD transitions to the
-+ *	target AP MLD and continues traffic).
-+ *
-+ * To use this in nl80211, multiple commands carry the %NL80211_ATTR_SMD_SUPPORT
-+ * attribute:
-+ *	Drivers set %WIPHY_FLAG_SUPPORTS_SMD to indicate userspace about the
-+ *	SMD capability in %NL80211_CMD_GET_WIPHY.
-+ *	%NL80211_CMD_START_AP carries %NL80211_ATTR_SMD_SUPPORT to indicate that
-+ *	the AP affiliated to an AP MLD is part of an SMD.
-+ */
-+
  /**
-  * enum nl80211_commands - supported nl80211 commands
-  *
-@@ -3243,6 +3263,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_ASSOC_PROTECTED_TWT: Enable protected TWT for the association,
-  *	requires protected TWT support (flag attribute)
-  *
-+ * @NL80211_ATTR_SMD_SUPPORT: Flag attribute to indicate SMD support. Used with
-+ *	multiple commands to indicate appropriate SMD support (refer DOC).
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3850,6 +3873,8 @@ enum nl80211_attrs {
+@@ -4035,6 +4044,12 @@ enum nl80211_iftype {
+  * @NL80211_STA_FLAG_SPP_AMSDU: station supports SPP A-MSDUs
+  * @NL80211_STA_FLAG_CIP: station has Control Integrity Protocol (CIP) enabled
+  * @NL80211_STA_FLAG_SMD: station has negotiated SMD.
++ * @NL80211_STA_FLAG_SMD_PREP_TARGET: station is prepared at SMD target AP MLD
++ *	(State 4a).
++ * @NL80211_STA_FLAG_SMD_EXEC_CURRENT: current AP MLD is executing SMD BSS
++ *	Transition (State 4b).
++ * @NL80211_STA_FLAG_SMD_DL_DRAIN: current AP MLD is in DL draining period
++ *	(State 4c).
+  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
+  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
+  */
+@@ -4050,6 +4065,9 @@ enum nl80211_sta_flags {
+ 	NL80211_STA_FLAG_SPP_AMSDU,
+ 	NL80211_STA_FLAG_CIP,
+ 	NL80211_STA_FLAG_SMD,
++	NL80211_STA_FLAG_SMD_PREP_TARGET,
++	NL80211_STA_FLAG_SMD_EXEC_CURRENT,
++	NL80211_STA_FLAG_SMD_DL_DRAIN,
  
- 	NL80211_ATTR_ASSOC_PROTECTED_TWT,
- 
-+	NL80211_ATTR_SMD_SUPPORT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
+ 	/* keep last */
+ 	__NL80211_STA_FLAG_AFTER_LAST,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2fc680382418..16d00ebed10a 100644
+index b06772ec8ac5..5df145ab4ab1 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -1201,6 +1201,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_ASSOC_CIP] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CIP_CAPABILITIES] = { .type = NLA_U8 },
- 	[NL80211_ATTR_ASSOC_PROTECTED_TWT] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SMD_SUPPORT] = { .type = NLA_FLAG },
+@@ -8025,6 +8025,9 @@ static const struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] = {
+ 	[NL80211_STA_FLAG_AUTHENTICATED] = { .type = NLA_FLAG },
+ 	[NL80211_STA_FLAG_TDLS_PEER] = { .type = NLA_FLAG },
+ 	[NL80211_STA_FLAG_SMD] = { .type = NLA_FLAG },
++	[NL80211_STA_FLAG_SMD_PREP_TARGET] = { .type = NLA_FLAG },
++	[NL80211_STA_FLAG_SMD_EXEC_CURRENT] = { .type = NLA_FLAG },
++	[NL80211_STA_FLAG_SMD_DL_DRAIN] = { .type = NLA_FLAG },
  };
  
- /* policy for the key attributes */
-@@ -3824,6 +3825,12 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		if (nl80211_put_nan_capa(&rdev->wiphy, msg))
- 			goto nla_put_failure;
+ static int parse_station_flags(struct genl_info *info,
+@@ -8091,7 +8094,11 @@ static int parse_station_flags(struct genl_info *info,
+ 	switch (iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		params->sta_flags_mask = BIT(NL80211_STA_FLAG_SMD);
++		params->sta_flags_mask =
++			BIT(NL80211_STA_FLAG_SMD) |
++			BIT(NL80211_STA_FLAG_SMD_PREP_TARGET) |
++			BIT(NL80211_STA_FLAG_SMD_EXEC_CURRENT) |
++			BIT(NL80211_STA_FLAG_SMD_DL_DRAIN);
+ 		fallthrough;
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		params->sta_flags_mask |= BIT(NL80211_STA_FLAG_AUTHORIZED) |
+@@ -9308,7 +9315,7 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 		return -EINVAL;
  
-+		state->split_start++;
-+		break;
-+	case 19:
-+		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SMD)
-+			nla_put_flag(msg, NL80211_ATTR_SMD_SUPPORT);
-+
- 		/* done */
- 		state->split_start = 0;
- 		break;
+ 	/* When you run into this, adjust the code below for the new flag */
+-	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 10);
++	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 13);
+ 
+ 	switch (statype) {
+ 	case CFG80211_STA_MESH_PEER_KERNEL:
+@@ -9404,7 +9411,10 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 				  BIT(NL80211_STA_FLAG_MFP) |
+ 				  BIT(NL80211_STA_FLAG_SPP_AMSDU) |
+ 				  BIT(NL80211_STA_FLAG_CIP) |
+-				  BIT(NL80211_STA_FLAG_SMD)))
++				  BIT(NL80211_STA_FLAG_SMD) |
++				  BIT(NL80211_STA_FLAG_SMD_PREP_TARGET) |
++				  BIT(NL80211_STA_FLAG_SMD_EXEC_CURRENT) |
++				  BIT(NL80211_STA_FLAG_SMD_DL_DRAIN)))
+ 			return -EINVAL;
+ 
+ 		/* but authenticated/associated only if driver handles it */
+@@ -10128,7 +10138,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	/* When you run into this, adjust the code below for the new flag */
+-	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 10);
++	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 13);
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_AP:
 
 -- 
 2.34.1
