@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793902348;
-	b=nbodg1IrHPoM0zNGBadcXd7/GmpVwIv3xIv4AsjukBqICYZiZx9mNdd0JSjE8p0kqDIr
-	 mAlAp9+xBmyaJyQ7NQ2DG2QofhPot27luMJ+hptIdo0sYtmEFRXknn28leloZQRoPtM3Z
-	 bSRITUxuI2HYGqSZnMGThsIyb2pLKlbwlNMYYmtWYyV8nU3nrliKhEqDLint7Jaz6qUMG
-	 GUXGNIkNOpCFS872/iQ4E2Rnz8/DALkrJyEciv93wjYpBZZ8AzvEsjqSWeODIAuHkVBJv
-	 ZeddpCFI/ORqh7NGDPTItNkSUDyq9Qf619G3wWdszZ3seIVf691TFPA8qEfPe3KNH0A==
+	t=1793902339;
+	b=D8fFlJbizJbMCT7KFqd+Pi0ODfHP6jtHsAmRAeacJ8aV0WPlK9HhHMn9UuzptfJXgPix
+	 nouwp1yJzAPJRXeQg0OoWIxBCHbwXEOtv+o731Iu1l0ReoCOSbH7wY/q/qsk/eB6019gA
+	 ZlMwZdMF++thBkxur8s8wlLPKTtTrc5o9tJVF1pyqJ+M0/Uti0+N0/3/xWF3VcIzDwNRC
+	 JC8+F99TKSz4QHEQSYAXiGVxXSpY1075GOerqQu0bKewL1TTjF/QWpGPSnMpG4vQnGGlo
+	 MTxpbah73EqfvTonRaJT/bIRo8Tvesady9DLn/Q0554O+I/ZrRdUllJx2960yY6xb4A==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793902348;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793902339;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=+VXh5wNmEMtDJf22hNJBMQBn0m2NV1zkl2tOQQX0J8U=;
-	b=JOPYYS/BpkIwIo7BIPHIyEI4Eh8p84K+10KrDioZXSd10ugg7WXNJISJl7tf1mmC5Q0p
-	 mitVfZ0GOjEVe4ylAL/skVXC09akcB7jNJPVFVcNVM10t3b6B5uRJ6k0UJLC2R6mBZL7M
-	 WnL6Ab98N5Yy6KGbcQi9wzZV/WJGrnvLyh+9p092cjpzNjG+zQhVHfqsRhknUBjIQBrK7
-	 fTdwmrPkrD6i+RzByk10IZ9fESxo4U9MfQK4PwyjJW44GkQYQIviznNNE70YRyA+IIlHY
-	 esFwKGoqh7jhgfE+YZZ+Ul3JQRN/U/OGUZA5lDw90778X3r/bxk1KAb7WMLf4kYN5SQ==
+	bh=yVPwvuQ4429GMVDIFBhVp3gdRyKw4KIG5B2nOMvQFTs=;
+	b=m4QswfCWb3to8FIVCfXKjYMKENmJXv/tL2A3wk4bqePapJTLNI+m0cfF6JhOqdnEwGeJ
+	 HryVkV6nMJgooR8bZOt4GdRq5WeBTLdLXRlFiB0mhRXCTYT5BnvT56KQiqErbH+fZQeR9
+	 gim99zGHooXEVrwWLTCsMxa/nHsDGz5lDzfAy+Q0YA+VguDm+5613phKlFGZAZYYi/b29
+	 /Ict8RLnMjwznUvym+keUd8gzI/gARseWZ47jpRpypzZ6wzDddYdw1rOy5mVi6WJDD30p
+	 PJbfeIiJwc3CutjTB2ujtuW1TjmIgGMh7AOTq4kEg3WVKyIjXOIg3s0WfFveUQ1R/ww==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fRz82+d1;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HgWspvau;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFFFB606A337;
-	Thu,  5 Nov 2026 18:12:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7995606A31B;
+	Thu,  5 Nov 2026 18:12:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fRz82+d1
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HgWspvau
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793902347;
-	b=jeQGh6vZ/wnXt951fWbVCPhuSCR/Hi6KyU4UFngqyo8SntalDxqNegI65ex46B4t2FLH
-	 eHb8gT/luMxF/fCje63Ngr7I+LRmrA41l8ig0WEztDd1WhAHJ6kSYhpp0ffv42DWiOYHK
-	 eBvXFh9Lo6QZLtgx7njq36WJGTUBgRe8mIlikjeqc1H7t45Amc1lqsP198HtTf0O+n7/i
-	 G8cxoHYejaBL9CxojSvdKGVXwfWNIsqBfIpkuLvM0fZCGBy563rXqeQMOfktXofplfsli
-	 jUDxdhVbcQPUK9+xlHRrvbWwjvnYlzXU8LcOvwM+s2vVxFXnyBRd4U69VrVFQRzCvyg==
+	t=1793902338;
+	b=XL/k5esB920XWSr1gobs9+36NAugbRLJR/Qsb9E9yW+5epqzzXwyP2KMutbKgonVaHaD
+	 p8/3fBlp8ti4daqp1VTRkuVzQ7Re19YkgRbyKRdRXPy9/f5GV1v9y1Yt//QywATJbHlEn
+	 9puxPJNXfazAvaPIqMXCA5sFBZPovxw8nbA6dGjBoWnqerBxRV2Pv2q0/HehuM30E+4iL
+	 WEEu4YZpUkrflueMjZy8s9917ecEt/3lyV/rHrklS1Ol+yYHan/I7EFyeL60dHm2DaKSN
+	 JohxGtneAEQ/gdC4kW0roG+KI7Nbtx9C9rV9Yl11y1IhW3i8LQjhWv8fFVltf6mreSw==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793902347;
+	c=relaxed/relaxed; t=1793902338;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=+VXh5wNmEMtDJf22hNJBMQBn0m2NV1zkl2tOQQX0J8U=;
-	b=sJBrddYaYR5CAjG58Oqxyu+oG99PXJzvLu9a3MYyOFinjd9i6/ydcBEd+VxO1MbJEWtC
-	 TDz2bZmoI8R53S9uKP31LP5W2svsg8L4DniU+oo8njwepxKuHKREAb+rPTgelpDb47FXk
-	 sFTAdhCZ+Znn9brdNJsdzs8vzv5ZHtz7VNwYzU9n9Xewu21DYLDYvXj1gBzw7qinlbBpk
-	 xodgZDSCyTiBMG+pcZZgT+GK+6gKsUhyGSewHHLJmi4WSBZlOSO4iDU05FhNY117QvCpk
-	 0ZNS8c1Wi0VK02YJY6mZpI++GyWOi8RhJxhoRHJWJ29n52SQYJmZMGdH3S8PMxEKHPw==
+	bh=yVPwvuQ4429GMVDIFBhVp3gdRyKw4KIG5B2nOMvQFTs=;
+	b=cpAUwXfcu5FhHQzUnhtIzZbIkyVPu34YtZeq2ePQX8hM12POMg7gS/8tvg1cC6yvPVKp
+	 3kDZGb/eYE+5FhUSWCp0B837p0lSX4GHYAP2iKF8kKs13AfkaXuFO2JWfVvuWpNWCwoPD
+	 UdimKdVzP6eoALohQ1NGX5QpaPKZ0fIGo4NuaMGTSDjf32/eKE2cxu55aMvydVYqGiLHl
+	 njLps88iPIAX5nZOUlxSVqoiBfQC7CUuoyMKLH8UouSIGboRlHnjYx4twC3OihCRaa13L
+	 6SvjcwrYCgUybX21i1C3CRn8dWVrgKkz1b8IdKBd6SQHXUQn3feU7sUrsCLrf/bJf3Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 44BD61F00919;
-	Thu,  5 Nov 2026 18:12:25 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id C33321F000C1;
+	Thu,  5 Nov 2026 18:12:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793902347;
-	bh=+VXh5wNmEMtDJf22hNJBMQBn0m2NV1zkl2tOQQX0J8U=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=fRz82+d1S0T995/t22eUM5vljIQ7eg7fPCSXqprJd49dY3UwSRutsEJO9qlzyiY2X
-	 n1Bo7TedAAc3TlkKMNoDi+48hDHxorRr1UflsHgiel/Ab32wdK3O3eP3ueAcRv3ZsO
-	 f4bq0bh/lL32uXlQYMoVGpbcwPmY3urHMLf9U8bPTd9thAN5xYi1oZkc0wODncK2oy
-	 JtpHuA2rLOE3+9WSaHmTyiEYx9dbwJK+GBCzHRh2GqqJ+Cd4plxuqxA5833P4yJgBM
-	 bo7LjnsZScYW8O4iG2Dy8A/4OECjeZAi7TSS24mG9514yN11W1x6m9GAFa4UpbKKMa
-	 ptM/9iNOLNfkw==
+	s=k20260515; t=1793902338;
+	bh=yVPwvuQ4429GMVDIFBhVp3gdRyKw4KIG5B2nOMvQFTs=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=HgWspvauZpoUm1k/8OF4k49yzZF6dcFDT9jRrLh7hw3iWeG5nmlfR/nzXD9RS8ueh
+	 xKNUL/vYOf+ExpHA0Pr/ECVe6pR+MLV7p/cu2o+HZhLVW57a38wrc5q5gMcovWCj7q
+	 MKDlC6yuX/40ywCdL62jOaAxVrcjbTzQsK111en1bmGdM3pDZPjdwHxHUamWfMt3nx
+	 pPumPjngFRVYDByNWv2Fkwt2aixnVBX6X8SgEKxHV/JjoLIIdLpT5nS7rWfwp80SG+
+	 BsxwhQZ7KUQU9s/kUIkbREBpkRY5/XyMlCs8okVA7xtvhkyT/Gonlf4+vzHHUO2Pxp
+	 luagBYSz9A7ig==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id CD1F6473BD;
-	Thu,  5 Nov 2026 18:12:24 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 55A49473B0;
+	Thu,  5 Nov 2026 18:12:17 +0000 (UTC)
 From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Thu, 05 Nov 2026 12:12:22 -0600
-Subject: [PATCH 1/2] wifi: ath11k: don't leave a monitor vif started when
- its stop fails
+Date: Thu, 05 Nov 2026 12:12:16 -0600
+Subject: [PATCH] wifi: ath11k: don't report a regulatory event skipped in
+ recovery
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,28 +84,24 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261105-ath-monitor-unassign-v1-1-277f0fbadb91@gmail.com>
-References: <20261105-ath-monitor-unassign-v1-0-277f0fbadb91@gmail.com>
-In-Reply-To: <20261105-ath-monitor-unassign-v1-0-277f0fbadb91@gmail.com>
+Message-Id: <20261105-ath11k-recovery-regd-skip-v1-1-621538e64760@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAADH7GoC/yXMQQqDQAyF4atI1gbMFIX2KsWFzmQ0FVQSKy3i3
+ R11977F+zcwVmGDV7aB8iom05hAeQa+b8aOUUIyuMJVREWJzdITDajsp5X1n0YX0AaZMXIZ4tP
+ To3UVpP+sHOV3td/1bfu2H/bLGYR9PwDVGkOufQAAAA==
+X-Change-ID: 20261105-ath11k-recovery-regd-skip-fe5df9c13b26
 To: Jeff Johnson <jjohnson@kernel.org>, 
- Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>, 
- Jouni Malinen <quic_jouni@quicinc.com>, Kalle Valo <kvalo@kernel.org>, 
- P Praneesh <quic_ppranees@quicinc.com>, 
- Ramya Gnanasekar <quic_rgnanase@quicinc.com>, 
- Wen Gong <quic_wgong@quicinc.com>, 
- Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
- linux-kernel@vger.kernel.org, 
  Baochen Qiang <baochen.qiang@oss.qualcomm.com>, 
- Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>, 
- ath12k@lists.infradead.org, 
+ Wen Gong <quic_wgong@quicinc.com>, Kalle Valo <kvalo@kernel.org>
+Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, 
  Christopher Griffin <christophergriffin05@gmail.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793902344; l=2565;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793902336; l=1959;
  i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=1R7oAGbBN78/oVWlhCPSGL7JqxfEoXYdSJISg6BkmUs=;
- b=TPfNd1rwEb1IAORwzaVwKydgTWq9y85ofF0dnxUxsONH+KfMDevRtnzxDbtsB6PGwVN6ME/y0
- jYIA7dJ3kDFAneU9+97YW99sbcrvw1DOYHUKbEhDvc7OksKHkKLF0b/
+ bh=INYaQh0/zCuDz50Z8TnNyMsCxbzCWj5WLewSHjP8/pQ=;
+ b=vEjMG+X+tk6vuWZJuhIkz0ixr+TOOkGvrHC3397VTx1kysdGNC1wU6eF0r9gVQ3SFKBDbNxgo
+ YLRf3SC2g1FCi4GO6+EcvspkIIfkDbxQ6E8XvBfLC8O3L4TvSyviOhZ
 X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
  pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
 X-Endpoint-Received: by B4 Relay for
@@ -116,65 +112,55 @@ Content-Transfer-Encoding: 7bit
 
 From: Christopher Griffin <christophergriffin05@gmail.com>
 
-ath11k_mac_op_unassign_vif_chanctx() returns early, with
-arvif->is_started still set, when ath11k_mac_monitor_stop() fails for a
-monitor vif. mac80211 can't fail an unassignment and considers the
-channel context released, so the vif's next assignment, e.g. the next
-channel change of the monitor interface, hits WARN_ON(arvif->is_started)
-in ath11k_mac_op_assign_vif_chanctx() and fails with -EBUSY.
+During firmware recovery, ath11k_reg_handle_chan_list() deliberately
+ignores the regulatory event when the radio already has its default
+regd, but it does so by returning -EINVAL, so every recovery logs a
+failure:
 
-A firmware crash during a monitor channel change does it. On a QCN9074
-with a monitor interface that changes channel every few hundred
-milliseconds, after simulate_fw_crash:
+  ath11k_pci 0001:01:00.0: failed to process regulatory info -22
 
-  failed to stop monitor vdev: -110
-  failed to stop monitor during vif channel context unassignment: -110
-  WARNING: CPU: 2 PID: 15367 at drivers/net/wireless/ath/ath11k/mac.c:8499 ath11k_mac_op_assign_vif_chanctx+0x304/0x3e0 [ath11k]
-  Call trace:
-   ath11k_mac_op_assign_vif_chanctx+0x304/0x3e0 [ath11k] (P)
-   drv_assign_vif_chanctx+0xac/0x144 [mac80211]
-   ieee80211_recalc_smps_chanctx+0x278/0x940 [mac80211]
-   _ieee80211_link_use_channel+0x158/0x210 [mac80211]
-   ieee80211_set_monitor_channel+0xa4/0x860 [mac80211]
-   cfg80211_set_monitor_channel+0x3c/0x60 [cfg80211]
-   nl80211_set_wiphy+0x2cc/0x7d8 [cfg80211]
+Before commit 7004bdceef60 ("wifi: ath11k: store cur_regulatory_info
+for each radio") moved this code out of ath11k_reg_chan_list_event(),
+the skip freed the event's rules and returned 0.
 
-Recovery resets the vif afterwards, but without a crash the vif would
-refuse every later channel context, with a warning each time.
-
-Clear is_started even when the stop fails, as the non-monitor path in
-the same function does.
+Do that again for the event (IEEE80211_REG_UNSET_AP), the same way as
+the skip of an unchanged default regd below it. The calls from mac.c
+pass the stored rules with a 6 GHz power type, never
+IEEE80211_REG_UNSET_AP; they keep getting -EINVAL during recovery, and
+the stored rules are left alone.
 
 Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.r4-00683-QCAHKSWPL_SILICONZ-1
 
-Fixes: 689a5e6fff75 ("ath11k: monitor mode clean up to use separate APIs")
+Fixes: 7004bdceef60 ("wifi: ath11k: store cur_regulatory_info for each radio")
 Assisted-by: Claude:claude-opus-5-5
 Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath11k/reg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 1a237adaa37d1..fc6c374c787fd 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -8514,12 +8514,10 @@ ath11k_mac_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
+index 1030e119fd903..915400afaee1a 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
+@@ -903,7 +903,10 @@ int ath11k_reg_handle_chan_list(struct ath11k_base *ab,
+ 	if (test_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags) &&
+ 	    ab->default_regd[pdev_idx]) {
+ 		spin_unlock_bh(&ab->base_lock);
+-		goto retfail;
++		if (power_type != IEEE80211_REG_UNSET_AP)
++			goto retfail;
++		ath11k_reg_reset_info(reg_info);
++		return 0;
+ 	}
+ 	spin_unlock_bh(&ab->base_lock);
  
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
- 		ret = ath11k_mac_monitor_stop(ar);
--		if (ret) {
-+		if (ret)
-+			/* continue: mac80211 has unassigned the context anyway */
- 			ath11k_warn(ar->ab, "failed to stop monitor during vif channel context unassignment: %d",
- 				    ret);
--			mutex_unlock(&ar->conf_mutex);
--			return;
--		}
- 
- 		arvif->is_started = false;
- 		mutex_unlock(&ar->conf_mutex);
 
--- 
-2.43.0
+---
+base-commit: 5c8eab13e391aaabd5a1ad58f3ee4bb10ce7573e
+change-id: 20261105-ath11k-recovery-regd-skip-fe5df9c13b26
+
+Best regards,
+--  
+Christopher Griffin <christophergriffin05@gmail.com>
 
 
