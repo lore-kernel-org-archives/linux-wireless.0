@@ -1,83 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906383;
-	b=rqEjoeBpdmISyp+f1AV0ZuCgI1OUW60VVGykwFVLItSoyQ4kz15Qdt7muA6P1Jags5Jn
-	 LHoLShzB7961HdEhPlXUpqytGMb7ZvKuSIeSTRw06RBNf/ZStKDhI+ts3ECW2PQWDoc4A
-	 t0OHYhHiQzXcV0zDjsAtOoZ6GeTR+CXlhQzFzCWm5AMTEDU5rQghCHHAneiwDfSw7XCYl
-	 fBd9O/ZqdLY6CQ6HuWOpu4FHK82vkKAbEYW6y6HujtjzTLYZ55ISuCdDj4sKr7gL5YPqF
-	 CKyd6J0/LxlutgWPyXNiiuJF6GCQhIHmOHObciNtZWQLBuMhs8JIIHrU7Isec1rz7sQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906383;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=z/2gVRqDIy8aB19su2IOPKcJY2mNZmdhA03swHLZjYQ=;
-	b=cXnInZHsCibHY3+JyEDByQvS/OXbWrYvtEvEz5qD0r8kRfLFuBU2xcJH2UcQmWhnlbyv
-	 LxOf9zzSO1g/Q8/Yy+FiBneRB96EC5ljU5eZRNeD+YOVs35x/b6g0m8CHIOxNafAdrwiv
-	 QEz8N/cdKRpqckOPJavL8OekG6uA2p3zOBpa3SaOlNKd9fdNTHgLCaMA8Vh1of/SMpgNZ
-	 h2DfgREj0kryqZplYBWTeIMynYUgg6qjLqxrTh0xm+JOIK+Y25W4Y27ZGItEDseO/0CWw
-	 5IF8Ce1+kbgwAFoN8qz8h2NB+aojEIpv9R6jCIhZaUZLQpylKUiPUZif2+Z5aKf/XjA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkEVYl84;
-	arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793906420;
+	b=TPauDL9JVcPMshhhDbgf6KyXtgIZGDs5C5W1bOuHXqsq9CbHnyy4sObLG9n5DZqKEt1L
+	 lXEgOxSvb9ONZm6QvzSNLwlMsPXRlQmvkSfIIUUCyXf2giFPMnAhDoZorikDN9DICVAde
+	 Mmy78XYpVJ631nQ+oFbCIXyKwZdO8vqFZ5wUpHp0hqfhphoLBpnJBiOy+7M7d3U87N/GX
+	 nU/E/RqMEqIaj2qb/Vq5K/XhSDIA/yaiG7aOCAxst0llu4hT/K1XVBkn7fnIAvbNjSNsK
+	 vfUoIUchVh/xZsGBjupLnLQX7OwDrnAAOAdbDhuBvYLT/ccQ8dLEalGNz7NcIz265Eg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793906420;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=6Bljr1uC7IbWpOg6SVLCyxLBHvHmsEA9na/XTcirQ6A=;
+	b=lP9nrA/Sowl5utlO8DIKMMizY0pusjSIsg+4Xi0EytGO8/91MyFKl21kJIOGPPX/AmOP
+	 F02Y/Kril1HhW6wFXZAiBg1dHwOJVzIbT9kS2IlX5ij7DrnTrPSKZrCHXjZ9EVJjt1/F6
+	 80xuk0hLuYzugkAvoVtMuCyklcuCxzE37asC5CuvUoS5Byo7Te+tY2A2/DxAbvH55aXIE
+	 Eaka+4xjuulwRvvf/d/DfOjDfkCoBHP9JDTxA2krquXmZkIUK9Eh8N3H/hvOdadcjDz09
+	 WZCKRg833Tb0V2qqh9oJvMOdVDMNS/g55qZ1XOBc3rw6BUgOiDErIlwDF8+sYE+oJVw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SWUUB8qK;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98297606A31B;
-	Thu,  5 Nov 2026 19:19:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B546606A32D;
+	Thu,  5 Nov 2026 19:20:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkEVYl84
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60E871F000C1;
-	Thu,  5 Nov 2026 19:19:42 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SWUUB8qK
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793906419;
+	b=CGIkOrBfFqzG/0QFZAe2wl9bcRAK0qEAoDQNpiY+AEDqn/ECeKejK5RpSP3aLzQrvSXq
+	 sd3GNEOOtiFd8/9Vn+YgI7DzlwNwruP8i3S/b8qEnBamynNLIad7iYQaqGuH08wOvKDWR
+	 5cbb0mL/eTdZ9TMA8JDWOCVemROvSicsI/hzTrHmDZDuJIhBGHirPs93M0jvnhmyFhGIL
+	 lkzb1kp/H1O11oTUrBVzbPiI1JFMYpxlziVuSLvE1YSFCtajRliM3xjNFGlc9E7QytIIZ
+	 QACk/j94c82AowIcbkMt+SGNLGYKzi2Wn6iFBMys7s3C2ghVGpVmQXhtwkYrMXgrOJg==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793906419;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=6Bljr1uC7IbWpOg6SVLCyxLBHvHmsEA9na/XTcirQ6A=;
+	b=0yUiHNigWA9ECRCBM37b9vC2PS90ohFJE0CaC/Io80vQspuDdWDU2Cuor8/BVaRP/f6c
+	 RffzHAI+Xdf1EX69ckQ2zQVhJDlHBawrm5bsPalfvri8QE1smFDPJSe0xfYIKR5qngy0+
+	 wD0YHSx3uC1E16Rfi6sDcxNppLUPPrs/t5M4w2V+0s+SaRdXQMbABt45mZoZ6Tx0RRa3n
+	 B+7o0la6oSdjr9NIAobRUpn3jnQgWJB/DT9y3NBlt5gIZhulL/Hxo4dsgjwChe45qgdpC
+	 AW2HrefwSsli3c56/uCZ5oMNLAb5AQKDe5E5iPHDgHl0wWzwNhBnCZEhDHvtRgdy9zg==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 44EE41F000C1;
+	Thu,  5 Nov 2026 19:20:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906383;
-	bh=z/2gVRqDIy8aB19su2IOPKcJY2mNZmdhA03swHLZjYQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jkEVYl845iO1BRjDNjs7l3aLV0DOTx2Xh4dkDtjEQRAG/szywJJ5iA7F7EBeoCv3/
-	 Xr/XPb+CiVQa81KxX4rWfb+Ey7BCQrq8ZgEJKW4tmKtvqc9XOhUvqI6GMjdGyv5wa/
-	 fFT42EqhuLoCYvx7kmlRnDtoWkdemyj50Ko8jo+RL8euRPtleHPXYSTL2guiYPygpR
-	 LmQAT9/JCG5RJdfVN5vfVW2kDcNKd8AzICxKZa2tpcTEwInZ2buqjtKKyH4CQ2de5i
-	 NVLEPe8RHtRdddRsaEMdYbNggz8TadkiapRYLGxK2b9KrUeCLhPUE/vb3Yg0OCtBC2
-	 7ZypycQhGTlGQ==
-Date: Thu, 5 Nov 2026 21:19:40 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 02/17] Input: serio - attach manual drivers through the
- driver core
-Message-ID: <20261105191940.GI8298@unreal>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
- <auy2plYVi723Qt42@google.com>
+	s=k20260515; t=1793906419;
+	bh=6Bljr1uC7IbWpOg6SVLCyxLBHvHmsEA9na/XTcirQ6A=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=SWUUB8qKgkBoNjcRM2a9/aa9bkjMy0tgY0yC9p5tYU7JJR2U1lMcUMSovPuvi/LiF
+	 DIVV/pzEtuZS5bghYLatfE42B76KrDRu4g+eHhTpDu10sb/A/IyU0sCz2LsC2+ycI+
+	 7a4IZk3bpp9t/luGMNxSSS7oaOyLfNzBxjgGoyEuxvjP5cusnkqUlWiuLRLbvZ4SVY
+	 NDGJenvO/4GkxuEdvW0We4IrDj43uRFEr91v0hxiV1tclJllYN81shIHyvXc8BkVWN
+	 p1Xs70PIaz4QlW5pFp1cEx9aNrJ0ZOKS1FVieQqlI3VWnEyIi6+MaXtP2J6SVCeHPg
+	 NhiqAJ11uNC+A==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 96DED473D0;
+	Thu,  5 Nov 2026 19:20:18 +0000 (UTC)
+From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
+Date: Thu, 05 Nov 2026 13:20:18 -0600
+Subject: [PATCH] wifi: ath11k: keep the PPDU status for the full monitor
+ delivery
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -87,78 +83,99 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <auy2plYVi723Qt42@google.com>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261105-ath11k-full-mon-ppdu-status-v1-1-819a3e225b9b@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAPHW7GoC/yXMwQ6CMAwA0F8hPduEzcDBXzEexlqkiGNZN2JC+
+ HenHN/l7aCchBVuzQ6JN1FZQ4W5NOAnF56MQtVgW9sb03bo8mTMC8eyLPheA8ZIBTW7XBRp8D0
+ RdXy1HuoQE4/y+e/3x2ktw8w+/0o4ji9o+0FSfwAAAA==
+X-Change-ID: 20261105-ath11k-full-mon-ppdu-status-dbc6ddd5e32c
+To: Jeff Johnson <jjohnson@kernel.org>, 
+ Aloka Dixit <quic_alokad@quicinc.com>, Kalle Valo <kvalo@kernel.org>, 
+ Baochen Qiang <baochen.qiang@oss.qualcomm.com>, 
+ Matthew Leach <matthew.leach@collabora.com>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
+ Christopher Griffin <christophergriffin05@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793906418; l=3067;
+ i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
+ bh=4fc48RxbyexxMZuKcYsZ86QAk9wyIus7mswxJpeNaL4=;
+ b=WK2YA9h1OGQghson9ByDiVw1Yk8uOT5wEVWfCpprjGXlhy4pmBnjrs0003SkGBXpkiJhACRHO
+ rkV3EfhvuD3AunvDGwOYvlu78FVAhnPm60sL1gMENVBq2FgoAarSVdq
+X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
+ pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
+X-Endpoint-Received: by B4 Relay for
+ christophergriffin05@gmail.com/20261024 with auth_id=1309
+X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
+Reply-To: christophergriffin05@gmail.com
+Content-Transfer-Encoding: 7bit
 
-On Thu, Nov 05, 2026 at 09:05:29AM -0800, Dmitry Torokhov wrote:
-> On Thu, Nov 05, 2026 at 01:42:15PM +0200, Leon Romanovsky wrote:
-> > From: Leon Romanovsky <leonro@nvidia.com>
-> > 
-> > Manual serio binding connects a driver before driver core can admit the
-> > device. A rejected binding therefore arrives after functional setup.
-> > 
-> > Keep the port ID check and use device_driver_attach() for the existing bus
-> > probe path. Driver core then serializes admission and handles probe failure
-> > before publishing the binding.
-> > 
-> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > ---
-> >  drivers/input/serio/serio.c | 24 +++---------------------
-> >  1 file changed, 3 insertions(+), 21 deletions(-)
-> > 
-> > diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
-> > index 54dd26249b027..604440244c1ca 100644
-> > --- a/drivers/input/serio/serio.c
-> > +++ b/drivers/input/serio/serio.c
-> > @@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
-> >  
-> >  static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
-> >  {
-> > -	int error;
-> > -
-> > -	if (serio_match_port(drv->id_table, serio)) {
-> > -
-> > -		serio->dev.driver = &drv->driver;
-> > -		if (serio_connect_driver(serio, drv)) {
-> > -			serio->dev.driver = NULL;
-> > -			return -ENODEV;
-> > -		}
-> > +	if (!serio_match_port(drv->id_table, serio))
-> > +		return 0;
-> >  
-> > -		error = device_bind_driver(&serio->dev);
-> > -		if (error) {
-> > -			dev_warn(&serio->dev,
-> > -				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
-> > -				 serio->phys, serio->name,
-> > -				 drv->description, error);
-> > -			serio_disconnect_driver(serio);
-> > -			serio->dev.driver = NULL;
-> > -			return error;
-> > -		}
-> > -	}
-> > -	return 0;
-> > +	return device_driver_attach(&drv->driver, &serio->dev);
-> 
-> I am not sure how safe it is, serio (and gameport) have pretty elaborate
-> structure and locking rules because they can recurse into themselves (to
-> support case of Synaptics touch-pads with pass-through PS/2 ports).
-> 
-> But this call is for user-initiated probing anyways, I am not sure if it
-> even needs "trust" handling.
+From: Christopher Griffin <christophergriffin05@gmail.com>
 
-This patch does not change the locking; the lock was already held on paths such
-as the rescan path. This change makes that explicit.
+In full monitor mode (QCN9074), ath11k_dp_rx_process_full_mon_status_ring()
+reaps the status buffer of the held PPDU with
+ath11k_dp_rx_process_mon_status() and then delivers the PPDU's MPDUs with
+pmon->mon_ppdu_info, the status that function parsed. But
+ath11k_dp_rx_process_mon_status() clears mon_ppdu_info again after each
+status buffer whose PPDU names a peer ID, whether the peer is found or
+not. Since commit 2a2451a34afd ("wifi: ath11k: fix peer resolution on rx
+path when peer_id=0") a PPDU from a station without a peer, which is
+every frame a monitor hears from other BSSs, names peer ID 0 and is
+cleared too. Every frame a QCN9074 monitor delivers then has an empty
+status: signal -95 dBm (the default noise floor and a zero rssi_comb),
+no TSFT, and the rate of its rx descriptor instead of its PPDU's.
 
-Thanks
+Each status buffer is already parsed from a cleared status. Drop the
+clear after it, so that the status of the last parsed PPDU stays for the
+delivery. The other monitor path is not affected: it delivers from
+within the loop, before the clear.
 
-> 
-> ... And I even thinking if we really need to keep these custom
-> attributes or if I can rip them out in the future ...
-> 
-> Thanks.
-> 
-> -- 
-> Dmitry
-> 
+On a QCN9074 alone in monitor mode on 6 GHz (5975, 6135 and 6455 MHz,
+frames from neighbouring APs), 311 of 313 frames had signal -95 dBm and
+TSFT 0 before. After, 307 of 309 had their received level (-79 and
+-80 dBm for the nearest AP's beacons) and their TSFT, and the beacons
+their 6 Mb/s rate instead of 48.
+
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.r4-00683-QCAHKSWPL_SILICONZ-1
+
+Fixes: 67a9d399fcb0 ("ath11k: enable RX PPDU stats in monitor co-exist mode")
+Assisted-by: Claude:claude-opus-5-5
+Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
+---
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 6d95f7b343a55..8bee3bfe33dfe 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -5290,6 +5290,10 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 		if (log_type != ATH11K_PKTLOG_TYPE_INVALID)
+ 			trace_ath11k_htt_rxdesc(ar, skb->data, log_type, rx_buf_sz);
+ 
++		/* Each status buffer is parsed from a clear status. The last one's
++		 * stays in mon_ppdu_info: full monitor mode delivers its PPDU after
++		 * this returns, with that status (signal, TSFT, rate).
++		 */
+ 		memset(ppdu_info, 0, sizeof(*ppdu_info));
+ 		ppdu_info->peer_id = HAL_INVALID_PEERID;
+ 		hal_status = ath11k_hal_rx_parse_mon_status(ab, ppdu_info, skb);
+@@ -5334,8 +5338,6 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 		rcu_read_unlock();
+ 
+ 		dev_kfree_skb_any(skb);
+-		memset(ppdu_info, 0, sizeof(*ppdu_info));
+-		ppdu_info->peer_id = HAL_INVALID_PEERID;
+ 	}
+ exit:
+ 	return num_buffs_reaped;
+
+---
+base-commit: 5c8eab13e391aaabd5a1ad58f3ee4bb10ce7573e
+change-id: 20261105-ath11k-full-mon-ppdu-status-dbc6ddd5e32c
+
+Best regards,
+--  
+Christopher Griffin <christophergriffin05@gmail.com>
+
+
