@@ -1,66 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.12
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793863767;
-	b=ovaafGbIcH2RSwy2EIfVtLYFuOZw2hNzhVf+YNYM+t7T0fq6ZMnuvX2Ho8ZHvA8qP69F
-	 7jWnNovIQq+/2Qf8qzNsiVTBkdylNxnQF1K8cyuaF7NdgV8lPSOVbFIoWXdm+Ve+yBuxz
-	 fpUGlfVGtdnvj2LBgxQs8ndzg355cNo6f6W3E+FJ8zFHQQpxALaEw/kEAIsr0G+nYhJ9y
-	 qrp6wn/0KHpz4nekhZ9Vlq2jRmI6SpxzQ/QS4vVSXnPYZRijoPSODYlOvLIXWNlTmV7MP
-	 6Wo82pEN6pUvIPbzDZktHU1PEj3wR6RpKwCBWy+HQ7bTOJvxkO70IrN1C73aFiNtzCw==
+	t=1793864489;
+	b=tp6umpo3t/Qm/xlh1XmYljiYKChBnrYU7yNvbgJ+TZ6vNayxs3ckd399HkQKBexWFjbq
+	 Q4SowNexlBgR1ps+zieVzCjzbUahs6yPNy1snb4TTLtSiEmmX5w8GkR8ZM/XCOE3PCjXM
+	 l/ZQrcEC8rzan0sv8NRgh+mb5WGr5/vTmUAzxhAlCrlDvjypFtwKGWO9XfSJqzGWE8EDJ
+	 nPeSAdyZb8gBYAO0FO/DXM1BIHSaZodMgIsEnTEILIxgsXB9MhBM2w1g90U8nkPA8g7s/
+	 fAKK4mWNBaJ/7Y698+E4V/7kgwYHzkcX/YrMrg7jCGxgAE7e+QafbB0XXpcETg5aOAQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793863767;
-	h=DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:Date:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:
-	 User-Agent:MIME-Version:X-malware-bazaar;
-	bh=BoRT1g7dlz6B1RXUbGcPf8lhXFO+4D4A2NHex2eXQRg=;
-	b=FyfZ/PKXyzqpeUo+OnmyiO1nxoASUrI8vtBWGmtLZoXoQRPZWaMCAcEXjF+1fg57txyS
-	 7P0SGhkhmLvUy+Z6KaBF16ULkggoRJLZ0VcH3Xww4s8sUYxMM1p1Y6wtQDdwH5KANP2Gn
-	 0av7MVYsKyISct54pXKq3FgtDfta4IW6a3KtZGUrwB88eXO3hQq5jvjnDi54ZRopxlWix
-	 o74KVdwD7WAfx61xx0C7z2RVWVp75sZB+jeK4VjoiJEYNvi2fq+n9ZKPv5GFEFn25ICRF
-	 CCAlABMli9ZN4kw7sBUs2dnubmsHsLTKU7bwAlPYqCDmV5x1hVe86RXXkCHiJzcnEKA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793864489;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
+	bh=btEeF2y4eomZ6xL6AOjDC/Nw7mOpuUZylJZu2L7L5K8=;
+	b=hdMXhP0QNE9x1SFHx3h3a64V1y+wLERn9a4fCzjCEmOQ1JWgf1WLzcxc07rtlb2+hPx7
+	 xXmWVY4RAERUUDH7QZ11AbLyfqBsV/TVWWIx1g+9xqZvJmUzpW1HsRLuiDag5fgMDdqH2
+	 afHrnUcZdDm+PDDsRO+MqfwsQdNkhl+ZgKdAymu1lTSAIy4L4SDfzPhVFIAopI/s1VMsf
+	 n0aQVkA6KtnXGWfykTqlUniDkWUZPvhT1WsZu8nn3oqW9GDuplIw2xEbAi8WXZGDXcehL
+	 CVtEgqCIJKL4QkzRkRWzMG/f4ohajSojD6GALNkqsYyGm6oUA5StPiW9eUFTUxEK4bQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=permerror header.from=sipsolutions.net;
-	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=UCprfuPt;
-	arc=none smtp.remote-ip=168.119.38.16
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	dmarc=pass header.from=wp.pl;
+	spf=pass smtp.mailfrom=wp.pl;
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=ERAXuMWX;
+	arc=none smtp.remote-ip=212.77.101.12
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE92606A326
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:29:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AD2F606A31B
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:41:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AD2F606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=UCprfuPt
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=BoRT1g7dlz6B1RXUbGcPf8lhXFO+4D4A2NHex2eXQRg=;
-	t=1793863766; x=1795073366; b=UCprfuPt+PwcbIGEJIXHZrT7M+aA2UaglIATzWsFXYNG++W
-	gFCyp/iIvMf585gfFmj5ym6PNJy4yVfzSXor6HuOnG6jXdbyD7t9lfKxwY6rqaJwehONOktAxxAWR
-	gQp/BS+CrdnB0lbwcEEbNqEgVSDeRCJiw/NGoTA1a1WG8pCQCI+7jb1RW0E83DsXenyePm1brmciT
-	yqhUsJ/Xb8ZcN2UNztHJCX5RuHWb2wjYyQT6Wwly5FP8dXQtupFdN3a3iYr7ZChcgPb5g4N4K+Kb8
-	m0zx/J3uUDgOPFqxWV+mA8L/1LSGBYZV9XgiOpzpaG+sVRxr3b0OfBwZEA/Iqh1w==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xOruT-00000007Q4g-2RYq;
-	Thu, 05 Nov 2026 08:29:21 +0100
-Message-ID: <6792cdaa627ba4755fd0836a74474977496f9670.camel@sipsolutions.net>
-Subject: Re: pull-request: ath-current-20261102
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
-	linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, ath11k@lists.infradead.org, 
-	ath12k@lists.infradead.org, jjohnson@kernel.org
-Date: Thu, 05 Nov 2026 08:29:20 +0100
-In-Reply-To: <61e49149-5096-4440-b261-ffe2d250f6f4@oss.qualcomm.com>
-References: <8e38f8dc-88f9-4974-8f98-687795fb360a@oss.qualcomm.com>
-	 <61e49149-5096-4440-b261-ffe2d250f6f4@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=ERAXuMWX
+Received: (wp-smtpd smtp.wp.pl 2047 invoked from network); 5 Nov 2026 08:41:18 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
+          t=1793864478; bh=btEeF2y4eomZ6xL6AOjDC/Nw7mOpuUZylJZu2L7L5K8=;
+          h=From:To:Cc:Subject;
+          b=ERAXuMWX0c9PyGrZIPXFbQzUjLpbRrnKfgQ0cndq+gaudjwrMk6FHPrBmZ+uwFuKO
+           2D97Bg20L9KA92z8t8v0gpPL7WgN19xy+QYd7sfsVwHmmuA18mFfllRSqLS1EHkLFQ
+           ZgtZIrARM9Fq0cITtpZLsQpOFIPVoo37y5qYoxDmwgwqmBwZnc1FbNrINlBfEAM6K7
+           JacHodT2WbHivbbD8oSQcmyK8s0BeR6+dSVk32kcFh2x1Z9EU5v6hlpPQhYCeBgJyD
+           YHL4p9tj1E7LJlxyHOZTe6x+IOAWs+tDaYPaqzVOgz8/8yfKb8/T32/Z+7b3kvWz3h
+           01pogl5L3m3ZA==
+Received: from localhost (77-236-11-168.static.play.pl [77.236.11.168])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <hjf3108@gmail.com>; 5 Nov 2026 08:41:18 +0100
+Date: Thu, 5 Nov 2026 08:41:17 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Ho Jie Feng <hjf3108@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless-next v2 1/7] wifi: rt2x00: start the link tuner
+ when an interface is added
+Message-ID: <20261105074117.GA64923@wp.pl>
+References: <20261031165117.2868671-1-hjf3108@gmail.com>
+ <20261031165117.2868671-2-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -70,24 +65,60 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261031165117.2868671-2-hjf3108@gmail.com>
+X-WP-MailID: e91b5766c371303b359a778914f4b52c
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 000000A [gUM0]                               
 
-Hi Jeff,
+On Sun, Nov 01, 2026 at 12:51:08AM +0800, Ho Jie Feng wrote:
+> rt2x00lib_start() enables the radio before mac80211 adds the first
+> interface, so rt2x00link_start_tuner(), called from
+> rt2x00lib_enable_radio(), finds no station or AP interface and returns.
+> 
+> Start the link tuner again when the first interface is added, and stop
+> it when the last interface is removed.
+> 
+> Fixes: d96324703ffa ("rt2x00: merge agc and vco works with link tuner")
+> Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-On Wed, 2026-11-04 at 17:11 -0800, Jeff Johnson wrote:
->=20
-> I missed the window for your wireless-2026-11-02 release.
-
-Very narrowly too ...
-
-> Since you have now
-> fast-forwarded I hope you can pick this up so that I can also fast-forwar=
-d. I
-> have a series that depends upon a revert that went straight into Linus' t=
-ree.
-
-I did, but I was also going to wait until net lands in Linus's tree,
-which should be soon (today/tomorrow) and fast forward again, so we're
-really aligned. Hope that's OK.
-
-johannes
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00mac.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+> index 3bc0c1c906c91..86547ce81cd2e 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+> @@ -264,6 +264,13 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+>  	 */
+>  	rt2x00dev->packet_filter = 0;
+>  
+> +	/*
+> +	 * Start the link tuner again if the radio is enabled before the
+> +	 * first interface is added.
+> +	 */
+> +	if (rt2x00dev->intf_ap_count + rt2x00dev->intf_sta_count == 1)
+> +		rt2x00link_start_tuner(rt2x00dev);
+> +
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00mac_add_interface);
+> @@ -289,6 +296,12 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+>  	else
+>  		rt2x00dev->intf_sta_count--;
+>  
+> +	/*
+> +	 * Stop the link tuner when the last interface is removed.
+> +	 */
+> +	if (!rt2x00dev->intf_ap_count && !rt2x00dev->intf_sta_count)
+> +		rt2x00link_stop_tuner(rt2x00dev);
+> +
+>  	/*
+>  	 * Release beacon entry so it is available for
+>  	 * new interfaces again.
+> -- 
+> 2.53.0
+> 
