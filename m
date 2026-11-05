@@ -1,64 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793857166;
-	b=aho4mLEQIL+ZM7szM9Wq3q/Vdiq7vs0XgiI1FS3g6UYFH5cj5CtniE9jI94IOSu8f3PP
-	 ynDRm2uYY/W57ejVK8SzEsTf46KjtTTHMa3aMRHkW9FElN9Q8UfOEVsOl1S/j6fsvNsas
-	 qghD8Yhklx4Le8CyA91rVe2bB4U3xoiZfc0QIUSKgiyHlFQ3ZuBPi9gfDuzlSYjnzvo5w
-	 4hE+HUp9G3CD48KrvJbR93gFDeAev0pMPUPEzrI5ytFJHaRW5cxjB8ss64NlgvrVtMDqy
-	 pir0TScmJvjzDPBmZUInJdQQHqg6ZX83y8ckQm3JlEXHoeVbGlFU4rZ68EQk0sxeXMA==
+	t=1793861495;
+	b=Ndyzg1fx1n4GMKD7bSmGTGUgWyaJa3xTfUNJyzWa2TdEh9B5VbBG9mExenQcYtmE/ebJ
+	 Z236BJ3eFszXie0o/9WM3XzTThVFuxTv/1Ib8em66L3//9EmoczTWeoivHM1qecwvPDqW
+	 pv/5++gsl4IXAWr+mTnPOZzuEdBQtGa4oFz9DL+N1SEz03RwAc3gF7hjPZYC0r7GVhIi/
+	 CZvBmAgJYcl0MGyXSmAR5tJ2etjefx9Pi+axkocbL14DbDraX077uYnDyFhxnZoDO29mW
+	 Sy87wMSaKce2ROfnKj0z/M/QkYmOHMnXTcQy5mk5el2dkLvAPqiUhRLt2JEHqeIsg5g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793857166;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:Subject:Message-ID:Date:MIME-Version:Content-Type;
-	bh=MblfcjcxVCPxFCIeKOgE8Yw23yuKQoSN9AdXHXRqoIM=;
-	b=PVUvmsRaXbkOmYxOlpEISgqejHJt7gUphEN3OYjjYMyHHwjOWgFNZJ7EEXnLcLKkc9u5
-	 Bv3qJa/C/Yu501aoNV+NPSU5iceTuC8lmDTAEs4sXdMELkKY7ygfeYX8kzV+fIEbDni1r
-	 V88FZqu0nB16KWAWxArno+0udkVZ1k2JOL7L+bN/+8MzVU0J2tPDKHJc7sc38Hk9vml9/
-	 HbX9KWflOwK37caqUgHmdCdpq8yXM1bU7APcbtmPFuT7umvZLW9rFjPE3bNPxGKlqbXK6
-	 3orD0NmfTY2S+NuvSdC4udSWMyPMwrXP7k4KTNWO+xc2oRzOIHM8Bx1EFjN14IQJ+wQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793861495;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=iXZRs5L0BEPW07OJnE4hXrMgoGB6nXyoylaVSM8yvEI=;
+	b=V5T6rZHDL4d349/nfEBeexcnGgp6mgSwo0/aA4ORWCq+43pXjtpILc6jx35WV9KWVR7a
+	 qhadttRVsMssiD/rpiGOLvHci8jqm0Rie54vENAMwmDJw4usK59z1qvKCcg5NyyoIAF32
+	 Zy0VvmCeufC5yK6ucsacDT5lgnSvf8KESWZmyJZyuUudieGW79WoT+38YKZQTZkAqlTT/
+	 7lcVtGZ5QD0PM/RptM/znhZcur0p8BUm0tE4g9mMaBjBN5WyeYAcnJ22HD9nJ4sSMHLEq
+	 IaQylJ3BF5zaZWrr+owPpebGDcsmzl4LXWGUa0IDZcJR4sbVNUSmuuxJ5bTYvEjD5eA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=Ck0R3aXv;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=justthetip.ca;
+	spf=pass smtp.mailfrom=justthetip.ca;
+	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=sh7N1C24;
+	arc=none smtp.remote-ip=91.218.175.35
+Received: from mta0.migadu.com (out-35.mta0.migadu.com [91.218.175.35])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9F3A606A330
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 05:39:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B9F3A606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AC86606A31B
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 06:51:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2AC86606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=Ck0R3aXv
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6A55dMxdD505778, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1793857162; bh=MblfcjcxVCPxFCIeKOgE8Yw23yuKQoSN9AdXHXRqoIM=;
-	h=From:To:Subject:Message-ID:Date:MIME-Version:Content-Type;
-	b=Ck0R3aXvB21mHMrTT8ONIBLgGE72vu/OwWYv/hhusS8JD8iF9N/LJxgQOm4Juf9AI
-	 4fQi6sz4x/uB9/RS7gafAEIMWHlxY2okikm/wiyolt/8e1U7U9yM74BWiSYSX4ThQn
-	 5shfsQ2G8N7l9ExLUOOxnGC5EspLcZOHjjRTmV/iVklnSYAN0WlFr3A+hpEhsbbCnO
-	 aX7cJi6dtfqhCRCnaP3bcwYmYW8LwyRBwLGCT25f2sgPb+n0tGq0NlrUM1woDQBL5w
-	 4KK04CwipwFYKjxD7NnMrhUJPbpPmO9M2XdCz4W66okrFAK5xSqSx6kT5omTD+dZ2V
-	 MaC5mSLyREpNw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6A55dMxdD505778
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 5 Nov 2026 13:39:22 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Thu, 5 Nov 2026 13:39:20 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
- Transport; Thu, 5 Nov 2026 13:39:20 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: pull-request: rtw-2026-11-05 (for -rc)
-Message-ID: <53f38754-ecd3-452f-b2c6-a42164a2e9e4@RTKEXHMBS06.realtek.com.tw>
-Date: Thu, 5 Nov 2026 13:39:20 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=sh7N1C24
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=cW+1Fu8aETnGoEi3UV7T3MY47dOgL+uKiztr+hDrDjg=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793861492; v=1; x=1794466292;
+ b=sh7N1C24tU/8ysQc45ganF0pzLfV6X25rVW7+gw8T5TzwSOiV1Wwixvuzy/nJzGD5zj5ABPW
+ zrpK66/rtRTkUtpXuRe6p7y0s/li8swSn7GHe4I/m9y6Y93785lZZYP/LO//q3dV20W4QrjNvPi
+ lHuskFCz+acRncTqbPHLPmn8TlwQsPJfozuENN6MVZvsxpun0CFQfuLnT1DoIwlRZxSfMa7BJxD
+ Meu10JZ1FvE7A6+0IGEgpWu2eKSbv4Cmdz5H/9W1cNxdOJi8ZsPTEbZyJlJaVitMNG4ZO5InXCv
+ /Bf4EuJYxTG3r7P90cycICbFXcl1Vy8eWAVPDWpjzFkXg==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id a027a634dc82f0a4;
+	Thu, 05 Nov 2026 06:51:31 +0000
+X-Mizu-Trace-ID: a027a634dc82f0a4
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Aaron Beckendorf <albecken@mtu.edu>
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v2] wifi: mt76: connac: honour injected HT/VHT rate and bandwidth
+Date: Wed,  4 Nov 2026 23:51:26 -0700
+Message-ID: <20261105065126.1041-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.50.0.windows.2
+In-Reply-To: <20261104142737.186484-1-albecken@mtu.edu>
+References: <20261104142737.186484-1-albecken@mtu.edu>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -68,54 +73,25 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Johannes,
+On Wed, Nov 04, 2026 at 09:26:22AM -0500, Aaron Beckendorf wrote:
+> This makes 20/40/80 MHz HT/VHT injection work on mt7921u. mt7925 and
+> mt7996 build their own TX descriptor and are not affected.
 
-A pull-request of rtw to wireless tree.
+Ran v2 through the same test, MT7921AU injecting and MT7922 capturing,
+100 frames per case, two runs:
 
-The drivers/staging/rtl8723bs was removed, and people did migrate to rtw88.
-However, the AP mode for SDIO devices doesn't work well, because high
-queue (for broadcast/multicast) TX back-pressure causes TX stuck. That
-makes bad user experience comparing to staging driver.
+  requested                    stock      v2
+  HT MCS 0 (20), 7 (20/40)     6 Mbit/s   as requested
+  HT MCS 8 (20), 15 (20/40)    6 Mbit/s   as requested
+  VHT MCS 0 (80), 9 (40/80)    6 Mbit/s   as requested
+  VHT MCS 7 x 2 (80)           6 Mbit/s   as requested
 
-This pull-request only contains two patches, one is to move shared code,
-and the other uses it. One question is that first one doesn't have a Fixes
-tag. If this isn't good, I can squash two into one. Please let me know
-the better way.
+An MT7925U still injects at 6 Mbit/s with v2, as you say. 160 MHz
+isn't covered.
 
-Thanks
-Ping-Ke
+Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca> # MT7921AU
 
----
-
-The following changes since commit c4328134f3f7c2ce141121a8f82a5ec0cc8a709c:
-
-  Merge tag 'wireless-2026-11-02' of https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless (2026-11-04 15:00:50 +0100)
-
-are available in the Git repository at:
-
-  https://github.com/pkshih/rtw.git tags/rtw-2026-11-05
-
-for you to fetch changes up to ff4d3699bf386b35b3d713a59d705f0cd5a49107:
-
-  wifi: rtw88: sdio: limit the high queue to DTIM delivery (2026-11-05 12:25:19 +0800)
-
-----------------------------------------------------------------
-rtw patches for -rc
-
-Fix TX stuck for rtw88 SDIO devices under AP mode.
-
-----------------------------------------------------------------
-Luka Gejak (2):
-      wifi: rtw88: move the bmc high queue decision to tx.c
-      wifi: rtw88: sdio: limit the high queue to DTIM delivery
-
- drivers/net/wireless/realtek/rtw88/main.c |  3 ++
- drivers/net/wireless/realtek/rtw88/main.h |  5 +++
- drivers/net/wireless/realtek/rtw88/sdio.c |  3 ++
- drivers/net/wireless/realtek/rtw88/tx.c   | 59 ++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/tx.h   |  4 ++
- drivers/net/wireless/realtek/rtw88/usb.c  | 64 ++-----------------------------
- drivers/net/wireless/realtek/rtw88/usb.h  |  5 ---
- 7 files changed, 77 insertions(+), 66 deletions(-)
+Thanks for the quick v2 :)
