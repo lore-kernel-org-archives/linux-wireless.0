@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793903188;
-	b=cFM0+pzysVFTp+ZQ5cSZTjmmpwFyMz3EpbFRkvFuDpyCin/F5No5Ml/nEDhIeer/MV6J
-	 po2TvQq+RHCW+nZEBYxCUfbbkyEF8xpaWCPnAV0MxID6+fBFZg6d6QnC5qDrPLg0vpLeX
-	 Mli8SmHCE66PPt1WLy/wBeAc+srP2oURiQBTYhS0pUeuqczi/V0IlhguDu2DE390Tl4DA
-	 XMcmHnKdBW8VvT6FJD0GbEEXs2jhBAmHlKpb+dhJ7bT6dv7X1JHpy9ZFgmhDM6+mrBZYO
-	 lQpYA6SifEHIy4IoCYtqCHDxq0mSEVzcadB7DYdPxkIuBKR1z5VkbuWyAuO2ZDOXhww==
+	t=1793903715;
+	b=Z5pYD++vl6iO91Z3cgZkDRwREoyCNa7L/pAFkN03Zapl79e9Gd+kYQMigx4t78BogVkX
+	 y6oPt32XwFsnZAdV8TZh0ESwsqGuQYwqGq1nVJpYDlERv9356qG8pmAuYDj642VFiwcEK
+	 dRmEAGDeI03LU0/zX33ESfCEWRXOF9q5HqG0lciDQ3Gurn4DeB1TVpyZVJ3ZGC6RgFhkh
+	 p7Sg8DmFWqAkr00YPGQToi2SeaTGtEuFp61Htth6ol6UPlUIGKDQG/yGFPVWu9oVAIJo5
+	 VyHokX+n9nGERWSRBfW6INUFiMQtj03ftXY+aeqR5KMSGgd/WRej/bDmknI+3nUDKhw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793903188;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793903715;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=/R0hL4pC4E1+M4yPEUjAb9DEswCGIx3z9hc5cmLnrn8=;
-	b=RYbn3/hxRfDGlhYufbFPel9k+IJBb/WkzM6TuPi74pX12Y/kSUV5CDcdqK8c3kzBx71Z
-	 TYIrcpzOQpzdxPcOSpEHVq16URrYuDRVOGWqeSEv3NQEmKnzU9iTCqMmkzWkofnbCB/5+
-	 AJTrFn+5nOXPdEo1aenNb7O/W7T5Gt6MvndMHAZvsFBvVXta3q4sNDnNX2QyqSMCKpFwR
-	 dpPyPm6M7QaH6/RP/veODloWicMlvhHqzrJw9CIBj7UkrzxafIgFw4qoXaI4P6GT1rLbo
-	 aP0irO+QEPK2WP/WDHgYoGn308x6xFAFKODSynwujMSV+1Yr7vIzAXeoQQzL2lreKuQ==
+	bh=eu0Jx463SVZSBII0hnmMnU2aWA+n3XFJpC/YB1CnfNs=;
+	b=zUAwMFFwI42T5qXTkF38FLb+wtix/cWstMdLopqcg4C/OFT/ztLaPBgA407jcaPNgJ0Y
+	 /ouMnxWnZBY9KxeG6U118mRVLLJ6SLLb3XmyDkfeGbva07rnrfJdK8PaSS/msONNhy7MA
+	 i8HNUY9uJ2w8/wMb+cltfeIIOvFf9RmOL/rYUWklRM7CD12fkz6QmMQsVawbifaOmhP9E
+	 IZDXHBuI3IfyaHD4QwZWLPpF4W1kDIqahJCwUVpwFhqsFErpbTzdSQVPIZSLChxXKwTb0
+	 zdVh/veeesm5Ab8GNu3nm8fMR78MJxHL6wZ5eFlFSsIQB3GIilLAYV5rxKMCmjmBsBA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="WSADaA2/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aLY3g30d;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D977D606A31B;
-	Thu,  5 Nov 2026 18:26:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06F6D606A31B;
+	Thu,  5 Nov 2026 18:35:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WSADaA2/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59AEC1F000C1;
-	Thu,  5 Nov 2026 18:26:26 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aLY3g30d
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8147E1F000C1;
+	Thu,  5 Nov 2026 18:35:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793903187;
-	bh=/R0hL4pC4E1+M4yPEUjAb9DEswCGIx3z9hc5cmLnrn8=;
+	s=k20260515; t=1793903714;
+	bh=eu0Jx463SVZSBII0hnmMnU2aWA+n3XFJpC/YB1CnfNs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WSADaA2/B0njymg1oF8Zt+aQWjkjZp7YNB/CPyp9J98Lqyl4v6ZjN9fdw7/g/aDHs
-	 chIL9JCou1TsxyZomGHv2ZBjLQZ9Z1DMWTUjRpmHis5a1j1jVyAEUyc+4ePcQsFPhd
-	 OPBs016zO1yFXnt4RNHofu1Kp5EDvzii20mg9cT1xiXd9rLrrVGa/442/RYi2She4m
-	 EYJhTmYBt2Rvig1iLH8Imhje9jvJRWYRfaZbM8Jt178SF2ils406aYXkle+Zdk/FLn
-	 gDUCaggZAfj1BLbk+EODCjDPXj1SZjVg3T1elHfRmQ6s3AYErm9i4G5kIxtD/aXjgb
-	 Fehrul5E5Cuyg==
-Date: Thu, 5 Nov 2026 20:26:22 +0200
+	b=aLY3g30dLKBuWsWBkUMgULwEU6A7srUzOGRWXrQBpz1o9mVmcB0XEsZS9PgzsCskI
+	 mTdR296HvEdvgv5e8dlypLleVdRgAieM1fqfROu89knGdcktbTpf2wPH0vieUv8Zaf
+	 q7eTideU1qc7O/4NoJf5h6S203jDcddohITPddb/Ah2R7zJ9VSOLNa0XVgdsQGlTj7
+	 FpmA0nj0w3H+/n/QBvZwX3Nzu6Yh6Wxa5DFnmxC63RoXrcgWmVycmheYAQIpy4wTn/
+	 9ig2A747T+VoI19eE8rGolCQZ885lg2Jj8Wmj5RNXFOPAivQfPadCLbnwUFLW4/Oec
+	 bewdzKyKGqJTQ==
+Date: Thu, 5 Nov 2026 20:35:10 +0200
 From: Leon Romanovsky <leon@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, "Rafael J. Wysocki" <rafael@kernel.org>,
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
 	Danilo Krummrich <dakr@kernel.org>,
 	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
 	Heiner Kallweit <hkallweit1@gmail.com>,
 	Russell King <linux@armlinux.org.uk>,
 	"David S. Miller" <davem@davemloft.net>,
@@ -72,15 +72,13 @@ Cc: Jason Gunthorpe <jgg@ziepe.ca>, "Rafael J. Wysocki" <rafael@kernel.org>,
 	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
 	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
 	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev
-Subject: Re: [PATCH 17/17] PCI: Replace untrusted state with device trust
-Message-ID: <20261105182622.GD8298@unreal>
+	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 03/17] net: phy: Attach generic PHY drivers through the
+ driver core
+Message-ID: <20261105183510.GE8298@unreal>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
- <2026110526-aerobics-correct-4c06@gregkh>
- <20261105131856.GA8298@unreal>
- <20261105140352.GF3889730@ziepe.ca>
- <2026110558-tartar-juicy-036a@gregkh>
+ <20261105-device-trust-core-v1-3-1e536825b4eb@nvidia.com>
+ <9866a873-e71d-48cd-9153-be1bfce51eda@lunn.ch>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -92,68 +90,36 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2026110558-tartar-juicy-036a@gregkh>
+In-Reply-To: <9866a873-e71d-48cd-9153-be1bfce51eda@lunn.ch>
 
-On Thu, Nov 05, 2026 at 10:43:00AM -0500, Greg Kroah-Hartman wrote:
-> On Thu, Nov 05, 2026 at 10:03:52AM -0400, Jason Gunthorpe wrote:
-> > On Thu, Nov 05, 2026 at 03:18:56PM +0200, Leon Romanovsky wrote:
-> > > On Thu, Nov 05, 2026 at 08:12:51AM -0500, Greg Kroah-Hartman wrote:
-> > > > On Thu, Nov 05, 2026 at 01:42:30PM +0200, Leon Romanovsky wrote:
-> > > > > From: Leon Romanovsky <leonro@nvidia.com>
-> > > > > 
-> > > > > Convert the PCI specific untrusted to use the common device trust
-> > > > > level. Adversarial means the same thing untrusted does.
-> > > > 
-> > > > What about for USB?  Will that "move" to use this common trust level?
-> > > > If not, I don't think it's very "common" :)
-> > > 
-> > > It supposed to work for all buses out-of-the box, at least this is the
-> > > intention.
+On Thu, Nov 05, 2026 at 03:50:35PM +0100, Andrew Lunn wrote:
+> On Thu, Nov 05, 2026 at 01:42:16PM +0200, Leon Romanovsky wrote:
+> > From: Leon Romanovsky <leonro@nvidia.com>
 > > 
-> > You mean DISABLED/FULL should work with this patch series on USB
-> > right? Meaning the core code will not bind a USB driver when DISABLED?
+> > The generic PHY fallback probes directly before publishing its binding,
+> > bypassing driver-core admission and supplier checks.
 > > 
-> > I was wondering if some of the broader things we are doing on PCIe
-> > also apply to USB, like device authentication. I don't know alot about
-> > USB, but I got AI to help me find some relavent spec information.
-> > 
-> >  https://usb.org/authentication
-> > 
-> > This looks like the parallel to PCIe SPDM device authentication. I
-> > would expect it to work broadly the same way as PCIe if anyone wanted
-> > to implement it:
+> > Attach through the driver core so admission precedes functional setup.
+> > Callers hold RTNL, which a concurrent bind of a specific driver may wait
+> > for with the device lock held, so for this flow let's add
+> > device_driver_try_attach() so the attachment never waits for that lock.
 > 
-> No real need to as no one actually made a USB device with that spec :)
-> 
-> There was some patches on the linux-usb list 6 months or so ago to try
-> to implement it, but it stalled due to there not even be any devices to
-> test it for.
-> 
-> > 1) USB discovery discovers authentication support and creates an
-> >    attestation subsystem device for it
-> > 2) The struct device starts up with trust = DISABLED
-> > 3) Userspace runs the crypto flow through attestation subsystem. This
-> >    is extremely similar looking to PCIe SPDM:
-> >     1. GET_DIGESTS -> device returns a hash for each certificate chain
-> >        slot it has.
-> >     2. GET_CERTIFICATE -> device returns its certificate chain, read
-> >        in pieces.
-> >     3. CHALLENGE (nonce) -> device returns CHALLENGE_AUTH: the chain
-> >        hash, a salt, a hash of its descriptors, and a signature over the
-> >        challenge and the response.
-> > 4) Userspace inspects the above and approves the device
-> > 5) trust = FULL, driver is probed.
-> > 
-> > But I supposed Greg is asking about /sys/bus/usb/devices/DEVICE/authorized ..
-> 
-> Yes, that is exactly what I am asking about.
+> FYI: This code is fragile, and causes issues. I will need to stare
+> long and hard at it before accepting it. So i'm unlikely to do that
+> until the basic idea is accepted.
 
-I used AI assistance to create the conversion, which produced two patches.
-The first exports `device_trust_set_policy()` to support
-`/sys/,,,/authorized` and `/sys/.../interface_authorized_default`.
-The second adds calls to the `device_trust_*()` functions.
+In order to accept basic idea, we need to change PHY code hold device
+lock when binding the driver.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/leon/linux-rdma.git/commit/?h=device-trust-core-v2&id=98f5d11580d736a7878323dfb7238cd08c6c76af
-https://git.kernel.org/pub/scm/linux/kernel/git/leon/linux-rdma.git/commit/?h=device-trust-core-v2&id=f10f8e448540982699438dce369fef6cbfabcba5
+> 
+> I also wounder how a PHY is a threat. What is your threat model for an
+> Ethernet PHY?
+
+There is no special threat model for X or Y. Everything that requires
+drivers to be bound are expected behave the same - honor trust level
+policy.
 
 Thanks
+
+> 
+>       Andrew
