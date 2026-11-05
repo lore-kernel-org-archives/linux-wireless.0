@@ -1,79 +1,80 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793855830;
-	b=qgEULDe8qzsbDldNOL4lAUz4nwTNXw9ym7W3mnwfigaRn2LD50babewior5DYFve/3xD
-	 ds+wdHYy/WBaPysal2J96YkLqO9W/9EKe1ARCfjqHvQUGvuxq8toogaOrmj5ioC1XYcxC
-	 7F1uzQs2SUiktw26/fairmYUN/WDKiDCXB2wejbxXxjgDLyI9DD4NJay87rXgSWLgMb/6
-	 uTU+dzHoSct0lo+i3GNyJu8k9E2dLuItThsOlYQhA/weKr0BgeMD548IIi8OwR8sVC1Rz
-	 PUCVqvFJ5Qwl9Rw+8e+XzhDN5DZxwR0Zt/4CDei6gJZ4ucKZIvqESBMUqhPXSrP9kXQ==
+	t=1793855847;
+	b=PAHRwrZXBi/SGaG0WikwBUbNgvgYvapdyQfg3megjRmZ+D+Fe6kfuabCSqQ8Y1uTrzVz
+	 J+mGFCHyjoRtIVMTmxedDeoksyCzMURSE66sw9VPkmNt/NyP8r7d5BKS/srN9K2Hyrq9n
+	 oHWOw01B4AimY+QPYRrRMU38hgERxGAtIYmoBs7Y/GJYNF1NOJott/V6ow/wmcucSupmC
+	 a/s69zr+AcrXW1VnlIsol01u6MueR/ZeOWK36xm2XE5d8liT307F43jjTq7U8ivWiX410
+	 YnstIgNRzetm+HaWm+5U3ao2gld+6Tcg7ZOe3U4SUukuQFQBsEr9tYRR5sqT9jwi2nw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793855830;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=NVAnmuoA9gL7mXf9hPCOfc86UVshuAYigYl6E9l0mzE=;
-	b=ZeeFFvX3IWK9xrZm8Cm5bKFRdqOuNnnXRALDLrCK4isTcwUd47IizNgvIEGrgWJExKeA
-	 Wig706T75C8FjK0NXRqUH1SfwW0scfOyeaCsqShBd2gAQkz7OkNKBjpCis4yCRrGDsuUc
-	 aYUHMaN3733CKL+afX3d4TqMHbbEj6XODJooZLZvZVfitVKtLxYPlu9XpbhozcVL92G6f
-	 bJcXzx3GtU1X6LXxHkEr2Wa4QseLuoP5picLahdZHY1Wtu6Vo2u+KMKZHjPPt8XhdBz66
-	 YY31B/HBQWReK1WRB23YP277IC7wxO3g9bgwz5h3Y3aZjBb58AHIvmh2Ki9JUyeY+Cg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793855847;
+	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Endpoint-Received:X-Original-From:Reply-To;
+	bh=xRL1ep3hIcctFNg5PU9cJMm1rmalbTnT9ajmmrpACBE=;
+	b=2D9PpVkZ8zWvfhnshvGDPDA51CcxfiNE64Dfr72rLC1qPpNOhwWFscWJELvT9P5Gplbg
+	 iXAnkCzSemq+nECgLLGuNY1I31teUGFogfAUDeZKByCS5ahqi3B4DO17igd8xo7S5tbur
+	 bh0rkqa8n2mQFKtczVxzztSzNUAw3m9aw9HnxuLD5ZUUE8dU/nhHIE1m/LvsFwkwjaGiu
+	 WsZdj1MFpPDSN/S96HedlF6IDVoBAWe4s7ZFSv2OOoTrjHnCftdgw2AANm3rRjjgVRmsu
+	 d0qE8Esm9U84uyAy39SLKtwiSXOg0Hl0KD7BUOIz0lw86OtjmV6+LglebbS2JT55Xrw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hXzpVksA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NV6fDwYz;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14027606A326;
-	Thu,  5 Nov 2026 05:17:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B74E606A31B;
+	Thu,  5 Nov 2026 05:17:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hXzpVksA
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NV6fDwYz
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793855829;
-	b=ydWvnhJ+iXKCwRwKEWLjIHUNJehxIAB+GeYngUESP3V3ZJXnAbAMCUZcMnVuwKEq5LFr
-	 6ljZFdWDlpmaRrLGA0YX8AV8f4UOoexUAGW9hlspbK/VNUvrocK+kew+3EVK2IaJI5mCe
-	 2pm047yYZ4CGQAAG9/HxqfCpuuoZh1iV0Ik/eec3P5q+myzET+1uIvdl23shSB82r0xCs
-	 G8qWURJoLmsrCdmAvYku6KS2so4jsUS6h1Vj9i81BSsG1kLwX/Fbh1PXMExce3pNKIY+s
-	 G/vzmdTEP5CGDRQF/bZdGCm/nctYCag14xXXfyy65TmeN0KaFxM6tAwLLyAa/kIEyGw==
+	t=1793855847;
+	b=H8wSGYngmMGCICMbTxdiW3HHuYchmtyT2HSHQKkVtbu91f6FVFDn1rMha1ud6XPFpeD6
+	 LA5mGQjwyrujF7C5t7scqI7Zg9mJ3GHJVS6OwhOpTrby2Siwffu0sivy4FEx+7GsXXQTB
+	 f5D6LxMiPipU39JBBRTGR9WMlPJ3mh3ZjXFf1fEjb4nZ1QEJlrxS7QtVYCdsWNoAIAAGN
+	 hZnHwRI/GhK3WzP84Sp7VE/PwwC1zux+tn1ybYUDNfTep6gAcYN0NyyZ8ujv97SsbikUa
+	 upvvUID/svbZGLBSQdGhX7x3fdXntDeAFB/pRMK7YvYMLJvU3JSzUDeBFQf/9EqYQfA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793855829;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=NVAnmuoA9gL7mXf9hPCOfc86UVshuAYigYl6E9l0mzE=;
-	b=eXZVAnasZn1C7gix2H1EsNr/5eYACSuJkWlroYS0ohAC2xT/SkAxbD3SYljZZuRYLN4i
-	 2cgslid7iLDJm51mwE0jpT0q30OZ9RVmW/jkZHi69/woW1j5izpucFBNaBAUD1+CdiF6A
-	 6PYs7WC82XXirE4QiW8GCHfFCAqzsTOjV8HZCJWAF36hX4QN/sZHCZsBUhhaaJ/UndvaX
-	 cCebIUMsb7YTQtT+RUK6GdlTZ3bXbLQGeX8n542+Y/JR9SgbNZ5Hpvp5cEhU5lqGE0Etz
-	 SFgh8HWMISwVi5u3hbGVoCBAHErqODml8tmNA0oYfn3Ggox5F1TbkeJYIYP70kKVhzA==
+	c=relaxed/relaxed; t=1793855847;
+	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=xRL1ep3hIcctFNg5PU9cJMm1rmalbTnT9ajmmrpACBE=;
+	b=hpgfM79+PKBI4Wf82vmF33ncfkh6r2By1sfPgBThWA00fKsEm+oh3OqTlZVJj9xlyvbp
+	 KpO92xCf6zlG5Uo93AXiOOv80lDanFphzyazOyL8tGyZWts/kzEMLEHLkKjoT89vxdW/j
+	 C8wL0iDtR44tCGohnm/3wRX6bEB5Kmu9a1Kq6rVNj3QrXVae1FFLqP1x+9FlHcUp+MgNc
+	 9ysST8ZdnpKfdHW5OebZx4NV/VryMvrevTirvAvsjzePneJj4x4Fm7wbvNys6ZESQTY1j
+	 JXmYyB0hZjHc86fneVQKrOiAzWqk1MgR1FsN/lXq6SCtXYAtMvwcYokh16POLTL869Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id DDE201F0093A;
-	Thu,  5 Nov 2026 05:17:08 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 76DE21F000C1;
+	Thu,  5 Nov 2026 05:17:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793855829;
-	bh=NVAnmuoA9gL7mXf9hPCOfc86UVshuAYigYl6E9l0mzE=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=hXzpVksAkJeKpAfZWbEk25HswGzQIzEI4CUN4dI3QJ0QRB5P2btplBFIv+1ealQal
-	 VOU9EiAhdgoTRJbLtkF9X4oM3nSPZoMM/hLyuPs3zuSNpo8IxgnQEI0ymQ7uDq/Nld
-	 1fv9TOO7W1INrmu5AnAV8JuA8dtRkUG8ykGv7P/036/RbrTI2GyrbeBgA3vLHmQOge
-	 EV+6aZt06dPus+tp2wpU6Mh8NVVWDSlviY9kaTrLwLSehu4PdE0oegFJoRN0eOcebN
-	 qkNBdhbk+T7yRen8MPJjvdNd9T+BU5GepAuXEQ5hBFn2sM8Ic+0lBGvq1eHLg2xeTh
-	 wRtAKF/EBxfKw==
+	s=k20260515; t=1793855846;
+	bh=xRL1ep3hIcctFNg5PU9cJMm1rmalbTnT9ajmmrpACBE=;
+	h=From:Subject:Date:To:Cc:Reply-To;
+	b=NV6fDwYz4O0ThGDUNsjGzfrVlqSx/TnG4/UgxsP0yqqHEyngkrQBbS2eGe7r9Rij1
+	 4ysw2QkKuT13a15B1Q1tl0pZujOweyH8XdKnv6l2MQ5R5wPdLoizC0ty+q8DQZj5QD
+	 SHRljMpFhcgL7rA0FrfgUS//ubm7pgCpiTKtgScznzJnsOfIU87RI6QsPSvR/BSYho
+	 sCB6UzUk404zfRGZHZ6J0HddmMFg6LhES7Kqj4zq+iHOzYmf2SwQ0jhRo3ZzrJRHe+
+	 G9E0CzI8brx/tuVtjQRARWxU7IQfmWPnvZOU4FI95gpAk0VmxHqViw5kvYzVcPZF2A
+	 adaTRQlcdQs2Q==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 64818470B5;
-	Thu,  5 Nov 2026 05:17:08 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 0377C470C6;
+	Thu,  5 Nov 2026 05:17:26 +0000 (UTC)
 From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
-Date: Wed, 04 Nov 2026 23:17:08 -0600
-Subject: [PATCH ath-next] wifi: ath11k: drop the full monitor state left
- from before a monitor stop
+Subject: [PATCH ath-next 0/2] wifi: ath11k/ath12k: don't bit-reverse the
+ firmware's PPE thresholds
+Date: Wed, 04 Nov 2026 23:17:25 -0600
+Message-Id: <20261104-ath-ppe-thresholds-bit-order-v1-0-0f569106cbc4@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,219 +85,57 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261104-ath11k-full-monitor-stale-hold-v1-1-10a680c3ad2f@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAFMR7GoC/yWNywrCMBBFf6XM2oEkfSD+irhI06kZjYlkUimU/
- ruxLg+He+4GQplJ4NJskOnDwilW0KcGnLfxTshTZTDKDFqrDm3xWj9xXkLAV4pcUkYpNhD6FCZ
- 0pu3VaE03tGeokXemmdfj4Ap1i5HWAre/kWV8kCu/Puz7F0NilUWMAAAA
-X-Change-ID: 20261104-ath11k-full-monitor-stale-hold-c2350ba24638
-To: Jeff Johnson <jjohnson@kernel.org>, 
- Anilkumar Kolli <quic_akolli@quicinc.com>, Kalle Valo <kvalo@kernel.org>
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAGUR7GoC/yXMQQrCMBCF4auUWTvQ1LRSryJdpMloRiQpM1EKp
+ Xc31eXP430bKAmTwrXZQOjDyjnVMKcGfHTpQcihNnRtNxjTWnQl4rIQliikMb+C4swFswQStOf
+ B+XH0/cX2UIlF6M7rj7/B8Uy0Fpj+i77nJ/ly6LDvX7Fh+GyKAAAA
+X-Change-ID: 20261104-ath-ppe-thresholds-bit-order-436ac99c5745
+To: Jeff Johnson <jjohnson@kernel.org>, John Crispin <john@phrozen.org>, 
+ Kalle Valo <kvalo@kernel.org>, 
+ Shashidhar Lakkavalli <slakkavalli@datto.com>, 
+ P Praneesh <quic_ppranees@quicinc.com>, 
+ Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>, 
+ Karthikeyan Periyasamy <quic_periyasa@quicinc.com>, 
+ Wen Gong <quic_wgong@quicinc.com>
 Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
  linux-kernel@vger.kernel.org, 
+ Baochen Qiang <baochen.qiang@oss.qualcomm.com>, 
+ Carl Huang <quic_cjhuang@quicinc.com>, 
+ Ramya Gnanasekar <quic_rgnanase@quicinc.com>, 
+ Balamurugan Selvarajan <quic_bselvara@quicinc.com>, 
+ ath12k@lists.infradead.org, 
  Christopher Griffin <christophergriffin05@gmail.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793855827; l=8294;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793855845; l=877;
  i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
- bh=XLX7K0utKQw/gsxKboFItICJfxTeRdNiCzLnMMpwlvs=;
- b=9rxh9ZYJ9W6nXOONrK46TRxpAz7oEQ3qfJsONmBMCxlOjS3CRzK7NpUDhPAXJI/USohyHnXNH
- 0IseRnpfh0TBfFMz4LBb1umhgeC56vfjVpdOtLLuGWpetqcFmdDG9SQ
+ bh=m5qCJPR3zlN0I7usffBzkGSY2j42Ch9xFnvpnWZIrgk=;
+ b=Z5yw6rhxUKTbuG0OPSbwUlFkZrVc4kVxxzD251A+6dAgW9FmfUZDyL05ogaZtDXVlN+ZWBzfG
+ dD863UmHCdvAL086gJi8kz2T7tvy2dIbvyVY9oa5IZH2rfXEtyEG7sM
 X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
  pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
 X-Endpoint-Received: by B4 Relay for
  christophergriffin05@gmail.com/20261024 with auth_id=1309
 X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
 Reply-To: christophergriffin05@gmail.com
-Content-Transfer-Encoding: 7bit
 
-From: Christopher Griffin <christophergriffin05@gmail.com>
+ath11k and ath12k build the PPE Thresholds field of their HE
+capabilities from the firmware's WMI layout with each 3-bit threshold
+bit-reversed (QPSK and 256-QAM swap places, 64-QAM becomes reserved),
+while a peer's thresholds are converted the right way. Firmware that
+reports 0 and 7 only, as IPQ8074 and QCN9074 do, hides it. One patch
+per driver.
 
-In full monitor mode (QCN9074) the monitor destination ring is read
-first, and the PPDU it ends on is held, together with the destination
-ring, until its status buffer turns up on the monitor status ring. A
-status buffer with the same PPDU ID delivers the PPDU and ends the
-hold; one that reads as newer (LEAD) drops the PPDU and ends it; one
-that reads as older (LAG) keeps the hold.
-
-The hold outlives a monitor stop. While the monitor is stopped,
-ath11k_dp_rx_process_mon_rings() reaps the status ring on the plain
-path, so the held PPDU's status buffer is gone. When the monitor starts
-again, the held PPDU ID is compared with whatever the status ring
-carries after the gap, and the 16-bit compare in
-ath11k_dp_rx_mon_update_status_buf_state() reads LEAD or LAG depending
-on how far the PPDU counter moved meanwhile. After a long, busy stop it
-reads LAG about half the time, and then the hold never ends: the
-destination ring fills, the firmware reports backpressure on the
-monitor destination ring, and the radio receives nothing more, scan
-results included, until the driver is bound again.
-
-Seen with a QCN9074 used as a scanning radio and lent, for about 25 s
-at a time, as the station of a client test: it went deaf after 4 of 7
-loans, each time with the hold set, the status ring empty (buf_state
-DP_MON_STATUS_REPLINISH) and the destination ring full. The monitor
-also stops and starts at each channel change of a scan, and a PPDU was
-held at nearly every start (4022 of 4033).
-
-When the monitor starts, drop the held PPDU and the destination ring
-entries left behind it, and clear the hold. Also bound a hold: more
-status buffers than the status ring holds cannot come before the held
-PPDU's own, so drop the PPDU then rather than wait.
-
-With this, the radio kept receiving through 13 hours of such loans,
-about four an hour, and two more units through 9 and 11 hours.
-
-Fixes: 7e2ea2e94704 ("ath11k: Process full monitor mode rx support")
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.r4-00683-QCAHKSWPL_SILICONZ-1
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
 ---
- drivers/net/wireless/ath/ath11k/dp.h    |  1 +
- drivers/net/wireless/ath/ath11k/dp_rx.c | 75 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/dp_rx.h |  1 +
- drivers/net/wireless/ath/ath11k/mac.c   |  3 ++
- 4 files changed, 80 insertions(+)
+Christopher Griffin (2):
+      wifi: ath11k: don't bit-reverse the firmware's PPE thresholds
+      wifi: ath12k: don't bit-reverse the firmware's PPE thresholds
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
-index 84f66839f0c6d..0f2d278eb709d 100644
---- a/drivers/net/wireless/ath/ath11k/dp.h
-+++ b/drivers/net/wireless/ath/ath11k/dp.h
-@@ -162,6 +162,7 @@ struct ath11k_mon_data {
- 	bool hold_mon_dst_ring;
- 	enum dp_mon_status_buf_state buf_state;
- 	dma_addr_t mon_status_paddr;
-+	u32 hold_status_bufs;
- 	struct dp_full_mon_mpdu *mon_mpdu;
- 	struct hal_sw_mon_ring_entries sw_mon_entries;
- 	struct ath11k_pdev_mon_stats rx_mon_stats;
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 6d95f7b343a55..c941f35741167 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -5595,6 +5595,15 @@ ath11k_dp_rx_process_full_mon_status_ring(struct ath11k_base *ab, int mac_id,
- 			   pmon->buf_state == DP_MON_STATUS_LEAD) {
- 			sw_mon_entries->drop_ppdu = true;
- 			pmon->hold_mon_dst_ring = false;
-+		} else if (quota &&
-+			   ++pmon->hold_status_bufs > DP_RXDMA_MON_STATUS_RING_SIZE) {
-+			/* More status buffers than the ring holds came before
-+			 * this PPDU's own: it is not coming.
-+			 */
-+			ath11k_dbg(ab, ATH11K_DBG_DATA, "full mon: ppdu %u held past %u status buffers, dropped\n",
-+				   sw_mon_entries->ppdu_id, pmon->hold_status_bufs);
-+			sw_mon_entries->drop_ppdu = true;
-+			pmon->hold_mon_dst_ring = false;
- 		}
- 
- 		if (!quota)
-@@ -5672,6 +5681,7 @@ static int ath11k_dp_full_mon_process_rx(struct ath11k_base *ab, int mac_id,
- 		pmon->buf_state = DP_MON_STATUS_LAG;
- 		pmon->mon_status_paddr = sw_mon_entries->mon_status_paddr;
- 		pmon->hold_mon_dst_ring = true;
-+		pmon->hold_status_bufs = 0;
- next_entry:
- 		ring_entry = ath11k_hal_srng_dst_get_next_entry(ar->ab,
- 								mon_dst_srng);
-@@ -5697,6 +5707,71 @@ static int ath11k_dp_full_mon_process_rx(struct ath11k_base *ab, int mac_id,
- 	return quota;
- }
- 
-+/* Drop what full monitor mode kept from before the monitor was stopped: a
-+ * PPDU held for its status buffer and the destination ring entries behind
-+ * it. While the monitor is stopped the status ring is reaped on the plain
-+ * path, so their status buffers are gone, and a hold that compares its
-+ * PPDU ID with what the status ring carries after the gap can wait for
-+ * good. The destination ring then fills and stalls the RXDMA.
-+ */
-+void ath11k_dp_rx_full_mon_reset(struct ath11k *ar)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_pdev_dp *dp = &ar->dp;
-+	struct ath11k_mon_data *pmon = &dp->mon_data;
-+	struct hal_sw_mon_ring_entries *sw_mon_entries = &pmon->sw_mon_entries;
-+	struct sk_buff *head_msdu, *tail_msdu, *msdu, *next;
-+	struct hal_srng *mon_dst_srng;
-+	u32 rx_bufs_used = 0, entries = 0;
-+	bool held;
-+	u16 ppdu_id;
-+	void *ring_entry;
-+
-+	spin_lock_bh(&pmon->mon_lock);
-+
-+	held = pmon->hold_mon_dst_ring;
-+	ppdu_id = sw_mon_entries->ppdu_id;
-+	ath11k_dp_rx_full_mon_drop_ppdu(&ab->dp, pmon->mon_mpdu);
-+
-+	mon_dst_srng = &ab->hal.srng_list[dp->rxdma_mon_dst_ring.ring_id];
-+	spin_lock_bh(&mon_dst_srng->lock);
-+	ath11k_hal_srng_access_begin(ab, mon_dst_srng);
-+	while ((ring_entry = ath11k_hal_srng_dst_peek(ab, mon_dst_srng))) {
-+		head_msdu = NULL;
-+		tail_msdu = NULL;
-+		rx_bufs_used += ath11k_dp_rx_full_mon_mpdu_pop(ar, ring_entry,
-+							       &head_msdu,
-+							       &tail_msdu,
-+							       sw_mon_entries);
-+		for (msdu = head_msdu; msdu; msdu = next) {
-+			next = msdu->next;
-+			dev_kfree_skb_any(msdu);
-+		}
-+		entries++;
-+		ath11k_hal_srng_dst_get_next_entry(ab, mon_dst_srng);
-+	}
-+	ath11k_hal_srng_access_end(ab, mon_dst_srng);
-+	spin_unlock_bh(&mon_dst_srng->lock);
-+
-+	pmon->hold_mon_dst_ring = false;
-+	pmon->hold_status_bufs = 0;
-+	pmon->mon_status_paddr = 0;
-+	pmon->mon_ppdu_status = DP_PPDU_STATUS_START;
-+	memset(sw_mon_entries, 0, sizeof(*sw_mon_entries));
-+
-+	spin_unlock_bh(&pmon->mon_lock);
-+
-+	if (rx_bufs_used)
-+		ath11k_dp_rxbufs_replenish(ab, dp->mac_id,
-+					   &dp->rxdma_mon_buf_ring,
-+					   rx_bufs_used,
-+					   HAL_RX_BUF_RBM_SW3_BM);
-+
-+	if (held || entries)
-+		ath11k_dbg(ab, ATH11K_DBG_DATA, "full mon: monitor start: dropped %s ppdu %u, %u dest ring entries\n",
-+			   held ? "held" : "no held", ppdu_id, entries);
-+}
-+
- int ath11k_dp_rx_process_mon_rings(struct ath11k_base *ab, int mac_id,
- 				   struct napi_struct *napi, int budget)
- {
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.h b/drivers/net/wireless/ath/ath11k/dp_rx.h
-index f69d9301e0a16..ea005537e6275 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.h
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.h
-@@ -81,6 +81,7 @@ int ath11k_dp_htt_tlv_iter(struct ath11k_base *ab, const void *ptr, size_t len,
- 			   int (*iter)(struct ath11k_base *ar, u16 tag, u16 len,
- 				       const void *ptr, void *data),
- 			   void *data);
-+void ath11k_dp_rx_full_mon_reset(struct ath11k *ar);
- int ath11k_dp_rx_process_mon_rings(struct ath11k_base *ab, int mac_id,
- 				   struct napi_struct *napi, int budget);
- int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 1a237adaa37d1..a4556d8e75cdf 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1185,6 +1185,9 @@ static int ath11k_mac_monitor_start(struct ath11k *ar)
- 		return ret;
- 	}
- 
-+	if (ar->ab->hw_params.full_monitor_mode)
-+		ath11k_dp_rx_full_mon_reset(ar);
-+
- 	set_bit(ATH11K_FLAG_MONITOR_STARTED, &ar->monitor_flags);
- 
- 	ar->num_started_vdevs++;
-
+ drivers/net/wireless/ath/ath11k/mac.c | 3 +--
+ drivers/net/wireless/ath/ath12k/mac.c | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 ---
 base-commit: a3ddbb45768717b5c9f923489387cf55c838d1ad
-change-id: 20261104-ath11k-full-monitor-stale-hold-c2350ba24638
+change-id: 20261104-ath-ppe-thresholds-bit-order-436ac99c5745
 
 Best regards,
 --  
