@@ -1,79 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793900589;
-	b=Ld3bDA1Y+5ZsukIK/61VpYsSb8+VxQtwUfNk9+t2naWz8wooRPXX3NVp1LPaKUdTkE6d
-	 vZJkH/+S6dFZuj/aHyes+DTlSconmxjJ07MI0h4UZ702wLXZ7HQeCjsaSaZMEWQyrWIko
-	 t5CHE+pdSXwhiZJX0gIoJlw0/Is/KYF3so11WlHvakkg2mKODtndvFZITVbX4oAMyp1z6
-	 xy6iX7kJQjPD+0xKYgDZ80w+TAXVVdzb9Ju+lw+e1mLdXOm2eVExIevHGFRbfd4fRHQHa
-	 cIUsJtSYrwhZzk5tx49KoL8K0zLg/QQ26boyt6VZyfK+94DhIC5xeYeN2V+WdeZh75w==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793900589;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=mAbdJhg7KQQLMPqnM2x2qGh2TczYxJtrbnDI9lw6h+Q=;
-	b=GxbIdoqT9Wy9y285huWFPN4mLcyfnCpKBN1OBFW5bnZiAKAJuCCqMLZJ+cpJcYIb7tNR
-	 dYsvcF63oNjM6QVhI3ocyP+wX9Zjc0eFjDqgZkuB0v2SvHpS4vl+r8i5pNqagVdc0vWvA
-	 TIrLfEWTHqJD4841Ca7Yz3Q1M2yipz0Ilo2T7iIiPlZ+9bqIWk38GP0MCRLFgm4t9g83P
-	 7JNx2f9WdK0dbwkkL+deZF1ifsyzg4ed2GJ+bIsyWW7Clci+zTpiuwnzhNTXkRiaCiFja
-	 dIV14Dq86ood54cWZ9YWTXaBVjxRwOk0JUnAHBZhyO8Pn6JUPcZznLUF9i/cOS0q/rQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=QMgHXcUM;
-	arc=none smtp.remote-ip=198.175.65.17
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793902302;
+	b=KGsIBqUhLbJoimFvhGnxPztW/GR9j3qtyMRQflCjD+8irwhDEVWKGMjSzgHsK7Vg8Gu6
+	 79KCfExIPZIoumjZTusLz7eAH0KZFNie0jeXqIQdDNOCNmA1axedo7nj1IJ78VpNXTjDi
+	 3W92i7S2Q7YLSu6S/wsgRi9mVtmzAETVIFp56+VeUx0uSonk2cTvwFuEZECCECTymvER5
+	 4eCIIBd0k5VbzKoW/OwotjDTnmVAmyElF9p6/nnzFxcC9hkOGJwrnQhMYUN7zmGNiljyG
+	 tDkkSWRDxCXYybGsB27A17nBedzFy2PGqW4iX6Iz+NXUAJBcPdQ/KTfn2+zmHegj7Qg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793902302;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=c+tJig5xb24t0XVZzwp57K8cfpDhjN9MmR0cfzYiA9k=;
+	b=LxR1XodnpzHFTDNFtOML/D3frpJ4xt1zm/oUrOeaOFFYUtt2UoDpcPv5BtZViedpP9R2
+	 iMNVIIZ4qmR4taCXVQEHOmNNAo7uLpEZWiMzI3JKjbDkA69nVSz8ORjKj1S9nBJRPGnq+
+	 NEpT74ej8VvSTRmmVQct1YW146ZLevhf6D6UQ2fhCIeHmpuk22XAYcNA8fZZzW/EohpJ3
+	 HvQUywibM3679Jv6EjF2ixE2X47WlxsBuS6JzzbQj0PqeIbgLCpp0mPwGCEOk5IlV3mbL
+	 cEswFrvitoqk0Nz6RTWjuR12XgpA/UVxvvf/Jjax4b9Pc3kMoQB/Lwi63gvqiEX2EEw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SIDCbA0p;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32DFF606A337
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 17:43:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 32DFF606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F793606A31B;
+	Thu,  5 Nov 2026 18:11:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=QMgHXcUM
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793900588; x=1825436588;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=lPtjP3yQPx4ZRRZvZjROkLRXCbnu/qXUGHAsaz8Mt6Y=;
-  b=QMgHXcUMEnNNjVKiZcrIynIdv5OjnNYxd4W2HxH0osqspCCdSdwpNPQH
-   g5uP/PeJ5mJ7aZEONf3bfiR+d33KFtdZxb5T6w/CkAFs/p1UB7eBoXmCu
-   laEQWhtWLXy1RWEuOAK0EgQDEV/iXLzatVGzZ44jH6PJ7NpttcaMFhJBG
-   6WqlfZIH01rbNYJJzosHoctcpp3y6su23Zf8mdE6ZQ9TY6n/FbUt46zEU
-   nF7wiWZ4OczFK5962JB8xsTSbvLj1zDWRUDOpfAbq+2or5DhIfmPsqL0D
-   3lMDa+E568+C/Wo9TFKt+TYnEc/bpO0laFeHRoqfXaWwUSd3D/oJYr/K7
-   A==;
-X-CSE-ConnectionGUID: d/Ay79maS0ObmdL2xLuCIw==
-X-CSE-MsgGUID: alUxBruDRvG1vG6muAsCog==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2726969"
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2726969"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 09:43:08 -0800
-X-CSE-ConnectionGUID: pTt+09rbRgqVe0ccWLQxzA==
-X-CSE-MsgGUID: UlW4nkCxQKu0mcbm28HrKw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7489424"
-Received: from iapp347.iil.intel.com (HELO 87c02287900a.iil.intel.com) ([10.167.28.6])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 09:43:07 -0800
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-To: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>,
-	johannes@sipsolutions.net
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	linux-wireless@vger.kernel.org,
-	kavita.kavita@oss.qualcomm.com,
-	vamsin@qti.qualcomm.com
-Subject: Re: [PATCH wireless-next 14/15] wifi: nl80211/cfg80211: add support for NDP confirm indication
-Date: Thu,  5 Nov 2026 19:42:45 +0200
-Message-ID: <20261105174250.37677-8-andrei.otcheretianski@intel.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261014103359.1508345-15-shivani.baranwal@oss.qualcomm.com>
-References: <20261014103359.1508345-1-shivani.baranwal@oss.qualcomm.com> <20261014103359.1508345-15-shivani.baranwal@oss.qualcomm.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SIDCbA0p
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793902302;
+	b=Ny0Gf+M8GbBe/xXqw9sIekWEVUxvxJO3pJ7MQT7igT+F9XQr3GXokyaUn4KJVge/FMRg
+	 d8slm06BqsHEJ5c8Gx2pSrvnlnn05PEQ1vQsKa8MaZe121xTXkJJ+ttCeJFpFsZP7QvjV
+	 /wrjaTIV0xbGpJTgTYVHX6isIy0Ljbx2FACGejr4ItVByiK1O1WcIhZDPPkkHVnmXqoCj
+	 nikzB8cf3O3w5d1DELkWaH0DI8DH68p0BeTnSazcZnbXJACSLPn0nlmY+2AprwsOu0OIA
+	 Sftd7CmpWmw/lZGsSUH1EkB/MR9TLD3ueMZQBipV/F6TDwBRumUF8vnH8KrBj85s1Xg==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793902302;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=c+tJig5xb24t0XVZzwp57K8cfpDhjN9MmR0cfzYiA9k=;
+	b=hHcuopev3WfpZa+97zWm1z2GrBULr/cWyjd7uIRGU2Jl2h8HBYTkLEAvevjgppyylxWb
+	 RAPbHeoB6ZY17rV6W0D+bOvYrSqgzLYI46brFNjEgW1UuientEYi6cxjKCIok1/YW7Nxc
+	 eZbiqX6SDXmTrcY35PMXe9DLicKSddKAgiD2G/9hW9mdOlGDxHZ6lLQLFvqLdgDtR4oiD
+	 3Bp9e9xztfQMTdPtZXSKwe4rCUz2pxdBDwtGm2FBz+x0EJer5oxCvFAA2IvptMRXJ9A+t
+	 U6EgCLNy2Q6ySBte8mN/t+P1gTxKKN+iCqUyxY1Aa0oNZPGt2aSGN1+LBau5ZH6HOHQ==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 946A61F00A02;
+	Thu,  5 Nov 2026 18:11:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793902302;
+	bh=c+tJig5xb24t0XVZzwp57K8cfpDhjN9MmR0cfzYiA9k=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=SIDCbA0p3X4cLq3yGm5Ey8gn21t9YRlBbC2r1LrD96kWZNolqLBAqYQLcRQ30zMWQ
+	 c7tcbd8G/MMIteCnmG77hQOlUs2SSCgR1BJuNMsiAfSaNAGguh4RDzrqjuyoVj3EkX
+	 53aLDeeoSBqe/LSNNhpX6mdd4jyXYsX1YA2qf5oGBL7005RZujqIvVjvqnsA2V6u99
+	 T+OmVBIAniiSFPa3CXubQnLCNEMTbAKGAenfw1wGS7dwdJJzQitr6L4f11pxy18EaR
+	 BPh0fqc+JMJtl9HEtnVIYmQZa3iaRo4cvmp6RSNuJtMkT8czQCcNYlBULpG+izW8SE
+	 08ayAVxWpq5ow==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 20A8F473BD;
+	Thu,  5 Nov 2026 18:11:40 +0000 (UTC)
+From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
+Date: Thu, 05 Nov 2026 12:11:38 -0600
+Subject: [PATCH 3/3] wifi: ath10k: don't arm the scan timeout for a scan
+ that did not start
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,38 +83,75 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261105-ath-recovery-scan-timeout-v1-3-99a70d89e114@gmail.com>
+References: <20261105-ath-recovery-scan-timeout-v1-0-99a70d89e114@gmail.com>
+In-Reply-To: <20261105-ath-recovery-scan-timeout-v1-0-99a70d89e114@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>, 
+ Hari Chandrakanthan <quic_haric@quicinc.com>, 
+ Venkateswara Naralasetty <quic_vnaralas@quicinc.com>, 
+ Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>, 
+ Anilkumar Kolli <quic_akolli@quicinc.com>, 
+ Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, 
+ Maharaja Kennadyrajan <quic_mkenna@quicinc.com>, 
+ John Crispin <john@phrozen.org>, 
+ Govindaraj Saminathan <quic_gsamin@quicinc.com>, ath10k@lists.infradead.org, 
+ Wen Gong <quic_wgong@quicinc.com>, 
+ Christopher Griffin <christophergriffin05@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793902298; l=1474;
+ i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
+ bh=8zbD+lVnCTk/jEl5MxoVBJ8ccaebPXe50Jkz06PSJ0A=;
+ b=93y/2nl2YnFu6ut5Bipi9DZVLRdNz+4uwAG5tLNRkc+9yVtXFwKW2evOomIGBWZaD28W8JsoP
+ soM4m5afM/6A/qZsSUC5/VBfZMLOzbkzBho8GVpxty70WnYk0VTebWq
+X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
+ pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
+X-Endpoint-Received: by B4 Relay for
+ christophergriffin05@gmail.com/20261024 with auth_id=1309
+X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
+Reply-To: christophergriffin05@gmail.com
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 14, 2026 at 04:03:58PM +0530, Shivani Baranwal wrote:
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> +void cfg80211_nan_ndp_confirm(struct wireless_dev *wdev,
-> +			      struct cfg80211_nan_ndp_confirm_params *params,
-> +			      gfp_t gfp);
+From: Christopher Griffin <christophergriffin05@gmail.com>
 
-I think a better name would be cfg80211_nan_ndp_status(), but it's a matter of
-taste I guess
+When ath10k_start_scan() fails, ath10k_hw_scan() sets the scan state
+back to idle and returns the error to mac80211, but first still queues
+ar->scan.timeout. The timeout then stays pending for the full scan time
+(20 s by default) although no scan is running. A scan started within
+that time gets no timeout of its own, as the work is already pending,
+and the stale one aborts it early.
 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> +enum nl80211_nan_ndp_status {
-> +	NL80211_NAN_NDP_STATUS_ACCEPTED,
-> +	NL80211_NAN_NDP_STATUS_REJECTED,
-> +};
+Don't queue the timeout when the scan did not start, as
+ath10k_remain_on_channel() already does. Until commit 634349bae0b2
+("ath10k: move hw_scan worker queuing") ath10k_start_scan() queued it,
+on success only.
 
-A boolean flag is simpler instead of an enum with these two options only
+ath11k has the same code; there, a QCN9074 firmware crash during a scan
+left such a timeout pending.
 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> @@ -796,6 +796,7 @@ nl80211_nan_ndp_policy[NL80211_NAN_NDP_ATTR_MAX + 1] = {
-> +	[NL80211_NAN_NDP_ATTR_STATUS] = { .type = NLA_U8 },
+Fixes: 634349bae0b2 ("ath10k: move hw_scan worker queuing")
+Assisted-by: Claude:claude-opus-5-5
+Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-That's an out attribute, no policy is required for that.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8e604697d6c20..2fded15b61721 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6491,6 +6491,7 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+ 		spin_lock_bh(&ar->data_lock);
+ 		ar->scan.state = ATH10K_SCAN_IDLE;
+ 		spin_unlock_bh(&ar->data_lock);
++		goto exit;
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
 
-> +	nla_nest_end(msg, ndp_attr);
-> +	genlmsg_end(msg, hdr);
-> +	genlmsg_unicast(wiphy_net(wiphy), msg, wdev->owner_nlportid);
-> +	return;
+-- 
+2.43.0
 
-Also here, the trace event should be recorded here
 
-Thanks,
-Andrei
