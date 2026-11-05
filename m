@@ -1,99 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.102
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793844592;
-	b=yrki/eNCl8Olob5ReRbtmmN2vX+Rm9c+aLvlgyfBClurTiOmkmBeO10mnaqRpuJ0umgX
-	 ZKdo3RZuxX3hrgtIQYk+2cyVOy/t9Co4rxx85qLoKYmZodpTvcwra2bnYdTI6+gYrO569
-	 y/5J/uefnyv4mN5VybzaJiiOSlLFjod7REns6wYCkfQVyyLAA90NahkLTENU1Yk4K07hT
-	 7t2hqqENdiCgy9iMTnrHK/jlBi7RGXk7aTFZM3vLhUtSDxij/FDdPAhfeiRebzA+zhVAs
-	 CB+S8jnS5AUtARLA4D+9tnYJI8SjbH6UGb/PTgA/hoLRsUlB9hGsc5yrK1VPbWDSSKQ==
+	t=1793844847;
+	b=K3wSuHQDbkIqlzsnfAoKIc648M48bCuu780LX+WKewXEY8Sg/xHbufqwaLQbDodCEqpf
+	 5W283eOKkMQ0DBgBtpK/kFFwvw9vY+bo5H4IYAUMeWXlk0BdQZBFJEfgX8jLLL+fKA5o7
+	 f86jpReGlSmAQIcRtQ0DRtcRafywqlJqX+XDvVI5JuXpDBqpdwttYj1tAEP5CXruX0B6u
+	 wiJmFyWn/sMNZTqlWjbPiNzDNAQFpS+9m/iTqtoavXud2PVqYK4gW/3rQKY1eb5Oo+duI
+	 olwkHDXXWEDKsylw+/cTH9d/IzGQQjPoQiKxI4NHg1nfl6SlBOBeyZvFJGfKWxb67Fg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793844592;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=QM0rqoR6TQ58XbCJMdcNU5VHlh8KBEoq/5kBhNjxofc=;
-	b=uEXwlCBPWBzTYFSDX8au3sWcZZySx4CdvrVCc4RC7vNtntps8DzxkmKpXjZYkPWTcUGb
-	 QZtDnfLVrS9pBDiBZc/H5n4Kq6aY7MPiGtXwf0uolj6gDtfIvc8C/IIzkj+PHwQlz+w+T
-	 v3fRKHZSXygpCi+UaHElm4EpCTyykcF6GeT3g6kgPMBsdcbbLP6fOgJ8jP0Ny5R4ty1Fi
-	 GpuGaEGZB4Nid3NPb9WMTsjAgtpJfUI1nTkFa5dHG1dSUpaz1hA/PGHztIIyDXP2OSVtp
-	 k1qIc2FlSm8bIDAsvSbPuHrV6gHguNdbLN189PSJ6HVGI4DvZGULMQMl3u3V6hmU9vg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793844847;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=tXeq94tKXH8bHOz1amsH5XRU51n2PYOOTkgxfF1PjyI=;
+	b=FBl/tZLkpjKBKCaGBVQdK/QJitfjohPAhFcIhy9nJQ7seVEWEmVKbHayiMBK8ynzWhDd
+	 7236nOBcMFJUgCCkYknb8ht7p1WMhdz7lGL4UnksDrzmZB+wl/4eFl1kdg8mekzdNMnXC
+	 EoIfblR5UM9qHh1t6xH3MCHQSFcmWiugU4oQrp2jzrODaMDB/0L1d1IDp8l1wJZJNEGzv
+	 /IAfoVLNQ3QcCrnreQCWhqsALcgdidw456hVxhHBssbX3+8q/K6WYa0xzU5RJk5xnPzef
+	 BKFrk14GbhXonjvEb7pcxqoBYqcF3GjVq4LtE30+f/l/QMd1FUIZ87209V4/6wOeX2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=DxuLsby3;
-	arc=none smtp.remote-ip=74.125.82.42
-Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=j2sTp789;
+	arc=none smtp.remote-ip=95.215.58.102
+Received: from mta1.migadu.com (out-102.mta1.migadu.com [95.215.58.102])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F5BC606A326
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 02:09:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1F5BC606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0712A606A32C
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 02:14:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0712A606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=DxuLsby3
-Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-1b244fb7fffso1901658c88.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2026 18:09:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793844591; x=1794449391; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=QM0rqoR6TQ58XbCJMdcNU5VHlh8KBEoq/5kBhNjxofc=;
-        b=DxuLsby3907SeCgJyDfsbvUyOXMUgxEgCBV5FRQ8BUgxz6S22WV45NryMtWseE/dpU
-         sTO0+loltyFMAq8K2ZyHk9DEdMBv6TCwD/CCXK674v2QpujnLk6vXzbAtNNW7XhwBAKz
-         s4HSRHr31VchGGM4KxHKI0Mz6J6gQW97JlhNvnDWUCAgUzsG9pr90/JBbtpzpA0heeZr
-         h18ErhlRxD3KFO+actCD56g7O5HLVMfjVqy6JRI/pkDkl8FtfSi9m57r46R0J7fkVXHX
-         ztCZ8v+Vp7Er978v+jlamn2fn9oczoenJcTndwNQg5TMjKZ8ul87Q6s2DW8vvmoshtZo
-         hS8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793844591; x=1794449391;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QM0rqoR6TQ58XbCJMdcNU5VHlh8KBEoq/5kBhNjxofc=;
-        b=pN1OzoULELuXV/O/X472dh+yRr09H/Kr39kedFTLjZQkWnW8RG4Vqc7mnfrYufUucW
-         0y15CmNwmVnRbe9dRiSpWj7obwK+zVfwz56j3Fi1qs7szI8mwCFyEQksuV7gmtSw9+ga
-         4QAgPAdqq84d8iOdH3IZHWuD/Kj6ppQHhnna1cRvRgoNmRnEeUHT8NkeRUz1v+YGx0VU
-         KAG6Zd3z7ADKwcxNfXoK8QvaGI5FH/qTzacg81X+dAko6TL+9AjozuSA09B0CwS1w6FG
-         ggRIc4LQhqV0MY0Y2IvUkQL0teIcmEIDsCVSYkusOyv2AHWcA1HLhIL9/h75mgZ4Umjq
-         xHKw==
-X-Forwarded-Encrypted: i=1; AKwUvBw4ow0KCHCUGe+5kXqJJjf642JvuKaRnDZbpPZ3qLEK7UI746Zr7XQJNzT5+k24feKmSJKM8kvs3yDYjlKdLA==@vger.kernel.org
-X-Gm-Message-State: APuU4Z9ooy5/wKQKau0XeUCXlV/RZ8JlyOfeL8I/468ApCMfSN3Z5oPD
-	SnN2cvFx/qNEnrEXeDcZabxa/ljUBQF0BFIevbCv6COSqZ/ry5Xah+XT
-X-Gm-Gg: AYBFou1KAwod/nmzfbSIgz60ryA0FpGQR4QDs5GzX25r52PRqMh2l5s9wC6Y9X6Hmz8
-	x7WJ2hoeWQph8lGFO4Sy03xdsJ9dwCfDVHuii+YVTY5QCSokJ2amVU7Cleti8Kv4I7UUQaPQdDS
-	2q2zg45pnhQ9FT40M4x/6xNq/3xJb49umtwwM0wY60ILJjb0Woex9a8X86/PkB/vfJV0eOdj0qt
-	Zq7wYDnjKFArqiEEKgozF2dktiTorheiS1OrEjKcdjoR9zDSpl91sXUmLqrfllf7JMboonQ4yGO
-	5pCc0/2TwP/dAwp9XJ0tvfzdY3ehzFIhz1x8H47nJBN37bKdHW3ZjleQXelQxQnKPCa7JYuND84
-	NUm0E+z8Z9IViWWWSptM3H6H8vBOwQOxLRX7ggiCn0b2kLUCOH0IeMxK3zAouioPO2HVHt2nbAi
-	kkwRikcZbYRPlqzlyddYSnVS5uJ65K+64YYvOFt/cwY3aEqdJj5pLBkSpVpEB+8X1sT17Hxp4tL
-	hMJTfqkG7m9dnT8ObGCZ1n5uLyvp9M1L5IhOD/hVQSF4rcgeJ3dtUXIpGqSiCymxv6cYFR97hDJ
-	qdy8+UAc8Nw1/wTLr8NKx7vtQRXH7B+YmVh/pwcSFQCIbg==
-X-Received: by 2002:a05:7300:c387:b0:36d:c2a:7964 with SMTP id 5a478bee46e88-36d0c2a7ae7mr4540508eec.21.1793844591036;
-        Wed, 04 Nov 2026 18:09:51 -0800 (PST)
-Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36d34d5960esm10630389eec.5.2026.11.04.18.09.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Nov 2026 18:09:50 -0800 (PST)
-From: Zhan Xusheng <zhanxusheng1024@gmail.com>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Benjamin Berg <benjamin.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Avraham Stern <avraham.stern@intel.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zhanxusheng@xiaomi.com,
-	Zhan Xusheng <zhanxusheng1024@gmail.com>
-Subject: Re: [PATCH v3 0/2] wifi: iwlwifi: Fix GP2 to nanoseconds overflow on 32-bit
-Date: Thu,  5 Nov 2026 10:09:45 +0800
-Message-ID: <20261105020945.2683535-1-zhanxusheng1024@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261012050516.3803074-1-zhanxusheng@xiaomi.com>
-References: <20261012050516.3803074-1-zhanxusheng@xiaomi.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=j2sTp789
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=l5hRS8qgzR0WOCPLF0tQbQ+of37lp1oZsgw+XUQqwhg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793844844; v=1; x=1794449644;
+ b=j2sTp789TAzH4+lGZ7lYWfaDwj4tzc9cwnz9VymVYz+93eIx1j2P1wIewQP0NcIfVbJQKLyf
+ 0DO8NIIghKzDouBSBnDym1wAnQyGpqJsD9irj2dQSZrGObeDZJB96QtjMGxheDIwPErfv1cfpzT
+ zdnAQ3fG/Xx2Ge3hDWonFfXo=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 7ce234fbb2517b84;
+	Thu, 05 Nov 2026 02:14:03 +0000
+X-Mizu-Trace-ID: 7ce234fbb2517b84
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <fc4939cc-84ec-4c5c-88a7-658ca800377d@linux.dev>
+Date: Thu, 5 Nov 2026 10:15:13 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -103,19 +58,189 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RESEND v2 01/51] alloc_tag: don't remove /proc/allocinfo
+ under the codetag module lock
+To: Christian Brauner <brauner@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+ Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>,
+ Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>,
+ Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+ Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>,
+ Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
+ <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>,
+ Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>,
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+ coreteam@netfilter.org, kexec@lists.infradead.org,
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+ netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net,
+ linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org,
+ linux-usb@vger.kernel.org, samba-technical@lists.samba.org,
+ sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+ linux-doc@vger.kernel.org, linux-serial@vger.kernel.org,
+ linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>,
+ linux-input@vger.kernel.org, linux-raid@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org,
+ linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>,
+ stable@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Suren Baghdasaryan <surenb@google.com>
+References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-1-021c84d852e0@kernel.org>
+Content-Language: en-US
+From: Hao Ge <hao.ge@linux.dev>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-1-021c84d852e0@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Miri,
+Cc Suren
 
-Gentle ping on this series. Both patches still apply to v7.4-rc1, and
-the six multiplications are unchanged there.
+Hi Christian
 
-One correction to 2/2: the mld/rx.c site came in later than the
-sub-driver itself, so 2/2 should also carry
+On 2026/11/5 03:06, Christian Brauner wrote:
+> codetag_alloc_module_section() takes the codetag type's mod_lock for
+> writing and calls reserve_module_tags() with it held. When that can't
+> reserve the tags, because the section's alignment doesn't fit, because
+> there are too many tags for the page flag bits or because the memory
+> for them can't be allocated, it shuts memory allocation profiling down
+> and removes /proc/allocinfo, still with mod_lock held.
+> 
+> remove_proc_entry() waits until every reader of the entry has let go of
+> it, and a reader of /proc/allocinfo takes mod_lock for reading in
+> allocinfo_start() while it holds the entry. So a module load that hits
+> one of those paths while /proc/allocinfo is being read waits for the
+> reader and the reader waits for the module load, for good.
+> 
+> Let a work item remove the entry in that case. The profiling is shut
+> down right away like before, the file just goes a moment later.
+> 
+> Fixes: 4835f747d3ed ("alloc_tag: support for page allocation tag compression")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-Fixes: f1699ad5857d ("wifi: iwlwifi: mld: add debugfs for using ptp clock time for monitor interface")
+Thanks.
 
-I can send a v4 with that if you prefer.
+is this a problem you have hit in practice?
+Sashiko discovered this issue earlier and reported it as follows:
 
-Thanks,
-Zhan Xusheng
+> diff --git a/mm/alloc_tag.c b/mm/alloc_tag.c
+> index 2070e682fe106..112a014d4b890 100644
+> --- a/mm/alloc_tag.c
+> +++ b/mm/alloc_tag.c
+> @@ -950,10 +950,12 @@ static void *reserve_module_tags(struct module *mod, unsigned long size,
+>  		int grow_res;
+>  
+>  		module_tags.size = offset + size;
+> -		if (mem_alloc_profiling_enabled() && !tags_addressable()) {
+> +		if (!tags_addressable()) {
+>  			shutdown_mem_profiling(true);
+This is a pre-existing issue, but does this shutdown_mem_profiling(true) call
+introduce an AB-BA deadlock between /proc/allocinfo file readers (pde->in_use)
+and module loading (cttype->mod_lock)?
+A user reading /proc/allocinfo acquires the procfs in_use reference in
+use_pde(), then blocks on down_read(&alloc_tag_cttype->mod_lock) in
+allocinfo_start().
+Concurrently, if a module loads and tags_addressable() fails,
+codetag_alloc_module_section() holds down_write(&cttype->mod_lock) and calls
+shutdown_mem_profiling(true), which removes the proc entry. This removal waits
+indefinitely for the in_use reference to drop to zero, hanging both procfs
+reads and module loading.
+> -			pr_warn("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
+> -				mod->name, NR_UNUSED_PAGEFLAG_BITS);
+> +			pr_warn_once("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
+> +				     mod->name, NR_UNUSED_PAGEFLAG_BITS);
+> +			release_module_tags(mod, false);
+> +			return ERR_PTR(-EAGAIN);
+>  		}
+>  
+>  		grow_res = vm_module_tags_populate();
+
+I previously sent a patch with a comparable idea, though Sashiko remained unconvinced.
+
+[patch]: https://lore.kernel.org/all/20260817062726.106511-3-hao.ge@linux.dev/
+
+[Sashiko's objections]: https://sashiko.dev/#/patchset/20260817062726.106511-1-hao.ge@linux.dev
+
+Could this patch perhaps wait for mine? No worries if this is inconvenient.
+
+Best regards                                                                                                                                                                                                                                                                  
+Hao
+
+> ---
+>  mm/alloc_tag.c | 27 ++++++++++++++++++++++++---
+>  1 file changed, 24 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/alloc_tag.c b/mm/alloc_tag.c
+> index 82e2c3448dcf..7d7ad6704953 100644
+> --- a/mm/alloc_tag.c
+> +++ b/mm/alloc_tag.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/seq_file.h>
+>  #include <linux/string_choices.h>
+>  #include <linux/vmalloc.h>
+> +#include <linux/workqueue.h>
+>  #include <linux/kmemleak.h>
+>  #include <uapi/linux/alloc_tag.h>
+>  
+> @@ -604,6 +605,26 @@ static void shutdown_mem_profiling(bool remove_file)
+>  	mem_profiling_support = false;
+>  }
+>  
+> +static void remove_allocinfo_file(struct work_struct *work)
+> +{
+> +	remove_proc_entry(ALLOCINFO_FILE_NAME, NULL);
+> +}
+> +static DECLARE_WORK(remove_allocinfo_work, remove_allocinfo_file);
+> +
+> +/*
+> + * A module's tags are reserved with the codetag module lock held for
+> + * writing, and a reader of /proc/allocinfo takes that lock with the entry
+> + * pinned. Removing the entry there would wait for that reader for good, so
+> + * let a work item do it.
+> + */
+> +static void shutdown_mem_profiling_async(void)
+> +{
+> +	if (!mem_profiling_support)
+> +		return;
+> +	shutdown_mem_profiling(false);
+> +	schedule_work(&remove_allocinfo_work);
+> +}
+> +
+>  void __init alloc_tag_sec_init(void)
+>  {
+>  	struct alloc_tag *last_codetag;
+> @@ -855,7 +876,7 @@ static void *reserve_module_tags(struct module *mod, unsigned long size,
+>  		align = 1;
+>  
+>  	if (!ensure_alignment(align, &prepend)) {
+> -		shutdown_mem_profiling(true);
+> +		shutdown_mem_profiling_async();
+>  		pr_err("%s: alignment %lu is incompatible with allocation tag indexing. Memory allocation profiling is disabled!\n",
+>  			mod->name, align);
+>  		return ERR_PTR(-EINVAL);
+> @@ -905,14 +926,14 @@ unlock:
+>  
+>  		module_tags.size = offset + size;
+>  		if (mem_alloc_profiling_enabled() && !tags_addressable()) {
+> -			shutdown_mem_profiling(true);
+> +			shutdown_mem_profiling_async();
+>  			pr_warn("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
+>  				mod->name, NR_UNUSED_PAGEFLAG_BITS);
+>  		}
+>  
+>  		grow_res = vm_module_tags_populate();
+>  		if (grow_res) {
+> -			shutdown_mem_profiling(true);
+> +			shutdown_mem_profiling_async();
+>  			pr_err("Failed to allocate memory for allocation tags in the module %s. Memory allocation profiling is disabled!\n",
+>  			       mod->name);
+>  			return ERR_PTR(grow_res);
+> 
