@@ -1,61 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.12
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793865032;
-	b=E5eLt1/VSNfpc+EcpFmyO+FGZZejTXQ06dN25dlzQafRryOAJcyWJWvBbd0j6qwRVwYM
-	 ZX4jCmoFRM/onOgpgvw5zXnXT6fehP8F4JWOvmkV/B3BhsRIwJoe5k8O2ZKes/iakFXIi
-	 Rj7lMC5OV9iW1rOTaMdwvWSsG4FJboLviwxjfeGvXcgvgDAlxQj646aYxQw7XlpTAl+U8
-	 Q0yEeWne1jahfmey1YdSS3G8xnnGvU5DYGBGDgGz12NQX7VsgZOvlRojWhCOTQAummtY/
-	 XqEA7KUrEuGKF9FbAMjiJZ8y3t6z7hKRb1Eusm7MaUlFQ7yJBKrOhK8HLzdPISB+JpQ==
+	t=1793865259;
+	b=tKmECL3ih4vGqdIYfMHanPJTh8OQJt9KyLA8EkWMUtNG3WGk2koQBgaiLzboupIyQSA1
+	 Z8GviDC4ELlyhzKnYOXX/W3O4OJLztybyJCgDsD2gob4RxSMJ+ZrEDyeYvm0KbolxTZ6M
+	 PTgTcoqBDfQuNznjMcm8RiaJzesgsrV15D/oAJBXPnKm0j0L9Le1wQ4zjrEEbJsDkrQ8/
+	 0YMFH+avXDJZt4Hn2YfZe0KB4GrgLMTDrCuSkuGi4y9vuHKhueBmIjNFmrXyre/faJOFr
+	 SVBcNbymYm8uTaO0Sh9aNu6ugz+KYiol9AUB0fbK1d2rwTgF3QCKXiCUcZkDXRnD2JA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793865032;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793865259;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
-	bh=MT7CHxtYrEBjce/G8CudYmVuEwhrgxDZngOuUCegR5s=;
-	b=Jto5DG3F9sfWqSuwdsx0u6xf9NgU2ji4aUQdJ3MW3umqa+7zike8DDugFXwfg2NbvA1p
-	 OMK7tuptxpVSM7THn1KrhXVU2/ZzEzFF7w6SMW5smJFADxjdmA26AZtlDsvcSFYGKTTEz
-	 PgB3OUdPIVD+r+ZPHXej0127MDDj0I1LbQ+lmxN776mRGBUEQZjL+tU0U9DMnUqCTEOnp
-	 L4D3vxm3xPqjgLtmVwQ1/4kBFFy2bqSCZxiPPNKspfprWBXzFnOESSCDn+QWNPh9qXdi5
-	 qgm3UbNNEM0CkvkL8JFDHLcPqv213QY7lWzdmMS3hvULEzYlrGRXaf69+sYlfjm9Jbg==
+	bh=+rU20r7Dr13iRSBw8Jn6KltxQDYBVImv5e7de11TRhk=;
+	b=pu0aYixR9+7QfHmw1K4JuAmWZ6AaiProJ7Br7KSW/QjyKTCDM3I5GplQdkQPfX5kuN4x
+	 lDjYFbWWARnsfdeWW36bJX71Hd1QYN+kcMzQGQEfhQrZSx4e71ioSslZVPChOGXXluKSE
+	 8mNITdZG+fQMuMCFNWeRRc2lMDBc+mu8oJewyh9FuhTgT73BCBsZgG257OsN1gSIGTG4F
+	 TQiTpPSQF0Jcr+sPVfoj/FLNYHkeInK/uNi654F7uN2EbeaWP1Uzs7J0m7Ll5MGGaXe6L
+	 pUhLsSZol8RW4WkhBnupKCkkQ0XT5jsp7kKtqOfQJwwM5p8/5Gcm5uqhgeWXtPXvytg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=wp.pl;
 	spf=pass smtp.mailfrom=wp.pl;
-	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=HYFklPJ8;
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=KJrYile7;
 	arc=none smtp.remote-ip=212.77.101.12
 Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA51606A329
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:50:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EA51606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5343606A326
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:54:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A5343606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=HYFklPJ8
-Received: (wp-smtpd smtp.wp.pl 8454 invoked from network); 5 Nov 2026 08:50:28 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=KJrYile7
+Received: (wp-smtpd smtp.wp.pl 29956 invoked from network); 5 Nov 2026 08:54:16 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
-          t=1793865028; bh=MT7CHxtYrEBjce/G8CudYmVuEwhrgxDZngOuUCegR5s=;
+          t=1793865256; bh=+rU20r7Dr13iRSBw8Jn6KltxQDYBVImv5e7de11TRhk=;
           h=From:To:Cc:Subject;
-          b=HYFklPJ8Jz+u1quSO5zrrTCKNril2QrpsA2ht6Mj6C5gGkhB5JhXHoHxOP2gww3ls
-           gDYG72l3A2ywieDfVZB1N+F0f2mExV2DtMlvC+cD6NDX7edn8HR2Q1hPBIPZlGF1Ml
-           Opl2fs7QAUXYZhff0oFF/oy32cOZLRLnlWnzCsoDjLjCJERyE3JRjOh0e1U1bt4siF
-           pKF3aEoaiQK5Vm5+gkEuuwyULT1A60dUHix0SqgYLLfilG2Dzkt91jPPhjgPhKyrGz
-           nVCwhyj1T356NFIqNsvYI9SEUTRx8a7Q5/6YknvaTkNykUTwLVrjpP2EnmIXUpJmPU
-           kOs8xZATGOySA==
+          b=KJrYile7ftSxvzHgg0EpXRW6ttYBPsuwm/NiG5oLWPaiTte1usFmUGiqJmIO4mQ1G
+           dU0Wg6jxUq/ADK/LySrMXxkfa1rRYJi8Ua/UpGh9aPCTVVBBb69ppI4ttC3Ir6d/Zo
+           7RgDgyFOhXQs6o+b85bn1fQBzoMvvc/AZpL/OdRQZAiV6DtmfWI+Jub88kdzM/K8PY
+           kFOoEVleSgZnRkMvju/MS/q4Z/wrQRxth5cp+2h9AhAgXDY4qOooLRb2igfV+3M2jh
+           Ou4rbqjofqHLylS6UW5xiYpWSFUzDe9DbCOPR2qTnVUVKnratugvHkbxwdc74uDKgO
+           jqZ+RlWR+OSmw==
 Received: from localhost (77-236-11-168.static.play.pl [77.236.11.168])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <hjf3108@gmail.com>; 5 Nov 2026 08:50:28 +0100
-Date: Thu, 5 Nov 2026 08:50:28 +0100
+          for <hjf3108@gmail.com>; 5 Nov 2026 08:54:16 +0100
+Date: Thu, 5 Nov 2026 08:54:15 +0100
 From: Stanislaw Gruszka <stf_xl@wp.pl>
 To: Ho Jie Feng <hjf3108@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-next v2 2/7] wifi: rt2800: calibrate the crystal
- of RT3593 with the beacons
-Message-ID: <20261105075028.GB64923@wp.pl>
+Subject: Re: [PATCH wireless-next v2 3/7] wifi: rt2800: make MCS 16 fall back
+ to MCS 8 on devices with 3 TX chains
+Message-ID: <20261105075415.GC64923@wp.pl>
 References: <20261031165117.2868671-1-hjf3108@gmail.com>
- <20261031165117.2868671-3-hjf3108@gmail.com>
+ <20261031165117.2868671-4-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -67,103 +67,122 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261031165117.2868671-3-hjf3108@gmail.com>
-X-WP-MailID: 551f157876d80c84defb86f2e927fff3
+In-Reply-To: <20261031165117.2868671-4-hjf3108@gmail.com>
+X-WP-MailID: 152d5a30443aa7cf71d125b5e8be1581
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 000000A [oSM0]                               
+X-WP-SPAM: NO 000000A [AQMk]                               
 
-Hi,
-
-On Sun, Nov 01, 2026 at 12:51:09AM +0800, Ho Jie Feng wrote:
-> On a Netgear WNDA4100 (RT3593), as the adapter warms up, the
-> frequency offset drifts enough to affect the link quality.
-> In certain cases it can cause the link speed to drop
-> to 1Mbit/s or below.
+On Sun, Nov 01, 2026 at 12:51:10AM +0800, Ho Jie Feng wrote:
+> MCS 15 has worse reliability than MCS 16, since 16 and above
+> are 3 stream rates, and 15 is the top of the 2 stream rates.
+> Falling back from MCS 16 to MCS 15 does not make sense, so
+> make the fallback to MCS 8 on all devices with 3 TX chains,
+> like the Ralink driver does.
 > 
-> Add a frequency calibration step function to RT3593 to use
-> the frequency offset obtained from the beacon frames of the AP
-> for tuning.
+> The retry chain is now MCS 16 to MCS 8, skipping 7 MCS rates
+> in between. Reflect that in the retry calculation code. This
+> also fixes the retry count on RT3883, which already used this
+> fallback.
 > 
 > Test results:
 >    before after
-> TX 27.7   28.5
-> RX 31.6   69.7
+> TX 28.2   29.1
+> RX 70.4   70.2
 > 
 > Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
 > ---
->  drivers/net/wireless/ralink/rt2x00/rt2800.h   |   1 +
->  .../net/wireless/ralink/rt2x00/rt2800lib.c    | 101 ++++++++++++++++++
->  .../net/wireless/ralink/rt2x00/rt2800lib.h    |   4 +
->  .../net/wireless/ralink/rt2x00/rt2800usb.c    |   1 +
->  drivers/net/wireless/ralink/rt2x00/rt2x00.h   |   6 ++
->  .../net/wireless/ralink/rt2x00/rt2x00lib.h    |   2 +
->  .../net/wireless/ralink/rt2x00/rt2x00link.c   |   9 ++
->  7 files changed, 124 insertions(+)
+>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 10 +++++++++-
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  5 +++++
+>  drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 14 ++++++++++++--
+>  3 files changed, 26 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-> index 8930589b4967d..b9f6de3a462e3 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-> @@ -3163,6 +3163,7 @@ enum rt2800_eeprom_word {
->   */
->  #define RXWI_W3_SNR0			FIELD32(0x000000ff)
->  #define RXWI_W3_SNR1			FIELD32(0x0000ff00)
-> +#define RXWI_W3_FOFFSET			FIELD32(0xff000000)
->  
->  /*
->   * Macros for converting txpower from EEPROM to mac80211 value
 > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> index 2e2e382b62475..e7b6edf485099 100644
+> index e7b6edf485099..5e1ee016624c6 100644
 > --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
 > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> @@ -897,6 +897,28 @@ static int rt2800_agc_to_rssi(struct rt2x00_dev *rt2x00dev, u32 rxwi_w2)
->  	return (int)max(rssi0, rssi2);
->  }
->  
-> +static void rt2800_rx_freq_offset(struct queue_entry *entry,
-> +				  struct rxdone_entry_desc *rxdesc)
-> +{
-> +	struct rt2800_drv_data *drv_data = entry->queue->rt2x00dev->drv_data;
-> +	__le32 *rxwi = (__le32 *) entry->skb->data;
-> +	struct ieee80211_hdr *hdr =
-> +	    (void *)(entry->skb->data + entry->queue->winfo_size);
-> +	u32 word;
+> @@ -1116,6 +1116,14 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
+>  		 */
+>  		__set_bit(TXDONE_SUCCESS, &txdesc.flags);
+>  		txdesc.retry = ((mcs > real_mcs) ? mcs - real_mcs : 0);
 > +
-> +	if (!(rxdesc->dev_flags & RXDONE_MY_BSS) ||
-> +	    (rxdesc->flags & RX_FLAG_FAILED_FCS_CRC) ||
-> +	    !ieee80211_is_beacon(hdr->frame_control))
-> +		return;
-> +
-> +	word = rt2x00_desc_read(rxwi, 3);
-> +
-> +	spin_lock_bh(&drv_data->bcn_lock);
-> +	drv_data->bcn_freq_offset = rt2x00_get_field32(word, RXWI_W3_FOFFSET);
-> +	drv_data->bcn_rate_mode = rxdesc->rate_mode;
-> +	spin_unlock_bh(&drv_data->bcn_lock);
-> +}
-> +
->  void rt2800_process_rxwi(struct queue_entry *entry,
->  			 struct rxdone_entry_desc *rxdesc)
->  {
-> @@ -935,6 +957,14 @@ void rt2800_process_rxwi(struct queue_entry *entry,
->  	 * Convert descriptor AGC value to RSSI value.
->  	 */
->  	rxdesc->rssi = rt2800_agc_to_rssi(entry->queue->rt2x00dev, word);
-> +
-> +	/*
-> +	 * The frequency offset of the beacons is used for the frequency
-> +	 * calibration.
-> +	 */
-> +	if (rt2x00_rt(entry->queue->rt2x00dev, RT3593))
-> +		rt2800_rx_freq_offset(entry, rxdesc);
-> +
+> +		/*
+> +		 * On devices with 3 TX chains MCS16 falls back to MCS8, so a
+> +		 * frame that was sent below MCS16 after a three stream rate
+> +		 * skipped MCS9 to MCS15.
+> +		 */
+> +		if (rt2x00_is_3t(rt2x00dev) && mcs >= 16 && real_mcs < 16)
+> +			txdesc.retry -= 7;
+I would prefer to change condition to: real_mcs <= 8 
+It would be visible that we can not overflow txdesc.retry by subtraction.
 
-I dislike fact that this is part of ->fill_rxdone() callback.
-I think it would be better to add new field in rxdesc and
-add flag there indicating the bcn_freq_offset is valid. 
-
-Then add new function in rt2x00lib_rxdone_skb().
+Otherwise the patch looks good to me.
 
 Regards
 Stanislaw
-
+>  	} else {
+>  		/*
+>  		 * Transmission failed. The number of retries is
+> @@ -6303,7 +6311,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>  	reg = rt2x00_rt(rt2x00dev, RT5592) ? 0x00000082 : 0x00000002;
+>  	rt2800_register_write(rt2x00dev, TXOP_HLDR_ET, reg);
+>  
+> -	if (rt2x00_rt(rt2x00dev, RT3883)) {
+> +	if (rt2x00_is_3t(rt2x00dev)) {
+>  		rt2800_register_write(rt2x00dev, TX_FBK_CFG_3S_0, 0x12111008);
+>  		rt2800_register_write(rt2x00dev, TX_FBK_CFG_3S_1, 0x16151413);
+>  	}
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> index a80508db32d9c..f82dda0266f9b 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> @@ -1193,6 +1193,11 @@ static inline bool rt2x00_is_soc(struct rt2x00_dev *rt2x00dev)
+>  	return rt2x00_intf(rt2x00dev, RT2X00_CHIP_INTF_SOC);
+>  }
+>  
+> +static inline bool rt2x00_is_3t(struct rt2x00_dev *rt2x00dev)
+> +{
+> +	return rt2x00dev->default_ant.tx_chain_num == 3;
+> +}
+> +
+>  /* Helpers for capability flags */
+>  
+>  static inline bool
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> index 4d94b7062f440..db33c1215de97 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> @@ -329,10 +329,10 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
+>  	 * lowest rate was used.
+>  	 */
+>  	for (i = 0; i < retry_rates && i < IEEE80211_TX_MAX_RATES; i++) {
+> -		tx_info->status.rates[i].idx = rate_idx - i;
+> +		tx_info->status.rates[i].idx = rate_idx;
+>  		tx_info->status.rates[i].flags = rate_flags;
+>  
+> -		if (rate_idx - i == 0) {
+> +		if (rate_idx == 0) {
+>  			/*
+>  			 * The lowest rate (index 0) was used until the
+>  			 * number of max retries was reached.
+> @@ -340,8 +340,18 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
+>  			tx_info->status.rates[i].count = retry_rates - i;
+>  			i++;
+>  			break;
+> +		} else if (rate_idx == 16) {
+> +			/*
+> +			 * TX_FBK_CFG_3S_0 makes MCS16 fall back to MCS8 on
+> +			 * devices with 3 TX chains, the decrement below shifts
+> +			 * it back to 8.
+> +			 */
+> +			if (rt2x00_is_3t(rt2x00dev) &&
+> +			    (rate_flags & IEEE80211_TX_RC_MCS))
+> +				rate_idx = 9;
+>  		}
+>  		tx_info->status.rates[i].count = 1;
+> +		rate_idx--;
+>  	}
+>  	if (i < (IEEE80211_TX_MAX_RATES - 1))
+>  		tx_info->status.rates[i].idx = -1; /* terminate */
+> -- 
+> 2.53.0
+> 
