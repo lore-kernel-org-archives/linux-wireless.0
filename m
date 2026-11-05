@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793878962;
-	b=wT/XadydeQeBuFy7DsD0UiYk3ADtVruFucXZiTw6VfhKGJQc4b8RhxTetjPod8inJKx3
-	 NWljKmjdq4aAIuog0RcsVVb9fyaX6/kJha+rNFZ58j6Tz+vfT6dZ27JlGkqhHltY2cCRa
-	 KHV0hc+vsIJ/brgRIRZXV49BxwXbwZvtpt7uY+oWRy9X5oXG+IF1rRoSXn27F5h79gyhm
-	 oBPpv2tHMv/65ZtR04lyf6sBubcpBhs0LiXLhmHDxSkvIkFCL5L9RRKN82aOpIR0OXSo3
-	 Z4YJDbmp8CaP8RZB3RY6JXsYeTZi4epCLA5pj1cKswX0j3NNnYPVunio6Qg7S5o1hDQ==
+	t=1793878965;
+	b=E23y5Dh0LvlTYSlflk1cfaRgsrBPIv9+AZEhejhMvfnKAfqAoVAyvRIgGErSxFWx/vkj
+	 +st3i3PxPs4XEkTfiFD/cxKdufe3nIpF64fmUAyY63sMm147/0TLp4kyVsvQcDNv8zN64
+	 kyu9v0JRfm3v0SjBOA3LLzYAo2E8JGiulJSUcGW3CS5izJj8K2ZQpH1Ql5RjwVr/zLBKX
+	 gvmTAcGmhh35JdBtKWhja5EhjWs8b9G+olBA6nW8JcwIgkPqPg5dp9/6/WiLWl4S++Hp1
+	 6gVWmn8wXwb+y3SpCMeoSnZ3w9MUE3WAnnmipYpAJfIUJkIYRdCWmRsNWVcsRpIuzYw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793878962;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793878965;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=q/Qxk6NeWhoD49CZMGNhUQK3Ye1Uhy5tudrbI2veMqg=;
-	b=yb/G7HuF7PCveQrq8XpHxXMQP5cLmcZM+Q3BnW7nJRmA4zqX5m4dcTxPMTlQGlU5HYSV
-	 es5zV4yyq74IaL2xbFJQVFQf4xKMsJk/npuFmFjXyd3006lSFBvWe+ciKblzLJdK1UUC3
-	 XX9SXL01B0jHXHIHUuOrfTjD9xMo+q6Cvui1fLaho2K/WXV53sbCz/1Yi3vrm3v2liPVC
-	 bReLypLFxz+79BjztdX1ur4Tn8diBK5c2OqVvgf0VoSekFbGoZGYr13I5kkmEJ/pduYoZ
-	 dAoEZqGM9qHjdvY6ov+eMRzezNgpryq0lw/aSbD9b4b6AN+TD8wQKFBdkbNWwE4WMtw==
+	bh=Uf1oZV9pQvGrEUvi8XtIeuSa56tR9ySw+fDX7XP+CMk=;
+	b=mjBxzr0IRfTuHjOkaAF+dqa4VF6+2oTOm7oWlTM4Cnp/PBIG+aHEsTieoRVjaPPzLszR
+	 pD51WD6LFjcNcZVy2owVjEEK//i1cuhxkOK8EHOK0Oi/FMbOJsWOROo+oyu6S3MUUZWVy
+	 w4iaH6xwp21r4bFdttQpmYj2PgcYvMwYIhDqqriKEs5WlG5D1mwOKHNNC87sbXyzhD5qr
+	 VZMExZaVcs75Xy4GWV1Y+8ugUc2Pa9hxMjxQ4JE/45waLL0dhouX0s+DjWI4TQ+8kNODg
+	 GRH1N+ZzyDaYRECYWrTl90Hxzx7UM00k99yKVBhZf7oqXp/0O36sjn9qnkEND5wIcLQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UW7yjrIx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RnInfvfx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26D1E606A337;
-	Thu,  5 Nov 2026 11:42:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61CA9606D809;
+	Thu,  5 Nov 2026 11:42:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UW7yjrIx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E152E1F000C1;
-	Thu,  5 Nov 2026 11:42:40 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RnInfvfx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62A431F000C1;
+	Thu,  5 Nov 2026 11:42:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793878961;
-	bh=q/Qxk6NeWhoD49CZMGNhUQK3Ye1Uhy5tudrbI2veMqg=;
+	s=k20260515; t=1793878965;
+	bh=Uf1oZV9pQvGrEUvi8XtIeuSa56tR9ySw+fDX7XP+CMk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UW7yjrIxoMuhKqJCMOf168PwSNa9h/+jej36Fcd/LWKz5NuA9QtRSYRCMSNZd7xvT
-	 jjcrXib9VxfxHay7RdARYM8NeU7zB0bpwGwwYgzD0CvNPnXv/GLWtp2jAQT48bHD7c
-	 tyeFBzdliTt5BAw3wlKkrQR+vugiNfVUR38D88DQyDcjJfsvxOt8nVfm/MhstM8+TS
-	 AK53IyoMUg23I94IuY9b8bE+ecVbmF/PCb3YYyz3iMsn0TvN96HrYZhD0ZXbDQn4U8
-	 ZQ+r3uBNwMmpMzz06/7ItmYDusnSaVPAiPDlo7jBWoXZuaJurDJCWMhQghPLntFzVc
-	 IF5WqejG+eXSg==
+	b=RnInfvfxHXtvO4dD2rpgLRRjDe8FtQGLLRwQ8XylHDziicCqsNVQ5WQrmbaLGX6vY
+	 zCXyGQq/kPlFlMojAMi9XImf5AAA8FMsyc8xKVMxzmLW5CKJzFa+SCHdWImWnC50wO
+	 twOGlGdhGEOOmy8M7brqom2qCMFDApBMHYhcTP1rns8FA7AtPo3HgR+JWHD36IHylV
+	 VfgZjUiISKYbQeQTkbTweQ3xkeHCT/DWFVYl5hFXfmVJ0XG1MAvJbjghyIEDJsZXMF
+	 ekz3UjPPpd4mHzRAGT6qzsEjrEhh0pw6QnVTjASyaukekBZzUdAF0/whpYf2ASVRmf
+	 xp4H1OKTG4jkQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -82,9 +82,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH 02/17] Input: serio - attach manual drivers through the driver core
-Date: Thu,  5 Nov 2026 13:42:15 +0200
-Message-ID: <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
+Subject: [PATCH 03/17] net: phy: Attach generic PHY drivers through the driver core
+Date: Thu,  5 Nov 2026 13:42:16 +0200
+Message-ID: <20261105-device-trust-core-v1-3-1e536825b4eb@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
@@ -103,54 +103,226 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Manual serio binding connects a driver before driver core can admit the
-device. A rejected binding therefore arrives after functional setup.
+The generic PHY fallback probes directly before publishing its binding,
+bypassing driver-core admission and supplier checks.
 
-Keep the port ID check and use device_driver_attach() for the existing bus
-probe path. Driver core then serializes admission and handles probe failure
-before publishing the binding.
+Attach through the driver core so admission precedes functional setup.
+Callers hold RTNL, which a concurrent bind of a specific driver may wait
+for with the device lock held, so for this flow let's add
+device_driver_try_attach() so the attachment never waits for that lock.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/input/serio/serio.c | 24 +++---------------------
- 1 file changed, 3 insertions(+), 21 deletions(-)
+ drivers/base/dd.c            | 65 +++++++++++++++++++++++++++++++++++++-------
+ drivers/net/phy/phy_device.c | 39 +++++++++++++++++---------
+ include/linux/device.h       |  2 ++
+ 3 files changed, 83 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
-index 54dd26249b027..604440244c1ca 100644
---- a/drivers/input/serio/serio.c
-+++ b/drivers/input/serio/serio.c
-@@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
- 
- static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
- {
--	int error;
--
--	if (serio_match_port(drv->id_table, serio)) {
--
--		serio->dev.driver = &drv->driver;
--		if (serio_connect_driver(serio, drv)) {
--			serio->dev.driver = NULL;
--			return -ENODEV;
--		}
-+	if (!serio_match_port(drv->id_table, serio))
-+		return 0;
- 
--		error = device_bind_driver(&serio->dev);
--		if (error) {
--			dev_warn(&serio->dev,
--				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
--				 serio->phys, serio->name,
--				 drv->description, error);
--			serio_disconnect_driver(serio);
--			serio->dev.driver = NULL;
--			return error;
--		}
--	}
--	return 0;
-+	return device_driver_attach(&drv->driver, &serio->dev);
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 52123251965de..01026e02de92e 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -1046,6 +1046,25 @@ static void __device_driver_lock(struct device *dev, struct device *parent)
+ 	device_lock(dev);
  }
  
- static void serio_find_driver(struct serio *serio)
++/*
++ * __device_driver_trylock - __device_driver_lock() without sleeping
++ *
++ * Returns true if the locks were taken.
++ */
++static bool __device_driver_trylock(struct device *dev, struct device *parent)
++{
++	if (dev->type && dev->type->need_parent_lock && parent) {
++		if (!device_trylock(parent))
++			return false;
++		if (!device_trylock(dev)) {
++			device_unlock(parent);
++			return false;
++		}
++		return true;
++	}
++	return device_trylock(dev);
++}
++
+ /*
+  * __device_driver_unlock - release locks needed to manipulate dev->drv
+  * @dev: Device we will update driver info for
+@@ -1195,19 +1214,17 @@ void device_initial_probe(struct device *dev)
+ 	subsys_put(sp);
+ }
+ 
+-/**
+- * device_driver_attach - attach a specific driver to a specific device
+- * @drv: Driver to attach
+- * @dev: Device to attach it to
+- *
+- * Manually attach driver to a device. Will acquire both @dev lock and
+- * @dev->parent lock if needed. Returns 0 on success, -ERR on failure.
+- */
+-int device_driver_attach(const struct device_driver *drv, struct device *dev)
++static int __device_driver_attach(const struct device_driver *drv,
++				  struct device *dev, bool trylock)
+ {
+ 	int ret;
+ 
+-	__device_driver_lock(dev, dev->parent);
++	if (trylock) {
++		if (!__device_driver_trylock(dev, dev->parent))
++			return -EBUSY;
++	} else {
++		__device_driver_lock(dev, dev->parent);
++	}
+ 	ret = __driver_probe_device(drv, dev);
+ 	__device_driver_unlock(dev, dev->parent);
+ 
+@@ -1218,8 +1235,36 @@ int device_driver_attach(const struct device_driver *drv, struct device *dev)
+ 		return -EAGAIN;
+ 	return ret;
+ }
++
++/**
++ * device_driver_attach - attach a specific driver to a specific device
++ * @drv: Driver to attach
++ * @dev: Device to attach it to
++ *
++ * Manually attach driver to a device. Will acquire both @dev lock and
++ * @dev->parent lock if needed. Returns 0 on success, -ERR on failure.
++ */
++int device_driver_attach(const struct device_driver *drv, struct device *dev)
++{
++	return __device_driver_attach(drv, dev, false);
++}
+ EXPORT_SYMBOL_GPL(device_driver_attach);
+ 
++/**
++ * device_driver_try_attach - attach a specific driver without waiting for locks
++ * @drv: Driver to attach
++ * @dev: Device to attach it to
++ *
++ * Like device_driver_attach(), for callers that hold a lock which the holder
++ * of the @dev or @dev->parent lock may wait for. Returns -EBUSY, before any
++ * probing, if one of those locks is contended.
++ */
++int device_driver_try_attach(const struct device_driver *drv, struct device *dev)
++{
++	return __device_driver_attach(drv, dev, true);
++}
++EXPORT_SYMBOL_GPL(device_driver_try_attach);
++
+ static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
+ {
+ 	struct device *dev = _dev;
+diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
+index 5d4508bcfbe99..8cc0de755bd08 100644
+--- a/drivers/net/phy/phy_device.c
++++ b/drivers/net/phy/phy_device.c
+@@ -1912,7 +1912,9 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	struct device *d = &phydev->mdio.dev;
+ 	struct module *ndev_owner = NULL;
+ 	struct module *drv_owner;
++	struct device_driver *drv;
+ 	int irq = phydev->irq;
++	bool bind_genphy;
+ 	int err;
+ 
+ 	/* For Ethernet device drivers that register their own MDIO bus, we
+@@ -1939,16 +1941,16 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	/* Assume that if there is no driver, that it doesn't
+ 	 * exist, and we should use the genphy driver.
+ 	 */
+-	if (!d->driver) {
++	drv = d->driver;
++	bind_genphy = !drv;
++	if (bind_genphy) {
+ 		if (phydev->is_c45)
+-			d->driver = &genphy_c45_driver.mdiodrv.driver;
++			drv = &genphy_c45_driver.mdiodrv.driver;
+ 		else
+-			d->driver = &genphy_driver.mdiodrv.driver;
+-
+-		phydev->is_genphy_driven = 1;
++			drv = &genphy_driver.mdiodrv.driver;
+ 	}
+ 
+-	drv_owner = d->driver->owner;
++	drv_owner = drv->owner;
+ 	if (!try_module_get(drv_owner)) {
+ 		phydev_err(phydev, "failed to get the device driver module\n");
+ 		err = -EIO;
+@@ -1956,11 +1958,20 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	}
+ 	phydev->drv_owner = drv_owner;
+ 
+-	if (phydev->is_genphy_driven) {
+-		err = d->driver->probe(d);
+-		if (err >= 0)
+-			err = device_bind_driver(d);
+-
++	if (bind_genphy) {
++		/*
++		 * RTNL is held, and a concurrent bind of a specific driver may
++		 * wait for it with the device lock held. Never wait for that
++		 * lock, and let the caller retry.
++		 */
++		err = device_driver_try_attach(drv, d);
++		if (err == -EBUSY) {
++			/* Another bind owns the PHY, so nothing was probed here. */
++			irq = phydev->irq;
++			err = -EPROBE_DEFER;
++		} else if (err == -EAGAIN) {
++			err = -EPROBE_DEFER;
++		}
+ 		if (err)
+ 			goto error_module_put;
+ 	}
+@@ -2071,8 +2082,6 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	module_put(phydev->drv_owner);
+ 	phydev->drv_owner = NULL;
+ 	phydev->irq = irq;
+-	phydev->is_genphy_driven = 0;
+-	d->driver = NULL;
+ error_put_device:
+ 	put_device(d);
+ 	if (ndev_owner != bus->owner)
+@@ -3813,6 +3822,8 @@ static int phy_probe(struct device *dev)
+ 	int err = 0;
+ 
+ 	phydev->drv = phydrv;
++	phydev->is_genphy_driven = phydrv == &genphy_driver ||
++				 phydrv == &genphy_c45_driver;
+ 
+ 	/* Disable the interrupt if the PHY doesn't support it
+ 	 * but the interrupt is still a valid one
+@@ -3949,6 +3960,7 @@ static int phy_probe(struct device *dev)
+ out_reset:
+ 	/* Re-assert the reset signal on error */
+ 	phy_device_reset(phydev, 1);
++	phydev->is_genphy_driven = 0;
+ 
+ 	return err;
+ }
+@@ -3977,6 +3989,7 @@ static int phy_remove(struct device *dev)
+ 	phy_device_reset(phydev, 1);
+ 
+ 	phydev->drv = NULL;
++	phydev->is_genphy_driven = 0;
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 429e39f647cf9..4cf62d69eac4f 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -1314,6 +1314,8 @@ static inline void *dev_get_platdata(const struct device *dev)
+  */
+ int __must_check device_driver_attach(const struct device_driver *drv,
+ 				      struct device *dev);
++int __must_check device_driver_try_attach(const struct device_driver *drv,
++					  struct device *dev);
+ int __must_check device_bind_driver(struct device *dev);
+ void device_release_driver(struct device *dev);
+ int  __must_check device_attach(struct device *dev);
 
 -- 
 2.56.0
