@@ -1,126 +1,112 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793909063;
-	b=tXGkOk2HwQr07EvjqxwTK4Ng29ELXvMj/zb/OOhLgV2yJzbKulHZHQ5HeXlEYpmDMcky
-	 eTk/fiHAGPQlgpjJi9iS0xUCvI4w/hIqwHCwVg4l2tKdbbJ+cWZ5bp9qEcPZiSJtl/2E9
-	 93u1BuDTMrXF5PTnzX0lvgE0TXxh1ELG12t8L0OhkntoUhzC/HoQXH9eterNAZ7rP9EJz
-	 IjXsjOkDEp0E9eu2/alKBb07GmnZjhkPLeZAya2mD3vn3mwAV6S8JvIa/bnUs9F2qJnp9
-	 ysOB4Dv+/cVJiLFTQahWTTMgv4JdZTr2pXI6yqrBayud2R37bOaQhqKcZ5NMrh5e2zQ==
+	t=1793910900;
+	b=25qQjX9elgnDrcuZJ8v0EJi61e4R91q2bfy9IwQnUjIGXZNFvPQvnS7mNYtjucTxwqE2
+	 gJ3eHJtq7qS1XlcxWX6Mpo5AHGRTSP1M6eA5JN2fB5P4oFIQiKdvsqJalCzyFsgmS9nTr
+	 /pN7iTQQ3Bzf+uenar0UN0U9OxghExdKjvieuEPV1RI9I164sgqVR8WdsPTgotRqYzCzo
+	 l3YcVyf+DTUBk4NiKxvflt3y7Itv0vIrQeXMPRvKuQA6N9Ajgp1XJuWWF3udD6VbY1t1S
+	 RMsrHRvScuYR0zXO2Xv3hoJpQrj0wIrSjlC135A1oCC3JcjDYZeCKPFCB6QubTQ7PcA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793909063;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793910900;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=Aw5degZrQHo3V3rpws5+g22RRHe/seP3Fa1C54u6MN0=;
-	b=JrsDpPgLWnd+b2Q6yWrBrOWr5lOBPuwHAUFa92+w776fPAUaGxosVc1ghhi4WAL4vXRc
-	 kYAwzqci1hOeNcxfoWUNv9kFb75bbHXkwsFD/wVeEUMDfnQA46F4yJtEyzf+McqdVnVdo
-	 gDRfWXhRwiH/JTp5yN7QVUucRUojtiYCrj6O2Hu9M+30DwaO7Oqkbe1jXEr5rggbDoHRh
-	 dsFp2nlOSrunZY8gpWGLoHNGfganRg0F6wFXlN6zKQRIkglg5Nck/YWxdufivSmD1ssGT
-	 A3Xr6TMVD088xfJ+Xu4G5UDI240HEgLDPDt0OWCpoD9FhlPkSZy7Oq5qL511ngbh3Vw==
+	bh=aFjl/l4WKV+VfugNVUlnSUSxj2ZFcfM53muFdv6vcfQ=;
+	b=SEO+LrXFl+NOjSr1YaqrRiXRm7EgoaeN6eEIr6v47R7K+uaEJZuH2RRCux7M0d0+VAo7
+	 EVYOALt2yYlR61SfhxDyuXdcWxxzIIv4FrJhF88tRFWeeXY5xQbw9eVHbtTFlOgliTeMH
+	 eNEMcuG/LMLxz+faj3K25S/z7SRrFwUHmRboZLwA7tWvbORmtb9DfYctxpsbOu5reF+bQ
+	 OiR2kFGp4NV2oHYiJmiDqh/EXLz5QtoE/jMSoTw6HnZVwDiFVEJ0DfhoDsmWSNP8uEEcd
+	 W/JzWyTVSvw4ulQWbAnKfrsK6JIt2tqRK6W2ldfycS/rmbK4NGrR/ZmL9QfIqBvvfow==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rowland.harvard.edu;
-	spf=fail smtp.mailfrom=g.harvard.edu;
-	dkim=pass header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.a=rsa-sha256 header.s=google header.b="l7XvB/r0";
-	arc=none smtp.remote-ip=209.85.160.173
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tfDV8RqH;
+	arc=none smtp.remote-ip=74.125.82.41
+Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ADA4606A31B
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 20:04:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2ADA4606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B971E606A32C
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 20:34:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B971E606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.a=rsa-sha256 header.s=google header.b=l7XvB/r0
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-53397554beaso21893541cf.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 12:04:23 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tfDV8RqH
+Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-1a3c08d6928so621c88.0
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 12:34:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1793909062; x=1794513862; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793910899; x=1794515699; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Aw5degZrQHo3V3rpws5+g22RRHe/seP3Fa1C54u6MN0=;
-        b=l7XvB/r0EAsfmkvKwLXi9U+FCv4znlZ1uWBgyBwXXZBCaUNdokUJy53RUHWJ+2kEWT
-         BpwprXNHONWGHOvIsaDTpZHtcB6XsAeWhewDJaNhuiB2euiyoU1AbjQlFtg5R3UAb8Zl
-         j9ild+5nUdzM5UZbj7mYag8Dctagcxk6YhEm1Nh61f0Vznb26vlUpjb7sFwe3CVlNOPl
-         SyOS6Mi1UVvjAAp7m7mMB3CBgWNbht54CQ+BOwi4rfm1nRGeYFie5joT1aagUt7j+5ki
-         VjKs1rKf0ER8mcU7zk1mritepu2DeojMvspSrsP6rAbky9P1uX094nTddzM3XtqlzsCQ
-         csmA==
+        bh=aFjl/l4WKV+VfugNVUlnSUSxj2ZFcfM53muFdv6vcfQ=;
+        b=tfDV8RqHdxq2Tir67Fgi3R8YmRMnkFni198pbJyN+2f/wlgyg1u3H/zAskp5NHkOv7
+         tIdkAuAZ8WUJ1kMmFVB+y6fHOz8B/caj8wD6aThvegmX02BzNu06iJykZNQp0y6aCkds
+         RlikDnWVU951ugzrT3mYdlzvFKlHh7U4jsRYSXIG1h4+jf8Ji6Bx4VcBvQSsJCCbdeY9
+         mB7Z2NGEfuJN8Celqb7oNC5peWi2IHdFiN3NSUJbZlwldHAE4GnOhIkhY+aC2WxclROa
+         S4gSdge+AsM35XlqkfzkRHJ1/+Vy2cjQlMpoMljhOELSER57fCOwoNKU+WxKYNt0B3OE
+         B7JQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793909062; x=1794513862;
+        d=1e100.net; s=20260707; t=1793910899; x=1794515699;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Aw5degZrQHo3V3rpws5+g22RRHe/seP3Fa1C54u6MN0=;
-        b=ld4L0MErfJ4UnTfCETjpjVbaDnHFPjWUDD9ZtSi7tXyz5DLqo8DhLorqnzV/hjPWJC
-         C1cymRfKGj21qZ4VzEiN6HXWF79u+Vk4xjcVzGzNKUSu6SwJmvVUFNam0jMjRqAZNRgN
-         9al5CGyrViVI8h4Yaux68nrSuH19Am3KAaBh02yU9Np+23qgEsXX2w4jJfsG9i9dNhXl
-         8dAbjZwO2IkBAputUo6NJxz6+RX6T0WyNYbTXS1KVYVe42nesITEGDPXdpPYh5nwsrib
-         ufG/iSY8M5cH7pWANThga3uKx2q/FzZjc8JPhKpErunOToOdn71pMh/I3aW85udsVq5e
-         jTWw==
-X-Forwarded-Encrypted: i=1; AKwUvBwM/k69tZ07UIDPZkjd2PCI92ETadBLuOHw2KXzOs/w9qj0Yu6TwlVRolbY77fY7I5ecK9fWo96BX4ySZGBCg==@vger.kernel.org
-X-Gm-Message-State: APuU4Z/bYjjHkw7B4b4ETyDvInzIquSrfu02fs5LezFuImqULdgkFpgk
-	Mg3l3nprrfmBbFfGWOqcTGiMzr94k1NTYbeJlGSg2TxSg2mp1W9y3GSf8BnAZY583g==
-X-Gm-Gg: AYBFou22jNmh6T6JH7KVtNgEKN1ThbS79gjyc+GCfIQcLUzlZcp8jImkdfL7JPzELpa
-	KRwQSVIV2U3vsnIbEaRNOmVAci0GAR9N7CE1pez1+k4GjZ9r+VaUdNPOzRNhcoWgoon6lFxs/Yt
-	xhL3REiAjSwKPcySwum7385RTxMthxBP6xp6DUQiIButSEls5VdDdSVMKA+DsMI29N8N6bO/iiW
-	qctDCQV314fRhAlOEMrAzBWvm/sJeZveN4brfmLkQomqaAgn+50/HXhLBfLu4CZGTVajW9drpUD
-	+2NOUJOQEua0Syg3d6Ox9IwnH5qj+Nnw3nLoFhWWvmBG1gzitUzfS3zJ+xIVzynCtHklT/nWoE+
-	UGiuKO8Uf9KgL6m6z7OLQrgt5h80aPaICU9Djr/Uk3O92Fclqljq3xXYmhJrL8Uq0nOYfTlv9mE
-	rkPhZ0jisom0x5BzG0KHBjKMTbwxVoroIzzJpPRB9dTkw58f5ciLI4EqQTNP8Glo0yIqpMZDh08
-	CA0hEv762qQ4KpCOaa+2mBkgnXKITD+ET1zxiYcK8ySbUAp48uocxfINnSWdBBFAUGXw6+Q+YgH
-	cDn/fbyWN9D02EtbYrfsVKGz8aYo
-X-Received: by 2002:a05:622a:418d:b0:536:60e1:c87d with SMTP id d75a77b69052e-54e14266a2dmr6509601cf.35.1793909061778;
-        Thu, 05 Nov 2026 12:04:21 -0800 (PST)
-Received: from rowland.harvard.edu ([2601:19b:d01:d210::66b0])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-54e270167afsm1403061cf.25.2026.11.05.12.04.19
+        bh=aFjl/l4WKV+VfugNVUlnSUSxj2ZFcfM53muFdv6vcfQ=;
+        b=arXqwCPmxerxghRJEfO9zG000gwlp9I/eorpUuKZgQjH8dnkzn/PKqjhPGf+2btskc
+         aYTEKZkDVH+ETceEQ5LL0OTKT+C5FfJ4JKlQ0P7UnY+PANXdxtY3r3vv/ICGtexorgau
+         ZtX//RgM05ivCnOIEnXP70aeTDjx2Nn31Qvd/89SYSCVyU3VU3U6XiYKFAr+ALzk4BGH
+         7j7dceF00GikuoFxlhQ7qcihM9js8+umPXkEbA4kpXWO44M/cm/xlj+CFb38GpziSG+j
+         5eZDMN4ghy4W1fI8CN2SxwWhAqNUGbDX8per6j5y20JGvI9n9f0EF58pD9PU6yaYZXV3
+         lI3g==
+X-Forwarded-Encrypted: i=1; AKwUvBzWAXyUzl1gmnQNVwr9s8x5Ay7BwfmDhWJ2e6m5nYwVe7Us86xZk2CrpBlcKKaTdF/ecrKqYJh0fPbB34jH5w==@vger.kernel.org
+X-Gm-Message-State: APuU4Z/hsxs70TvwYeTmc+xdDi82U5AkZ2p1mZF2V0g47URIYrnCparq
+	rRRhA8UVkdtQum5lQZA8Cwus5DSGdWnDBOMLsypgy9j7Y3P+CWqBNGpI
+X-Gm-Gg: AYBFou3JJ8e7Z8UI3awQIimgbnA2EZHPs5inZP1F5ZX+pXhC7n4SnEQ/lWsBc75WsZO
+	y1O3tZPW7iGb1cRXkkP/RoZ8oXRJ2eCzvU8dJBAeupgAZIHtECUXXGdUoh0u1gq6rIJieYnxvIN
+	98HwAJNYK2JsLP/ls4rkkYU8SzgusXhJJW6RlpkU5UvlijLjcOpVGM//u7dTOtQAicJ+N4vex7q
+	WJ4VdIpuDrKvtvVBs/JFMgbsRfcxFvQiEjmJWFaNnUzOdcykHWJZzZq+e/Ul+5MEyZ6D5o+ny5W
+	z8OzlE+DJlGsuiVmxDuyW1E2SYjH5ACCdDK9cIZ3wF+bTYuOiaC+x0jMCK9oGBW5DGtuecXM8Hy
+	afaULsZ2lvLl4ytafr6nODa+0t8wQ1BSlIrvKClYmGWzQ1mxIYrcn/LFXapYibk/qYNGGeixbjX
+	ffGEb96GJYSX8kPbbLjcY+8nq7QKGQ/DzDOR9uVA7JiUE75Em1yNQ5a2JhVVjtw2VDV2ToN48Yi
+	m2MgwENo5GjUQ2WX0Y1JSRac3hxQ2TonAMnFxXPQAnTjJvFVlrQ5gikgLrOrFfLW+H2+10dsuRL
+	0AKGOYtWi9qMvYSwIDk5Zm/7BiH5PbyoWbzqIanBRd+slCUnEn1liCvBqbzCMATnr2JRPxM=
+X-Received: by 2002:a05:701b:2050:20b0:166:5552:780a with SMTP id a92af1059eb24-1b25d31e5a2mr163714c88.8.1793910898553;
+        Thu, 05 Nov 2026 12:34:58 -0800 (PST)
+Received: from google.com ([2a00:79e0:2ebe:8:c8f4:b7d9:252f:4483])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36f722ed274sm649631eec.18.2026.11.05.12.34.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 12:04:21 -0800 (PST)
-Date: Thu, 5 Nov 2026 15:04:18 -0500
-From: Alan Stern <stern@rowland.harvard.edu>
+        Thu, 05 Nov 2026 12:34:57 -0800 (PST)
+Date: Thu, 5 Nov 2026 12:34:53 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 05/17] USB: Lock registered interfaces during manual
- driver binding
-Message-ID: <bf756e50-c77e-40f2-916d-e88887426806@rowland.harvard.edu>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
+	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	"David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Johannes Berg <johannes@sipsolutions.net>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Randy Dunlap <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Joerg Roedel (AMD)" <joro@8bytes.org>, Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, 
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>, 
+	Lu Baolu <baolu.lu@linux.intel.com>, Johan Hovold <johan@kernel.org>, 
+	Eric Dumazet <edumazet@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Nipun Gupta <nipun.gupta@amd.com>, 
+	Nikhil Agarwal <nikhil.agarwal@amd.com>, Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>, 
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, linux-input@vger.kernel.org, 
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 02/17] Input: serio - attach manual drivers through the
+ driver core
+Message-ID: <auzno3uoL5Pfojfl@google.com>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-5-1e536825b4eb@nvidia.com>
- <bb83fe3c-cebb-4bc8-bfc9-24df1cf72b0b@rowland.harvard.edu>
- <20261105184442.GF8298@unreal>
+ <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
+ <auy2plYVi723Qt42@google.com>
+ <20261105191940.GI8298@unreal>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -132,105 +118,77 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261105184442.GF8298@unreal>
+In-Reply-To: <20261105191940.GI8298@unreal>
 
-On Thu, Nov 05, 2026 at 08:44:42PM +0200, Leon Romanovsky wrote:
-> On Thu, Nov 05, 2026 at 12:24:33PM -0500, Alan Stern wrote:
-> > On Thu, Nov 05, 2026 at 01:42:18PM +0200, Leon Romanovsky wrote:
+On Thu, Nov 05, 2026 at 09:19:40PM +0200, Leon Romanovsky wrote:
+> On Thu, Nov 05, 2026 at 09:05:29AM -0800, Dmitry Torokhov wrote:
+> > On Thu, Nov 05, 2026 at 01:42:15PM +0200, Leon Romanovsky wrote:
 > > > From: Leon Romanovsky <leonro@nvidia.com>
 > > > 
-> > > Interface claims hold the USB device lock, but device_bind_driver()
-> > > requires the target interface lock. Without it, trust-policy writes can
-> > > race admission.
-> > 
-> > This says nothing about usb_driver_release_refused_claim() and the code 
-> > related to it.  It is an incomplete description of the patch.
-> > 
-> > Note that nothing prevents drivers from using an interface they claim 
-> > before that interface is registered.  For your scheme to work properly, 
-> > you should make sure the claim is authorized when 
-> > usb_driver_claim_interface() is called, not when the interface is 
-> > registered.
-> 
-> This patch is unrelated to authorization;
-
-I meant "authorization" in its generic sense.  When you don't trust 
-something, you don't authorize it to do anything.  Pretend I had written 
-"the interface being claimed is trusted" in place of "the claim is 
-authorized" above.
-
->  it ensures that the lock is
-> acquired when the driver is bound.
-
-That may have been your intention when the patch was created, but if you 
-read the patch you'll see that it includes a whole bunch of material 
-not related to locking during binding.  Namely, this part:
-
-> > > +/*
-> > > + * The driver core refused to bind an interface that a sibling claimed before
-> > > + * it was registered, and dropped the claim. Let the claimant release the
-> > > + * interface instead of operating it with a bound interface but no driver.
-> > > + */
-> > > +void usb_driver_release_refused_claim(struct usb_interface *iface,
-> > > +				      struct device_driver *claimant)
-> > > +{
-> > > +	struct device *dev = &iface->dev;
-> > > +
-> > > +	device_lock(dev);
-> > > +	if (!dev->driver && iface->condition == USB_INTERFACE_BOUND) {
-> > > +		dev->driver = claimant;
-> > > +		usb_unbind_interface(dev);
-> > > +		dev_set_drvdata(dev, NULL);
-> > > +		dev->driver = NULL;
-> > > +	}
-> > > +	device_unlock(dev);
-> > > +}
-> > > +
-> > >  /* returns 0 if no match, 1 if match */
-> > >  int usb_match_device(struct usb_device *dev, const struct usb_device_id *id)
-> > >  {
-> > > diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-> > > index a738d03c23eac..d35a7710c8ef4 100644
-> > > --- a/drivers/usb/core/message.c
-> > > +++ b/drivers/usb/core/message.c
-> > > @@ -2264,6 +2264,7 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> > >  	 */
-> > >  	for (i = 0; i < nintf; ++i) {
-> > >  		struct usb_interface *intf = cp->interface[i];
-> > > +		struct device_driver *claimant;
+> > > Manual serio binding connects a driver before driver core can admit the
+> > > device. A rejected binding therefore arrives after functional setup.
+> > > 
+> > > Keep the port ID check and use device_driver_attach() for the existing bus
+> > > probe path. Driver core then serializes admission and handles probe failure
+> > > before publishing the binding.
+> > > 
+> > > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> > > ---
+> > >  drivers/input/serio/serio.c | 24 +++---------------------
+> > >  1 file changed, 3 insertions(+), 21 deletions(-)
+> > > 
+> > > diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
+> > > index 54dd26249b027..604440244c1ca 100644
+> > > --- a/drivers/input/serio/serio.c
+> > > +++ b/drivers/input/serio/serio.c
+> > > @@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
 > > >  
-> > >  		if (intf->dev.of_node &&
-> > >  		    !of_device_is_available(intf->dev.of_node)) {
-> > > @@ -2277,7 +2278,14 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> > >  			dev_name(&intf->dev), configuration,
-> > >  			intf->cur_altsetting->desc.bInterfaceNumber);
-> > >  		device_enable_async_suspend(&intf->dev);
-> > > +		claimant = intf->dev.driver;
-> > > +		if (claimant && !try_module_get(claimant->owner))
-> > > +			claimant = NULL;
-> > >  		ret = device_add(&intf->dev);
-> > > +		if (!ret && claimant && !intf->dev.driver)
-> > > +			usb_driver_release_refused_claim(intf, claimant);
-> > > +		if (claimant)
-> > > +			module_put(claimant->owner);
-> > >  		if (ret != 0) {
-> > >  			dev_err(&dev->dev, "device_add(%s) --> %d\n",
-> > >  				dev_name(&intf->dev), ret);
-> > > diff --git a/drivers/usb/core/usb.h b/drivers/usb/core/usb.h
-> > > index a9b37aeb515be..293340a48b6c5 100644
-> > > --- a/drivers/usb/core/usb.h
-> > > +++ b/drivers/usb/core/usb.h
-> > > @@ -49,6 +49,8 @@ extern int usb_set_isoch_delay(struct usb_device *dev);
-> > >  extern int usb_get_bos_descriptor(struct usb_device *dev);
-> > >  extern void usb_release_bos_descriptor(struct usb_device *dev);
-> > >  extern int usb_set_configuration(struct usb_device *dev, int configuration);
-> > > +void usb_driver_release_refused_claim(struct usb_interface *iface,
-> > > +				      struct device_driver *claimant);
-> > >  extern int usb_choose_configuration(struct usb_device *udev);
-> > >  extern int usb_generic_driver_probe(struct usb_device *udev);
-> > >  extern void usb_generic_driver_disconnect(struct usb_device *udev);
+> > >  static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
+> > >  {
+> > > -	int error;
+> > > -
+> > > -	if (serio_match_port(drv->id_table, serio)) {
+> > > -
+> > > -		serio->dev.driver = &drv->driver;
+> > > -		if (serio_connect_driver(serio, drv)) {
+> > > -			serio->dev.driver = NULL;
+> > > -			return -ENODEV;
+> > > -		}
+> > > +	if (!serio_match_port(drv->id_table, serio))
+> > > +		return 0;
+> > >  
+> > > -		error = device_bind_driver(&serio->dev);
+> > > -		if (error) {
+> > > -			dev_warn(&serio->dev,
+> > > -				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
+> > > -				 serio->phys, serio->name,
+> > > -				 drv->description, error);
+> > > -			serio_disconnect_driver(serio);
+> > > -			serio->dev.driver = NULL;
+> > > -			return error;
+> > > -		}
+> > > -	}
+> > > -	return 0;
+> > > +	return device_driver_attach(&drv->driver, &serio->dev);
+> > 
+> > I am not sure how safe it is, serio (and gameport) have pretty elaborate
+> > structure and locking rules because they can recurse into themselves (to
+> > support case of Synaptics touch-pads with pass-through PS/2 ports).
+> > 
+> > But this call is for user-initiated probing anyways, I am not sure if it
+> > even needs "trust" handling.
+> 
+> This patch does not change the locking; the lock was already held on paths such
+> as the rescan path. This change makes that explicit.
 
-Was this meant to be two separate patches that somehow got combined into 
-one?
+Does this enforce synchronous probing?
 
-Alan Stern
+Anyway, I would like to get rid of this special probing in serio core.
+Given that the code path is only triggered by explicit user request I do
+not believe we need to worry about supporting trust notion here, so
+please drop it from the series.
+
+Thanks.
+
+-- 
+Dmitry
