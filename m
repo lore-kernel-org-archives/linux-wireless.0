@@ -1,61 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.12
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.77.101.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793866206;
-	b=L81b+QyndXdm5hiJddKqrWk7KdvceZz954GD0Y9eohuAGW5A6vz6WyIvsKx32zm6GUo8
-	 SHPXfVzTTIMH3wN86zcpXn6CGChFY8/5UApJ/PWvGBSvdXOWQmnE+tIU0eCFF1os+Sg5u
-	 kNoP0R4TSWud3COjdggtWb/feKK1Jv677pjLv6kTrFTOVPMbROOKbjGE36E7w6A03GeWi
-	 QuKYw2LzFsjdDwZdA22MaPxaVjZ/+QS2hmSZh5r4uI58uuNYGKgwcMGiYRBta8tK48lg7
-	 isCOhZtDmhpgs1dodoM46sW9xOnB7YSfWWNNRiJh4tYVTYsBYxJmQKDTKg45Mn31LSA==
+	t=1793866809;
+	b=IrLq38T/7N7M0OivZb/Mr6TxhHJENTWFKDt+LYZI2D6iarPHkWnAYjlHtFzOSfjnEDqU
+	 c6sz63WgGf5AGGXaoF3PLY1jVvcyLqA9NW+Hpj7Zzuz3KhYXWiBsCeSfeJzXgv0RwIxY7
+	 xrJRh4COLgQR1eQVK8G7WkAnBEeD1N9HwfVpJUF3d/szdxhLsn9Aj/UbSCrMy9Gpu5aSc
+	 FJOEKQuRqpuKYZR/T/XrJaUpov1JWOMJMyRvMza6nffPaTXEDuzaF4c4AtYlyVWK1NnE2
+	 ErzXyMneLG7rkEg9CUqx9mcMSDnW5DxIrFbRaGlaZGhl3cMzh8sBwfJwtheaYMb7Ijw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793866206;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793866809;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To:X-WP-MailID:X-WP-AV:X-WP-SPAM;
-	bh=pPzxmMDpWSDaV8W3s4FdAc/v8tpRCB4PYKmWU6fSemM=;
-	b=KEmSYKCM+TaLYTnUgSfdOAhZOYz/hqUC71XyA4u/8oibkabidqSJ9HIprrZTyPAKzZAn
-	 ixADes6rzrvFG0QHeU85WiecVWIEaT64lTsBf2BOJOhX6xnjWZoxEZAp+55QO1KFYgeyx
-	 2ztndGX+eLS15ocnccX0/nkh4qf7lptFQt8BGssvojBbJlsEV9i6cnDe4u2LwPiNzolg0
-	 Heks9k6nz++SnjKdIMJAO7hHk1sNkWiK53i/nlkhS8LQzlJDMTjUdnLCuR93tadPnyRBw
-	 uOiy0B7kG/XgogON5AKhiMMpuRBBUCo+wipIfyaSt2QEt+ZmPzCGMp4SFKkeVZE5sSQ==
+	bh=l2JVBcPTCiTfYHlZ3fQ99n2ZH8W2gtmOLFdO5al9ZjM=;
+	b=TolFzesUJrEB+BpZjpnrCtGxcnOBSe1t6D/pm9KLdL+BAezpk6MuUlxaKRUiS5xlNJax
+	 haNGt2i8WZwQSQiYhXRbUOTpw9gMTcaH6on/QPAjhOvBsSwVM3HPykdLHfOfIXbnZ7faC
+	 ZdF1sOsUqJwxmy2sJZyV2NX2LJ+J1j8PHtf6z+v/YwwT72Z7NiI4IhaFamvsvIw2/Y6Dw
+	 NfNldWW1w6ktPf/xqHy+GiRegjz40LDyoSuHPlEreDvWBq4o4fJTYxymQyB+dju+NZr16
+	 2WawMNhp4XMNMaVn/oaSK8md/7hFosFK0sNAnSAT4CLZqM8Kd80TPwOySuWZ+9S8rYQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=wp.pl;
 	spf=pass smtp.mailfrom=wp.pl;
-	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=kFjLGTSs;
-	arc=none smtp.remote-ip=212.77.101.12
-Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
+	dkim=pass header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b="QVf/bxyU";
+	arc=none smtp.remote-ip=212.77.101.9
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF061606A332
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 08:10:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF061606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48D9D606A31B
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 08:20:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 48D9D606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=kFjLGTSs
-Received: (wp-smtpd smtp.wp.pl 13302 invoked from network); 5 Nov 2026 09:10:00 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=wp.pl header.i=@wp.pl header.a=rsa-sha256 header.s=s20261001 header.b=QVf/bxyU
+Received: (wp-smtpd smtp.wp.pl 19237 invoked from network); 5 Nov 2026 09:20:05 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
-          t=1793866200; bh=pPzxmMDpWSDaV8W3s4FdAc/v8tpRCB4PYKmWU6fSemM=;
+          t=1793866805; bh=l2JVBcPTCiTfYHlZ3fQ99n2ZH8W2gtmOLFdO5al9ZjM=;
           h=From:To:Cc:Subject;
-          b=kFjLGTSs+ry8DE4tZu5U5w4yCGsSGddgD2NnNmfWle+0UJcbKGgSUaNrKbghsFFWt
-           I0VPdUHwWaE8W4VrayoIe5Mx0kSTAd7MQNEk4GiG5PDh3iBNYpk9LQg25VRKr3W+y7
-           bNbzSZ08iWfZX7PKU+m9xmFE7vj6rUb6yG03CJgVRStSsBHDnOYg0h+zZ7MBw1msIr
-           zwW4sLhNr2wsVuDcYjv9z/Ki4vWrucbyjETLXyZT1c4039JsEbrJg7CG/bvKruWvLB
-           ffIAd/UEwEffVIyvhkHX9nn8n9SWHMIdf9x5KJlN1nWG2lBGMOPKufDE4/O4bgKFdM
-           lRZp/Bjbwl4Ow==
+          b=QVf/bxyUopt+QSLQ5F7VvTWKeK0XYvyiR9x2YiFms/xQZc5nZIkIgpvdqwUkUlkYI
+           +FfpIVpntK7Tff2wiR+M7wUMan1mCMo2LO292VDy7ccvoGLJOR9jheOv5EMXb/lffI
+           gb2C5MF2igBVerw0cSOVZQPELmmnuN1pei+52IVr4y51OOFeVCEA39FiPGEExzT1FU
+           tY33CKJPkFPJ8iDELlZLBuoCx4OYzgJrxtFtgcLva84CzrfFm1vs671J2XT6tFB6B+
+           pfcVQuTFJ4vrIAWsg80SUHBLCIX4wNG7GyaFu6lLddqsNztN7DT573GhfL5kawkxuL
+           EtTA5BhL+5SKw==
 Received: from localhost (77-236-11-168.static.play.pl [77.236.11.168])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <hjf3108@gmail.com>; 5 Nov 2026 09:10:00 +0100
-Date: Thu, 5 Nov 2026 09:10:00 +0100
+          for <hjf3108@gmail.com>; 5 Nov 2026 09:20:05 +0100
+Date: Thu, 5 Nov 2026 09:20:05 +0100
 From: Stanislaw Gruszka <stf_xl@wp.pl>
 To: Ho Jie Feng <hjf3108@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-next v2 6/7] wifi: rt2800usb: enable RX bulk
- aggregation
-Message-ID: <20261105081000.GF64923@wp.pl>
+Subject: Re: [PATCH wireless-next v2 7/7] wifi: rt2x00usb: use a threaded
+ NAPI with GRO for RX
+Message-ID: <20261105082005.GG64923@wp.pl>
 References: <20261031165117.2868671-1-hjf3108@gmail.com>
- <20261031165117.2868671-7-hjf3108@gmail.com>
+ <20261031165117.2868671-8-hjf3108@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -67,122 +67,78 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261031165117.2868671-7-hjf3108@gmail.com>
-X-WP-MailID: c842c11c0585a80f5c1764f88a790da2
+In-Reply-To: <20261031165117.2868671-8-hjf3108@gmail.com>
+X-WP-MailID: 607961d4125142382bdef943e6499de2
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 000000A [IXME]                               
+X-WP-SPAM: NO 000000A [8TOE]                               
 
-On Sun, Nov 01, 2026 at 12:51:13AM +0800, Ho Jie Feng wrote:
-> Enable RX bulk aggregation on high speed USB, to receive more
-> frames per URB.
+On Sun, Nov 01, 2026 at 12:51:14AM +0800, Ho Jie Feng wrote:
+> GRO makes sense now that RX aggregation is enabled, since multiple
+> frames arrive at once.
 > 
-> RX buffers are now 24KB, so reduce it to 16 buffers instead of 128,
-> so that they take 512 KB in total instead of 4 MB.
+> This code is referenced from commit 5323d3e50c20
+> ("wifi: mt76: mt76u: use a threaded NAPI for the RX path")
 > 
 > Test results:
 >    before after
 > TX 30.5   30.5
-> RX 67.8   80.9
-> 
-> This code references the mt7601u driver.
-> 
+> RX 80.9   161.7
+
+What is the explanation for this gain?
+
+I tested on my devices and do not see RX performance gain.
+I would expect some benefits, but I don't see any and wonder why.
+Maybe on your setup CPU get saturated on single thread ?
+Or maybe I'm not testing traffic that benefits from this?
+
 > Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
 > ---
->  .../net/wireless/ralink/rt2x00/rt2800usb.c    | 32 +++++--
->  .../net/wireless/ralink/rt2x00/rt2800usb.h    |  6 ++
->  drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  3 +-
->  .../net/wireless/ralink/rt2x00/rt2x00dev.c    | 84 +++++++++++++------
->  .../net/wireless/ralink/rt2x00/rt2x00mmio.c   |  2 +-
->  .../net/wireless/ralink/rt2x00/rt2x00usb.c    |  5 +-
->  6 files changed, 100 insertions(+), 32 deletions(-)
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h   |  7 ++-
+>  .../net/wireless/ralink/rt2x00/rt2x00dev.c    |  6 ++-
+>  .../net/wireless/ralink/rt2x00/rt2x00usb.c    | 49 ++++++++++++++++---
+>  3 files changed, 52 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-> index 387c07e2251b7..2e4277b1e5d1b 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-> @@ -301,15 +301,15 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
->  		return -EIO;
->  
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_PHY_CLEAR, 0);
-> -	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN, 0);
-> +	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN,
-> +			   rt2x00dev->rx->usb_maxpacket == 512);
-
-Any idea why this condition ? We can not have aggregation on slower
-or faster USB?
-
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_TIMEOUT, 128);
->  	/*
->  	 * Total room for RX frames in kilobytes, PBF might still exceed
->  	 * this limit so reduce the number to prevent errors.
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> index 4c83168e9c169..25262b96c6941 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> @@ -955,9 +955,14 @@ struct rt2x00_dev {
+>  	/**
+>  	 * Scheduled work for TX/RX done handling (USB devices)
 >  	 */
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_LIMIT,
-> -			   ((rt2x00dev->rx->limit * DATA_FRAME_SIZE)
-> -			    / 1024) - 3);
-> +			   (rt2x00dev->rx->data_size / 1024) - 4);
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_EN, 1);
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_TX_BULK_EN, 1);
->  	rt2x00usb_register_write(rt2x00dev, USB_DMA_CFG, reg);
-> @@ -478,6 +478,27 @@ static void rt2800usb_work_txdone(struct work_struct *work)
->  /*
->   * RX control handlers
->   */
-> +static unsigned int rt2800usb_get_rx_seg_len(void *data, unsigned int len)
-> +{
-> +	unsigned int min_seg_len = RXINFO_DESC_SIZE + RXWI_DESC_SIZE_4WORDS +
-> +				   RXD_DESC_SIZE;
-> +	unsigned int rx_pkt_len;
-> +	u32 word;
-> +
-> +	if (len < min_seg_len)
-> +		return 0;
-> +
-> +	word = rt2x00_desc_read(data, 0);
-> +	rx_pkt_len = rt2x00_get_field32(word, RXINFO_W0_USB_DMA_RX_PKT_LEN);
-> +
-> +	if (!rx_pkt_len ||
-> +	    RXINFO_DESC_SIZE + rx_pkt_len + RXD_DESC_SIZE > len ||
-> +	    rx_pkt_len & 0x3)
-
-This is indication of we do something wrong, similar when len < min_seg_len.
-Maybe wrap those with WARN_ON_ONCE() ? 
-
->
-> +
-> +	return RXINFO_DESC_SIZE + rx_pkt_len + RXD_DESC_SIZE;
-> +}
-> +
->  static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  				  struct rxdone_entry_desc *rxdesc)
->  {
-> @@ -706,6 +727,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
->  	.clear_beacon		= rt2800_clear_beacon,
->  	.get_tx_data_len	= rt2800usb_get_tx_data_len,
->  	.fill_rxdone		= rt2800usb_fill_rxdone,
-> +	.get_rx_seg_len		= rt2800usb_get_rx_seg_len,
->  	.config_shared_key	= rt2800_config_shared_key,
->  	.config_pairwise_key	= rt2800_config_pairwise_key,
->  	.config_filter		= rt2800_config_filter,
-> @@ -725,8 +747,8 @@ static void rt2800usb_queue_init(struct data_queue *queue)
+> -	struct work_struct rxdone_work;
+>  	struct work_struct txdone_work;
 >  
->  	switch (queue->qid) {
->  	case QID_RX:
-> -		queue->limit = 128;
-> -		queue->data_size = AGGREGATION_SIZE;
-> +		queue->limit = 16;
-> +		queue->data_size = MAX_RXBULK_SIZE;
+> +	/*
+> +	 * NAPI context for RX done handling (USB devices).
+> +	 */
+> +	struct net_device *napi_dev;
+> +	struct napi_struct napi;
+> +
+>  	/*
+>  	 * Powersaving work
+>  	 */
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> index 8f02b62cecdf6..6226bcbf24e5b 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> @@ -847,7 +847,11 @@ static void rt2x00lib_rxdone_skb(struct queue_entry *entry)
+>  	rx_status->bw = rxdesc.bw;
+>  	rx_status->antenna = rt2x00dev->link.ant.active.rx;
+>  
+> -	ieee80211_rx_ni(rt2x00dev->hw, entry->skb);
+> +	if (rt2x00dev->napi_dev)
+> +		ieee80211_rx_napi(rt2x00dev->hw, NULL, entry->skb,
+> +				  &rt2x00dev->napi);
 
-Since we enable aggregation conditionally, this probably should also be
-conditional. But the issue is that we do not have 
-rt2x00dev->rx->usb_maxpacket value available yet.
+The docs for ieee80211_rx_napi() states:
 
-We could just enable aggregation unconditionally,
-but I'm not sure it will work with some older chips like RT2870?
+"Must not run concurrently with
+ieee80211_tx_status_skb() or ieee80211_tx_status_ni()."
 
-So perhaps better would be set a capability flag during probe for
-chips that know to work with the aggregation and use it here and 
-when configuring USB_DMA register? Or base on usb_maxpacket
-but check it during probe?
+So we would need to either introduce lock similar like mt76 or
+assure ieee80211_ts_status() and ieee80211_rx_napi() are done
+in the same thread.
 
 Regards
 Stanislaw
