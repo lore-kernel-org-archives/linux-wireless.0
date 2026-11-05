@@ -1,129 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793898126;
-	b=eW8EPLhMWdq4IbDFoWPAtcngl06DEjsf/Ky7Z6QsI4gDyvQx6lCTnqUvAd8WwemZN0Tj
-	 nOEtnUdOH4v2aSE3jYEl+FTbAPrYplbZRzqh08z/9V5t9zotnpk5q+kUpvsmy2iCnukjH
-	 1zMchprSyRd3UKXq2wFV+tJmjMGYxCTMLaozJrvJ52J8sLP+hxuH5sHKNF1oZmylyytww
-	 Uipn+bDmEwNwIk1hRc0hhU6rbQYBT2OUEsC8lspvW5pPo2f39QAQLiYGDKP0s5yTBco1Q
-	 7JT6qYS2gr43kzKd7b6nxjN/7DtQ0zRXWRdiTbM5i96GAtChZfQQofwzi4mYjO3+LBg==
+	t=1793898304;
+	b=Q0Am9KME4syrOWUUMLIwgFSIBMbiJmL1Zpfr5kKdfI4hhm3etPQ3QPAQbm8NjiIJcEy3
+	 H2OAhqJKWqvL2DBSbK5KccumDjl/6E2zt/9B0iP1UFGAbdiw7RiaxhNPmXM3HCz3f+lki
+	 k8ozvhVORZhIGhXMN0Ga5W09bevsABC5Er8e453X+twvoxK23bdO8LQXbiImK6C48amIy
+	 2GL/JWjWYUYCFYBXlMej3dFZ3T2xv9HNvO7M+VL460wk47KKwKVm0qT6woyrZXtwBtQhd
+	 dfqdQ3oysujzVwSGVREEFZUfLtuf6ikn1bqbGGFWOYqtQvnlPvFU6OMOAIVIPssKSRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793898126;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=E1zVtHMFtNJFSrWULrvIbtVVqDsU9/hCEAvj/Fm4m+Y=;
-	b=GR2auUWLW0WStGvVXGE758oSNjSmEe/AE1I+t4IpbI1BcdLmMrmLBRypWB5cAEC9H2HS
-	 /V4mzk1Y0SOSu2GMLHn+otek5zIpf+PsMy41DXKD0x9PW/ZhUD115He/pEZtuGwsT//lH
-	 tO4y8MUdz2OrVlpHi6+daymk6QQwXBhzJRhnE7IoZ0/h3HbGh9Lbg7LwSt6RFOr+tt4SY
-	 WkayHST/umXGmguuJQvKTna+8B976MNMlz9jZaUrpDRryjpRYP6mGAILyXaBWrpBk/6uD
-	 yRNCs92yF6DSHr1mKUNlKBN7b/zCq3us6+Mb63kpZmEsOFz/Z3FMLAvtkuYc+PU0ojw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793898304;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=BsTZVQ6tUmIbIT25Pss1efYGgm8TLRoF2m6voevDz+I=;
+	b=5po1jTlGwwGZ8lVjMWWpoE38D0TseFeEcJCfw+akCcFakRwXKzdE9Jj38KIArrnwMsTx
+	 9It3AlTTw2rHp0Mu5YN7CPBYk+bILpp29YYeeyGa7DttFU20heue9XtqOutjP/Kf6RDQc
+	 kUutElVAc/JV4/fsCjV9gLFuOLMZu241u9Q4Ueb3KhN8xD/9OKSQy2mjdu8KYEFfVWsV9
+	 fNUr68S0HU61bX273Tvg1lg4azGJibK3thGjdHbk5hBq/hltlyvTKA9Q/aGkAtLzTFo6I
+	 Wy/S3DFFUaQ4z+htERRuWTfGRAW/4XjWrnMG4rGfRRf/pgnxIYXY0C2l2J2snL5ZYcQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b="UT/D8aSt";
-	arc=none smtp.remote-ip=209.85.222.45
-Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com [209.85.222.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b="dpyYuB/I";
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KujPir1I;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F5F5606A32F
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 17:02:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0F5F5606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDD8606A331
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 17:05:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FDD8606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=UT/D8aSt
-Received: by mail-ua1-f45.google.com with SMTP id a1e0cc1a2514c-990703f817fso1030009241.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 09:02:05 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=dpyYuB/I;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KujPir1I
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5EQB4A686819
+	for <linux-wireless@vger.kernel.org>; Thu, 5 Nov 2026 17:05:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	BsTZVQ6tUmIbIT25Pss1efYGgm8TLRoF2m6voevDz+I=; b=dpyYuB/IwZdMjvCJ
+	bcWfhr/MRUmjY8yU2kYoWhVoVOSH1IgN5Q/irDeC0zoljT0WO/INopqYXbM10omS
+	iz8xkDDw3Kx/q2BPp6aWcYi6lH7V/mBlGZKlihHc8l0QKF00ZOzQPSp2A/Tt1TPF
+	vSd4bgwny4JfDEvWl4TVzSM8CXQ/9XJ/RBgMI+rw/FGxFChPaxtDO+/rMBj4JqpS
+	FbItxWcKF3vxHqG48iu1lJTzdKqrWowiGeZSJKm5bHPw0nYp4BmAY7QA04BmDlt3
+	P1eEQselIm8bSgKAxWiXNjVxQne3AG+6LumV3tYHV2y07kRYWm6oHcsoHbOKn4y7
+	0V9jZw==
+Received: from mail-dl1-f71.google.com (mail-dl1-f71.google.com [74.125.82.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hrq1p21g4-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 17:05:02 +0000 (GMT)
+Received: by mail-dl1-f71.google.com with SMTP id a92af1059eb24-16bc6f3fdb1so2274882c88.0
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 09:05:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1793898125; x=1794502925; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=E1zVtHMFtNJFSrWULrvIbtVVqDsU9/hCEAvj/Fm4m+Y=;
-        b=UT/D8aStYb7dPEp/Z1PTR1znD76pBm0Z1nPlORuFlgDbzwSX/aHEaMIKgxREgduhMs
-         7b184i+9WuyWU3kP4ECdvxL5tqJCBp+sE58xftFr07RVMuYSe2D0AHX1L8wkHJuC4lcP
-         6d7IEtulMVc64pTkfBc/dFTnsuyCXdHVpF//V/K2Xgp9mPmSNI4/p7tLi2H5V42yljeY
-         GtO1ChQ2JjqDeaKC4B9biWxL+z3aUuPX/f+FWBrD4U/FW4Q80YjAWhMK/Up13oskn2O3
-         3V6ObKXKjzYpPS1tL8mHYVexmV3sD/kfJUj7ToJWfvaytzTBimAL6fO0bssiuf+AQf9l
-         4B+A==
+        d=oss.qualcomm.com; s=google; t=1793898301; x=1794503101; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=BsTZVQ6tUmIbIT25Pss1efYGgm8TLRoF2m6voevDz+I=;
+        b=KujPir1IzYKiVWFog5dfupUJC0e8Ys3O5p+TvGwBzCYReudncQT2GaOZYalfSkvDMp
+         ZFHuQfXor8bkrI1pp2qSwNweINIYgWfMf0zZ9Ss1xrcXur00LrDkO9SxQJVAz3R5cB8T
+         KVPhdTbGXQvU7NHjqDwVMyZVnAhArF/+N8fuHgTTGfE7jTC6ujuVRLim41LyBpSjopxF
+         sjRFwQphJaabJGAUiCls2rUpBY+F1j+jOuqSaeMhnP8ooCZRVPC1FLIOewsHfKNrH+3h
+         QuGflrvn4whLSVP8mz9GlvtFNEtC5Rru+9ee4aCJwBdlC4MsT2KKbufe/qS/qfp+YFz+
+         sCiw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793898125; x=1794502925;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=E1zVtHMFtNJFSrWULrvIbtVVqDsU9/hCEAvj/Fm4m+Y=;
-        b=nIqTMaC2ql826OPOHXwNx7AxmVJYwDgDFFBawFItjKIl2Dk5p5NxP15Op8wIv7eC9/
-         BCTRzZRm3ZYFm6Pth6SipGLCr4/LmPJ5OKFh0pL6GItF8CGcQymlm+VWh2CazHGAJKl9
-         Yx8vtfGlng/LaOnm9R7aL2GBB/XAbGHp4QLyOHGi7ykgTGwHRZyqwdBSt/woSOLtPRIu
-         y3ffoDmTcP7YybHG2cnwUmeLLK+K3iemn+pYSk8xPefPwcIsBgG2r35YD4UcV538rFuF
-         7fBq7ERiVdUJNMACxbyrSZrdfMOZNNuJCbqz4joLXZkNhDABcCHDPkfkJklL48f79EVX
-         CWuA==
-X-Forwarded-Encrypted: i=1; AKwUvBykz1aadidJsIOGVUIPmL+eEx+eEdoC8CcxP5FLk7YRKYLkF7Xckx8GNgWzLR9u7glvlCgD9en5Nai09/9R5A==@vger.kernel.org
-X-Gm-Message-State: APuU4Z9F7JaKqv3tJUBFK18O3r1s3e6c0b/c8vbnUGqwW9Hkpa4l0ZJE
-	2muBtQZ6v0KJIgCg4g9PsraIuGC1MnWyKn5PYyskhM5byHHc5eiFfkv4/WWbZYsIauY=
-X-Gm-Gg: AYBFou0oHdpfxfGOrHRJ3lvX46dR0nLpah5dy5q/k/zWNHJwlvO9A1Ex2wCmvq/J356
-	gRPh+H3uOwjy5iCWb7eiBUiDXpyYtdH5eOmNoZZaHsicI/gBbYYk2XqP2UGfIBkfZ43mWHyOePr
-	+fVAGEV4teX/I3YhCaJc8x/6VKvg3EbbD1Ukk++egkvDND01Ac3gry0PpGBoPBtx6bq0cZPwt+M
-	R+AsNyJ2dwavzXCyZvuAz82YIYUn4+r5p68+9loxwuExHbiInw34fyvYFjYmq6+Xj0oEt9AWNHN
-	wQ5DXvHFBJW0C4REhQMfNuhhXQ6Gb/1MdK4CeJkK3+IwNb/MCQ2l3LCMIUKCuD3WIZL2nBI9+nG
-	4xuRgb62sqnukh+sxc4MTHbpFm7WqoJUrw0nMymsWAcDPBqbcsoumGFwzA3dRDTh6RBJ6lD9Lnd
-	Y9DOYCiO7ATcDemrQRuw/zKXuv8Bu6LDPnXBw9XlN3cETAALKWah+HfmWvkA86X3oRpNHKiZYEn
-	XMBZkeC35wcuX+oc6/tFVVGEtY9G1qzBLo8THyT+7nROehsu0WVsfuNtEcZfVytkvjwkzkgJjqh
-	c3fPL1tB//hCiPhTcHm2Jl833nNMpadiX5TFbB10Hnx6YYfPs2YLqRMRH9W5vRyttG8GaYGmKHZ
-	363pX3oe6nfbF/UAcc07yB7rAgQ+ViQ8=
-X-Received: by 2002:a05:6102:2c1b:b0:7cc:2bb7:1335 with SMTP id ada2fe7eead31-7d2a16c7f35mr120203137.33.1793898124846;
-        Thu, 05 Nov 2026 09:02:04 -0800 (PST)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7d26fd3e101sm4619225137.3.2026.11.05.09.02.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 09:02:04 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xP0qh-0000000388I-28Zd;
-	Thu, 05 Nov 2026 13:02:03 -0400
-Date: Thu, 5 Nov 2026 13:02:03 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev
-Subject: Re: [PATCH 10/17] driver core: Expose device trust authorization
- through sysfs
-Message-ID: <20261105170203.GC663069@ziepe.ca>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
+        d=1e100.net; s=20260707; t=1793898301; x=1794503101;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=BsTZVQ6tUmIbIT25Pss1efYGgm8TLRoF2m6voevDz+I=;
+        b=H56gGWUUtPTBACSqSHU+Fa+Mf/vn++LboEhLicKdwlAW7ny4fbXVshGgfgvARlpfbM
+         yZxGj8lA0x/1ScDDiM8H2AnEhTk/SjzD0t/oUnloc8ny7Pw/AVsaW1J9p6L6kdskVWbL
+         WvKOlFQHBRPs52wzqzv/EPRzISIfaY+SkGUpzjNNq/8cv27bm7EWbfY9EbqeOlsNhGp/
+         eoMuNYYe2/Pm68yiXtoOUH361AGX//xOIGJk/o9COkf+q4NqsCjTorGO8pTVRiwzXZ44
+         /o64AVkcvsLiIsu/OMeS2DbR7w6MSQiBlGZ8qtTQjfmFfuviAc5hlvA0W5rL4Ht5Rd6R
+         2fJA==
+X-Gm-Message-State: APuU4Z8XnlDstULpKzVamR32RElVrzsNEJ2w9dUjoBWmKoRcZvV33bxN
+	Icz23+hVTKx49rluPdaiHJO/LM8EevyA0Vx47QIGLS5Uy8S4XetPwCKtrYxERipToC93nNhLoLS
+	png2VJP4sTLgZEdDnnxGfUZ72SOu/WU3hJzrifS62ULfdfTXCHNXh1KfhzNrRDOK8iYqE77dQYX
+	z89A==
+X-Gm-Gg: AYBFou0zl/pS7zmymnB1Vj3DY6VTU/5Uvy8BZZXXvBn1xe8fDZ0pw6+NM7s5gdJiRHz
+	U1FYBLQ66Mqnl6VRXe4nI1c31FzFhULoEnfOiskfgc7sAFjyI+7fkGpZjXYPGVqb4OH5hKP78Ka
+	RqcHxdHt12etoTgHlEe3ErAlSBjLp1axGA2vfbjrU/Z+0NX8lL7MXWy7cUm01UIp2ypXCSxa8oi
+	VrOhgh9yoqCPWYn813fj9XiPYpcFtZaclr7CL6I2ig0OHN4XGmgbXt6UwheU/FTdjDy02VefyQz
+	n1kY+jT2WhAOYKJKBD4H8K3m68QvYJUsQZDlqF9sIOO0SneSNYxR7wakiJimBmc9mUnklzOakNg
+	JjNdLOe2sLlcbwxXjKyo9dIHzymI7nkFLQChFGvxFejMm3GUi/XDkHTB+knFhsxbt7fFDFyRNeb
+	654DgunaHpf1m/ysg=
+X-Received: by 2002:a05:701b:2091:20b0:148:bc4a:8356 with SMTP id a92af1059eb24-1ac5d5aae1fmr28881551c88.28.1793898301048;
+        Thu, 05 Nov 2026 09:05:01 -0800 (PST)
+X-Received: by 2002:a05:701b:2091:20b0:148:bc4a:8356 with SMTP id a92af1059eb24-1ac5d5aae1fmr28881520c88.28.1793898300422;
+        Thu, 05 Nov 2026 09:05:00 -0800 (PST)
+Received: from [192.168.11.102] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b245b86fbesm18717397c88.1.2026.11.05.09.04.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Nov 2026 09:04:59 -0800 (PST)
+Message-ID: <b60c4c56-483b-406e-92ab-643b0fdf2dc8@oss.qualcomm.com>
+Date: Thu, 5 Nov 2026 22:34:53 +0530
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -133,50 +114,113 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 1/2] wifi: ath11k: don't bit-reverse the
+ firmware's PPE thresholds
+To: christophergriffin05@gmail.com, Jeff Johnson <jjohnson@kernel.org>,
+        John Crispin <john@phrozen.org>, Kalle Valo <kvalo@kernel.org>,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>,
+        P Praneesh <quic_ppranees@quicinc.com>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Baochen Qiang
+ <baochen.qiang@oss.qualcomm.com>,
+        ath12k@lists.infradead.org
+References: <20261104-ath-ppe-thresholds-bit-order-v1-0-0f569106cbc4@gmail.com>
+ <20261104-ath-ppe-thresholds-bit-order-v1-1-0f569106cbc4@gmail.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261104-ath-ppe-thresholds-bit-order-v1-1-0f569106cbc4@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=AaYkjHXG c=1 sm=1 tr=0 ts=6aecb73e cx=c_pps
+ a=JYo30EpNSr/tUYqK9jHPoA==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=pGLkceISAAAA:8 a=g6HBiduwhlTomHawZCYA:9 a=QEXdDO2ut3YA:10
+ a=Fk4IpSoW4aLDllm1B1p-:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDA2OCBTYWx0ZWRfX7VcqRMUBLQCG
+ vbmRmPE0aujcTVleBT2mPWwvIDh8GK7RmDOyNit4gQmAwuAw9s3lnHm8QicZgw68vrNFFV0Voox
+ 8gnMWNd6SlHJLILbgnQvc2Hi/xoksCj47Y6ArDCbDEgTQdePwG8kKEoGscB3hua/kE64Sq8YJ4M
+ j8fGFImuB9gho/AylZLd2j9EZQROtWjA1ZoUMcw+aiUT5nrfZUEinRd/q7oVm1NpU/+wwIzkjjL
+ eN+lJPKIbQrBzRlLXRSQYcbB156icyJponWkw/83gL2zvsFbUrs/jiLu75QTc+Azr7DUjerBJhF
+ CvqvSMkpFXSleWg9cDeqy5VIgn2aKMtVbYBHEK0hBJSOL3m9yKSaTyssm5fU00GwoXzJhWu9Vhj
+ zU9d51OJnEkJeAeOFQ2uL/2zNptKEiSZ7MPcllSHDJp8mkANoy7Qad7zg0hem1Pc6XwuAS25Pma
+ TlDIbg/KAKqflHkxa7A==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDA2OCBTYWx0ZWRfXxdkKxP3TKxcA
+ oK9GqASZZ9zxcqzBYTsnXNeEWEQPM2C0E3A5ixWZSRHzquDTVEgnH7/b9heYVGzCBPfCnzLgtf8
+ T+1/4q4m7Wlx4iDL72tpCb+4xI/GLz0=
+X-Proofpoint-ORIG-GUID: V9MB5W4M51oNy4FH5a7ejuVCj7odl4Wi
+X-Proofpoint-GUID: V9MB5W4M51oNy4FH5a7ejuVCj7odl4Wi
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-05_04,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 bulkscore=0 clxscore=1015 suspectscore=0 spamscore=0
+ priorityscore=1501 malwarescore=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
+ definitions=main-2611050068
 
-On Thu, Nov 05, 2026 at 01:42:23PM +0200, Leon Romanovsky wrote:
-> +		(RW) The requested trust policy for the device. The initial
-> +		value may be selected by the bus before the device is
-> +		registered; otherwise it is "default". The policy is resolved
-> +		to an active trust level before the device is probed.
-> +
-> +		The values are "default", "disabled", "adversary", and
-> +		"full". "default" lets the bus select the active trust level.
-> +		"disabled" prevents a functional driver from binding.
+On 11/5/2026 10:47 AM, Christopher Griffin via B4 Relay wrote:
+> From: Christopher Griffin <christophergriffin05@gmail.com>
+> 
+> The firmware reports its PPE thresholds as WMI defines them: in
+> ppet16_ppet8_ru3_ru0[nss], each RU has six bits, PPET16 in bits 2:0 and
+> PPET8 in bits 5:3, each a 3-bit constellation index. The PPE Thresholds
+> field of the HE Capabilities element carries the same two subfields in
+> the same order, bit 0 first, and ath11k_peer_assoc_h_he() already
 
-For making this more general:
+yes, but ath11k_peer_assoc_h_he() logic seems to be too complicated as 
+well with << 5 and >> 1 for each iteration. Looks we need to simplify 
+that with just,
 
-"disabled" prevents a driver from binding and informs the kernel to
-provide containment of the device. For example a PCIe device should be
-unable to DMA to memory.
+val |= ((he_cap->ppe_thres[bit / 8] >> (bit % 8)) & 0x1) << i;
 
-> +		"adversary" requests operation with the restrictions that the
-> +		bus and DMA layers can enforce for a potentially malicious
-> +		device; it does not isolate DMA by itself. "full" requests
-> +		normal operation.
+May be in a separate patch.
 
 
-"adversary" informs the kernel that the userspace wants to opt into
-any security defenses the kernel may have to restrict and further
-validate interactions with the device. This may have a performance or
-functional cost compared to "full". As an example the DMA API and
-IOMMU layers will avoid exposing unrelated nearby memory to the device
-during DMA.
+> converts a peer's field to the WMI layout that way.
+> 
+> ath11k_gen_ppe_thresh(), which builds our own field from the firmware's,
+> swaps the two halves and then writes the six bits from the top down.
+> That puts PPET16 first again, but with its three bits reversed, and the
+> same for PPET8: a threshold of 1 (QPSK) is advertised as 4 (256-QAM),
+> 4 as 1, 3 (64-QAM) as 6 (reserved) and 6 as 3. Only 0, 2, 5 and 7 (none)
+> come out right, so the bug does not show with firmware that asks for
+> 16 us padding at every constellation (PPET16 0, PPET8 7).
+> 
+> Copy the six bits in order.
+> 
+> IPQ8074 (WLAN.HK.2.9.0.1-02146) and QCN9074 (WLAN.HK.2.5.r4-00683)
+> firmware report PPET16 0 and PPET8 7 everywhere (iw phy: PPE Threshold
+> 0x7b 0x1c 0xc7 0x71 ...), which reads the same either way, so their HE
+> capabilities do not change. Compile-tested.
+> 
+> Fixes: 9f056ed8ee01 ("ath11k: add HE support")
+> Assisted-by: Claude:claude-opus-5-5
 
-> +		Successful resolution to an allowed level commits policy
-> +		and operating level before driver or DMA setup. Both remain
+This tag may not be needed as per latest guidelines
 
-"before driver startup"
-
-> +		fixed for the device object's lifetime, including through
-> +		failed or deferred probes, unbind, reset, and driver reload.
-> +		Later binds must resolve to the same level, including when
-> +		the policy is "default". A resolver error or disabled result
-> +		before commitment leaves the policy's writability unchanged.
-
-Not sure what "resolver error" is.
-
-Jason
+> Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
+> ---
+>   drivers/net/wireless/ath/ath11k/mac.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+> index 1a237adaa37d1..8b4e992b609a6 100644
+> --- a/drivers/net/wireless/ath/ath11k/mac.c
+> +++ b/drivers/net/wireless/ath/ath11k/mac.c
+> @@ -5825,8 +5825,7 @@ static void ath11k_gen_ppe_thresh(struct ath11k_ppe_threshold *fw_ppet,
+>   				continue;
+>   			val = (fw_ppet->ppet16_ppet8_ru3_ru0[nss] >> (ru * 6)) &
+>   			       0x3f;
+> -			val = ((val >> 3) & 0x7) | ((val & 0x7) << 3);
+> -			for (i = 5; i >= 0; i--) {
+> +			for (i = 0; i < 6; i++) {
+>   				he_ppet[bit / 8] |=
+>   					((val >> i) & 0x1) << ((bit % 8));
+>   				bit++;
+> 
+-- 
+Ramesh
