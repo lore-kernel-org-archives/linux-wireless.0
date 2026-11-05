@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793863501;
-	b=2ecG6NUkaR3Cwx1E1kd03/1tFeiprYi0pQwexGpyKPQKKbLh6RzTz/4VDDtUAxRrGx2D
-	 iEuPYqt8HLERk1RmyM4sPJX3wd3aCOznYD58v+rtymuudBKncyOn9jaV/cp/qgiWv5/Bs
-	 yz7ZF29KKt2v/uY+beDlgeIfzFqGEjShqvPW0poE/lU3xJFONlIbHA14Cxgk5RlfmH4t1
-	 ucvVzbtRwCc1aG1TJZDZfB9yzzDjV/S3SdRO+V0gDzRhJY2dGbks56+GuzrfTf3m9bBNW
-	 PvboqfEVbxth/pGwMcVJIQ4Du+pJrVmsOZHo6Ow8Kv8KyQednpa6xZ81MS7SSbByGzQ==
+	b=jc2AKBZxTUkOpoAClPi9YF+CqQBDhaU3CY+IXLQ/aWF8b7vxszFxnnNvT7XrurjjYJC+
+	 QFcwjq9Q/OVEJ/sPDGk37kmX03grCRXseieizkeN4beh5TXaKfsDp/9Un3QmEt1dMOYYE
+	 T379U4w6WueAwrYtLSKH04VN+M/P3bztWMGXddHIQq2swMzxmhje6OtLbtqja/32oFtpc
+	 XKEU7FiBKxFWyDNf3n1XAyphcqxROjFksNXMuIotFPmKViN+5ehG4b2tPuZnNXDKIZLIn
+	 dgERp0k/Z6uP56LnpvD5HKC0HKiKfEeDZqP16afWBlDCLoeyeUBXNN1EjEZ6+o6JnAw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793863501;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=rwSXrp7wWww5a/SGAeXxUVdwq0yhUyGUoLszs1NCcjc=;
-	b=kdXecVGhzAzHr3d7ayNoZonuA/mASlaOnlWtiqRsce6+dXirvylKjLJAvTHczLDNP6gA
-	 TxvHgHF2IsqnEAG6kmgg0sl5LIqJw/hLsn5NX3Xng4iHLW3dUIyn5nGKqKgSabSj0ZMfV
-	 Dj9lKLhBACzp2sF5Vpgqr1eata89BSYh4//1GHRNfJCsC8KsUiXu3f/e4LYixvmDRe4f+
-	 ggB4MfbUtpquBSW+6t/K4QllpPxs652206mrkpgxjVazJ8yBN/18fL65yAN4JazoIbeS0
-	 0h+TCx6ZyF8uviJtHcll6AnrbO5Qy77bmDB6WRw1oSVzRHXPf+KH8fz/d3r9ZheamFg==
+	bh=SzZ+9sL9Z87GJ5231u3VEd6ZbBPqnC3V670Ckyp+vZs=;
+	b=SLXa8+nd+xEQxrb3CRr+KnoRw6t1oMHAzzWAYqpJZGT1J2AcZZtczxKyrsdhzsql02dq
+	 c+D2xaRMsieyppIng+RW1bzyQr6pDUw5kN74R1jinjaY0dsmfWPMFt5A2P0MFb6EH8lWq
+	 ztUHYjd+rwCPByMgSz8A1gzwR+7QkR2zcIBB3OJjDCXuQMFM5XktNAoHnncCKVL3JOLxH
+	 OPGayHAktSVnqttM3Xy4ElWZ1TqhkG5MSJtniZk7hvcJYaSBWdDVDt6OTZTL2O8cNT21z
+	 YwXDtVBHfwfphCAKZOLMNe8Rns6+uWBOwMkVMntyyrbCPo9cGoo3XLa2jv7uoXjQ42g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=N8TX6e79;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=eFQxHSzC;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB54E606A31B
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:24:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69ADB606A328
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 07:25:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=N8TX6e79
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=eFQxHSzC
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=rwSXrp7wWww5a/SGAeXxUVdwq0yhUyGUoLszs1NCcjc=;
-	t=1793863499; x=1795073099; b=N8TX6e797i0IER5tXQB16xDCwQiDszd3xLerivBY7Jseex9
-	Wm60OZNxPDPl9WggEd4UrN5sESBpKgmXq9BgON77XaGdfUyDLvp25oZFFBYPYgBZfyS9dSBUIlHzF
-	99/pXdoyH7BfIH7sSKfs+IY7LK9ETgHCMSDqqfzkSKJfIN5w0i0RJW5+d5dDGaT066qprCChEgh+W
-	TbD4by3fssOeVckhsNvVIx/tlMJmI/kUNnwvCD7GYetbMSy7eup312pbCaRzr7s/eT7JzATv1eB6P
-	ixfxjhSPhyzgtmVO+cJCaOTtgkRaesgS/YcelCLgYHYyhJ6wTixPpHTTwL29fJTA==;
+	Resent-Cc:Resent-Message-ID; bh=SzZ+9sL9Z87GJ5231u3VEd6ZbBPqnC3V670Ckyp+vZs=;
+	t=1793863500; x=1795073100; b=eFQxHSzCPJxFR8ls3yInOEqfcMALwQUBfe3HuDqVmYmiEnl
+	nGCkM18bNfSI+wpJQe1ukE5CV6qLDQPiTzbeZenp1NaAGECmpnjlSAQxJSMvpOWc2Q6/4nCOSV5bZ
+	h0rluIpBfm9mFMSkAED6cPZTXUPKC7Sb+2X0ZHx58yZ7icu9BF2twpCyRbg7W9sCtrAPonyXO/m/t
+	exg/P2EIA286ddr4kQqhRQrBLB8ck9U2wq5KX0tXWEM4ZM/HOE1N/5dxOZC4G3MxI4HEuL+/QUzVK
+	SmddSMBim8O3HsgvrC8nTOyHoxVaGCutxN2Abg49QOWXOUxbHa289IBZTzrYcE0g==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xOrqB-00000007Ped-3NId;
+	id 1xOrqC-00000007Ped-2Xjc;
 	Thu, 05 Nov 2026 08:24:56 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next v2 1/6] wifi: cfg80211: clean up unused/set reg_num_devs_support_basehint
-Date: Thu,  5 Nov 2026 08:23:49 +0100
-Message-ID: <20261105082451.147d23123dc9.I263dd4aef57bd64c74b576eed081dfa9adca39de@changeid>
+Subject: [PATCH wireless-next v2 2/6] wifi: qtnfmac: register regulatory before wiphy
+Date: Thu,  5 Nov 2026 08:23:50 +0100
+Message-ID: <20261105072451.1710800-9-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261105072451.1710800-8-johannes@sipsolutions.net>
 References: <20261105072451.1710800-8-johannes@sipsolutions.net>
@@ -69,90 +69,41 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Move the variable inside the CONFIG_CFG80211_REG_CELLULAR_HINTS
-block where it's actually used, and add a small helper to change
-it to avoid a warning from clang that it's set but not used.
+This order is going to become required, since userspace
+can query the regulatory in the window between the two
+registrations.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c | 29 +++++++++++++++++++----------
- 1 file changed, 19 insertions(+), 10 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5460b3117d5f..2bf3bcd8809b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -104,13 +104,6 @@ static struct faux_device *reg_fdev;
-  */
- const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index d9c84d5ce254..139f67adead7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -1231,13 +1231,18 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+ 		sizeof(wiphy->fw_version));
+ 	wiphy->hw_version = hw_info->hw_version;
  
--/*
-- * Number of devices that registered to the core
-- * that support cellular base station regulatory hints
-- * (protected by cfg80211_mutex)
-- */
--static int reg_num_devs_support_basehint;
--
- /*
-  * State variable indicating if the platform on which the devices
-  * are attached is operating in an indoor environment. The state variable
-@@ -2055,6 +2048,13 @@ bool reg_last_request_cell_base(void)
- }
- 
- #ifdef CONFIG_CFG80211_REG_CELLULAR_HINTS
-+/*
-+ * Number of devices that registered to the core
-+ * that support cellular base station regulatory hints
-+ * (protected by cfg80211_mutex)
-+ */
-+static int reg_num_devs_support_basehint;
++	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
++		ret = regulatory_set_wiphy_regd(wiphy, mac->rd);
++		if (ret < 0)
++			goto out;
++	}
 +
- /* Core specific check */
- static enum reg_request_treatment
- reg_ignore_cell_hint(struct regulatory_request *pending_request)
-@@ -2076,6 +2076,12 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
- {
- 	return !(wiphy->features & NL80211_FEATURE_CELL_BASE_REG_HINTS);
- }
-+
-+static void reg_update_cell_hint_num(struct wiphy *wiphy, int delta)
-+{
-+	if (!reg_dev_ignore_cell_hint(wiphy))
-+		reg_num_devs_support_basehint += delta;
-+}
- #else
- static enum reg_request_treatment
- reg_ignore_cell_hint(struct regulatory_request *pending_request)
-@@ -2087,6 +2093,10 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
- {
- 	return true;
- }
-+
-+static void reg_update_cell_hint_num(struct wiphy *wiphy, int delta)
-+{
-+}
- #endif
+ 	ret = wiphy_register(wiphy);
+ 	if (ret < 0)
+ 		goto out;
  
- static bool wiphy_strict_alpha2_regd(struct wiphy *wiphy)
-@@ -4181,7 +4191,7 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
- 		}
+-	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+-		ret = regulatory_set_wiphy_regd(wiphy, mac->rd);
+-	else if (regdomain_is_known)
++	if (regdomain_is_known &&
++	    !(wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED))
+ 		ret = regulatory_hint(wiphy, mac->rd->alpha2);
  
- 		if (!reg_dev_ignore_cell_hint(wiphy))
--			reg_num_devs_support_basehint++;
-+			reg_update_cell_hint_num(wiphy, 1);
- 
- 		wiphy_update_regulatory(wiphy, lr->initiator);
- 		wiphy_all_share_dfs_chan_state(wiphy);
-@@ -4199,8 +4209,7 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- 
- 	lr = get_last_request();
- 
--	if (!reg_dev_ignore_cell_hint(wiphy))
--		reg_num_devs_support_basehint--;
-+	reg_update_cell_hint_num(wiphy, -1);
- 
- 	rcu_free_regdom(get_wiphy_regdom(wiphy));
- 	RCU_INIT_POINTER(wiphy->regd, NULL);
+ out:
 -- 
 2.56.0
 
