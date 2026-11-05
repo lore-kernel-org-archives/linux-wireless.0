@@ -1,76 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793872532;
-	b=MVNf+zX6u+3bfg1ulusNHAGCi5JavPnrAEq6OepY6FEahNAAgzsGwpgY2PL9LcOaXq8b
-	 xOmf5zTVQJbt2kz5vZeUuGlXqZdqRCVpBJGdI6HEW9A1sqygqbp/j1jf49VaaDXKMQBbr
-	 lfxM6v9VK0hF8Nnha8yJn7yPwCW93pf092VXtdVsdLo2dym5/4l/AuamWeTQnC1aHaIkf
-	 NaEb2EjKAeUjwPjPDIKUMNda2/FXQS2yXkegC3Ur3xcRcANFxfp38YmgKuToQfqTg27st
-	 M6QrEGISoBnNN74fvu2gYG5z7kGcKEcq28WoJg9JJuPcYj0eqBJwzfZWYxlRW+gLhFw==
+	t=1793872884;
+	b=GMXCZv6GoMvVoiW3RZqRF66IP1cGBVQauhraHouGZQErnKloFIH0FFDbIfq6jS/DccI1
+	 kXcDbgOeGT61wjEO510Hz1UvkfmoVRnz4KmNVoRB3BHJeYYgu5v3oePQYHvMUxIKjrLqI
+	 AVfTZZv2ZGYEvAT65n23siMwsREM/F5GRmKfCWY/oCYE9y7jG63Wt3NV6yYK85bQUvkVP
+	 mGZgWzFpt3KvCzUlYaa4snuOWuySTAU0kjMORw8lvGs3aZCyJLM7KqOZyF8w00U5dItMD
+	 rYIKPG6tLya8g15BWBHN5t6ihjy1bCoj++bUZIZ6OabolHicnFV6YD1432nJBcYzSAA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793872532;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793872884;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:
 	 X-Forwarded-Encrypted:X-Received:MIME-Version:References:In-Reply-To:
 	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
 	 Subject:To:Cc:Content-Type;
-	bh=LrgDMUrSYXpYgkAhfsYKg0ebb/uLgOfOMhqzX4yL0j4=;
-	b=0RpMocacBKLKmFNaDs2HScyIJ4ewur8eCG3XGMfYDZroZjEYXcYJDlYxTYx3IME2tz7d
-	 UtLCdZgkaSJ4s07QGKGNGqRgpwBqVmRlRz8Kup+pWnGIgAhNcD7fFjXMaZWeNjwXTki9N
-	 svTfOEyVXlOQkf5TWZKFM4XeS7MxcHuCJFjIIyA6VclV8k/ah+JCl6A8D7dr3ty9B3CgV
-	 gzyrkZcYS4F+gtdsXwQ6JAYQXEoIGo0lKUPBMDZIMQFh2biBx0Y4PNh/WMj/vFGTeFgkS
-	 v5wNeq1I6L3JISBprl+C9XDYWiJcb5DrJuRJELkLw94lAXZ+qi+zomaMVFLSqEHeyaw==
+	bh=n+1lmuZTLENNkpqKh8T8PUriZ63OKZ7RGcjsYNzzAGM=;
+	b=Afux2vC9WhTpaKnADci54KMD+O30y84o0/G+TMFC2NLI+1tda1je+8XS710C4caPKIEu
+	 M55/r8j4/kzh7UEZNOkqCXtS6TIVHTtyMMp35AEy37BHQ332wkB4HAtvr+PdQwvPaoDty
+	 p9xP6XoYFSFXIqIz5dPoAB5iUVq8KFRoWfmfC/Y9ksRzF+g0rBWue3To2g5vLH4eyQnwQ
+	 6Ceny91vwbA962nu/OQODixlLY8PAWIkq394p9g3Gs6h1T6IwZqqLhMtEZ8mRWirBFOWc
+	 V1dryrBt93jgXPs0SCtqxVCzxWJLg4wZQnq04fs50/YUtRa/83TbXMw+l+tH1QMg9WA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=linux-m68k.org;
 	spf=pass smtp.mailfrom=gmail.com;
-	arc=none smtp.remote-ip=209.85.217.49
-Received: from mail-vs1-f49.google.com (mail-vs1-f49.google.com [209.85.217.49])
+	arc=none smtp.remote-ip=209.85.219.45
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDF7B606A332
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 09:55:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDF7B606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F9E606A31B
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 10:01:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 63F9E606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vs1-f49.google.com with SMTP id ada2fe7eead31-7c3b75caad1so1060504137.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 01:55:31 -0800 (PST)
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-91c1f548f87so26531546d6.2
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 02:01:24 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793872531; x=1794477331;
+        d=1e100.net; s=20260707; t=1793872883; x=1794477683;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=LrgDMUrSYXpYgkAhfsYKg0ebb/uLgOfOMhqzX4yL0j4=;
-        b=mwrIXTS8gVcJ6w8pZWh9vcHvp1MEGqtAOVjYK26jgScnEX3G1UQlUehLugQqCAkylN
-         7SJVJpDLQuatwYXCajiw+FbgMZE+w90nwcwGErPnYwVJq29gdQLfXbWBhIZMGy+GrXhf
-         6sl2AQFcrNqykqjLgffynrTFBwLIvwE0JRAraLxr6f/sHFjkcIx/CMb8IrF56Grzp4Ai
-         Ve+Vuvy56A3XhRtgtOsOwxkYvnicRQdShsPVN7tc5wO7O+qKuuax7+yO+hkPAMoNwqBi
-         kKmfpQANIO+Tn3LRyov3ET+UZKxusOfysK965Yy1E70H2tHBTwslsnUKVzPr+30uHTIR
-         pnFQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxe8n4EAz9DfJdriRGYkV/Q98TnXxgCBTZmAXsIZOmjJYGuEOEzVoZVIqXYSL5I17f3TZBy0WgSHtzfq9fCJQ==@vger.kernel.org
-X-Gm-Message-State: APuU4Z9DChgvWEAMt/tmCOt2yXZCEMREQ3vlauGCvgblSTUQ0veVDhG5
-	yohOFvuMKjsc4se5AYsojuCAPGUkgLd0/ETLmJeMDhPxqWqRjbI1a0U9+ZvasIP6NZw=
-X-Gm-Gg: AYBFou1PA2mKP5CNoVCOh6k/QwSKch9DjsMJSppMWSncoVBGH0mtCszbmfXscLjtNjM
-	qLArp4OySnvzH/hmr83vkOGw7dF5W4yZYRgq28WFOn44nn4sR3m7FO9mdhq6bVF+XXToXCC5IRA
-	IH55VqrQaMQMhX7EYPiMkKCaJB0w3OupHzTYskvEVNRLRK19NqBm9304JUpsaF8J47eaKtf1Od0
-	78jmjG9+ahQ4JYYaHeFu+aRBZH1fk4uBq+ouK82+5yIF1yDK7NBlxfdm8e+VfThyOf7ZHsL8zvo
-	AxDgxpQGu17XLudwh9FpSoHVF7TG8IInBN3dqakmkGHOVTdBNnrjS+Cn64YallRfHEZcFALlvQD
-	bA7Z9wfrmq7Om4KvQTyGfqQzJsA2O0fo2QAq9o18oXeJEoAnCX0igM6yNoC9BrSBjTeMDoE+ZYv
-	Pj3dxPLqt7jTfngI/MAqbH+kkHtE9DAfgbKcv5t3IWMyQIBcas/4JFLW7cbaiSR7Fum4bSJRPQE
-	nh28FqL+mPC1IUWSyX4XcXpUhEKH0CBkLuWfHAPUMp+wbmDzUvL8h+6OcdASSAFuf+fClvnCLSB
-	w/yZKKXtgZuC+qyyzLJ/PxP/VjNP5syG3QN3cLO2IRAxqx6JlBc3toRMHWtEZKoHFw==
-X-Received: by 2002:a05:6102:644b:b0:7c3:a1c6:7a13 with SMTP id ada2fe7eead31-7d072c3bcd3mr9368129137.16.1793872530831;
-        Thu, 05 Nov 2026 01:55:30 -0800 (PST)
-Received: from mail-vs1-f43.google.com (mail-vs1-f43.google.com. [209.85.217.43])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-998d9c906fcsm4171946241.11.2026.11.05.01.55.26
+        bh=n+1lmuZTLENNkpqKh8T8PUriZ63OKZ7RGcjsYNzzAGM=;
+        b=kY4C1jncS7N2olg9L6Y0nKP/9EYM+tIRCW/IjNp7JUrBLelK8s1KzV+KAapN3f+xl7
+         2OgJ9lQwIcxlvXsC4b1OgIbwaHAr6p8eT5bbbv7IXb8Vt/B7E0u1kF9WBL8MxGZr3QUG
+         Cn/wKl7zM9mMXhBFOV/mOl0xbDuvbH4lHNlQ8H/yoaHX/EpIUSDk8r2Hkp6FNy8u5RGn
+         Z8lqB0rSlTcmfluGEqgNYynuVOk+7JECGHD0voXACTltUn9OVHaVX3RGfjv16LWeEy2J
+         uwnNt2epgS8lduRL0wTOVTeXdUgVDm0Ii3pN0YhAf2nPCT1dSM/3w2xvZza2f2swuV1c
+         btWA==
+X-Forwarded-Encrypted: i=1; AKwUvByyGm5Jy2IQ9vs0vecUXuOiMTODoXzCdw0QoAzxeHFN0hSq2rzjJOM3ghw3WiuGHqwjZv0YfyfozMPRJRHDkg==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9A5shxvt7WZo9exg5GUXhCIClc/Xdhu2EZ0cpiqTyI5aBAQMsO
+	SdDUp8bTplbjfk3qMDvDnTOoukVb49baDqdem1iNQT6Q0gADN+1xNDQiIPSbemkAC1M=
+X-Gm-Gg: AYBFou1LcA6poFZjD5d01L8eINs02yU0sPXyUGAuhCBHIA1Ixe+dFDiMTwCkhJ6PHdu
+	++BmuQoBlFR8iCNVXpyBBdRRi4EC3iH0u53HqnGAC6QEtTxEsXc1jS0rHgE9EX9L9CWpEdC9kIv
+	z40QPLkE7ErmDG/+wS3Au/QgIuuQZncsg2x/SIdVK1Uja1/FeIwovgxGpfPfZBq5NcpNTkcvdaS
+	nMPbT5CS5KjsPFOu00ybYgMHv0iOlE1igPrkLZ/34I7r9wgQ2eOPYCI5A46/ohkg/9nRWhfjeQx
+	ZyQN4of+X7hfXChpPKD4dAXeIsXcTurDnEI4EASUrFve3RBX98N9mWhp80iJyyAbqoQ+snN2FkV
+	NeHCjjpJHCOxz2Aq9flVsfY2AQgn+ycc9g/1I/yWbZtPalw0e3666SQMZz/puXCJA6UxXTxHSdL
+	V4Q2g1DdaRRdGoD56yWPUjdDveBj0O6Pgv2iO5wz9gX7oc+aeiDbZAI2gnU2LZ9UuMKA3XExx6q
+	t5EXwkQIQ058FsJnBN0KcZo/wIIGCTAJPfW6k7TdLWAfeU8Dn0MKR3+1uNmhL3+GHLSLnaimOhH
+	xCrMWH3j3OgYefO+JlbvK1C5VqRcKEhHp6Jbjv4fvh+9DwwmOg8hC6UQ1D8X6ZewfQ==
+X-Received: by 2002:a05:6214:194a:b0:91c:79c3:7b48 with SMTP id 6a1803df08f44-91ca4a0cfcdmr333585816d6.4.1793872883402;
+        Thu, 05 Nov 2026 02:01:23 -0800 (PST)
+Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com. [209.85.219.51])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91e962b3fc2sm17711366d6.4.2026.11.05.02.01.22
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Nov 2026 01:55:29 -0800 (PST)
-Received: by mail-vs1-f43.google.com with SMTP id ada2fe7eead31-7c3b75caad1so1060471137.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 01:55:26 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBx87urWJOGeNgdU5DPrhmQvHFwh5oKCEgyx3DDN2RDuw40M6Z9UUawev2s81WQrJL/wNbTkR8ICa18z/QugAw==@vger.kernel.org
-X-Received: by 2002:a05:6102:5108:b0:7cc:56a:58e5 with SMTP id
- ada2fe7eead31-7d072d84a58mr8269567137.37.1793872526219; Thu, 05 Nov 2026
- 01:55:26 -0800 (PST)
+        Thu, 05 Nov 2026 02:01:23 -0800 (PST)
+Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-91c79a9a739so23689356d6.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 02:01:22 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvByX5PMjdEBRHz0XbuMcUaC75RgCjPhWGbkQhDRbezbYg4xnGHEaYlAhqEUvV0M8Hv6Rj+ONRSUlgplwiTrHoA==@vger.kernel.org
+X-Received: by 2002:a05:6102:6449:b0:7cb:bc5e:7dad with SMTP id
+ ada2fe7eead31-7d072baa450mr7614890137.10.1793872492413; Thu, 05 Nov 2026
+ 01:54:52 -0800 (PST)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -80,14 +80,15 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org> <20261104-work-procfs-drivers-v2-2-245e54e87116@kernel.org>
-In-Reply-To: <20261104-work-procfs-drivers-v2-2-245e54e87116@kernel.org>
+References: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org> <20261104-work-procfs-arch-v2-4-2aeb952c9597@kernel.org>
+In-Reply-To: <20261104-work-procfs-arch-v2-4-2aeb952c9597@kernel.org>
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 5 Nov 2026 10:55:15 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdVHxQvKnJyKHrOZhaOg9Rn2hMeRU1JnMFFEEi31FPZaGg@mail.gmail.com>
-X-Gm-Features: AclHuK_UsJ1nGicdWEWcMLQAICTi1A7pGF3yhNkxXkXRPqohle17eXAHHNBsR6k
-Message-ID: <CAMuHMdVHxQvKnJyKHrOZhaOg9Rn2hMeRU1JnMFFEEi31FPZaGg@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 02/26] zorro: let procfs copy out reads
+Date: Thu, 5 Nov 2026 10:54:40 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdUNBs_NyhFpXonirMXkYptUWsAizMvVpGHUDLzto1LGJg@mail.gmail.com>
+X-Gm-Features: AclHuK_RsrcE7hVRjmpZezBV5tMd490Mza2XAQiqUTgUNqAiHAzRP5z7NIbtMh8
+Message-ID: <CAMuHMdUNBs_NyhFpXonirMXkYptUWsAizMvVpGHUDLzto1LGJg@mail.gmail.com>
+Subject: Re: [PATCH RESEND v2 04/23] m68k/bootinfo: let procfs copy out reads
+ of /proc/bootinfo
 To: Christian Brauner <brauner@kernel.org>
 Cc: linux-fsdevel@vger.kernel.org, 
 	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, 
@@ -117,9 +118,9 @@ Cc: linux-fsdevel@vger.kernel.org,
 	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 4 Nov 2026 at 20:43, Christian Brauner <brauner@kernel.org> wrote:
-> Implement ->proc_read_buf() so procfs copies what is read from
-> /proc/bus/zorro/<slot> to userspace after it unpinned the entry.
+On Wed, 4 Nov 2026 at 20:36, Christian Brauner <brauner@kernel.org> wrote:
+> Implement ->proc_read_buf() so procfs copies what is read to userspace
+> after it unpinned the entry.
 >
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
