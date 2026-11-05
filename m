@@ -1,84 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793885254;
-	b=XtOptqmvAPKbfSDERbXweLGnAYI6Y0l/giP0JNGM3pGbPRmuI0bI+0EwIXuxpn+y06tq
-	 83OxUYTzZ8Z1LYttnSjLdUNwv1GPwj0pPjRJ/wegTQI3iPl3LRmjbziFzxQqcAyeLyTUl
-	 /l6GjpInOgHNlnQZ9nGRVpi3HHNJCj5CBZQJ+mbO/npSOTywhcfbfKRTMQSGdJBvdMoD5
-	 68D5znBQBrKMpvaljmK7VD8XRICua8J84/fDf1DpwCWaBsW/9UgjCNDAM2yl4eHbVBTfq
-	 X7s0VnjEglBurqzOTuBUWOu8OgrIbz4yuPKX0u1IXZbEhI/KA5w3NM+yPMdr8age6LQ==
+	t=1793885496;
+	b=CRifd4fj5CFAGeUfHrAvI8qGhEqlnQBi56Yzgg2tflvctxnr0rGvPQ+Zu6OnGlQR9Msk
+	 RDO7LF2J0G5qgGztFq5AtEf6foRrE2JFI54GH45dd2dZyoRYprLBCmyWznSdAUsCmoF3l
+	 ZODy3Mqv0CLFPUmzY3kN4yWP/YgxvAV4n5+z1fbhooCmkLtorx2iVi/wL8HzOP3zNB+zz
+	 qwkwzCyDtoWVsvUVCcHo7glF1rahrlvX4CB3QOCY/JWvWS8mu37yJkd1BeDXd/11pQTCp
+	 sZCYxaZEp1Yfw2kRKIWVOwmRgzYZqMFSHqgqRAU3VuWIUGYnPVjlQJzpkEi/ppcuKYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793885254;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=XrBQYJBKmN4p93auIZi3LsTAkyZ/pnTV+pc9s6RclDY=;
-	b=JliHrWjXpNiORv2vpVcgmX5Zm4u+cQw+Q+6Rp/kemFSm+2zdoek/iY0CmtXyzAtXWWiu
-	 YWkIm+A3RCukWHUKl43X7bGf3EeDQwsK6+kU1496fbD5/aMEbe87VyTcBrQbuE/G2i2Be
-	 fVLtjp2IVHTKXsoiC5TmnfsNAj8Um0N0vh14jbQei/X8+RA5ZEiya74txkMglbWMI3D/m
-	 Gz2JcSIUA9H/cltJvipwvbXEcUsIQTyYxWyY6GTKtnulDALj+c2+PYDSLco8PuHJpdsAP
-	 sp9X0GHiUREV49h8CmGQT1zVCvLk3SL0SA6fJ9hsptEFiumbaThqf15wHFhQe6WtV0w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793885496;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:From:Subject:To:References:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=c1TYCaawHF9Qh/HMTmrG4qEvk+h7Jd0bESBrUuO2QUs=;
+	b=2E4Ym/zD072Wt11HZ/TmN+ni9sCM9rzvxaK3VI7pm5rqPN4RuUzmZcQ8E/0gZUp/jXlq
+	 nv62gk0rFFyu4Uom/ArsxeXve5Rt6FQSbKXKdEgBecJDIKsdptj5WB578pewqZ1w3kXRm
+	 Z+Zq2V2n9EtGFugFVPiEfLwVJMFalHELbrvIDbjkIUUC2VfR9yJtzqEvFMgywZR8pWLKp
+	 HhaRhsN+LxoidWdYdFcZ1bhJFfjC57TXk4UaWRJLkcnu/MEK1YErGo81hbTvyNyWHGGLR
+	 6tKHMhLQHHMLWVLJO07qrifNaqOhu7Jl8Sc9x4Fkxh2wYTWs+CArBMSjJiUrk8ZSEFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JK2Ti1jA;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GBI0tha7;
+	arc=none smtp.remote-ip=209.85.218.53
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3E7F606A326;
-	Thu,  5 Nov 2026 13:27:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF9D606A32E
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2026 13:31:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2EF9D606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JK2Ti1jA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 817331F00919;
-	Thu,  5 Nov 2026 13:27:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793885253;
-	bh=XrBQYJBKmN4p93auIZi3LsTAkyZ/pnTV+pc9s6RclDY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JK2Ti1jA3utWAgrt6V4JUS7tslRWfNukRCd+/Vzfz7h/q0E1p8+7S8luP+VD4LAYD
-	 7SihzxrgOYXG8U0cQ7JZFx8YFxMoxO/yFemOAtRTazaDhuvYkS0K35sZZ0c3s+KU2o
-	 lM6rj29uyaswnmyP6F68EXwCsjKUiAKcRePanEbxomxutU+3yS3tkA3/QIf9brzDLh
-	 aiNB6ftZI1eeCWp3rSN9ZCx71+gQ3tsIMQUMJPinxAtG4Td8DrMeMVL0JEQVRFNoEM
-	 Rzz4qv5TtVwT799y7DIPLtMhY+Cx4FCS0D2NLbvyTBY2Aw7zKpeILiQrBovRfpIO9t
-	 OsoSWUhj/O7qA==
-Date: Thu, 5 Nov 2026 15:27:29 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 10/17] driver core: Expose device trust authorization
- through sysfs
-Message-ID: <20261105132729.GB8298@unreal>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
- <2026110514-bunkhouse-handset-6a3a@gregkh>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GBI0tha7
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c4203bbb1e9so291471766b.3
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 05:31:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793885494; x=1794490294; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:to:subject:from:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=c1TYCaawHF9Qh/HMTmrG4qEvk+h7Jd0bESBrUuO2QUs=;
+        b=GBI0tha7l2gZ/NxkOjUn5QG1p85LPyHBbu0R0IN2aEXTjdNfQztc1tRKW4prdGVCdU
+         BDZ7o+7l0Is9rteAojabgDN08PoJcQS2hufCCL40dhPpzl3vahJy0OUco3sTPg9t6V/T
+         5I3EnK4mHDr5faAYapnS3gokqzFFp6y3B+YT573RZGD4sDIkVTP7ABLaaMAegaXEBs/a
+         f+J881QQhrf1lY0ag6kJwQRmscczgrq3CLxbJ0gZPQKqyik52DSAvwS75iw2mNFobNaV
+         KB9X1qUubemOInFQN0oZvqqS/gwnCfRIG3t+mY/xsFbutW5aOlgkM1K71GLAKgedasTp
+         FcBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793885494; x=1794490294;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=c1TYCaawHF9Qh/HMTmrG4qEvk+h7Jd0bESBrUuO2QUs=;
+        b=1L/X5TCz7l2C6kETxakaxvCuz63ZwHe61N7HkdvQEjC9vwswstHWY2BLLxKtm7xD2M
+         9TLfsGOYCm+oZNyiuQMc/M7LO3WfuAEtc01ph3XSDAfIHQqMZwiIChmnR/LuoQaJGsPY
+         auKdhn2Byz6GgZbX2cEyvVYqprBGH9erj6cj75EMx2eeOU2y8Pve07w9tdQM4pf1uQ+n
+         Y8XtTgMr18s9V4pBqMN15niRiLF/Toh9aATy17c+Q3LekcU+aVlPgNBQRNmjTZsMeP69
+         xj2hAW1Xld0ihBvpZYmvmDO2aDdVu5iBqHS3XAwnWea42haum4Erc17ABRVJKTAaFByY
+         26zw==
+X-Forwarded-Encrypted: i=1; AKwUvBz2X7qK7V0UP7f3bJ3czwxGJe6Z+6AR0azlpnUKFk51pXv0yuFb4TEAdhbPgPu18Fhi8wN6y+pTRSPOb5yaJQ==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9bq2DPaCYgSq61MSBumU2f5VHHm2S16wc2Kz9ch8Zs1YzFhVUd
+	PWfe8abYst2Ugdm3ww7IM3WKm5ugfKD1Hg14I4q6KzSXNxh6OwSB74l4dsaa7Fzx
+X-Gm-Gg: AYBFou1nfEP4s0MG37GHdmKu3Ggrshq1VS7MI3moJVLCfJ3jWj5bB/Ftdeyi+YqF9EZ
+	dHaGotMxoFMqryuq2wPjtcBgNGrJ4RLgjctUfQxvxocGL2EIgWAgeRqSO87hXf/uaeGSFTbjdd4
+	t6WMgJLHbKDEYhg9EDge5HF+5gc2NjK7AOUticbQRTE7qAbKv4EeBVuncXon28//MbofFJo//6/
+	gtT0U6/4YGstMXOD6D5iGwyTv4gLCc41XFsgo9WVsbIfaIt50m85OJC5KlCO4Yicz905LatpRBI
+	aarl5HQDc8aSykF4fwkwBZP5fJ5rfbwn0W5v6t63wwab93TA4mGP7TwQ4k8WzhwrRSDAuY9ydfp
+	Nxtx+9M6ioaB4/K93FyJIwwZEieDzLf0IY3l/GBc/riI84AK+mGOi/1voU7Aqk1EdRvw4/T/qsy
+	/kLUXxI3aqPJiEyImSZ7GocnN9nSbCh0dSaCOqqp7yXN4jCE/Y3gyl1QRogVFZAFylgTlKhGaIW
+	5ojPd1vCMdvl1JgoYCg70iP9rcTnNgBUfauvE5wsqGTaY7ULjIJYIeIZ13yUMFrV/I0uODbpKLp
+	jSp5wmcSO1ltYfkzwETG/FZ4RtSX27KqERiw
+X-Received: by 2002:a17:906:9f87:b0:c33:9fab:5f61 with SMTP id a640c23a62f3a-c4ca7a80dfcmr1783355366b.29.1793885494321;
+        Thu, 05 Nov 2026 05:31:34 -0800 (PST)
+Received: from [192.168.1.50] ([81.196.40.160])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4d0e42479dsm175532866b.17.2026.11.05.05.31.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Nov 2026 05:31:33 -0800 (PST)
+Message-ID: <b0b75c12-9c66-4d73-b3b0-44ff4122b386@gmail.com>
+Date: Thu, 5 Nov 2026 15:31:32 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -88,102 +90,108 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2026110514-bunkhouse-handset-6a3a@gregkh>
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH rtw-next 0/5] wifi: rtw88: pci: Support an older design,
+ like RTL8821AE/RTL8812AE
+To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>,
+ linux-wireless@vger.kernel.org
+References: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
+ <4c0eae7568334475b3b9a57e50f5c912@realtek.com>
+ <152bc5bf-4e5e-443e-b191-198205ad81bc@gmail.com>
+ <f5ec572f354f4c67a2a65b2b1676eae0@realtek.com>
+ <ca4921aa-c8aa-4f88-880a-bc717aa103d4@gmail.com>
+ <08b040fc2f7e4311aa7721cf4969896f@realtek.com>
+ <716e083d-93c1-4236-bfa2-ec88d0c84ca4@gmail.com>
+ <88568fb7cf038782c67e858210b843d79afc0e25@linux.dev>
+Content-Language: en-US
+In-Reply-To: <88568fb7cf038782c67e858210b843d79afc0e25@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Nov 05, 2026 at 08:10:14AM -0500, Greg Kroah-Hartman wrote:
-> On Thu, Nov 05, 2026 at 01:42:23PM +0200, Leon Romanovsky wrote:
-> > From: Leon Romanovsky <leonro@nvidia.com>
-> > 
-> > An initrd must authorize a disabled device after attestation even if a
-> > built-in driver already attempted to probe it.
-> > 
-> > Expose requested trust_policy and read-only active trust. Allow explicit
-> > disabled policy to advance once to adversary or full, fixing that decision
-> > immediately. Reject later policy changes, including for a device claimed
-> > before registration, while allowing same-value writes on live devices.
-> > Keep initial unrestricted selection separate from explicit authorization
-> > and bind-time commitment. Serialize writes with probing under the device
-> > lock. Include the attributes in device ownership changes.
-> > 
-> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > ---
-> >  Documentation/ABI/testing/sysfs-devices-trust |  51 +++++++++++++
-> >  MAINTAINERS                                   |   1 +
-> >  drivers/base/base.h                           |   6 ++
-> >  drivers/base/core.c                           |  15 +++-
-> >  drivers/base/trust.c                          | 102 ++++++++++++++++++++++++++
-> >  5 files changed, 174 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/ABI/testing/sysfs-devices-trust b/Documentation/ABI/testing/sysfs-devices-trust
-> > new file mode 100644
-> > index 0000000000000..97e07a174769c
-> > --- /dev/null
-> > +++ b/Documentation/ABI/testing/sysfs-devices-trust
-> > @@ -0,0 +1,51 @@
-> > +What:		/sys/devices/.../trust
-> > +Date:		September 2026
-> > +Contact:	driver-core@lists.linux.dev
-> > +Description:
-> > +		(RO) The active trust level for the device. The values are
-> > +		"disabled", "adversary", and "full". Driver core resolves
-> > +		the level before DMA configuration and probe, and retains it
-> > +		through removal and DMA cleanup. Outside a bind transaction
-> > +		the level is "disabled". This does not imply that policy is
-> > +		writable or that the device has never operated.
-> > +
-> > +What:		/sys/devices/.../trust_policy
-> > +Date:		September 2026
-> > +Contact:	driver-core@lists.linux.dev
-> > +Description:
-> > +		(RW) The requested trust policy for the device. The initial
-> > +		value may be selected by the bus before the device is
-> > +		registered; otherwise it is "default". The policy is resolved
-> > +		to an active trust level before the device is probed.
-> > +
-> > +		The values are "default", "disabled", "adversary", and
-> > +		"full". "default" lets the bus select the active trust level.
-> > +		"disabled" prevents a functional driver from binding.
-> > +		"adversary" requests operation with the restrictions that the
-> > +		bus and DMA layers can enforce for a potentially malicious
-> > +		device; it does not isolate DMA by itself. "full" requests
-> > +		normal operation.
-> > +
-> > +		Before an operating level is committed, policy may change
-> > +		freely until "disabled" is selected. Explicit "disabled"
-> > +		blocks binding while allowing a later write of "adversary" or
-> > +		"full". Repeated rejected probes preserve this opportunity.
-> > +		Authorization immediately fixes the requested policy.
-> > +		Returning to "default" or "disabled", or selecting another
-> > +		mode, fails.
-> > +
-> > +		Successful resolution to an allowed level commits policy
-> > +		and operating level before driver or DMA setup. Both remain
-> > +		fixed for the device object's lifetime, including through
-> > +		failed or deferred probes, unbind, reset, and driver reload.
-> > +		Later binds must resolve to the same level, including when
-> > +		the policy is "default". A resolver error or disabled result
-> > +		before commitment leaves the policy's writability unchanged.
+On 31/10/2026 09:42, Luka Gejak wrote:
+> Hi Bitterblue,
 > 
-> I understand you are aproaching this from a PCI point-of-view, but many
-> busses do not care or have DMA at all, and need to actually talk to the
-> device before being able to even "add" it to the kernel.  So you are
-> making a driver core-specific policy based on mentioning DMA here, when
-> really that should only be a bus-specific thing, right?  Some busses
-> might require DMA to happen (i.e. USB needs their host controllers to
-> use DMA to even talk to the device at all).
+> I had taken a look at the RX slowdown on the RTL8821AE and I don't think
+> it is the PCIe link that causes it.
 > 
-> So can this be written to be more vague and generic and then put the
-> specifics in the bus-specific portion?
+> October 30, 2026 at 7:47 PM, "Bitterblue Smith" <rtl8821cerfe2@gmail.com> wrote:
+> 
+>>
+>> On 30/10/2026 02:43, Ping-Ke Shih wrote:
+>>
+>>>
+>>> Have you dug the cause RX speed is low? The PHY rate becomes low at that time?
+>>> Or can air capture see any weird packets? Or did you think PCIE get stuck
+>>> somehow?
+>>
+>> I think it's a PCIE problem. Before the first IMR_RDU the RX speed is normal.
+>> After, it's low. I will test the RTL8821AE again probably next week.
+> 
+> As far as I can see, the RX descriptors are never given back to the
+> hardware on power on. The RX ring is set up only once in probe, and on
+> every power on this runs:
+> 
+>         rtw_hci_setup()
+>           rtw_pci_setup()
+>             rtw_pci_old_reset()
+>               rtw_pci_old_reset_buf_desc()
+> 
+> which only resets the indexes and the base address:
+> 
+>         rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.rp = 0;
+>         rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.wp = 0;
+>         rtw_write32(rtwdev, REG_RX_DESA,
+>                     rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma);
+> 
+> On the way down, rtw_pci_stop() turns off the interrupt and NAPI, but RX
+> keeps running until rtw88xxa_power_off() clears REG_CR. A frame that lands
+> in the ring after the last NAPI poll stays in its descriptor with OWN
+> cleared.
+> 
+> So if I read it right, after the next power on the driver and the
+> hardware both start at descriptor 0, while some descriptors are still
+> owned by the host. If descriptor 0 is one of them:
+> 
+>         hardware fills 511, finds 0 owned by the host, raises IMR_RDU
+>         driver handles 511, then 0 (an old frame), then waits at 1
+>         hardware gets 0 back, fills it with a new frame, then 1, 2...
+> 
+> The new frame in descriptor 0 is now behind the driver, so it is only
+> picked up after the next wrap, and the same thing happens again. So the
+> hardware seems to be right about IMR_RDU, the descriptor it wants really
+> belongs to the host, even with 510 or 511 others free.
+> 
+> This doesn't go away by itself. I put the ring logic in a small
+> simulation, and with one stale descriptor at 0 it shows your exact order
+> (511, 0, wait at 1) and an IMR_RDU on almost every lap. The frame from
+> descriptor 0 is about 511 frames old by then. That is far behind the
+> reorder window, so I think mac80211 drops it as out of date, and TCP sees
+> a loss on every lap. That could well cap it at 70 to 100 Mbps.
+> 
+> It would also fit the rest of what you saw. The idle interface powers off
+> and on a lot, so there are many chances to leave a frame behind. A power
+> cycle doesn't help because the stale descriptors are still there after
+> it, and reloading the driver helps because rtw_pci_init_rx_ring() sets up
+> a fresh ring. Maybe the Bluetooth headphones matter because the
+> C2H_BT_INFO reports come in through the same RX ring.
+> 
+> rtlwifi doesn't run into this because rtl_pci_reset_trx_ring() clears
+> every RX descriptor and sets the buffer address, PKT_LEN and OWN again,
+> with EOR on the last one. It is called from rtl_pci_start() and from
+> rtl_ps_enable_nic(). Would it make sense to do the same in
+> rtw_pci_old_reset_buf_desc()? Maybe the descriptor part of
+> rtw_pci_old_reset_rx_desc() could be split out and reused there.
+> 
+> Sending rtw_pci_reset_trx_ring() through pci_gen for the stop path, as
+> you planned for patch 4, would fix the registers, but I think it would
+> still leave the descriptors as they are.
+> 
+> Best regards,
+> Luka Gejak
 
-Yes, of course. The main point is that drivers must not communicate with
-or configure hardware before attestation is approved. DMA is the PCI
-way to communicate with hardware.
+I remember thinking there is nothing wrong with the RX ring because
+"it looks fine".
 
-Thanks
-
-> 
-> thanks,
-> 
-> greg k-h
+But you're right, IMR_RDU is caused by a packet arriving after
+rtw_pci_stop(). Resetting the RX ring fixes it.
