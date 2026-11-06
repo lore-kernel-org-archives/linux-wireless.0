@@ -1,48 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.32
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.135
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793976380;
-	b=nJCu4HnhP9Mg9nhZ2wYJ6VnJkbjKI3byBy6uTqtBpS940lq7ZCS3/ewLCO8GxGU57md5
-	 6joHF5BE0GsxZhwVlIW0zN5r+kJE3USVYO7NocsDHGXYO1EkSqBwqdQc5uIf5feJHyOM2
-	 ehD9qfga1tlk544IIHGMEeiyK7oV9a7CZG6NORSX1bBmIan+HhUOrQx/86E+gVYmrrBMm
-	 X+gGOS5fAsJ0Hpb3PFOep065fVUZgk9hONse0XDLYVI64GB42zWXT0yu/mG4qnrUrN2Cq
-	 MFwYgyZI2ktMz/aoDHvGKmv6JTVc2n4/eodR00n1aLaTOE50nSuCqrYFgsL53ZFDbjw==
+	t=1793977670;
+	b=mkEtsbnpBGPSnpt6ItpbhAw4HQJShvUsLmmUhAXBiuUqz0Kmjvn7B5WR7RDt0crIpPjp
+	 UaLvFm+fuQLA4SpV5gGTdiRxzkFz1YXgo0QCjUEwOd+him6BG86cvn58XRhi5KzlqYD0b
+	 ptpdmgIUXJ+7qRvu2IyC1NE++0gHGTjYuyBuebxmdmr7C8I+vtZA2pulr2CiUPr1MEl+n
+	 ZtKNfo+up5VVuWliWlUigNuydjtiDW+V2WiqEwuH+Xq+elVrI+PVYa9D2kAMLvWkzWEtt
+	 mj/K+sNPgrXwdYyq+yyIpWX15RHujnnz/hKffwVqVD7tWyDR9It0qCNIh/EHuCObpjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793976380;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793977670;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
 	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
 	 In-Reply-To:References;
-	bh=bcf8NooVSigb4TfmPTaRxGuCBTM15fUvnjEuKFhLl1k=;
-	b=iKloHGD/p9CEMvRGNbLsQzG6JdfqelDL7R+GPaCuhFqc9eLf9b9+3pQJZveDfPo5yHUB
-	 bkVUXAkymdcDMPLPLMyHNIOLruK2I73YvQgpFrxNc+iuJ9a+QKHyAryvz8TIzXVqFk0BS
-	 jNMGiZetZ2Q5kexltk9d7eDw11f21XgaB1g28qh91RFHlYq8NvlunnXISrUp4Ifuo+CES
-	 9V8YttQ79OZPmua4whbzG4hycp0kPhw37aI/7idy1+Tdg2IhU6IxungZTppWUAis8Ux28
-	 APaJ31Vl9f+PwGVqLCfxkgxq7E9ipuG2uBkgBehECvDOVeRdfgsnVOAbjctZO/dhfNw==
+	bh=uhfmT1IiRbitTf2nGJgABf4mbFwdhgE6lRGWUZmbaes=;
+	b=SDecUxCma7tBIMvktb+ypZPxBLGAOJt2H1xBauqMynWfzqbFGCOyeicu17EC4RpvLWjr
+	 VPQEyUZ4KJBey014SySj7DMqALNZJoLWjYFfrnlW7GGsJ1pPR9QDZghaMQMaySRuJ2RgT
+	 cu0w6vhxT+2Zk34Rr4xwM0Kn8SE6hyat6zj9CdpIaqhJMoiCdtQKaUbCBXl63E4cC6t1N
+	 G/fV5ph+O93LvxRsRT3I1E38DDqR8w75a2JCaN55LvGlnND9jBNr8M8Eef9ryEax3+U7l
+	 AczZeRBHheNoKcYTOL8UX7WHbRJ5i7BAR6z7urMMwVknqsqk2QmX9Yx+iByrGIrDIEw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.32
-Received: from mta0.migadu.com (out-32.mta0.migadu.com [91.218.175.32])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xbMUdS3N;
+	arc=none smtp.remote-ip=95.215.58.135
+Received: from mta1.migadu.com (out-135.mta1.migadu.com [95.215.58.135])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5FC6606A329
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 14:46:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5FC6606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A366B606A326
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 15:07:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A366B606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xbMUdS3N
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=2dbWv/ipPcBByrtWVppRgZPHES/QVz3Y/W26rsMlQ0o=;
+DKIM-Signature: a=rsa-sha256; bh=iUgwg3wOU0y3JGB7xLSFqDmWliv+o/Ng4s2MaACzyrQ=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793976371; v=1; x=1794581171;
- b=FFxrbnvMEF7JCHJuFCQDbFF0oOP5ds8ggkeEYsJnHnNSv9hkWDwkjBi8IHyeLul1mYWhMHgS
- Mm/SKZVfFgBuCnHqqYps8CiK1dw/2tioGwTzkuNE3W1T7hWWF2tuiEhYKENGGspkPRenLkDiVdS
- xs85kurRvIVLKwCbshO3QDEE=
+ t=1793977666; v=1; x=1794582466;
+ b=xbMUdS3NZHCmuF89wzhD2Bqqv44hLBxt4jwhOS9+RuhzNBdYkuMDdfxKOsRmYT9aKMlQm/BE
+ uul8D1uSHDTRUK+PgfZb17nYatLfZQ1JRLt+gETp+ERNN2P8bkZvDH8F8Gu0DJimXe6emAzUSe8
+ PfzJ6dApLUe3z1sqcTi2GM/o=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9a8c2e4ffcc01ae3;
-	Fri, 06 Nov 2026 14:46:10 +0000
-X-Mizu-Trace-ID: 9a8c2e4ffcc01ae3
+Received: by smtp.migadu.com with ESMTPS id e724dfcd2d325e23;
+	Fri, 06 Nov 2026 15:07:46 +0000
+X-Mizu-Trace-ID: e724dfcd2d325e23
 X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,110 +56,136 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Fri, 06 Nov 2026 14:46:06 +0000
+Date: Fri, 06 Nov 2026 15:07:46 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <3c56f067d3d87156d8dad56c34b813543ef41d0f@linux.dev>
+Message-ID: <f6a7d3272fe7635c6a83698dfab5d85500437ca6@linux.dev>
 TLS-Required: No
-Subject: Re: [PATCH rtw-next v8 2/4] wifi: rtw88: sdio: Track running state
- and cancel TX worker on stop
-To: "Alastair D'Silva" <alastair@d-silva.org>,
- linux-wireless@vger.kernel.org, "Ping-Ke Shih" <pkshih@realtek.com>,
- "Kalle Valo" <kvalo@kernel.org>
-Cc: "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>, "Jernej
- Skrabec" <jernej.skrabec@gmail.com>, "Ulf Hansson" <ulfh@kernel.org>,
- linux-kernel@vger.kernel.org, "Alastair D'Silva" <alastair@d-silva.org>,
- stable@vger.kernel.org
-In-Reply-To: <20261105025700.1655219-3-alastair@d-silva.org>
-References: <20261105025700.1655219-1-alastair@d-silva.org>
- <20261105025700.1655219-3-alastair@d-silva.org>
+Subject: Re: [PATCH rtw-next] wifi: rtw88: 8822c: fix out-of-bounds access in
+ cck_pd_set
+To: "Zeshan Ahmed Nobin" <zeshanahmednobin@gmail.com>,
+ linux-wireless@vger.kernel.org
+Cc: "Ping-Ke Shih" <pkshih@realtek.com>
+In-Reply-To: <20261105113415.73184-1-zeshanahmednobin@gmail.com>
+References: <20261105113415.73184-1-zeshanahmednobin@gmail.com>
 
-Hi Alastair,
+Hi Zeshan,
 
-Thanks for the new version. Two comments below.
+Thanks for tracking this down. Few things below.
 
-November 5, 2026 at 3:56 AM, "Alastair D'Silva" <alastair@d-silva.org> wr=
-ote:
+November 5, 2026 at 12:34 PM, "Zeshan Ahmed Nobin" <zeshanahmednobin@gmai=
+l.com> wrote:
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wi=
-reless/realtek/rtw88/sdio.c
-> index 172aa7ad4732a..e318fefe5b5e7 100644
-> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
-> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+>=20
+>=20rtw8822c_phy_cck_pd_set() reads the current bandwidth from a 2-bit
+> register field (0x9b0[3:2]) and uses it as the first index into
+> dm_info->cck_pd_lv[2][RTW_RF_PATH_MAX]. CCK PD only runs on 2.4 GHz,
+> where the bandwidth is 20 or 40 MHz, so the array has two entries.
+>=20
+>=20When the chip stops responding on the PCIe bus, register reads return
+> all ones and bw becomes 3. The function then reads cck_pd_lv[3][nrx]
+> three times. rtw8822c_phy_cck_pd_set_reg() rejects bw with WARN_ON()
+> and returns, but the caller still writes new_lvl to cck_pd_lv[3][nrx],
+> past the end of the array, into the fields that follow it in struct
+> rtw_dm_info. Depending on the byte read back, pd_lvl[cur_lvl] and
+> cs_lvl[cur_lvl] can also read past the end of the on-stack arrays.
+>=20
+>=20On Ubuntu's 7.0.0-42 kernel, whose line numbers here are three lower
+> than in mainline, each chip failure seen so far logged one report for
+> each of the three reads, then the WARN_ON(), then one for the write:
+>=20
+>=20 UBSAN: array-index-out-of-bounds in .../rtw88/rtw8822c.c:4407:21
+>  index 3 is out of range for type 'u8 [2][4]'
+>  Workqueue: phy0 rtw_watch_dog_work [rtw88_core]
+>  Call Trace:
+>  <TASK>
+>  __ubsan_handle_out_of_bounds+0xdd/0x120
+>  rtw8822c_phy_cck_pd_set+0x33c/0x510 [rtw88_8822c]
+>  rtw_phy_dynamic_mechanism+0x310/0x330 [rtw88_core]
+>  rtw_watch_dog_work+0x217/0x330 [rtw88_core]
+>  UBSAN: array-index-out-of-bounds in .../rtw88/rtw8822c.c:4410:24
+>  UBSAN: array-index-out-of-bounds in .../rtw88/rtw8822c.c:4413:30
+>  WARNING: .../rtw88/rtw8822c.c:4364 at rtw8822c_phy_cck_pd_set+0x322
+>  UBSAN: array-index-out-of-bounds in .../rtw88/rtw8822c.c:4422:20
+>=20
+>=20Return early when bw is out of range. nrx comes from a 2-bit field an=
+d
+> always fits the second dimension; it is checked as well so that both
+> indices are validated before use. The chip is already unusable at that
+> point; this only stops the driver from corrupting its own state.
+>=20
+>=20On the machine below, every boot with a chip failure logged these
+> reports together with the WARN_ON(): 17 boots between 2026-10-18 and
+> 2026-11-02 on Ubuntu's 6.8.0-147 kernel, and 3 boots on 2026-11-04/05
+> on 7.0.0-42. Boots without a chip failure logged neither. With this
+> patch applied to 6.8.0-147, 5 boots with chip failures logged no UBSAN
+> report and no WARN_ON().
+>=20
+>=20Seen on an RTL8822CE in an ASUS TUF Gaming A15 FA506IU whose chip
+> intermittently drops off the PCIe bus.
+>=20
+>=20The problem was found from the UBSAN reports above. The analysis, the
+> fix and this message were written with the help of an AI coding
+> assistant (Claude Opus 5.5 by Anthropic), then reviewed and tested by
+> the submitter as described above.
+>=20
+>=20Fixes: 479c4ee931a6 ("rtw88: add dynamic cck pd mechanism")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Zeshan Ahmed Nobin <zeshanahmednobin@gmail.com>
+> ---
 
-[ ... ]
+This is a lot of testing data in commit message. Are you sure all of
+it is necessary or maybe big chunk of it can be moved under ---, so
+commit message stays clean?
 
->  static void rtw_sdio_stop(struct rtw_dev *rtwdev)
->  {
+> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/ne=
+t/wireless/realtek/rtw88/rtw8822c.c
+> index 09315d23e2c4..a29611ff248d 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> @@ -4406,6 +4406,13 @@ static void rtw8822c_phy_cck_pd_set(struct rtw_d=
+ev *rtwdev, u8 new_lvl)
+>       nrx =3D (u8)rtw_read32_mask(rtwdev, 0x1a2c, 0x60000);
+>       bw =3D (u8)rtw_read32_mask(rtwdev, 0x9b0, 0xc);
+>
+> +     /* cck_pd_lv[] only has entries for 20 and 40 MHz. A chip that st=
+ops
+> +      * responding on the bus reads back as all ones, giving bw =3D 3.
+> +      */
 
-[ ... ]
+We do not use this style for comments anymore. Current style is:
 
-> +     cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
-> +
-> +     for (i =3D 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
-> +             ieee80211_purge_tx_queue(rtwdev->hw, &rtwsdio->tx_queue[i=
-]);
+/*
+ * text
+ * text
+ */
 
-ieee80211_purge_tx_queue() takes the frames off with __skb_dequeue(), so
-without the queue lock. rtw_sdio_tx_write() appends with skb_queue_tail()
-and does not look at running, so as far as I can see both can run on the
-same queue at once.
+> +     if (bw >=3D ARRAY_SIZE(dm_info->cck_pd_lv) ||
+> +         nrx >=3D ARRAY_SIZE(dm_info->cck_pd_lv[0]))
+> +             return;
 
-That seems possible on the firmware recovery path, where the device is
-stopped while mac80211 is still sending, since ieee80211_restart_hw()
-only comes afterwards:
+As far as I can see the nrx part can never be true, since nrx is a two bi=
+t
+field and cck_pd_lv[0] has RTW_RF_PATH_MAX entries. The commit message
+says that too.
 
-        rtw_fw_recovery_work()
-          __fw_recovery_work()
-            rtw_enter_ips()
-              rtw_core_stop()
-                rtw_power_off()
-                  rtw_hci_stop()
-                    rtw_sdio_stop()
-          ieee80211_restart_hw()
+The array where nrx seems to matter is rtw8822c_cck_pd_reg[], which only
+has entries for nrx 0 and 1. For 2 and 3 the rows are all zero, so
+rtw8822c_phy_cck_pd_set_reg() gets past its WARN_ON() and does a read
+modify write of register 0x0 with a zero mask, with __ffs(0) in
 
-rtw_core_stop() clears RTW_FLAG_RUNNING, but it does not cancel
-rtwdev->tx_work, and __rtw_tx_work() does not check the flag. So a
-tx_work that is already pushing frames can append while the purge walks
-the queue, and the list and qlen get corrupted. On SDIO this path is
-reachable since dc16902cad9c ("wifi: rtw88: ps: Trigger firmware
-recovery when failing to leave LPS state"). If I read it right, that is
-the only rtw_fw_recovery() caller there, because rtw_fw_c2h_cmd_isr() is
-only called from pci.c.
+        rtw_read32_mask(rtwdev, 0x0, 0x0)
+        rtw_write32_mask(rtwdev, 0x0, 0x0, pd)
 
-A frame appended just after the purge also stays in tx_queue[] and goes
-out after the restart with the TX descriptor from before it, like with
-the rearm in v7.
+With all ones from PCIe bw is 3 as well, so your check catches that. But
+on USB a failed read returns whatever was left in its usb_data[] slot, so
+if I read it right bw 0 or 1 with nrx 2 or 3 is possible there once the
+device stops answering.
 
-Freeing with skb_dequeue() and ieee80211_free_txskb() in a loop would
-keep the list intact. Maybe a second pass in rtw_sdio_start(), before
-running is set, could drop the late frames too.
-
-> +     for (i =3D 0; i < IEEE80211_NUM_ACS; i++) {
-> +             queue =3D rtw_tx_ac_to_hwq(i);
-> +             if (rtwsdio->tx_queue_stopped[queue]) {
-> +                     rtwsdio->tx_queue_stopped[queue] =3D false;
-> +                     ieee80211_wake_queue(rtwdev->hw, i);
-> +             }
-> +     }
->  }
-
-When the 8723bs back pressure has stopped an AC, mac80211 marks its txqs
-with IEEE80211_TXQ_DIRTY the next time a dequeue is tried. On the
-recovery path above, this wake runs before ieee80211_restart_hw() sets
-in_reconfig. So if I read it right, the wake_txqs tasklet clears the flag
-and calls rtw_ops_wake_tx_queue(), which returns early because
-RTW_FLAG_RUNNING is already clear. After the restart those txqs only move
-again once another frame is queued on them.
-
-PCI does this reset in rtw_pci_start() since 6ac7db1cea43 ("wifi: rtw88:
-pci: wake the TX queues after restart_hw and interface up"), through
-rtw_pci_reset_tx_queue_state(). On restart_hw that runs while in_reconfig
-is set and the SUSPEND reason still holds the queues, so the marked txqs
-are woken at the end of the reconfig instead. I think moving the reset
-and the wake to rtw_sdio_start() would work here too. It could also take
-tx_queue[].lock there, like the 8723bs stop and wake helpers.
+That is not new with this patch. But since nrx is checked anyway, maybe
+check it against the two entries rtw8822c_cck_pd_reg[] has for each bw,
+or drop the nrx part if you want to keep the fix to bw only.
 
 Best regards,
 Luka Gejak
