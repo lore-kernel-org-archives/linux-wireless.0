@@ -1,112 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793952016;
-	b=R/ho3dHP7NJ3hKQgu6O/gpO8+nfVSF5i69Wbfy76AjVrN8gKJb5eIwIUUe/QxHkrwGeo
-	 6xqIlTEYvVsDuNmv90JHsZu2QkUd0eiuMLn8cSz859FpJ7jV6skHbZFKGgP+lhm+6VgKp
-	 9oJeBzKuRsJBS4ETyB4gtg/nEO0JxnvMLhfxuS2h7DoaTjRkj2Fwkn4rulOSXY0FmfO1w
-	 r7zlNPvGXtARdyNQV/s9SGYXLP+Ra1NtY6KbOBKt7FjqgXugYMnqw5sCJHnTS4XlenxF/
-	 2tnXBmAF7UQHmzYRv3HZYavTnGhTrF6FTRZ7UqQxB3VcrjQHw3EASQWsRMJk2x8Ry/w==
+	t=1793952012;
+	b=CAQUecfcQUWoVc7BTjV1FM0MpqeK2YK7DoRNSd3ZLtVsmjSsiwwEKdbnZ4TfqfeRdyvk
+	 erhlXY4yoKgmn8CYnWjGzZvFVN0yH3Pzds6YiZ3d59IuRlJpnyDSmtaau2ShYq/Uir1EJ
+	 onTF8qGVH9124CVN3dw5QsO7XsLc4vSKhD25X19JBec1yt5Ue+lMv8Z5YpT7rr7woHR+R
+	 aAhaLb5KRQ/7LT9iZx03ppXLoMWc1ofQUjY/GE+Kt1o0ZlK7XNEmh8kU6WJbeY9yXqLS6
+	 S7bQ66z+WiH9PPDVpYv3BuneBBzsC8SgfCAjSgNi0DrCMNh9OPY8NSYjvo66XNr/hog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793952016;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793952012;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
 	 X-Received:X-Received:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
-	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 In-Reply-To:To:Cc:X-Mailer:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
 	 X-Proofpoint-Spam-Details;
-	bh=58cqdlgifRKWV1I5Qv4pWFFday1yRTm7BjeSoU3ga54=;
-	b=byabtzy5mylUnkweYtStJU0+auRLdsT7XSRS09qJdIBVr6ruHdeWNq3FmtC9YSvA/OUv
-	 Sjo1+k9a+XviZe4UHjp3VgDNX5MEleYjD7bqRSCrJlkUSfpIlHRvWAiiOuVXS5FotTgq+
-	 qYjBfNfN5YvaeXiXGuCaa5bBEIxGvPq7+ybwnpOqUsXbFromLsCP2XN/nOVgw3Kx7x9Qd
-	 i2Br4SsdrCFeCBkgx1QasFk2QtyPJJu5kPLZIB1dHCOYyJfvdRXze+N9Ox6kFU0IGihSB
-	 7M1XF13Z0kwMQ+h28FpxOvH/a2r3r73216atlfL61KClBvNhevyGEa10wlUesKXGgcg==
+	bh=gCtLvFIImSB8LqKP6MP6VDrJv6ieUFPxwzhvVnpKvdQ=;
+	b=ombcrUtxqR/PiZMXZQyYHfZNYyZRx/r+5JkAnI8MdU0IwlOKx0pixmrlaeNOQq083bjw
+	 dbMPhwUTXJwMGz+XZyCqwkEDZdqoNBIuZwod5IJii727IXKIM7lVr9HZysOhlR6J5LHE6
+	 n+/l1rLfiGy7U7gYA318KEEPNg39wISIZ8zWfjBuEA9XqhdfdauRatAe2lThLFYkabFFZ
+	 oFid3gVFAPMiQppRU3Fp7v7HhGC7mDKK/GNOvQMKyoqMpNEzupT7mblu2e7wK0tGexEKk
+	 me7RYKFm4I45okGXVh1tEb8rmkxQZKSId1wTFNt/GAqJrwQ248TY7FdHd8e11tqqFLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=d6V3+As1;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=B1o5cj6A;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=SIrLkXTU;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b="EmExq/IM";
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3433B60A5BC8
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 08:00:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3433B60A5BC8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6FC60A3818
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 08:00:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4B6FC60A3818
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=d6V3+As1;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=B1o5cj6A
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A67RTlF3301633
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2026 08:00:15 GMT
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=SIrLkXTU;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=EmExq/IM
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A67R7WF3243902
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2026 08:00:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	58cqdlgifRKWV1I5Qv4pWFFday1yRTm7BjeSoU3ga54=; b=d6V3+As1GHYnrqti
-	oD5UbqB4+PYCuT+n0Es+N+8abbZ1bplZD9CBhN8LqAaCTlxgndCiOfrze79VStgO
-	UqNQ+O3cRWXS/+0t6fUwXHnJdjNZ2XG7GkdxGs2fc1Cxm5RL3ObqKhN4kdkxInof
-	ABfgJpYc1F2QM9a4ymhHohlp3rtf7+nL8ljco+OKiTGXCHox9vXEkJJBNJscZkQQ
-	Uuxv0Z+dO4OHeFx4i1umEqMdB5UcMG7jZY3DAuvurlS6brBu+7Lg29H+2sNy0Svt
-	F0dnUGtpYBN1tsVanRXmajOj9qADUroKQXRKqrrwW0bmpjZ48kSOkWzPC8apbvgO
-	MSVFrg==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hs3pa1sck-1
+	gCtLvFIImSB8LqKP6MP6VDrJv6ieUFPxwzhvVnpKvdQ=; b=SIrLkXTUDN5wmz5c
+	/K18MyZ0vVZKLkwD6lBhIXtQiP1wCel90qwvIYVaYUVq0xXLWwPluS/LWNrbrPwV
+	+klXrMNzQRW4jevophr6svS7wj76UNCa+osDbLARgHw/BkAemm8HOeNMKy+xHUH2
+	wES2GmcF7PSl8QA5rU1KT+OI0hokY0ic3TVagieEA4YFtmhscldLyFVlxcG+P3IW
+	rLw+n+PpR3O/Xtu5OlE3yrMHLElg3nNO/b4goLh8oIfhAJNApf4Ahsfnapb4l75L
+	ko+v0dzvLvmGRc4cmub5z0665PYCo4+c2PSxiPJSAp8zpXus59a6eTFM1zZroNtN
+	gcqwHQ==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hs3pa1pnb-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 08:00:14 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ad704d4760so439237a91.3
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 00:00:14 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 08:00:11 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3b09b223c70so313456a91.2
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 00:00:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793952013; x=1794556813; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1793952011; x=1794556811; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=58cqdlgifRKWV1I5Qv4pWFFday1yRTm7BjeSoU3ga54=;
-        b=B1o5cj6ACy1fHz2Y7LSBju5tEcB30oW+KXjW6DXtVgAGQRs4phxhcQDdf3OZewPGc2
-         VsNSUAP8EZHT9MaIkqkE2MAKdqKcdFYBeNCpHy46mybVa+GFeM0sL2IHvGyQgQIjPRfQ
-         D0BgG1lqi46+MttVxW+AkT7BQS9kfF19MzlGWkhZNxM/Z6FrGxlwupGWYC0u/WWbzHGZ
-         UYHvyDYSEuCby/ueg3A80MCsPTQuRaq0zskcLvPGHIPSnOyMxA3a+VGhRk83TgECprpZ
-         sdhGRaJAYuZs4rM5ERmaPN3lpGXY66nFNMSEHIryDCgF5DICKmva4ZHmdbBPuQu0CEqw
-         EgQg==
+        bh=gCtLvFIImSB8LqKP6MP6VDrJv6ieUFPxwzhvVnpKvdQ=;
+        b=EmExq/IMZ6rAaDHB5N8tQTVDXUbXHExjyyEdYIlMe1QqoagKMo1ZBWhQYbf0TuQIAe
+         OViHyRNBzGK6Te8WSvl02p1mlAKOkG/bmlfTikCoxbKrnplSQjIHr0I15u0P0N6zr1Iv
+         pb9UPs2lGQVEm1UMOE3VtN5Ppi9adPfyYTywnO/Lht8Nl71ZAcUTqe9unx+8hqOnTGyd
+         G3At7bHeyn4xMuKfqtEMRwBEyZ7ld9HRcNmcY+h9/UsDyNl99qhm2HpKToK/WTD2zNDQ
+         GCl3ZyXl6cDi6EgveIb6k8yMnKXcuhrBUcBlbHcYuwNp2SvGczq9sBd5lXzTPHqpehnW
+         CIlg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793952013; x=1794556813;
+        d=1e100.net; s=20260707; t=1793952011; x=1794556811;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=58cqdlgifRKWV1I5Qv4pWFFday1yRTm7BjeSoU3ga54=;
-        b=xMiHQqgrmAEXN9/lwBGl2e10YZjBntqJGm6285ENsiTSHA63DRhAKnHlEA4cT2r2xL
-         3VsHT2SyNoWAjMHYPuOFINZ56Nkg5pvFXGoucRE4tZz2oc5C8c31xgKXaVKYTTHdl0Kc
-         PtnW1OxlonhgL72rh5eFnimFIGE6aZGfChWGnIEoVDdpNHkj7ze5PrMszAPlwVhvc5AW
-         9Yldck/UnbkBAdH5o/fTjepFzvx4CgBxG/1vSWKxSSCV/dWvFCDtQaVlK45cvFjGjVES
-         nzuFL4VcBYkgKM3cOnAka0RvvnFQmeV7t/9qwyGDmEIk7djc6AkdGC1n2c2azRPUX6oB
-         Hg+g==
-X-Gm-Message-State: APuU4Z9j+ZWcvkf2gX1dOxGaJjB7saR4OMsSWkH22C3ydBHKR1Y8sTMK
-	1VsNvT1HM8aIb9hIW2xiuJsEg1UYEuxwpYLcRWGuxfPur5cKg66zw9aBCVPQRIyS82QTvvPNwTM
-	l6L1Ivs8vNxAJVAgasHXSnXM5+W2/336I9PkwPFSHOTjDhT4ymS9HxyMj94VBmgJ1B67eRDd++n
-	g8
-X-Gm-Gg: AYBFou1U5/faVH67DOAY5mqUiKFN+snM6ZyCJgIh3tnOHdF7EVCeb7agCK2QjOZoUiG
-	zxWukGFnBoBEDdfcWOuYA+Kr5mLXvQK4HkZCdQmIuJDM1xH6q60NxleMKJlVuGbPs/9nSTl1c4S
-	e/p/3MtAD6MBtoUCMjp18a8iuUnrr4ytJqeeCFSw8T30sUBq+rMMEz4U4nTKIcyBDXmayP+NgWd
-	Q2p1aBSctVyYOD81NFMwMhrXYIa0IhFYEvV6bIaydvDN2QF/5/D89NBxN8Dy5k0CGr3ovrj80CO
-	FT5oyJNc9Tg8SNvLIFhcu4xD744AgjVMRMBzXSxnPbjJ2PF+HFAqv5KxbZYLGVxmi17n6Mz4/mX
-	dSBKjbK6Yi401w6GPZfcLPClkHdyvgqbRz5wCAieOoSo91oExlb4cvsoLZ2SMYpbaM23j0IZ2o4
-	ZanHUY0ldP7KjcveP7dStXF3h9Eu9Ns0t0x3ZnxguDdBPXVapn+1UQXzsGbsdCSLlVlsCRPU8=
-X-Received: by 2002:a17:90b:1b04:b0:3b0:a3eb:7597 with SMTP id 98e67ed59e1d1-3b0db72908bmr1272468a91.51.1793952012910;
-        Fri, 06 Nov 2026 00:00:12 -0800 (PST)
-X-Received: by 2002:a17:90b:1b04:b0:3b0:a3eb:7597 with SMTP id 98e67ed59e1d1-3b0db72908bmr1272443a91.51.1793952012360;
-        Fri, 06 Nov 2026 00:00:12 -0800 (PST)
+        bh=gCtLvFIImSB8LqKP6MP6VDrJv6ieUFPxwzhvVnpKvdQ=;
+        b=kcqh1ENFEK7LuK/xANJne8VzTSup6k41o4pLKiDQUk33wCQGl+QVXDEFRbpC6+EOKE
+         biIYYVnjoAk3P7vggDFlyUyZx0J9ux+XDTCaOr5cdWNMtHHJQXyvUr4FBRdqPSpNyS3v
+         m3ryrvIy5n/huPuSaCm6WOH58fk4xddjxLDrVLr4qKNNI5HiYcIgQk7EcidnKapPg7qF
+         c9cdfC8WUTV1jUsvjIvKXFRgOORH9dtcpEUCdWNoyR9e5SYVyscullUi8Y6CM5Pl8HOl
+         oiewmDQn9fg+C1wfHWs+SDLn3ls5+7fC0ozUKAi/XdeYdvAmIDTUmrbwfl1O/wns+h6m
+         pexw==
+X-Gm-Message-State: APuU4Z/i/06GfnbyqCrJ+NI7c+sIXsmkuNNBfVIXezja6GLK8XOlsY9D
+	L6wAubQNdSyAgXynHM3j8Wd+SI0RHfzQ17Vbl8RWGrbNOHMmrCCZERy53u4a1dG3jy8hacPWeYc
+	8fCfLYucQNKN+prtp8I27JIawsGhfaSnNeHiHTmch0wDJAXhn1t0cIuij+9ZVl0mDkvY0
+X-Gm-Gg: AYBFou3E/WRcQnD0fukHe1MI/UPfsG85e8YQW9hhZ4ICRTktRNYI+VfmD1+v7SuAA9i
+	3PdZHN5HuKho4yCkwxms+UYCbStWwK9mn3WDF/dJHXDLG4g7OqyCwoxo49giXl/Qiynj4kh1O8H
+	QAOkqBspzR9f3MG2W6v1919WF8UbWyQKV4MCJhN5ZMyadn8O9PQWdL7U0o0nFXw60toPv9xP/2W
+	sTIuCdRd8r0XS1BPmGTtM/oTapxS/9k+QIIz1eFJD4JFcTsCLRalOQX0BBLS4EBWlJwVzX+mZkx
+	WxjHUwG6ASeYx6rpVrd7CjOcLG5nAKe/Tvacm3pTf/zOq0PqLbsaPu0KlzC5uLVzquyIeZa029r
+	+TpGHDgkxAm6267YUmZL+M87wKY1lZE/777wyEU5+fjsLx5UrI6mFw/80DJADBCT1mK+QxFqZcs
+	y8bqTl6CTxSNSxDXJbqvVstIFPHvjuC7CTeIQ0qmw5/Mgjt2Ein9iez4l56UvWJAtguDWKDmI=
+X-Received: by 2002:a17:90b:3b8b:b0:3b0:a4bf:b90 with SMTP id 98e67ed59e1d1-3b0db69fddcmr1676078a91.20.1793952010662;
+        Fri, 06 Nov 2026 00:00:10 -0800 (PST)
+X-Received: by 2002:a17:90b:3b8b:b0:3b0:a4bf:b90 with SMTP id 98e67ed59e1d1-3b0db69fddcmr1676053a91.20.1793952009929;
+        Fri, 06 Nov 2026 00:00:09 -0800 (PST)
 Received: from hu-pooventh-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0e4b3cf54sm321685a91.2.2026.11.06.00.00.10
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0e4b3cf54sm321685a91.2.2026.11.06.00.00.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Nov 2026 00:00:11 -0800 (PST)
+        Fri, 06 Nov 2026 00:00:09 -0800 (PST)
 From: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
-Date: Fri, 06 Nov 2026 13:28:57 +0530
-Subject: [PATCH wireless-next v4 20/21] wifi: mac80211: add mac80211
- support to handle NL80211_CMD_GET_SMD_CTX
+Date: Fri, 06 Nov 2026 13:28:56 +0530
+Subject: [PATCH wireless-next v4 19/21] wifi: mac80211: add mac80211
+ support to handle NL80211_CMD_SET_SMD_CTX
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -118,115 +117,93 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261106-smd-v4-20-62e39487f51a@oss.qualcomm.com>
+Message-Id: <20261106-smd-v4-19-62e39487f51a@oss.qualcomm.com>
 References: <20261106-smd-v4-0-62e39487f51a@oss.qualcomm.com>
 In-Reply-To: <20261106-smd-v4-0-62e39487f51a@oss.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         pooventhiran.g@oss.qualcomm.com
 X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDAzMSBTYWx0ZWRfX3cWcItP9KZkB
- EG6qNGmX194bzasoTjZpMDq58e80qeDyGx5KTxTntUvrXwhDmz8lhFLMmDfZJP5ZnICssETy3f5
- NeyvuAXpAuS0XYRs/qUsZ+q+mWeW1YoqcG2tig02FgDrb6ULEl6MAayHpL5vknFl0b+jtE+BNdP
- pVOGyhBuaUTHPyIk+ysofDp31MF3rhwX3Y3duWvC1MOU6UmX7upHhPSR+oL4Zfw6i6vJa4V0RYa
- hT0YWACdbAKgk/NzLtbkI2U0NyxOt6JbCGuh3HFIsDtAIypcUUAWcjiM1r/7HRu4MVLR9SawHsI
- mStefeq/S64p8AlBrXCVYxeIGJjhhC6W4hI0ksH6/cLoHg7MiQapY2UPR8RjFbW++V/2n8FUj/+
- +Nb4foXfH1plMo8wbLDBLEAEyxbPOzinHdVNPGWOXrKI+edGTCodb1TNuesszbqzfyFxbcun/jF
- HcdYh9b2AEURbJUYcLw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDAzMSBTYWx0ZWRfX6nf5Z7+borXg
- vHYqHd1inWkAeF/alkyOIhlp5ER5XazCRuom+EU3lxk5sTIH+3oyvfgzqhnpB7Rx9z7XOo6fmwR
- xdPB7aE1PMJKTyzbrftTn5ExhvGDHq4=
-X-Proofpoint-ORIG-GUID: PyeLPAclJdCJeNh2mk0gZvHgVC9vv4mI
-X-Authority-Analysis: v=2.4 cv=GpzXaU1C c=1 sm=1 tr=0 ts=6aed890e cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Authority-Analysis: v=2.4 cv=PLeaavqC c=1 sm=1 tr=0 ts=6aed890b cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=EUspDBNiAAAA:8 a=x9_SPualhOxJPIen774A:9 a=QEXdDO2ut3YA:10
- a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-GUID: PyeLPAclJdCJeNh2mk0gZvHgVC9vv4mI
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=EUspDBNiAAAA:8 a=zHDNONmbSdC_GOYWSZkA:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDAzMSBTYWx0ZWRfX1cE28Nexbyit
+ XkwX+wYLWN6PA2AngdyI7y4eAampHTWz3MzKnO63LiylIkT0JlL45z7ryQHxg6mKKxv1r2MgIMZ
+ vCXUvKukha44xEU8C1tL6j/QFVSJaQU=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDAzMSBTYWx0ZWRfX0EhtwRR5ovM3
+ IVT82PNpAherZriXV4kHJv/ikggXRdRadY8lQYRb8Dir+daCu3jh/T9SklxHQNwqTLjbbE+ZASR
+ IlL/utjeXczimcg5K6dwKFIbSbi4BNcO3p796RgzRDSkDDBs4+Q7iDbe28CVN50t/59hB7zssaD
+ axopPjHyAuHE1f9rJLxkltmZUQI303DsqBX8M4qwlo7i7S+KbqjcNf0xgKUs1o6j+VzVD6GYBII
+ 1P0D3oFrPAanq/l7xJmmE8HRwa+tKM7xldAfO0gV7jl5G7i7afP7UKihKNKvARpjm8amc7eBVgs
+ Zn6vT1isX+6sFiIYwvBr67cv5vjTcaKgjZtmo7qvhtWg+mLHsSsoKMrTLmmHl4bCFTEGR3ix8/0
+ gBnkQTIuQwJ2TxeEMs2gE70hQ1VtQ53+yJ1TMo/85016PuPYG6h47Om2j9IMFYp/ibXUXBl2w0X
+ hz/S97OEvc6vJe2+DOg==
+X-Proofpoint-GUID: 1dWs1Xh6nHW71g-DijAGTr-6c3WU9B7U
+X-Proofpoint-ORIG-GUID: 1dWs1Xh6nHW71g-DijAGTr-6c3WU9B7U
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-06_02,2026-11-04_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 lowpriorityscore=0 suspectscore=0 adultscore=0 malwarescore=0
- priorityscore=1501 phishscore=0 bulkscore=0 clxscore=1015 impostorscore=0
+ lowpriorityscore=0 impostorscore=0 malwarescore=0 clxscore=1015 bulkscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 adultscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611060031
 
-cfg80211 supports NL80211_CMD_GET_SMD_CTX from userspace on the current
-AP MLD to collect the station's context on the target AP MLD's behalf;
-this context is used by the target AP MLD to program its TX and RX
-queues to support seamless roaming of the non-AP MLD.
+cfg80211 supports NL80211_CMD_SET_SMD_CTX on the target AP MLD for
+userspace to program the station's dynamic context on the TX and RX
+queues.
 
-Add mac80211 support for the same to invoke the driver to collect the
-requested station context. Since context collection is asynchronous,
-the driver reports the collected context later via
-ieee80211_get_smd_ctx_done(), which then packs the context into
-NL80211_CMD_SMD_CTX_EVENT and delivers it to userspace as a multicast
-event.
+Add mac80211 support to handle this command in driver and lower layers
+so that the context is installed and the target AP MLD is ready to
+continue data transfer with the non-AP MLD from where it may have left
+off at the current AP MLD. This facilitates the seamless roaming benefit
+of the SMD BSS Transition procedure.
 
 Signed-off-by: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
 ---
- include/net/mac80211.h    | 19 +++++++++++++++++++
- net/mac80211/cfg.c        | 36 ++++++++++++++++++++++++++++++++++++
+ include/net/mac80211.h    |  5 +++++
+ net/mac80211/cfg.c        | 30 ++++++++++++++++++++++++++++++
  net/mac80211/driver-ops.h | 24 ++++++++++++++++++++++++
- net/mac80211/sta_info.c   |  6 ++++++
- net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
- 5 files changed, 112 insertions(+)
+ net/mac80211/trace.h      | 36 ++++++++++++++++++++++++++++++++++++
+ 4 files changed, 95 insertions(+)
 
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 15d9a069ba73..d78b7e897230 100644
+index 2539b5ffd78b..15d9a069ba73 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -4817,6 +4817,11 @@ enum ieee80211_sta_smd_state {
+@@ -4815,6 +4815,8 @@ enum ieee80211_sta_smd_state {
+  * @sta_smd_state: Notifies low level driver about IEEE 802.11bn SMD substate
+  *	transition of a station. It must not fail while transitioning down.
   *	The callback can sleep.
-  * @set_smd_ctx: Set the UHR SMD context for the non-AP MLD. This is used on
-  *	the target AP MLD side to program dynamic context.
-+ * @get_smd_ctx: Get the UHR SMD context for the non-AP MLD. This is used in
-+ *	the current AP MLD side on behalf of the target AP MLD to collect
-+ *	dynamic context, when the non-AP MLD sends ST Execute frame directly
-+ *	to the target. Since the response is asynchronous, the drivers that
-+ *	implement this should not store reference to @sta.
++ * @set_smd_ctx: Set the UHR SMD context for the non-AP MLD. This is used on
++ *	the target AP MLD side to program dynamic context.
   */
  struct ieee80211_ops {
  	void (*tx)(struct ieee80211_hw *hw,
-@@ -5238,6 +5243,9 @@ struct ieee80211_ops {
- 	int (*set_smd_ctx)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta,
- 			   struct cfg80211_smd_transition_info *st_info);
-+	int (*get_smd_ctx)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+@@ -5233,6 +5235,9 @@ struct ieee80211_ops {
+ 			     struct ieee80211_sta *sta,
+ 			     enum ieee80211_sta_smd_state old_state,
+ 			     enum ieee80211_sta_smd_state new_state);
++	int (*set_smd_ctx)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 +			   struct ieee80211_sta *sta,
-+			   enum nl80211_smd_ctx_type type);
++			   struct cfg80211_smd_transition_info *st_info);
  };
  
  /**
-@@ -8312,4 +8320,15 @@ bool ieee80211_vif_nan_started(struct ieee80211_vif *vif);
-  * Return: 0 if success and non-zero on error
-  */
- int ieee80211_encrypt_tx_skb(struct sk_buff *skb);
-+
-+/**
-+ * ieee80211_get_smd_ctx_done - Deliver async get_smd_ctx result to nl80211
-+ * @vif: virtual interface
-+ * @sta_addr: non-AP MLD address the context was collected for
-+ * @st_info: SMD BSS Transition Info (set @st_info->ctx to NULL to indicate
-+ *	failure)
-+ */
-+void ieee80211_get_smd_ctx_done(struct ieee80211_vif *vif,
-+				const u8 *sta_addr,
-+				struct cfg80211_smd_transition_info *st_info);
- #endif /* MAC80211_H */
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 356c14eaa58c..26ebbc27dac0 100644
+index af9fe323c11b..356c14eaa58c 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -6388,6 +6388,41 @@ static int ieee80211_set_smd_ctx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	return drv_set_smd_ctx(local, sdata, &sta->sta, st_info);
+@@ -6359,6 +6359,35 @@ ieee80211_set_nan_non_evac_channels(struct wiphy *wiphy,
+ 	return ieee80211_nan_set_non_evac_channels(sdata, channels);
  }
  
-+static int ieee80211_get_smd_ctx(struct wiphy *wiphy, struct wireless_dev *wdev,
++static int ieee80211_set_smd_ctx(struct wiphy *wiphy, struct wireless_dev *wdev,
 +				 const u8 *addr,
-+				 enum nl80211_smd_ctx_type type)
++				 struct cfg80211_smd_transition_info *st_info)
 +{
 +	struct ieee80211_local *local = wiphy_priv(wiphy);
 +	struct ieee80211_sub_if_data *sdata;
@@ -243,47 +220,41 @@ index 356c14eaa58c..26ebbc27dac0 100644
 +	sta = sta_info_get_bss(sdata, addr);
 +	if (!sta)
 +		return -ENOENT;
-+	if (!sta->sta.smd_params.smd_sta)
++	if (!sta->sta.smd_params.smd_sta ||
++	    sta->smd_state != IEEE80211_STA_SMD_PREP)
 +		return -EINVAL;
 +
-+	return drv_get_smd_ctx(local, sdata, &sta->sta, type);
-+}
++	if (!wiphy_dereference(wiphy, sta->ptk[sta->ptk_idx]))
++		return -EINVAL;
 +
-+void ieee80211_get_smd_ctx_done(struct ieee80211_vif *vif,
-+				const u8 *sta_addr,
-+				struct cfg80211_smd_transition_info *st_info)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	cfg80211_get_smd_ctx_done(&sdata->wdev, sta_addr, st_info);
++	return drv_set_smd_ctx(local, sdata, &sta->sta, st_info);
 +}
-+EXPORT_SYMBOL(ieee80211_get_smd_ctx_done);
 +
  const struct cfg80211_ops mac80211_config_ops = {
  	.add_virtual_intf = ieee80211_add_iface,
  	.del_virtual_intf = ieee80211_del_iface,
-@@ -6512,4 +6547,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+@@ -6482,4 +6511,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.nan_set_local_sched = ieee80211_set_local_nan_sched,
  	.nan_set_peer_sched = ieee80211_set_peer_nan_sched,
  	.nan_set_non_evac_channels = ieee80211_set_nan_non_evac_channels,
- 	.set_smd_ctx = ieee80211_set_smd_ctx,
-+	.get_smd_ctx = ieee80211_get_smd_ctx,
++	.set_smd_ctx = ieee80211_set_smd_ctx,
  };
 diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 530936ffa11a..7d23ac03a899 100644
+index 0cdd1f1c5315..530936ffa11a 100644
 --- a/net/mac80211/driver-ops.h
 +++ b/net/mac80211/driver-ops.h
-@@ -1835,4 +1835,28 @@ static inline int drv_set_smd_ctx(struct ieee80211_local *local,
- 	return ret;
- }
+@@ -1811,4 +1811,28 @@ int drv_sta_smd_state(struct ieee80211_local *local,
+ 		      enum ieee80211_sta_smd_state old_state,
+ 		      enum ieee80211_sta_smd_state new_state);
  
-+static inline int drv_get_smd_ctx(struct ieee80211_local *local,
++static inline int drv_set_smd_ctx(struct ieee80211_local *local,
 +				  struct ieee80211_sub_if_data *sdata,
 +				  struct ieee80211_sta *sta,
-+				  enum nl80211_smd_ctx_type type)
++				  struct cfg80211_smd_transition_info *st_info)
 +{
 +	int ret;
 +
-+	if (!sdata || !local->ops->get_smd_ctx)
++	if (!local->ops->set_smd_ctx)
 +		return -EOPNOTSUPP;
 +
 +	sdata = get_bss_sdata(sdata);
@@ -293,77 +264,55 @@ index 530936ffa11a..7d23ac03a899 100644
 +	if (!check_sdata_in_driver(sdata))
 +		return -EIO;
 +
-+	trace_drv_get_smd_ctx(local, sdata, sta, type);
-+	ret = local->ops->get_smd_ctx(&local->hw, &sdata->vif, sta, type);
++	trace_drv_set_smd_ctx(local, sdata, sta, st_info);
++	ret = local->ops->set_smd_ctx(&local->hw, &sdata->vif, sta, st_info);
 +	trace_drv_return_int(local, ret);
 +
 +	return ret;
 +}
 +
  #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index d4d1008887c9..a3e161d160f0 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1312,6 +1312,7 @@ static int __must_check __sta_info_destroy_part1(struct sta_info *sta)
- {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
-+	struct wireless_dev *wdev;
- 	int ret, i;
- 
- 	might_sleep();
-@@ -1321,6 +1322,7 @@ static int __must_check __sta_info_destroy_part1(struct sta_info *sta)
- 
- 	local = sta->local;
- 	sdata = sta->sdata;
-+	wdev = &sdata->wdev;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
-@@ -1390,6 +1392,10 @@ static int __must_check __sta_info_destroy_part1(struct sta_info *sta)
- 	    rcu_access_pointer(sdata->u.vlan.sta) == sta)
- 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		cfg80211_free_pending_smd_ctx_req(wdev, sta->addr);
-+
- 	return 0;
- }
- 
 diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index c156e28fa07b..cdfacbc6e891 100644
+index 1a45ed66242c..c156e28fa07b 100644
 --- a/net/mac80211/trace.h
 +++ b/net/mac80211/trace.h
-@@ -3502,6 +3502,33 @@ TRACE_EVENT(drv_set_smd_ctx,
+@@ -3466,6 +3466,42 @@ TRACE_EVENT(drv_sta_smd_state,
  	)
  );
  
-+TRACE_EVENT(drv_get_smd_ctx,
++TRACE_EVENT(drv_set_smd_ctx,
 +	TP_PROTO(struct ieee80211_local *local,
 +		 struct ieee80211_sub_if_data *sdata,
 +		 struct ieee80211_sta *sta,
-+		 enum nl80211_smd_ctx_type type),
++		 struct cfg80211_smd_transition_info *st_info),
 +
-+	TP_ARGS(local, sdata, sta, type),
++	TP_ARGS(local, sdata, sta, st_info),
 +
 +	TP_STRUCT__entry(
 +		LOCAL_ENTRY
 +		VIF_ENTRY
 +		STA_ENTRY
 +		__field(u8, st_type)
++		__field(u8, dl_tid_bitmap)
++		__field(u8, ul_tid_bitmap)
 +	),
 +
 +	TP_fast_assign(
++		struct ieee80211_smd_ctx *ctx = st_info->ctx;
++
 +		LOCAL_ASSIGN;
 +		VIF_ASSIGN;
 +		STA_ASSIGN;
-+		__entry->st_type = type;
++		__entry->st_type = st_info->type;
++		__entry->dl_tid_bitmap = ctx->dl.valid_tid_bmap;
++		__entry->ul_tid_bitmap = ctx->ul.valid_tid_bmap;
 +	),
 +
-+	TP_printk(LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT ", ST type=%u",
-+		  LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->st_type
++	TP_printk(LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT
++		  ", ST type=%u DL TIDs: 0x%x, UL TIDs: 0x%x",
++		  LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG,
++		  __entry->st_type,
++		  __entry->dl_tid_bitmap, __entry->ul_tid_bitmap
 +	)
 +);
 +
