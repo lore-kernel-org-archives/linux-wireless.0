@@ -1,78 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793933294;
-	b=gh5cSOdgtQnKgWaKXBAPIf1egMQl+3H+4gsE7Xx3ArZlcvUGvCvt0fBhObuER8tvSNou
-	 AffE4hl8kzN6wutZWLJuxqX+NsdPTo4LXSwt9Qb4b2e1RuduT34fImWKvMD4yP5rhmM8e
-	 dOLMfPy2vvzcwPtZkJxvscDqavqXeyU5m5VKJlSdx9ouBy+pspAZ+Wz2YqwU6xAQMO7mY
-	 FD5V/vuUzSMMTIMCfcbMZvAYUbK4sUdCgWc1+RhLOiS6gwwaKyRu3u9S3yTijXWdL7DSC
-	 bPbCZKH8u8iH0yO2YjcLf5qjmVCHGEEVr8CS7NLgUnyXWW9bOgTLlWu/5kwrxp3uZPg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793933294;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=0UaxTG5x25gmRjc6KZfHadcJjXgPqxLqtyLeTH1tBMo=;
-	b=rrfTkTtRwdLQS/yjMY7ilMkbdMfVJRg6KTykTOEJ2oK9/MrgLHdlYIC11cZQb+jEMe9F
-	 fEPliQN28Zf99u3bwjjuDb+dWW+UiXkBE0fZKSxlDKyWsbCoQDBRAHQ4rWSYw6t5pca/D
-	 pM3dd0w4BgoEUmQKVSkdj760h4+mlBgsVBrwmDuhi/EKJ54/5c1NRyqLoGT8yRLzbMBY9
-	 h+f8MbafknPH/UP3MNJEQwuiZtJUaNt1Z0yKS4X6vC8QqGdZ855ndNwW0xARtsyTSAGni
-	 19+TBgu/5anw7AWLcygJyT9Qi8f+034Z02aU3SB6JqJ0fS5Ro+auLimWQYVL/nfwC4A==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dEaRpNx1;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.13
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793934116;
+	b=ACGCJGh+t8/GpKDZ4q9uVzFtIvQycbbPvK2pJ7ToAjP+lsR5+/KRa1kr2p2d+6QI00Ms
+	 LmkmyoPhug7ozSHCjpOgSSDUiRIVNa19ihcHtcvsnDILCIIJfzNzi6kUgB5KYkoXLkUXw
+	 u7YNllLOkHTeAhmpEudleloR6k3nnogGsWg+wNZ1vk8acdSSAYkcFwCbA2FYC7WCsyC4K
+	 SyGUIxMQHwgP4d/OKOu5gwuDZSGmlKG3Gki7hl+Il8CrDYnoYLE095hVFDr9fmRbBsPH0
+	 QVm2N2x5dLyhSE3UOdOSIbJOz9a6tWSYyA+6+romQiiHIEQHJIsyk7SVs7kO79NBfPQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793934116;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=n90xYOYRecs+yLRqpuRRcGw8wdLml7i48qgV7WcSPdY=;
+	b=xpyLOXYtr3O7urasCdLtkAPU+57UJOrqwZTDvBZNjcFS/eRgd/+mzor5YBQiN68icDZ+
+	 AtLWWwivhVJWuKxgP6QGx0/Gm9Sia1HCHUh9lac20u1koZ2hnTHdmIKzrrx+QnHwBUGae
+	 APtKBFQtTNkoRZraW/ijivHnKNHvd3wk34GkgqRz/gse5R1Ohk2hY+f9izTtannBu8+zB
+	 MPfqX2tItecMOD63Td0cKO2UfO6QMgDEh74WMgjh5opQJ0FbgBbvCiZRI3sny3UBCFUXH
+	 DuiVX/fBrlZTt9NWcfSImRmC9HDZw4zHx9qYr0uYngOVhNBtupDhAZxrQH7guLpWmsQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=cYpico84;
+	arc=none smtp.remote-ip=198.175.65.13
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D958C606A31B;
-	Fri,  6 Nov 2026 02:48:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76F61606A329;
+	Fri,  6 Nov 2026 03:01:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76F61606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dEaRpNx1
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793933293;
-	b=uQs9iv7cvDd0HHy6i3BusgHnZ4bH9xTHWJ8CM3piV/pLPYPWK4Y8holKK+xDf1cBYD/g
-	 OLkrpiyelcwzeNgsW/khjUcfdyBsczcKsV3iL//pN47xgk5Uxq7ozcLnpwKGDd93igPvW
-	 OLWZxkjdKdzzh7ZsFpck+67TX28qio62eykwG+unig/OUMORCVL5pdmPhd/UDgzkyrMGd
-	 B9/0nJcbKCs+wS3uQT1d7sc5nbmhJqgUnxrJ852COLzfGyoxb9cdtLFlu7xZL2HNWKUaR
-	 kZhvuW01NGq3N9CtR8m6YUdwhAXJ4ZArhhkSknLu4cYaNBajVyi06BeWyfcoGiuUjgw==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793933293;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=0UaxTG5x25gmRjc6KZfHadcJjXgPqxLqtyLeTH1tBMo=;
-	b=OUQoi2nnTu2A2U3UMhAgIn406JQC7nzp0OY5hDNSCe0ATTPlY23fiyBZFESCemQPTdNY
-	 X95yi5c6u4K7cNfM/l0EZj4ZS8NBIgWhQ8RLknR2Wvom0FySjMeiNJ8eEowKsJ79nynLE
-	 /MxIivopNGAZUu+H+mqcpp12EpsX85s1BKyRKple8C5X05w0KSE0scU2h6SbBZDnegAqM
-	 dauqiQ34fj3lyuySBJZRauhlHtzzvm8k959Ok4GY5VgWyldsBeTFTwdl2O//T4Xrd3JTT
-	 agrYV421lBePE6j4m7ZseRY3zzAsqk5Pqp0BS6Oo2Sr9ZoXjyCLQ1LYSahXht3a6DqA==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id C99811F0089F;
-	Fri,  6 Nov 2026 02:48:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793933293;
-	bh=0UaxTG5x25gmRjc6KZfHadcJjXgPqxLqtyLeTH1tBMo=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=dEaRpNx16Z9GiFUKj+kDvv4bXGPG1PD+vMpUefteWq8CKcUjOvQBBQ9oPX/ZniTps
-	 PmwsBgjSCEde8hgm6dAGxDOv2A7RC+NFnyILXwK+/jHzDS0U0iovDrDyAiIVirAvzh
-	 4JKa6rtlPiZHbxk5CxzfxxZjk9DYaLg6P7YnOkWupCm6K5w0OGRzRc1wqun3/rgnK6
-	 tPhr/CInY2O8uYaomiVZ9CI76gV4gLM0QHwKQDes2+pczy8RsVZmF0Nwr3ysbRBJp5
-	 FnMXjAWcNxUcDDIK9Hf8MsiGsG7GousSSwAaDG9ke4wo0Vn63pDRrAihEP2nxTmRbU
-	 omwbO+vWzKQaw==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 45C5545B53;
-	Fri,  6 Nov 2026 02:48:12 +0000 (UTC)
-From: kvnshroom via B4 Relay <devnull+kvnshroom.gmail.com@kernel.org>
-Date: Fri, 06 Nov 2026 03:47:00 +0100
-Subject: [PATCH] wifi: mt76: mt76x0: select the VGA gain from the RSSI
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=cYpico84
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793934115; x=1825470115;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=l7Th8NqpzkzSbTd9bubw0RIf0Ptss2DMkEUq3dw8Fl8=;
+  b=cYpico8499fNRENTxbDvAZs7AQoV8aJbsxH9I8HkZymlOmn2z7HmsGKU
+   YXmvOSxvPMaELhLOEeFjOYiFTVGrHXaPwCLTaqVs8vqSmt92GQJqfZ73E
+   R6YV0irKRdcum6z228hGFr7u3K0H223jjhA+xWpUi1rFwZvUUnr+TLCvW
+   v3ca1I6NUOocqnrD1xvEOmkLi8SPnVNY2yHY+2LUMcop1cJfkvg2cX6hC
+   jRcZ0ZCgopgfntY4ivxWr4Ls1PynGLSyf25djb91/+lWTnhKu6H1+DgAB
+   WIjUGfXyUFZWgIVba4vMYXV1KIr6NvFU7HnOkId0evaC6Szg3E1+dNa9F
+   A==;
+X-CSE-ConnectionGUID: rXGvVeKFRK2aQVrxTFrrJA==
+X-CSE-MsgGUID: LaG8NCXDTHai1OhQy/Gwqg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2622024"
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="2622024"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 19:01:55 -0800
+X-CSE-ConnectionGUID: EW294U1XSmGsQ9ZUSGqIWA==
+X-CSE-MsgGUID: UUKxHlTgQ1OdfRcP2OmXiw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="7732913"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 05 Nov 2026 19:01:53 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xPAD8-00000000nDj-3eZ2;
+	Fri, 06 Nov 2026 03:01:50 +0000
+Date: Fri, 6 Nov 2026 11:01:48 +0800
+From: kernel test robot <lkp@intel.com>
+To: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	pooventhiran.g@oss.qualcomm.com
+Subject: Re: [PATCH wireless-next v3 15/21] wifi: mac80211: filter uplink and
+ downlink frames based on SMD states
+Message-ID: <202611061037.MK46LPkJ-lkp@intel.com>
+References: <20261106-smd-v3-15-1723950e3cf8@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -82,171 +85,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261106-mt76x0-rssi-agc-v1-1-9d2f3ad74096@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzNDQwMz3dwSc7MKA92i4uJM3cT0ZF3TVPNEC2MzS/PEpGQloK6CotS0zAq
- widGxtbUAHa7S42EAAAA=
-X-Change-ID: 20261106-mt76x0-rssi-agc-5e7a83697abc
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, 
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, 
- Sean Wang <sean.wang@mediatek.com>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
- kvnshroom <kvnshroom@gmail.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793933291; l=4777;
- i=kvnshroom@gmail.com; s=20261106; h=from:subject:message-id;
- bh=GOUrR0SBzLl91iB01un4+ocyPS/13W2NZJubzZQmBUM=;
- b=u5iZ31sHOf1LNUdzPgpZzqWvjRaA3mYJPtptQvXyoEbww3yQIV9dtYYK4psF31FL6ZasMU6zF
- GhVWAqLvr/uDC+3Y+jAiie91KB5QWbRnMie1jQfhRTWOQRdUG1Duqk1
-X-Developer-Key: i=kvnshroom@gmail.com; a=ed25519;
- pk=8lajK9/tD4YlPR/MOkqpgUU4drxTtsOnUfM8foTue/4=
-X-Endpoint-Received: by B4 Relay for kvnshroom@gmail.com/20261106 with
- auth_id=1426
-X-Original-From: kvnshroom <kvnshroom@gmail.com>
-Reply-To: kvnshroom@gmail.com
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261106-smd-v3-15-1723950e3cf8@oss.qualcomm.com>
 
-From: kvnshroom <kvnshroom@gmail.com>
+Hi Pooventhiran,
 
-Since commit e1534fef1ae4 ("wifi: mt76: feed the station RSSI average
-from the chain signals") mt76x0 gets the real station RSSI for its gain
-control. On an MT7610U (ASUS USB-AC51, 5 GHz, 80 MHz, about -60 dBm)
-this makes the false CCA based VGA loop worse: with low_gain 2 the gain
-moves between 44 and 56 and stays at 56 most of the time, the false CCA
-counter reads 30k-50k per calibration interval and the receiver is
-overdriven.
+kernel test robot noticed the following build warnings:
 
-Fixed gain (BBP AGC8 bits 14:8) against the false CCA counter, with a
-ping to the AP every 200 ms during a download at the 50 Mbit/s line
-rate:
+[auto build test WARNING on b8e5b0ae8ff47240366d38e5d12c65f878724316]
 
-  gain   false CCA   ping p95 / max     download
-  24-48  0.9k-4k     2.5-3.8 / 5-27 ms  51 Mbit/s
-  50     8k-11k      3.2-4.5 / 25-40 ms 51 Mbit/s
-  56     46k-59k     164-299 / 400 ms   39-43 Mbit/s
+url:    https://github.com/intel-lab-lkp/linux/commits/Pooventhiran-G/wifi-nl80211-define-Seamless-Mobility-Domain-SMD-device-capability/20261106-010836
+base:   b8e5b0ae8ff47240366d38e5d12c65f878724316
+patch link:    https://lore.kernel.org/r/20261106-smd-v3-15-1723950e3cf8%40oss.qualcomm.com
+patch subject: [PATCH wireless-next v3 15/21] wifi: mac80211: filter uplink and downlink frames based on SMD states
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20261106/202611061037.MK46LPkJ-lkp@intel.com/config)
+compiler: clang version 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261106/202611061037.MK46LPkJ-lkp@intel.com/reproduce)
 
-The MediaTek Windows driver (netr28ux.sys 5.1.38) does not use the
-false CCA counter on MT7610/MT7650. It selects the gain from the RSSI
-in three steps, at -60 and -70 dBm. Do the same: reduce the calibrated
-initial gain by 42, 26 or 2 depending on the RSSI, with 2 dB of
-hysteresis between the steps. On this adapter the initial gain is 66,
-which gives the 24/40/64 used by that driver. MT7630 keeps the current
-behaviour.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611061037.MK46LPkJ-lkp@intel.com/
 
-Same setup, 60 s per run, two runs each:
+All warnings (new ones prefixed by >>):
 
-             gain       false CCA  ping p95 / max     loss  download
-  CCA loop   mostly 56  30k-50k    1.1-1.8 s / 3.4 s  0-9%  18-39 Mbit/s
-  RSSI steps 40         ~300       3 ms / 8-15 ms     0%    46-51 Mbit/s
-
-Not tested: weak signal (below -70 dBm), 2.4 GHz and MT7610E/MT7650E.
-
-The Windows driver was analysed with Ghidra. The analysis, this change
-and the changelog were prepared with the help of an AI coding assistant
-(Claude); I reviewed and tested the result on my hardware.
-
-Signed-off-by: kvnshroom <kvnshroom@gmail.com>
----
-Tested on an ASUS USB-AC51 (MT7610U) with Linux 7.3 and e1534fef1ae4
-backported. I can run more tests, for example with a weaker signal or
-on 2.4 GHz, if that helps.
----
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 64 +++++++++++++++++++++++++
- 1 file changed, 64 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index ec554a059..d052d8619 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -1064,6 +1064,64 @@ static void mt76x0_phy_set_gain_val(struct mt76x02_dev *dev)
- 		mt76x02_phy_dfs_adjust_agc(dev);
- }
- 
-+/*
-+ * MT7610/MT7650: select the VGA gain from the RSSI only. The gain is
-+ * reduced from the calibrated initial value by a fixed amount per RSSI
-+ * step, with some hysteresis between the steps. The false CCA counter is
-+ * not used, since on these chips it drives the gain into a range where
-+ * the receiver is overdriven.
-+ */
-+#define MT76X0_RSSI_GAIN_STRONG		-60
-+#define MT76X0_RSSI_GAIN_MEDIUM		-70
-+#define MT76X0_RSSI_GAIN_HYST		2
-+
-+static int mt76x0_phy_rssi_gain_step(int rssi, int prev)
-+{
-+	int strong = MT76X0_RSSI_GAIN_STRONG;
-+	int medium = MT76X0_RSSI_GAIN_MEDIUM;
-+
-+	if (prev == 2)
-+		strong -= MT76X0_RSSI_GAIN_HYST;
-+	else if (prev >= 0)
-+		strong += MT76X0_RSSI_GAIN_HYST;
-+	if (prev >= 1)
-+		medium -= MT76X0_RSSI_GAIN_HYST;
-+	else if (prev == 0)
-+		medium += MT76X0_RSSI_GAIN_HYST;
-+
-+	if (rssi > strong)
-+		return 2;
-+	if (rssi > medium)
-+		return 1;
-+	return 0;
-+}
-+
-+static void mt76x0_phy_update_rssi_gain(struct mt76x02_dev *dev)
-+{
-+	static const u8 gain_adjust[] = { 2, 26, 42 };
-+	int step;
-+	u8 adjust;
-+
-+	/* keep the counter visible in debugfs and clear it */
-+	dev->cal.false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS,
-+				       mt76_rr(dev, MT_RX_STAT_1));
-+
-+	if (!dev->cal.avg_rssi_all)
-+		step = 1;
-+	else
-+		step = mt76x0_phy_rssi_gain_step(dev->cal.avg_rssi_all,
-+						 dev->cal.low_gain);
-+
-+	adjust = min_t(u8, gain_adjust[step], dev->cal.agc_gain_init[0]);
-+	if (step == dev->cal.low_gain && adjust == dev->cal.agc_gain_adjust)
-+		return;
-+
-+	dev->cal.low_gain = step;
-+	dev->cal.agc_gain_adjust = adjust;
-+	dev->cal.agc_gain_cur[0] = dev->cal.agc_gain_init[0];
-+	mt76x0_phy_set_gain_val(dev);
-+}
-+
- static void
- mt76x0_phy_update_channel_gain(struct mt76x02_dev *dev)
- {
-@@ -1072,6 +1130,12 @@ mt76x0_phy_update_channel_gain(struct mt76x02_dev *dev)
- 	int low_gain;
- 
- 	dev->cal.avg_rssi_all = mt76_get_min_avg_rssi(&dev->mt76, 0);
-+
-+	if (!is_mt7630(dev)) {
-+		mt76x0_phy_update_rssi_gain(dev);
-+		return;
-+	}
-+
- 	if (!dev->cal.avg_rssi_all)
- 		dev->cal.avg_rssi_all = -75;
- 
-
----
-base-commit: b8e5b0ae8ff47240366d38e5d12c65f878724316
-change-id: 20261106-mt76x0-rssi-agc-5e7a83697abc
-
-Best regards,
--- 
-kvnshroom <kvnshroom@gmail.com>
+>> net/mac80211/tx.c:318:48: warning: overlapping comparisons always evaluate to true [-Wtautological-overlap-compare]
+     318 |             (tx->sdata->vif.type != NL80211_IFTYPE_AP ||
+         |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+     319 |              tx->sdata->vif.type != NL80211_IFTYPE_AP_VLAN) ||
+         |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1 warning generated.
 
 
+vim +318 net/mac80211/tx.c
+
+   310	
+   311	static ieee80211_tx_result debug_noinline
+   312	ieee80211_tx_h_smd_state(struct ieee80211_tx_data *tx)
+   313	{
+   314		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+   315		__le16 fc = hdr->frame_control;
+   316	
+   317		if (!tx->sta ||
+ > 318		    (tx->sdata->vif.type != NL80211_IFTYPE_AP ||
+   319		     tx->sdata->vif.type != NL80211_IFTYPE_AP_VLAN) ||
+   320		    !test_sta_flag(tx->sta, WLAN_STA_ASSOC) ||
+   321		    !(tx->flags & IEEE80211_TX_UNICAST))
+   322			return TX_CONTINUE;
+   323	
+   324		switch (tx->sta->smd_state) {
+   325		case IEEE80211_STA_SMD_NONE:
+   326			break;
+   327		case IEEE80211_STA_SMD_PREP:
+   328			/* 4a: Class 3 disallowed except ST Execution Response */
+   329			if (ieee80211_is_st_exec_resp(tx->skb))
+   330				break;
+   331			if (ieee80211_is_class3(tx->skb))
+   332				return TX_DROP;
+   333			break;
+   334		case IEEE80211_STA_SMD_EXEC:
+   335			/* 4b: no restriction */
+   336			break;
+   337		case IEEE80211_STA_SMD_DRAIN:
+   338			/* 4c: Class 3 disallowed except Data, Control,
+   339			 * UHR Reconfiguration Notify
+   340			 */
+   341			if (ieee80211_is_ctl(fc) || ieee80211_is_data(fc) ||
+   342			    ieee80211_is_uhr_link_reconf_notify(tx->skb))
+   343				break;
+   344			if (ieee80211_is_class3(tx->skb))
+   345				return TX_DROP;
+   346			break;
+   347		}
+   348	
+   349		return TX_CONTINUE;
+   350	}
+   351	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
