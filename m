@@ -1,87 +1,116 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.175
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793930866;
-	b=CRW+pNG7PJA+X1zbCCAHROdZYT5ur2qUQoFHSeNB9ooE8t0KTUB4P1KYEHguwJvvfloC
-	 8SPzdfWPwO4t86m9GsS8RZLmizk0M4Fp+vCEjpk/hEKhaXNGVCYaTMXo5Q+E9iHinchhG
-	 /eWOVYkV7WGzCbnqULRakLRAOsB4ZP3vu0+czeval7ZpkUsxBpyPkAAwgcMTYt+Le1RvP
-	 aGQckWhcLMvL4xwzqV35c0zw26zkKDT8huxVPB0V9ePSwpcEsOEd9CF2Ms+pNM5g4CFsj
-	 rY4ZfWeMBcLUhms4DrawKJY7CnEK1t3ngNfKCWS52QuBRmaskK7egpEKQyYDlObbp2A==
+	t=1793930908;
+	b=NvZC/YNRdZ3QuXfQ4TjaGloAsv+FgKpbTWMSulJwBziITvcBrWtQM4PPytZ97uS9s/MS
+	 VSy7v5o8WeB827rC5BMxxHKiiN2W8Gg0RbLBa79ZvEWmfKIux3tMG0akai14XNoEm763A
+	 4UOpJyPN7B6bBD66vb6A6ZM5FLIiDJVJIT0s+pY7KVc7wUiMI3ZG+02dbg7O10e2BA59H
+	 5u1Kwbt7lFVkrHvd/FlfiLz1r0pt5C0FWBNpphfQ+XtipU+z39lkr5N+ITidygQycKuRC
+	 bMqa3MUO7RmERuwpMyNXOJ0R2GXJqajsK2OTxdT/mxhIC4Lkh8Y1mPZhABOxTvtQFBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793930866;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Content-Type:
-	 Content-Transfer-Encoding:Mime-Version:Subject:Message-Id:Date:Cc:To:
-	 X-Mailer;
-	bh=9tVWOE571yIRel1WCas/DMzsKiN3hCHNnaxbQG3mgi0=;
-	b=PD5T+BnVHvPNvlb8lT40Yr7oqY1rmL6NarTtEYZcutOsy7C2rRYo742t82QRbpOYcXRn
-	 kI6vZu2XegK0OszJ4PXHVKCIUvApX43sZUu1lGEGfFJbbGaGTsOxgzE91enSQwsnB+lpH
-	 Snxg2G4NtsArGedC32Qe7idTONc3E0+x88RD4eykrYjLSnGBkto8Uter27jMk31AF9Mci
-	 ONPBytdtZB3rFyUGtb4wbcxVysdsvAuZuPAn84ILvx4UX9jin3h8nTql52cLNL76p/d69
-	 vgMH/3HYltZYX3nV4KdOiIwHm74Z7I98zi4ZlWn5+YfXj3S5EXzj23E36WSxDZxM2jw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793930908;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:
+	 Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=nf/bH+V3LpW42TMR0N1eeqd5iHEPLwJw3sYgg0jZ6eQ=;
+	b=wb0GEPE6csuiK4ZBDrqkm1GPPRz5lsjpiqLubGKVL8CxbEDSYgA+Ad/1sfADokJ0Hu1y
+	 T1hz4L67/wYjo77lpvj1jk+e/yOC/+2mfSChgyI2YSTWNO276Feh1JpMf7Sk6Pg1wA938
+	 qeOjDJmomPHuSwhj38HKMxI67ci0YtpQ0Pe7ITMi5x2YGRnZ8A87/ncLCurZt20QsB70/
+	 4gqEkGgxIoYRhD5ZtorTJiRvzuzUxkCmtNves7Y3Ryk2060hTCb0IDIWtwsx2GLN+SCr/
+	 n5JiaqViI1d48g8TgSNzJ4nv9582kj+NGYoDdItSJ1I1ZdnCOm2VSHiGkggaMQocN9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=r8Fcw000;
-	arc=none smtp.remote-ip=209.85.160.175
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=nUzEdP9w;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=U8skVmq6;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3AB9606A31B
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 02:07:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3AB9606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B10606A32E
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 02:08:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76B10606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=r8Fcw000
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-53665358476so961131cf.2
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 18:07:45 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=nUzEdP9w;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=U8skVmq6
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5NeTJ42855089
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2026 02:08:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=nf/bH+V3LpW42TMR0N1eeqd5iHEPLwJw3sY
+	gg0jZ6eQ=; b=nUzEdP9wl8T+wVbNvUHQNbNYOp805ZLOGUbPqvGISohFkbl6eko
+	ba311OLu8/745KDhbd5YBSGkizx5HwUOt1fnck4enNBHX1vtxC1vqYOg/ezT12iq
+	j8/eIDOJfpKBVmZ2EGygUK0gJPYQJiJ23KaYOKWi/7MyE8suU2UyDJ5vKd/3dsjS
+	uoVigoEbWhr/HC8wUvO0nZYW4n9LkFEEaDPhZi3jIQ24cKP4wT5xf79sbb8W5yIX
+	4UL7y1vaeuij+CtsKW5xBZzomIS8w0yz5wm4kyYeBNQGzwRv7Dndnffh2tiYdmYO
+	SQAn5rcu4M6PXAtsk+sBfvcdwcGSPbvv4cg==
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hs3pb0f65-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 02:08:26 +0000 (GMT)
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-1af203073e0so295639c88.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 18:08:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793930865; x=1794535665; darn=vger.kernel.org;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:content-type:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9tVWOE571yIRel1WCas/DMzsKiN3hCHNnaxbQG3mgi0=;
-        b=r8Fcw0000BPjizp5xlh8MhT8PG/EIleM69V6pRu/RlurMmwFZ7Mp0Z5o6JjYowLCKI
-         1MLklZV91sksHGOVieYCcabzT/nKZA3AU5VYKf3yRtn1qQeMdXjkOsrbOQ580tLvpWvV
-         Ff0K0pi44nn3COv5YYAKy2PPc6JipKs5whijLP2H3sHiOtaakFvXN3myFEiM45TmggYV
-         kKnoqRpVvm26LSgjFPJmJ+av6H/0GUIMXauX5FoHOIScdMfi6C3gib8ioZDM3kLMVLci
-         /R3CvTCJSyMrPzoUnqfZPqtSwuJmFNUsB3XR9EWF7C4AXJBA2j95C0tsk7uhdO5vtLoG
-         Pwzg==
+        d=oss.qualcomm.com; s=google; t=1793930905; x=1794535705; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=nf/bH+V3LpW42TMR0N1eeqd5iHEPLwJw3sYgg0jZ6eQ=;
+        b=U8skVmq6m0CUGBrFFOcEUUmNx6kaj4xN0x7lQKYZq/SLBoalngQCgUAcuNoCnqzPJV
+         QN0wWSCC+GPnRM17c/5V7m9UHi5O1XC2PtlERNI+Ec2Ve6pkD3Rfz2m+Opc39rRpWnJo
+         j4mP7HsrlvE00x1erb/MSIgRLjSQvT7Hh5dQT0sXEjuor9Kal1PcAIOgQKQ6uQQYdeCc
+         U0IuxFzhjdNasXXvyBvf0Xg6F4Q+KWLtoRyfyHtUPpgfFbRtLXtOH2X/5f4KyG7BKYRh
+         CPvIWJWUzrVkDLQWaYPYPGZbqEzuOePScd3lgOXTIIk5ANKYRkKIgDVc88D2l68zwSSk
+         ABWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793930865; x=1794535665;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:content-type:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9tVWOE571yIRel1WCas/DMzsKiN3hCHNnaxbQG3mgi0=;
-        b=G+5kLCzT8rvlSEDjVMUt1HdU4MTf5ECuQCGJHGe7WAfOAJ8P7Sj9/QizgMNijIdqos
-         9Fx5xq9R1Hxt5hmnLCp7NZGOLvUsRt+vXGR1TL/iJ8mWUuZ+Gy4I1LSkIvl/mMG8og9j
-         vj975kVJR/eEK4+BjkNjwgEBjgTh4Ud8eTvyQ3Xq+in9HdwyQU1YV5BdNYTgvCyiEmDR
-         YyoyHvG/Jkvo+k5nUt6PJSyv+IExZ6BC5hL4inExx0tKW4BKuF5BQlEpWOneQ4kSrxPW
-         gerzGlVuIfV43wmlvulSKUqPEKS1ieRwtrskLDO3hYbgJLXnlrAvsQn5LV06ujuZ7aSt
-         WPTQ==
-X-Gm-Message-State: APuU4Z8WEwck7WRuF/3f5W7q50Ts0tR1plZgIQWN9j4i92EENIbsYsr1
-	5gijWhIBxEVY4wJVpWw5kjABulbIethg+Yl6id3Z3dQsUxDefqwV6kTc5Kbi9w==
-X-Gm-Gg: AYBFou2X3CJwul1URewYnk6PatqbECObN6b+KB6PCNEk7HQ7SyNVfdLre9EBSjuTgpy
-	tyqCConS8Bnzy1F52aSyv1Ax+CzGmNMh9mk6Htj1PJinpRVS9SHXsn5Ext0h86fuqsbQ4J1z43C
-	HKOcUX/NcqIOusdeQKBSebJwu5CeZoYkXV1fD/UC3K/afWg1YNdqcbhw9CGBjPwkMR/c6GBdHY3
-	tADLi/lnjU2ebh1B7m37laAhDk2q4GLcj8vcHSRJKaNCC6bjwN9puQ2k6fv0wfGAP9X3xaV6ux5
-	qwY0r6itAAQGQQnkApx5A39DoPjw7vWq3fiiwU+aLQ3HkhpT2uuWVOqTQ6F33EU6Jj6Y4RUxr1f
-	oGAV3kBDzKxhRUrX/XagCheWtRvCOR9XQT3blHnsh6w0alEsxjvO3ZH+42lUWyxtKoO7IpoXCFi
-	OKyE6HepPhiYJOdQWrAufE6yKJKUt+etR3olmflgKe5gTh+FcnFS/dF4hwL9c2SFfiKth1GwxM1
-	25aYncfUe/NYWN32WHLVnqCfYCpeyr+936FsGaaAuzMvTQswHmotEB+5jxQWrEMNQ/wR57NjyOF
-	giJUSiJVP97DGz0g1IrMrI21HiXjgYD5ZktazrevJc1MuKcvKKFvI8s=
-X-Received: by 2002:a05:622a:1cce:b0:536:65fc:1e with SMTP id d75a77b69052e-54e1596c2ccmr18352831cf.62.1793930864495;
-        Thu, 05 Nov 2026 18:07:44 -0800 (PST)
-Received: from smtpclient.apple ([2600:4041:44c7:5c10:3958:f724:43b6:fd8])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-54e27207259sm8179661cf.27.2026.11.05.18.07.43
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 18:07:44 -0800 (PST)
-From: Christopher Hill <ch6574@gmail.com>
-Content-Type: text/plain;
-	charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+        d=1e100.net; s=20260707; t=1793930905; x=1794535705;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=nf/bH+V3LpW42TMR0N1eeqd5iHEPLwJw3sYgg0jZ6eQ=;
+        b=dfDjOnmayj30dSnnqLGjhPrJfBiafck9AJbjn0fF2/oqFyKja26VnL8LxFk17aT/UW
+         TlA7JCU6JHnNeJ8ykszi1fNPSXf9bsYV39ZbMsDsr+7FOaS0sU8X93Uu5HN+yFsAviA0
+         iO5AGNZmYmcQqmyS3IVm/R5MgX4fs7FPqevsETrsr0LGoPe/WhWZfzr4sgizjK62LTr/
+         BAixKYpgC32/0xppqCYpZu3NXz0fqrNfXOOLz6nmdpUh2e2w65UdUAZJMQfpg65Ln7CY
+         map1xwUB9m4/R+zM2yHPAMc52SQeMJKe61zFVy9iQtIjqicdwuN+YUWJpjEe5JhV5jL1
+         5KtQ==
+X-Forwarded-Encrypted: i=1; AKwUvByi/GjRHKSl02SMK70mV14Ljt/UVg3rv6Wjp52BnlTKMqp6BqasSWqyjt2HHF5QpsCQyhjDx0dcBXzMMrrWsQ==@vger.kernel.org
+X-Gm-Message-State: APuU4Z9Lp7BHstet5eq+g7e4a1oB0CftFJFvJ9N/itCBz8SirMroYn7Q
+	xumpLAQr3cGPg857v4KUajB22Hyuk2n0z+pTpcoagO59yWhp4DPc+jIqxUtXmEN7cz5icpFSKs+
+	XCMB3AcvHo88xyf69QPkVV8wXwfAv8BaF+UXNHF5c2devBAK10aqO7nDH75N5WgYhUanOjljb7t
+	HOjQi6
+X-Gm-Gg: AYBFou1gIXBGwDTQjf0GBJWNHNLnNdZU3b+go8s2v4LNimkI+hL2eWdCQbokanSCon8
+	UQxttEjgKpE11rCRO8lWB1qxCyKWD0z/YsH5O6vpmrSMpTZcTc/Pj/RIIWqadrLHqoxitkYwifk
+	Z75E5rzQ1+U3AM7gS+vR2bWUoNrRXTJts2v4T0kArKrlNrmqIs9ELAHkuMfquqX+dT+zmFXZuxT
+	L+oNA1t1lCZd8nnS9ArPwLf5QlqmU8wQhD33WimWT3mloieWfUUNrympzc+pupVr1ikzZir7XTB
+	TQoyM1pIhSmMkHm5DzJnsnowrO7Ly9+5E3HkmMVfNQzzqpeoKfcgubTOkNip88COhXAizH018Jc
+	g+68ZdoFapXqtIdGU8fTHe3ngSnkXRSjhAA8fnOFqrnGIsDyO02IVCqqxvYjYnRvYQ4vhR9q1fr
+	LmeOzkZtnd
+X-Received: by 2002:a05:7022:4183:b0:1a8:4997:65f6 with SMTP id a92af1059eb24-1b25d30ec8cmr1490438c88.20.1793930904826;
+        Thu, 05 Nov 2026 18:08:24 -0800 (PST)
+X-Received: by 2002:a05:7022:4183:b0:1a8:4997:65f6 with SMTP id a92af1059eb24-1b25d30ec8cmr1490393c88.20.1793930904197;
+        Thu, 05 Nov 2026 18:08:24 -0800 (PST)
+Received: from hu-hongchen-sha.qualcomm.com ([114.94.8.21])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b25e4a63f6sm1324796c88.9.2026.11.05.18.08.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Nov 2026 18:08:23 -0800 (PST)
+From: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
+To: Jeff Johnson <jjohnson@kernel.org>,
+        linux-wireless@vger.kernel.org (open list:QUALCOMM ATHEROS ATH11K WIRELESS DRIVER),
+        ath11k@lists.infradead.org (open list:QUALCOMM ATHEROS ATH11K WIRELESS DRIVER),
+        linux-kernel@vger.kernel.org (open list)
+Cc: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
+Subject: [PATCH ath-next v1] wifi: ath11k: add usecase firmware entry for QCA2066 hw2.1
+Date: Fri,  6 Nov 2026 07:38:08 +0530
+Message-Id: <20261106020809.3580396-1-hongcheng.zhang@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -90,141 +119,63 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.200.71.1.16\))
-Subject: [BUG] mac80211: ap_isolate is not applied to AP_VLAN interfaces
-Message-Id: <20E87267-920A-4FD9-9443-050AE7676E45@gmail.com>
-Date: Thu, 5 Nov 2026 21:07:33 -0500
-Cc: linux-wireless@vger.kernel.org
-To: johannes@sipsolutions.net
-X-Mailer: Apple Mail (2.3901.200.71.1.16)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: zkxllnM0vN261kL3CktI5M1xYT8sMKX4
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDAwOCBTYWx0ZWRfX7V2vAKzdRRog
+ nSMpMmjrhHxqO5lUB88n0PZBY+OgKxZMMV7JUGORz8Am5sJM3XmGPQKur6Z+OMLzGpnuGrGXNDK
+ Ik00vSAg3/4eQB3jkD2OcK6zMKtTSW0=
+X-Authority-Analysis: v=2.4 cv=LIrz05W9 c=1 sm=1 tr=0 ts=6aed369a cx=c_pps
+ a=bS7HVuBVfinNPG3f6cIo3Q==:117 a=Uz3yg00KUFJ2y2WijEJ4bw==:17
+ a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=EUspDBNiAAAA:8
+ a=SfIHIsIoJ2N3z6ihRgEA:9 a=vBUdepa8ALXHeOFLBtFW:22
+X-Proofpoint-ORIG-GUID: zkxllnM0vN261kL3CktI5M1xYT8sMKX4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDAwOCBTYWx0ZWRfX/BZsH2xKQjIT
+ M6WVUc7i8B6Xcd91LTrphvSM5b8f4Eag6qzgh/2GjzleAFZ006jddivYuHWWF8up0zkJ5octGkE
+ dJdPzbPySOa9JG67smahrWtSa6FW1CcNW88zx0IlVtcvO49V06jIa/OSrtfEKY+0+IusEaD3/AT
+ MwBwAGdrAic5ir8bw62m8mwjA81C5gLuy1sqwwbhyggv/2NH5Wj92mTJ0MMMM84mtCw/Y6oJhyz
+ j33agQmtZuOoT3oZ5lx3lCjsqHNmy23w+TIqoOuviS5ofVc0SG7FR2+Lh2KNfzRZY2EBIpapWtV
+ 2JdHUcR6wPyT0lqWllM7EQQs8co6YcZyEut9EEfn/eS4H2PSsIMt2VUYIXqS994z3CozsOQdGqC
+ 2NCmOmdr3lTD7v+YeXWmRWMyvIsakgZwpa/5C75VuNIKzC/BrmyBbE03iCo1r6Wq8CDlEhE5axC
+ TtKAOiFR9kH2DlkuAow==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-05_06,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 suspectscore=0 clxscore=1015 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 adultscore=0 phishscore=0 priorityscore=1501
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
+ definitions=main-2611060008
 
-Hi,
+The Monaco Monza platform (QCA2066 hw2.1) requires a usecase-specific
+firmware variant located under the nfa725 subdirectory.
 
-When an AP uses AP_VLAN interfaces (hostapd dynamic_vlan, e.g. VLAN
-assignment via wpa_psk_file or RADIUS), the ap_isolate setting of the
-BSS is not applied to stations bound to an AP_VLAN. mac80211 keeps
-forwarding frames between stations of the same AP_VLAN even with
-ap_isolate=3D1, so client isolation is silently ineffective for those
-stations.
+Add a new entry for "arduino,monza" compatible string to ensure that
+the correct usecase firmware (nfa725) is selected.
 
-Code (wireless tree as of 2026-11-04, also v6.18 and mainline
-7.4-rc1):
+Tested-on: QCA2066 hw2.1 PCI WLAN.HSP.1.1.c6-00302-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
 
-1. ieee80211_change_bss() (cfg.c) stores ap_isolate only on the
-   sdata the request was issued for, i.e. the AP interface:
+Signed-off-by: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath11k/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-   if (params->ap_isolate >=3D 0) {
-       if (params->ap_isolate)
-           sdata->flags |=3D IEEE80211_SDATA_DONT_BRIDGE_PACKETS;
-       else
-           sdata->flags &=3D ~IEEE80211_SDATA_DONT_BRIDGE_PACKETS;
-       ieee80211_check_fast_rx_iface(sdata);
-   }
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 766ae27306f4..b58dce133244 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1049,6 +1049,7 @@ static const struct __ath11k_core_usecase_firmware_table {
+ 	const char *compatible;
+ 	const char *firmware_name;
+ } ath11k_core_usecase_firmware_table[] = {
++	{ ATH11K_HW_QCA2066_HW21, "arduino,monza", "nfa725"},
+ 	{ ATH11K_HW_WCN6855_HW21, "qcom,hamoa-iot-evk", "nfa765"},
+ 	{ ATH11K_HW_WCN6855_HW21, "qcom,lemans-evk", "nfa765"},
+ 	{ ATH11K_HW_WCN6855_HW21, "qcom,monaco-evk", "nfa765"},
 
-2. When an AP_VLAN is opened (ieee80211_do_open(), iface.c), several
-   settings are copied from the master AP sdata (control_port_*,
-   cab_queue, hw_queue, chandef, tailroom count), but not the
-   IEEE80211_SDATA_DONT_BRIDGE_PACKETS flag. There is also no
-   propagation to existing VLANs when ap_isolate changes later.
+base-commit: 5c8eab13e391aaabd5a1ad58f3ee4bb10ce7573e
+-- 
+2.34.1
 
-3. The intra-BSS forwarding decisions test the flag on the station=E2=80=99=
-s
-   own sdata, which is the AP_VLAN sdata for VLAN stations:
-
-   - ieee80211_deliver_skb() (rx.c), sdata =3D rx->sdata:
-     if ((sdata->vif.type =3D=3D NL80211_IFTYPE_AP ||
-          sdata->vif.type =3D=3D NL80211_IFTYPE_AP_VLAN) &&
-         !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) && =E2=80=A6=
-
-
-   - ieee80211_check_fast_rx() (rx.c), sdata =3D sta->sdata:
-     fastrx.internal_forward =3D
-         !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) && ...
-
-Interestingly, __ieee80211_check_fast_rx_iface() already iterates
-stations whose sdata->bss matches the AP, i.e. it re-evaluates fast-rx
-for AP_VLAN stations when ap_isolate changes - but the evaluated flag
-lives on the AP_VLAN sdata, which is never updated.
-
-By contrast, multicast_to_unicast is stored in struct ieee80211_if_ap
-(sdata->u.ap) and read via sdata->bss in
-ieee80211_multicast_to_unicast() (tx.c), so it does apply to AP_VLAN
-interfaces.
-
-Observed effect:
-
-Linksys E8450 (MT7622 + MT7915E, mt76), OpenWrt 25.12.6 (mac80211
-from backports 6.18.55), hostapd 2025-08-26 (ca266cc2), dynamic_vlan=3D2
-with VLANs from wpa_psk_file, ap_isolate=3D1, multicast_to_unicast=3D1.
-The AP_VLAN netdevs (wlan1-vlanN) are bridge ports with hairpin on (as
-OpenWrt sets up for multicast_to_unicast, expecting ap_isolate to stop
-mac80211's own intra-BSS forwarding). Every multicast frame from a
-station is delivered twice to the other stations on the same AP_VLAN:
-once by mac80211 (not isolated) and once by the bridge (hairpin).
-E.g. an IPv6 all-nodes ping from one station gets two replies per
-sequence from every other station on the same radio/VLAN, one from
-wired hosts. Turning hairpin off on the AP_VLAN bridge port stops the
-duplicates immediately, while the stations still answer - i.e. the
-remaining copy is forwarded by mac80211 despite ap_isolate=3D1.
-
-The sdata flags in debugfs confirm that the isolation bit
-(IEEE80211_SDATA_DONT_BRIDGE_PACKETS, 0x8) is only set on the AP
-interfaces, never on the AP_VLANs (ap_isolate=3D1 in hostapd):
-
- /sys/kernel/debug/ieee80211/<phy>/netdev:<if>/flags
- wlan0        flags=3D0x28 (IN_DRIVER|DONT_BRIDGE_PACKETS)
- wlan0-vlan10 flags=3D0x1  (ALLMULTI)
- wlan0-vlan20 flags=3D0x1
- wlan0-vlan30 flags=3D0x1
- wlan0-vlan40 flags=3D0x1
- wlan1        flags=3D0x28 (IN_DRIVER|DONT_BRIDGE_PACKETS)
- wlan1-vlan10 flags=3D0x1  (ALLMULTI)
- wlan1-vlan20 flags=3D0x1
- wlan1-vlan30 flags=3D0x1
- wlan1-vlan40 flags=3D0x1
-
-Reproduction:
-
-1. hostapd AP with dynamic_vlan=3D1 or 2 and per-station VLAN
-   assignment (wpa_psk_file "vlanid=3D10 ..." or RADIUS), ap_isolate=3D1.
-
-2. Check the sdata flags: cat
-   /sys/kernel/debug/ieee80211/<phy>/netdev:<ap-if>/flags shows 0x8
-   set; the same file for the AP_VLAN netdev does not.
-
-3. Bridge the AP_VLAN netdev (e.g. wlan0-vlan10) with hairpin OFF.
-
-4. Associate two stations A and B that both land on VLAN 10 on the
-   same radio.
-
-5. With correct isolation, A and B must not reach each other (no
-   bridge hairpin, no mac80211 intra-BSS forwarding).
-
-6. Observed: A pings B (IPv4 unicast): replies received.
-   ping -6 ff02::1 from A: B replies (once per sequence).
-   Both stations on the same radio and VLAN, hairpin off on the
-   AP_VLAN bridge port, ap_isolate=3D1: the traffic can only have been
-   forwarded by mac80211.
-
-   Expected: ap_isolate applies to all stations of the BSS, including
-   those on AP_VLAN interfaces.
-
-Possible fix (untested sketch, for discussion only): evaluate the
-master AP's flag for AP_VLAN sdata in both rx.c places, e.g.
-
-static bool ieee80211_sdata_dont_bridge(struct ieee80211_sub_if_data =
-*sdata)
-{
-    if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP_VLAN && sdata->bss)
-        sdata =3D container_of(sdata->bss,
-                     struct ieee80211_sub_if_data, u.ap);
-    return sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS;
-}
-
-or move the setting into struct ieee80211_if_ap next to
-multicast_to_unicast.
-
-Thanks,
-Christopher Hill
-
-(Disclosure, bug investigation was AI assisted)=
