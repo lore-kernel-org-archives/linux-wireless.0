@@ -1,54 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=178.21.23.139
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793965915;
-	b=uRAvaxhFWWoInBXs9sHdtEW7Ev4iFUiag0miignNGVmdi5vlw3hi2zMMH7rzT6/WeWxG
-	 6/VbeKqV70sfxmFXmYYkMLZBKlI46O4jRe4qThatvJrtip7OrFCf2OjFM7UbH5zdLC4S3
-	 HPfbrR0ihznZCAu/s7VcSvjAbzIfMy867EW4mO8Ztq1bzzXQDOx20k6HYF5y7Kvc308fP
-	 N6wVUFluF8VNIJ6YUy7j7NkTaIRNrFZkAk2VwtxiwQJFtpnC/nUFvhZszA/U+Iylgn0Xr
-	 xygZXdSjQFVBJUQyfs/h+QH2DENwR0Sg/3YQyH3xqsGG1D6aHEbTZ1ddMhMcbIo3fxg==
+	b=vbDFJIIapL88gvjD8prFfs8Wf178q9z4IcZO+Vdd/YFpTZLsoivV1bHnYLbPt/GN1q2Q
+	 a5tUFhunBuCecs3Z1bTewJa81O/xU1X+rVt58RbPFvlZ8OPI9m4uXJjXYrorJSBGQIwSH
+	 Fmcql3/YCTzflabwGHhKe9eXrP/iXzyYxG5BZ4laeVGn3Hg5uSNYCKZ5EAFmnBI651m2E
+	 53GNNIIOFA4yl4TYlGMSxBhLOuVyV1dkg6GpQcCfnL4UHChKwgoPNIPbcOqkMdHvEXqRj
+	 l47D50IIwx8t8uQdyg+MKvnuRyclpWitG7VChxdH00Wmh4EXwAct9g0UkLee+icRXLQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793965915;
 	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:From:
-	 To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=sowS8VlK0YFuxRXUqxju6orwyRWV15bvieZJXVvCSf8=;
-	b=zo3WgIoFTMDHCMbrd/MJcrEAuV/9lBNfFpWpRIbq5iChSApCiTS0+GZKMt+TyoCzUXuJ
-	 NtPGLXpXdQGSrqnjQmBRst0GR5bxiTvGgr0yy3XgBbsIqfzwbovu/J9H7QMCHzKzd7JJE
-	 p4zgO3OpSpUMkioaBHNkFdJto+KdVc7PTD8i+dWZbrbweELj64Qll8ekg1t/nmktlpBba
-	 alT1fxkR7bfuh2YTrKPyS0r+U4AZXYkDu9/CytM3FLaq8npFU/oPs4jxRwQdQAyz3KXln
-	 7loZE/PofXIhnlJBz9l08yn7KWBpY4Mt7Ks73a7k7zhNE4Vj8M5Hi36b7pLfGNuhdKA==
+	 To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Transfer-Encoding;
+	bh=E2wwc7zaFaKTAagn5XMB9neG9tz4zIsm5fHynsnqTz8=;
+	b=C+taAG7GzGcKrUH1nH9Og86I3rA5FyTLSPIJ+uM0rsevk3FgqPcIdKT9/ZpksvD+Lzo6
+	 01Zdd4Z/Vu92dBElDwWCmiuLuy/XabVd5EgiZ+LBy6dJmsSAS3H7trSBLdWYLDxux5UGM
+	 HQRyAo46Ic2tfYlKqatITXqkSjWoQVnb6XzpEfV+o8oeSAPmh3Yzclu/eJPLi/KxRVNTY
+	 rcDK3HQQ9Lhs93vBRX7alrJNx/NpIR3rpCUMbMtG/ooVjIs4aAzkMTNN1eLayzz6nBlFT
+	 ZMPYrdM0LZ4GHtPbna9kwMZbJguc8Blo6O2uBhSRkmY/sT41PStia6usLbTXFwfdGsw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=disroot.org;
 	spf=pass smtp.mailfrom=disroot.org;
-	dkim=pass header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=ADpUlpgz;
+	dkim=pass header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=e8bCn0xj;
 	arc=none smtp.remote-ip=178.21.23.139
 Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECBF606A329;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC2C606A326;
 	Fri,  6 Nov 2026 11:51:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DECBF606A329
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DEC2C606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=ADpUlpgz
+	dkim=pass (2048-bit key, unprotected) header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=e8bCn0xj
 Received: from mail01.layka.lan (localhost [127.0.0.1])
-	by disroot.org (Postfix) with ESMTP id 29B26806EC;
-	Fri, 06 Nov 2026 12:51:52 +0100 (CET)
+	by disroot.org (Postfix) with ESMTP id DD71080449;
+	Fri, 06 Nov 2026 12:51:51 +0100 (CET)
 X-Virus-Scanned: SPAM Filter at disroot.org
 Received: from layka.disroot.org ([127.0.0.1])
  by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
- id W4gt2lxuuIWH; Fri,  6 Nov 2026 12:51:51 +0100 (CET)
+ id oszisWeC_mLU; Fri,  6 Nov 2026 12:51:51 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
-	t=1793965911; bh=2RDJyczQMowvvA1k3+Z+TXrpMLlqD8QWh6I1S4yjCY8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ADpUlpgzIKc2V9n81xWTWSQ87qA/slREk3XS40Uj5B133nv8i0ZiW1mNDe9lN8Yaa
-	 YeLJSriuTZC9gBgMGWPKQxlk0d1tXRPHt5LqyS2O2sZoR2YJDth0SRMcNgSt3n/xov
-	 KsPMgS6jTaIGvK8LskxXs6MDyWPxcifspQ1UoRz26KxJGMpYmzJCEf+nj7h2+zwxw8
-	 xV4+nyY8mbATSpVntKScHfx8puriMd16sKhT+sU+movyq7ahiacg12cKv2VGvnMzmf
-	 XkUg3cvwPGzc7Q7UsFfdt0IjFd9IBXhcvYCBLBfzlhMFKlOXpT3umOxIN+0OfpXddd
-	 BtEjsBQaqfndw==
+	t=1793965911; bh=r6rXpQ7fhFSWHIdpUzyK8xO9/DWNH+d88klaR/M4tpE=;
+	h=From:To:Cc:Subject:Date;
+	b=e8bCn0xjo8DYglI3sgomLSMSiwhNWF7PY6QTs0R9FHuWU9Dx2FI/bI4uJTlU/xriz
+	 NHM+2uYfP2o8GgCVfPSX08s59okwapKY8LLwjMRI2Yw2dkHgdMO4CH5xbfLvk/o5Uv
+	 TVN7oWdmhX+ePJdezI5g1SH96peAC8iHkqoIkRlgQq7TAPmdoQURFERz3rdtXbbW9N
+	 7iWpNJcSDOLBv7XWY/Le0EO7KUlY2T1ksoUbclL5vBwWfUBnhh+oZcEqO7hciiWUaE
+	 XxUAJhZADeqLtrICJ/RUbmcx5q08UJ4viSKP3X2PICallR5+UIJjzuGWI+4cHbwZ1l
+	 Hu92Hpz15VMtA==
 From: Florian Maurer <fmaurer@disroot.org>
 To: Felix Fietkau <nbd@nbd.name>,
 	Lorenzo Bianconi <lorenzo@kernel.org>
@@ -60,13 +59,10 @@ Cc: Ryder Lee <ryder.lee@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: [PATCH wireless 1/2] wifi: mt76: npu: return rx slots to the NPU only after refilling them
-Date: Fri,  6 Nov 2026 11:51:12 +0000
-Message-ID: <d6314f34e0965464207656d38a145490b6437aa5.1793927986.git.fmaurer@disroot.org>
-In-Reply-To: <cover.1793927986.git.fmaurer@disroot.org>
-References: <cover.1793927986.git.fmaurer@disroot.org>
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH wireless 0/2] wifi: mt76: npu: fix rx ring handling
+Date: Fri,  6 Nov 2026 11:51:11 +0000
+Message-ID: <cover.1793927986.git.fmaurer@disroot.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -78,93 +74,76 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mt76_npu_dequeue() writes the new tail to the dma_idx register of the
-NPU rx ring as soon as it has consumed a frame, while the slots are
-only refilled with new buffers by mt76_npu_rx_poll() after the whole
-NAPI budget. Until then, the descriptors of the released slots still
-point to the buffers that were passed up the stack, and on the first
-round of the ring the slot that was never filled points to address 0.
-If the NPU completes one of these slots, the host processes an entry
-without buffer, which crashes in dma_sync_single_for_cpu() under heavy
-rx load:
+On a Gemtek W1700K (Airoha AN7581 + MT7996) with the NPU offload
+enabled, 5 GHz rx load crashed the board within seconds. Patch 1 fixes
+that crash.
 
-  Unable to handle kernel paging request at virtual address ffffffff80000700
-  pc : dcache_inval_poc+0x28/0x58
-  lr : arch_sync_dma_for_cpu+0x28/0x38
-  Call trace:
-   dcache_inval_poc+0x28/0x58 (P)
-   __dma_sync_single_for_cpu+0xe4/0xf8
-   mt76_npu_rx_poll+0x184/0x390 [mt76]
-   __napi_poll+0x34/0x180
+With patch 1 applied, the two WARN_ON_ONCE() checks in
+mt7996_mac_tx_free() fired on misframed rx frames. A debug patch counted
+2-4 of these bogus events per 30 minutes. Patch 2 fixes the misframing.
+It needs multi-slot frames, which were frequent here because of a patch
+that leaves the de-aggregation of mesh A-MSDUs to mac80211 [1]. Without
+that patch the race may be hard to hit.
 
-Write dma_idx after refilling the ring instead, up to the slot kept
-free in front of the tail, which is the same value as before once the
-ring is full.
+Lorenzo, I have no documentation for the NPU. Everything here relies on
+what I inferred from the code, so can you confirm these?
+- dma_idx is the host's consumer index, and the NPU leaves one slot free
+  in front of it.
+- The NPU writes the info word before it sets DONE in ctrl.
 
-Also check that all slots of a frame are queued and complete before
-building the skb. So far a frame whose later slots were not yet
-done was freed together with the buffers of its first slots, which
-were then used again on the next poll.
+Also, with patch 1 the NPU can no longer get slots without buffers, so
+a lasting page pool failure can stall the ring until something else
+polls it. mt76_dma_rx_poll() has the same behaviour, so I left it. I
+haven't tested this case.
 
-Fixes: 7fb554b1b623 ("wifi: mt76: Introduce the NPU generic layer")
-Cc: stable@vger.kernel.org
-Signed-off-by: Florian Maurer <fmaurer@disroot.org>
----
- drivers/net/wireless/mediatek/mt76/npu.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+Tested on OpenWrt with kernel 6.18.55 and openwrt/mt76 at 467ae2e3. Its
+npu.c differs from this tree only in mt76_npu_setup_tc_block_cb(). The
+test image also carried [1], [2] and other local patches. The W1700K
+was meshed with an ath11k node and ran iperf3 in both directions on 2.4
+and 5 GHz for 60 minutes (5 GHz rx mostly around 220 Mbit/s). There was
+no reboot, and neither WARN_ON_ONCE() fired. That image had no debug
+patch to count bogus events directly.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/npu.c b/drivers/net/wireless/mediatek/mt76/npu.c
-index c4c7c0af6321..6e503a4a890c 100644
---- a/drivers/net/wireless/mediatek/mt76/npu.c
-+++ b/drivers/net/wireless/mediatek/mt76/npu.c
-@@ -40,6 +40,11 @@ int mt76_npu_fill_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
- 		nframes++;
- 	}
- 
-+	/* Hand the slots back to the NPU only once they have a new buffer,
-+	 * up to the one kept free in front of the tail.
-+	 */
-+	Q_WRITE(q, dma_idx, (q->head + 1) % q->ndesc);
-+
- 	return nframes;
- }
- 
-@@ -69,17 +74,22 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_dev *dev,
- 
- 	nframes = FIELD_GET(NPU_RX_DMA_PKT_COUNT_MASK, desc[index].info);
- 	nframes = max_t(int, nframes, 1);
-+	if (nframes > q->queued)
-+		return NULL;
-+
-+	/* Only take the frame once all of its slots are complete */
-+	for (i = 0; i < nframes; i++) {
-+		int idx = (index + i) % q->ndesc;
-+
-+		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[idx].ctrl))
-+			return NULL;
-+	}
- 
- 	for (i = 0; i < nframes; i++) {
- 		struct mt76_queue_entry *e = &q->entry[index];
- 		int len = FIELD_GET(NPU_RX_DMA_DESC_CUR_LEN_MASK,
- 				    desc[index].ctrl);
- 
--		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[index].ctrl)) {
--			dev_kfree_skb(skb);
--			return NULL;
--		}
--
- 		dma_sync_single_for_cpu(dev->dma_dev, e->dma_addr[0],
- 					e->dma_len[0],
- 					page_pool_get_dma_dir(q->page_pool));
-@@ -108,7 +118,6 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_dev *dev,
- 	}
- 	q->tail = index;
- 	q->queued -= i;
--	Q_WRITE(q, dma_idx, q->tail);
- 
- 	return skb;
- }
+Reset/restart: repeated wifi down/up rounds under about 30 Mbit/s of
+rx load were clean, but they don't reach the rx queue reset that
+patch 1 changes.
+
+Recovery itself can't be tested on this board because of a separate
+problem, which I don't think comes from these patches: a build without
+them also became unreachable after `echo 0,8` into the mt7996
+sys_recovery debugfs file (full system error recovery, the same path a
+real firmware crash takes). I will report this separately.
+
+With the patches, the same trigger wedges the board with and without
+rx load: the MT7996 stops responding on PCIe (completion timeout), the
+firmware reload fails, and the retry loop deadlocks in
+mt76_worker_disable(). A sysrq dump shows kthread_park() blocked on a
+TX worker kthread that is already parked. `echo 0,1` ended in the same
+state.
+
+On this tree the patches are only build-tested (arm64, W=1); the
+above was tested on the 6.18.55 image. Not tested: a completed
+recovery with patch 1, and MT7992.
+
+The same code is also open as a pull request against the OpenWrt mt76
+tree [3].
+
+[1] https://github.com/openwrt/mt76/pull/1170
+    ("wifi: mt76: mt7996: let mac80211 de-aggregate mesh A-MSDUs")
+[2] https://github.com/openwrt/mt76/pull/1132
+    ("wifi: mt76: mt7996: use own MAC as BSS BSSID for mesh interfaces")
+[3] https://github.com/openwrt/mt76/pull/1169
+
+Florian Maurer (2):
+  wifi: mt76: npu: return rx slots to the NPU only after refilling them
+  wifi: mt76: npu: read the rx slot count after the first slot is
+    complete
+
+ drivers/net/wireless/mediatek/mt76/npu.c | 28 +++++++++++++++++++-----
+ 1 file changed, 22 insertions(+), 6 deletions(-)
+
+
+base-commit: c4328134f3f7c2ce141121a8f82a5ec0cc8a709c
 -- 
 2.47.3
 
