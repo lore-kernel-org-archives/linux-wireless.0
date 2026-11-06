@@ -1,110 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793932659;
-	b=MRHHtXsi0Iy6PJt9yUfdrfc9yHLQUz5egnFIOAUSfy/sAHyQ2QQ0oRQ0hXAOVqytW6Rp
-	 +1IS8/RN2P/aaVHKMHyZZOpQf5LAv49DHkOdK1/WwPVsV1I68Is6u1oMG9w/Sb6RO1GZe
-	 vJZzIwrmZM5pSf/UtJLgZAwRtz/w66leoqufMDP74yXmyY4VAe8bsV4lVWFgqAS8Ey5uQ
-	 z7aDtkgrcHjU0fS1MpWSD9gNgmbJbajOjSSHu0QSAQ0+ivpR0MCsoi1yR2LaIQ4AVHHbK
-	 ccril8Lt1GXSTUsijVsY+8/uY1p7efj58zoE9g4ks6X/7Z41k8fadkwAacHlmwMa9XA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793932659;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=FI80B+nNie9zTSHCY3+0rdCsJu8kCjduFpHKAP6KyEk=;
-	b=fLb/vxo6B2wytb5rMDBOUjQuIf3masqBbahj7+nu51+PQ6U4ANup2Xz/VUHIW9798X6L
-	 EYAQWdBafeciIzZLmWArGQhH7WvPk6PJNjMr7oqaZoYpKhu9AhEsqkdf+L/B0mqPjn0Yh
-	 lpi6Uc3bp0yyJwJlwE/ZbTTh90UGFccym9qxRBCIOR5AojDUBm0nVkqVWhu0Y/P6zGFys
-	 cRkcrgcOJC8WIVRWkplcI8aYQ2YhlmJw2lWIOJHQVpxWbeWzmnlZGTzZy0wFhXbqlSn6l
-	 8FbFVDLwsmZxi7spZH3XGuK7UFfPfJxMOrcFG3JZbKNZDpqgCLl3CiNEbMbXQ1OPNWw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cX3k6+o3;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=FNHQFoCl;
-	arc=none smtp.remote-ip=205.220.168.131
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793933294;
+	b=gh5cSOdgtQnKgWaKXBAPIf1egMQl+3H+4gsE7Xx3ArZlcvUGvCvt0fBhObuER8tvSNou
+	 AffE4hl8kzN6wutZWLJuxqX+NsdPTo4LXSwt9Qb4b2e1RuduT34fImWKvMD4yP5rhmM8e
+	 dOLMfPy2vvzcwPtZkJxvscDqavqXeyU5m5VKJlSdx9ouBy+pspAZ+Wz2YqwU6xAQMO7mY
+	 FD5V/vuUzSMMTIMCfcbMZvAYUbK4sUdCgWc1+RhLOiS6gwwaKyRu3u9S3yTijXWdL7DSC
+	 bPbCZKH8u8iH0yO2YjcLf5qjmVCHGEEVr8CS7NLgUnyXWW9bOgTLlWu/5kwrxp3uZPg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793933294;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=0UaxTG5x25gmRjc6KZfHadcJjXgPqxLqtyLeTH1tBMo=;
+	b=rrfTkTtRwdLQS/yjMY7ilMkbdMfVJRg6KTykTOEJ2oK9/MrgLHdlYIC11cZQb+jEMe9F
+	 fEPliQN28Zf99u3bwjjuDb+dWW+UiXkBE0fZKSxlDKyWsbCoQDBRAHQ4rWSYw6t5pca/D
+	 pM3dd0w4BgoEUmQKVSkdj760h4+mlBgsVBrwmDuhi/EKJ54/5c1NRyqLoGT8yRLzbMBY9
+	 h+f8MbafknPH/UP3MNJEQwuiZtJUaNt1Z0yKS4X6vC8QqGdZ855ndNwW0xARtsyTSAGni
+	 19+TBgu/5anw7AWLcygJyT9Qi8f+034Z02aU3SB6JqJ0fS5Ro+auLimWQYVL/nfwC4A==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dEaRpNx1;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D958C606A31B;
+	Fri,  6 Nov 2026 02:48:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dEaRpNx1
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793933293;
+	b=uQs9iv7cvDd0HHy6i3BusgHnZ4bH9xTHWJ8CM3piV/pLPYPWK4Y8holKK+xDf1cBYD/g
+	 OLkrpiyelcwzeNgsW/khjUcfdyBsczcKsV3iL//pN47xgk5Uxq7ozcLnpwKGDd93igPvW
+	 OLWZxkjdKdzzh7ZsFpck+67TX28qio62eykwG+unig/OUMORCVL5pdmPhd/UDgzkyrMGd
+	 B9/0nJcbKCs+wS3uQT1d7sc5nbmhJqgUnxrJ852COLzfGyoxb9cdtLFlu7xZL2HNWKUaR
+	 kZhvuW01NGq3N9CtR8m6YUdwhAXJ4ZArhhkSknLu4cYaNBajVyi06BeWyfcoGiuUjgw==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793933293;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=0UaxTG5x25gmRjc6KZfHadcJjXgPqxLqtyLeTH1tBMo=;
+	b=OUQoi2nnTu2A2U3UMhAgIn406JQC7nzp0OY5hDNSCe0ATTPlY23fiyBZFESCemQPTdNY
+	 X95yi5c6u4K7cNfM/l0EZj4ZS8NBIgWhQ8RLknR2Wvom0FySjMeiNJ8eEowKsJ79nynLE
+	 /MxIivopNGAZUu+H+mqcpp12EpsX85s1BKyRKple8C5X05w0KSE0scU2h6SbBZDnegAqM
+	 dauqiQ34fj3lyuySBJZRauhlHtzzvm8k959Ok4GY5VgWyldsBeTFTwdl2O//T4Xrd3JTT
+	 agrYV421lBePE6j4m7ZseRY3zzAsqk5Pqp0BS6Oo2Sr9ZoXjyCLQ1LYSahXht3a6DqA==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44322606A326
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 02:37:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44322606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cX3k6+o3;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=FNHQFoCl
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5NePJg3295446
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2026 02:37:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	FI80B+nNie9zTSHCY3+0rdCsJu8kCjduFpHKAP6KyEk=; b=cX3k6+o3+lNfW68K
-	1HZ9gPO/cBOMoMWXrqHloeDAdwqEvFoL+a6umAhR4QOJGuZqnPtmsYX70V/ga1Ik
-	Q84v6R07jUToYDJI/41hB/aYk5rdeaPDymcXeR3/2CR+0R43IbpkNf3z8csIMzux
-	+8v771YAiUIuHtaBDf+NVTzD4jhr32Er/gwFwtujCafwkUcCjK86I5OC+wxhDzJl
-	SJRyDilDwlXQRwUZmkfWluevw66pEJENDohem5XgJCEcL09ma1BPRKu7F8q8k0xe
-	3HaKEKiU1O0CiRnJmsa5pcqOivJRSAeDvdNE4HGSCRz1GjC8WLojmmztQjdseV1U
-	ZEcPPQ==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hs3p9rhd2-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 02:37:38 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3adc5b185bfso227069a91.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 18:37:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793932658; x=1794537458; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FI80B+nNie9zTSHCY3+0rdCsJu8kCjduFpHKAP6KyEk=;
-        b=FNHQFoCljYdgIq6QWhZ7WvAZuPNsF+F4zLRH2XzvEE7fzzYfd6HkoBjxrrjYMb+T0G
-         W5aB7nij++nOwoEFfa8d9+l9PzXD/XxAojteHhnWVIvJHx0ik27lwPW0UZ1h2aewcErk
-         MBF9HKduMVyq9yMo0la4vh86KRYEyl6XpmOc5DA8EHCNgTzCq/TfhHZZmQYpTH4VAQ15
-         SvJCNny7ORhpVhKTANaKLGMLewiq1vQwiDVNkrtlgq6HWdx/KPYw9mUddOefSoMzeaK0
-         rRlXqBrMrxPVPFHGLhMkTbYMTr8QCcvMu4dLr3x7v7LyAa8k4yPhfbIlukZgauDZjdmi
-         p75w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793932658; x=1794537458;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=FI80B+nNie9zTSHCY3+0rdCsJu8kCjduFpHKAP6KyEk=;
-        b=nAg1ubALg7S/Tf9Xdor0oYtkA3bgDozsUwBBHMdeQ0MrlFHk30Qu1jc5Sqk5FNl8F9
-         dgzlR2N8akFjqFipc9WvTsR3C7J1wGBnrWrchV3PYOGFWItvfDrZGUIakPBfK4A1pJ9v
-         mXogd/Wt8P3MfhnvHek5p78vyv6bnf61sX4F9YWQC22zAYzehcsQbX730EOlGac9+qgb
-         2wvk8SvXkTEh+FC/MWU1Vtti6szzAwQ/oSBJEi8SL8U6lkzq1dd3i1X4oelJOagmNYn/
-         naUrVmyjEqQfDo/jJDT1cAJl2+shoI21SqJyVqtW2XxB6accbZ0JVarlDgsRjeLXtCoF
-         B8CA==
-X-Forwarded-Encrypted: i=1; AL+hErHgkChZK+mPkwXdBt5VxMUpsetjyHQSq5Ff5V3w86ICXhisvptvcT+Jhmp3pTKx29YcBlsSjCHPZ/huet8hPQ==@vger.kernel.org
-X-Gm-Message-State: APuU4Z+l31wXquZTBWg/lFWs2xotZpPMHaq3cnoNwcIdfUCLaeIZH4aC
-	0xrYJZ2W02vB5TStfJbWfLr0jzrmZ/UdnbSPaod+xCYblgtQ6w29gYaxlGWgBVuuy3EXt3CuNEB
-	c8JrEO9n6agTJj1xtQNJuPmYG0xwy5TyCgS9qQJ3b7gmDmQbHeTvEPVAk9Rc7RCbIG0K3Ow==
-X-Gm-Gg: AYBFou1ACgVDfHDCEYBP6J3kum22MfvnTsRV5ojSVGdQwPfkl6PFOnETnMb4zuiIJ5r
-	HTZ2fEWo3C0dQxJ4TJeI/srMZQtNTAZpLjS6j91UMM1vcPhwjFAZ+5OzigF6oYeNTCt4LL4AsXO
-	1drB3sNJelcYsBWCdZPlpLmSe2a2nyk9X5/hqqw0LL+F2G6fJy8D6sp5QH0yvTBFq2P+HnROj3Z
-	bBiOuaLQH6mRxE5GEojX8Xh97tmogjS3U+UOiT1ZHkcB1dK2Ee8FzwA1WSooLiZqGH6gdt1TWZE
-	gp+hBnJwTNAFZKWRv7LIfpYBTnTgDwIt9Fjfv5kyuazQ/jj/SHhkl0g7kAOGc5+aCtUJJT6xk0C
-	o5ExQyMHTyU97TyRQgsJpIJ3KXbGvpqxdDxl4fZg1GWE7r8vj2cm4kMTTAsw1NmPdSDJ0xGnpX3
-	tMjJSRPnwAY5d88QzSW74LMJVAUJQ/VdzgJafsN7A1fguTCQ==
-X-Received: by 2002:a17:90b:270e:b0:39e:6a80:b799 with SMTP id 98e67ed59e1d1-3b0db6dd119mr1162556a91.41.1793932657754;
-        Thu, 05 Nov 2026 18:37:37 -0800 (PST)
-X-Received: by 2002:a17:90b:270e:b0:39e:6a80:b799 with SMTP id 98e67ed59e1d1-3b0db6dd119mr1162518a91.41.1793932657155;
-        Thu, 05 Nov 2026 18:37:37 -0800 (PST)
-Received: from [10.133.33.112] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0b328a04asm5705831a91.14.2026.11.05.18.37.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Nov 2026 18:37:36 -0800 (PST)
-Message-ID: <108d86d4-3b0c-41e6-9a2a-3cf34ccd924a@oss.qualcomm.com>
-Date: Fri, 6 Nov 2026 10:37:34 +0800
+	by smtp.kernel.org (Postfix) with ESMTPS id C99811F0089F;
+	Fri,  6 Nov 2026 02:48:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793933293;
+	bh=0UaxTG5x25gmRjc6KZfHadcJjXgPqxLqtyLeTH1tBMo=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=dEaRpNx16Z9GiFUKj+kDvv4bXGPG1PD+vMpUefteWq8CKcUjOvQBBQ9oPX/ZniTps
+	 PmwsBgjSCEde8hgm6dAGxDOv2A7RC+NFnyILXwK+/jHzDS0U0iovDrDyAiIVirAvzh
+	 4JKa6rtlPiZHbxk5CxzfxxZjk9DYaLg6P7YnOkWupCm6K5w0OGRzRc1wqun3/rgnK6
+	 tPhr/CInY2O8uYaomiVZ9CI76gV4gLM0QHwKQDes2+pczy8RsVZmF0Nwr3ysbRBJp5
+	 FnMXjAWcNxUcDDIK9Hf8MsiGsG7GousSSwAaDG9ke4wo0Vn63pDRrAihEP2nxTmRbU
+	 omwbO+vWzKQaw==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 45C5545B53;
+	Fri,  6 Nov 2026 02:48:12 +0000 (UTC)
+From: kvnshroom via B4 Relay <devnull+kvnshroom.gmail.com@kernel.org>
+Date: Fri, 06 Nov 2026 03:47:00 +0100
+Subject: [PATCH] wifi: mt76: mt76x0: select the VGA gain from the RSSI
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -114,60 +82,171 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next v1] wifi: ath11k: add usecase firmware entry for
- QCA2066 hw2.1
-To: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        "open list:QUALCOMM ATHEROS ATH11K WIRELESS DRIVER"
- <linux-wireless@vger.kernel.org>,
-        "open list:QUALCOMM ATHEROS ATH11K WIRELESS DRIVER"
- <ath11k@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20261106020809.3580396-1-hongcheng.zhang@oss.qualcomm.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20261106020809.3580396-1-hongcheng.zhang@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261106-mt76x0-rssi-agc-v1-1-9d2f3ad74096@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzNDQwMz3dwSc7MKA92i4uJM3cT0ZF3TVPNEC2MzS/PEpGQloK6CotS0zAq
+ widGxtbUAHa7S42EAAAA=
+X-Change-ID: 20261106-mt76x0-rssi-agc-5e7a83697abc
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, 
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, 
+ Sean Wang <sean.wang@mediatek.com>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
+ kvnshroom <kvnshroom@gmail.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793933291; l=4777;
+ i=kvnshroom@gmail.com; s=20261106; h=from:subject:message-id;
+ bh=GOUrR0SBzLl91iB01un4+ocyPS/13W2NZJubzZQmBUM=;
+ b=u5iZ31sHOf1LNUdzPgpZzqWvjRaA3mYJPtptQvXyoEbww3yQIV9dtYYK4psF31FL6ZasMU6zF
+ GhVWAqLvr/uDC+3Y+jAiie91KB5QWbRnMie1jQfhRTWOQRdUG1Duqk1
+X-Developer-Key: i=kvnshroom@gmail.com; a=ed25519;
+ pk=8lajK9/tD4YlPR/MOkqpgUU4drxTtsOnUfM8foTue/4=
+X-Endpoint-Received: by B4 Relay for kvnshroom@gmail.com/20261106 with
+ auth_id=1426
+X-Original-From: kvnshroom <kvnshroom@gmail.com>
+Reply-To: kvnshroom@gmail.com
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDAxMCBTYWx0ZWRfXzWTmTUid9ifE
- +k6ZlffDyu1uRcp0CnUlHlCDp9i7dIZshCVUSA4Yhgal50c+CfTR8X7IrFvmViWlGQjCpQjlE+O
- KEBSNQUHPDNGOSMbW4U4k/UajU8/X+w=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDAxMCBTYWx0ZWRfX3R3zKt1Fxgp/
- NGmNVWzVqLVvEKNPQ+oWYvx+7bKQNaWUSQLF+JYdu7bCB2AVrFluN8hu/ydlNChHAjYKCAiZAR6
- eboDroX/g5+oXmMqleA8DCuTbgoz8Q17PmwK+FgrMqhLR/AwmfwwZkpvORlhpxqVNYWYbuuqxsv
- xArn9WmIDppCe0QllaZU/7NLPUiu9QG0IM7i4LKf7NO06/QAML7nMROTYmVGnxIKh4JoyEbdMPc
- V/fwuh3/T0JG5rEr+xF2hP16w1FWcTalu+Pd0bTgkGbDV5fQSJE2W/DI7rSPpzBOOdcCwaWrkSZ
- 7GRIQWgTp8AvWJ4xJajgiwvhO7meVxMqd6O/FoWJ7TdnMZAbUjUQucYF9ahNpOcOaG1TpvGUk5I
- oUShULDMqlgKlLZKUEomp2dBLDUaJ+dVgeRi3LhfaTpqWw4oZkt6DW9pkFG/3GdN5y2TR30Gryq
- eppFz80ADnPSYmXUPdw==
-X-Proofpoint-ORIG-GUID: K1a1LpYOYJJhozm94nm9KlwkSymnFXC2
-X-Authority-Analysis: v=2.4 cv=f6Pdl+yM c=1 sm=1 tr=0 ts=6aed3d72 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=EUspDBNiAAAA:8 a=38uOJd1x8bnEsvVciosA:9 a=QEXdDO2ut3YA:10
- a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-GUID: K1a1LpYOYJJhozm94nm9KlwkSymnFXC2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-05_06,2026-11-04_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 lowpriorityscore=0 malwarescore=0 bulkscore=0 phishscore=0
- adultscore=0 spamscore=0 clxscore=1015 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611060010
+
+From: kvnshroom <kvnshroom@gmail.com>
+
+Since commit e1534fef1ae4 ("wifi: mt76: feed the station RSSI average
+from the chain signals") mt76x0 gets the real station RSSI for its gain
+control. On an MT7610U (ASUS USB-AC51, 5 GHz, 80 MHz, about -60 dBm)
+this makes the false CCA based VGA loop worse: with low_gain 2 the gain
+moves between 44 and 56 and stays at 56 most of the time, the false CCA
+counter reads 30k-50k per calibration interval and the receiver is
+overdriven.
+
+Fixed gain (BBP AGC8 bits 14:8) against the false CCA counter, with a
+ping to the AP every 200 ms during a download at the 50 Mbit/s line
+rate:
+
+  gain   false CCA   ping p95 / max     download
+  24-48  0.9k-4k     2.5-3.8 / 5-27 ms  51 Mbit/s
+  50     8k-11k      3.2-4.5 / 25-40 ms 51 Mbit/s
+  56     46k-59k     164-299 / 400 ms   39-43 Mbit/s
+
+The MediaTek Windows driver (netr28ux.sys 5.1.38) does not use the
+false CCA counter on MT7610/MT7650. It selects the gain from the RSSI
+in three steps, at -60 and -70 dBm. Do the same: reduce the calibrated
+initial gain by 42, 26 or 2 depending on the RSSI, with 2 dB of
+hysteresis between the steps. On this adapter the initial gain is 66,
+which gives the 24/40/64 used by that driver. MT7630 keeps the current
+behaviour.
+
+Same setup, 60 s per run, two runs each:
+
+             gain       false CCA  ping p95 / max     loss  download
+  CCA loop   mostly 56  30k-50k    1.1-1.8 s / 3.4 s  0-9%  18-39 Mbit/s
+  RSSI steps 40         ~300       3 ms / 8-15 ms     0%    46-51 Mbit/s
+
+Not tested: weak signal (below -70 dBm), 2.4 GHz and MT7610E/MT7650E.
+
+The Windows driver was analysed with Ghidra. The analysis, this change
+and the changelog were prepared with the help of an AI coding assistant
+(Claude); I reviewed and tested the result on my hardware.
+
+Signed-off-by: kvnshroom <kvnshroom@gmail.com>
+---
+Tested on an ASUS USB-AC51 (MT7610U) with Linux 7.3 and e1534fef1ae4
+backported. I can run more tests, for example with a weaker signal or
+on 2.4 GHz, if that helps.
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 64 +++++++++++++++++++++++++
+ 1 file changed, 64 insertions(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index ec554a059..d052d8619 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -1064,6 +1064,64 @@ static void mt76x0_phy_set_gain_val(struct mt76x02_dev *dev)
+ 		mt76x02_phy_dfs_adjust_agc(dev);
+ }
+ 
++/*
++ * MT7610/MT7650: select the VGA gain from the RSSI only. The gain is
++ * reduced from the calibrated initial value by a fixed amount per RSSI
++ * step, with some hysteresis between the steps. The false CCA counter is
++ * not used, since on these chips it drives the gain into a range where
++ * the receiver is overdriven.
++ */
++#define MT76X0_RSSI_GAIN_STRONG		-60
++#define MT76X0_RSSI_GAIN_MEDIUM		-70
++#define MT76X0_RSSI_GAIN_HYST		2
++
++static int mt76x0_phy_rssi_gain_step(int rssi, int prev)
++{
++	int strong = MT76X0_RSSI_GAIN_STRONG;
++	int medium = MT76X0_RSSI_GAIN_MEDIUM;
++
++	if (prev == 2)
++		strong -= MT76X0_RSSI_GAIN_HYST;
++	else if (prev >= 0)
++		strong += MT76X0_RSSI_GAIN_HYST;
++	if (prev >= 1)
++		medium -= MT76X0_RSSI_GAIN_HYST;
++	else if (prev == 0)
++		medium += MT76X0_RSSI_GAIN_HYST;
++
++	if (rssi > strong)
++		return 2;
++	if (rssi > medium)
++		return 1;
++	return 0;
++}
++
++static void mt76x0_phy_update_rssi_gain(struct mt76x02_dev *dev)
++{
++	static const u8 gain_adjust[] = { 2, 26, 42 };
++	int step;
++	u8 adjust;
++
++	/* keep the counter visible in debugfs and clear it */
++	dev->cal.false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS,
++				       mt76_rr(dev, MT_RX_STAT_1));
++
++	if (!dev->cal.avg_rssi_all)
++		step = 1;
++	else
++		step = mt76x0_phy_rssi_gain_step(dev->cal.avg_rssi_all,
++						 dev->cal.low_gain);
++
++	adjust = min_t(u8, gain_adjust[step], dev->cal.agc_gain_init[0]);
++	if (step == dev->cal.low_gain && adjust == dev->cal.agc_gain_adjust)
++		return;
++
++	dev->cal.low_gain = step;
++	dev->cal.agc_gain_adjust = adjust;
++	dev->cal.agc_gain_cur[0] = dev->cal.agc_gain_init[0];
++	mt76x0_phy_set_gain_val(dev);
++}
++
+ static void
+ mt76x0_phy_update_channel_gain(struct mt76x02_dev *dev)
+ {
+@@ -1072,6 +1130,12 @@ mt76x0_phy_update_channel_gain(struct mt76x02_dev *dev)
+ 	int low_gain;
+ 
+ 	dev->cal.avg_rssi_all = mt76_get_min_avg_rssi(&dev->mt76, 0);
++
++	if (!is_mt7630(dev)) {
++		mt76x0_phy_update_rssi_gain(dev);
++		return;
++	}
++
+ 	if (!dev->cal.avg_rssi_all)
+ 		dev->cal.avg_rssi_all = -75;
+ 
+
+---
+base-commit: b8e5b0ae8ff47240366d38e5d12c65f878724316
+change-id: 20261106-mt76x0-rssi-agc-5e7a83697abc
+
+Best regards,
+-- 
+kvnshroom <kvnshroom@gmail.com>
 
 
-
-On 11/6/2026 10:08 AM, Hongcheng Zhang wrote:
-> The Monaco Monza platform (QCA2066 hw2.1) requires a usecase-specific
-> firmware variant located under the nfa725 subdirectory.
-> 
-> Add a new entry for "arduino,monza" compatible string to ensure that
-> the correct usecase firmware (nfa725) is selected.
-> 
-> Tested-on: QCA2066 hw2.1 PCI WLAN.HSP.1.1.c6-00302-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-> 
-> Signed-off-by: Hongcheng Zhang <hongcheng.zhang@oss.qualcomm.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
