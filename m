@@ -1,60 +1,112 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793975198;
-	b=ustygO8vHu1e7g/oWjhrGq/B/WyJu6jKzYnhZ5DR3h3+tG1I0NYmOg4AEQOjNAq7Zty6
-	 EXvhytaJZ1EVPe4JTFcOo4zBnBvE+LUbL2UxdchPQy2ZXS0UrkBl/GT6ffZ5lWvNaEM8L
-	 EdFNbVhpPbQL1UszT3z6l4F8gT0X3a9hipUUCKH8ZPv4WrFfhakZi0Y+akkBw70LFc5EC
-	 +m5Z6tK4Ot1pBikcez4olrYYWul2r/yNIpT3KElsQ3mcGFyr1n4da4/9Aud7WF1jQjeK1
-	 qvSZjyaqGmIrwyQF+jHkLn/SVlyCXzUOBZ0sEbJp33eIdLn+UXoL7s/wfyCyb7KtvJg==
+	t=1793975498;
+	b=wLB3pQ79eZo17Gs7Tbw8grD9Tqc7IIXBsGCevNaAOk4dAcczR8bK/AMHhHBDpgK9nLif
+	 XRk5F2gvTMMhN71/v8JXFQ7nF7SNkThUaPDaMjuxDDgMEnciHMlMdtKBtvBPh00wiCsfK
+	 80KPnlyjFU6iXJfokej+RJOC81wkFUXdW787AhoG5LA6ZBAl5qKjuDvcwHGSBSkaddQe5
+	 H+DlKw1Z8wfUmr4y/FOvL6Xzn+JjFkvHAUcw9ClXFMP9VlU5wwTfI3urSxIVkO7fPeLLE
+	 nIOg4xVJaux5jv68jCK1D/mxYeynA1I7ZuecTpbglkQgDNLhYfm7ALgQLfCDIKKys4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793975198;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=+KYXN7aai6IX1x5SM7xizmV0HBq9zshAmdQbcwaB9mo=;
-	b=2hKNny2KMF/2YKUu5fczjCJa3mZI4IdcsxaJW437EvGcuMo9EuXx9b33VoezwW9cMRAk
-	 B1E4TVZycjR4pOLOj2xqthwb9Q/ZU1FtYHbet7WbMPq/eQkg1XSL+NJ6CGislS/NmBYW2
-	 MNla/W13mdidQ23ygeQ4XG25ZfP95NKqJ+yvRChjozXuuJTHRJj9yUtnl2a4j1geJLdzx
-	 o0mAxQZAJOlQQg5gs8ZakH2NWv3L0ZWke5LpJ+5qNZvwhPsWdtxOB23/CE6TA2v3R5TZv
-	 P5VKjtrVgSQGGCRqYdMclHxj9lhNHxprgtL9M/ZPCpQPJur9bZ2qxp/C0iKhnad/G3Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793975498;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
+	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=qboeitKXtC/ct89Obi6R+XrF8lt4qTTqD4J1BPDmL80=;
+	b=dFAehxQtfzyTejuq+cFDV9g5eRAcFrGLgKqUELl/NDfsMQiRv9LYSTSwBjJ7CV/SRJNp
+	 ss3Dt1MEx/X2xjLA2wFLb3DQxOvcd6zqtkj3PRa2PyHeD4/qyE6+GrHc3lqH8Li5JACGb
+	 EbNcKT5TfBq85iNOAaHo/sQqG+xepSKZ8FzaF8Q9QmmapDpcq9ezQhWCULtnoD8/h3Yhc
+	 x5BgyYPg7yrsDYj+KKr+9KW57y/Q0vWxM0gE0mPwqj1T6fYbuCSgC4A1nDo2bcbIsiIpV
+	 lj3Uf4jUcE9KZnB0tCNKGdLat0GpYeYjA1N1A3XJVWXz6/t2NZUzdPXE8IljsFOtHHA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TmCJB6mn;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=LjOtuIDV;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=dQ2kOt7e;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98868606A32D;
-	Fri,  6 Nov 2026 14:26:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57FD0606A332
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 14:31:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57FD0606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TmCJB6mn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9E751F0089F;
-	Fri,  6 Nov 2026 14:26:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793975198;
-	bh=+KYXN7aai6IX1x5SM7xizmV0HBq9zshAmdQbcwaB9mo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TmCJB6mnQ8WzGjBpzNOrtANc6+bY+KMqzHJFg2qc1E9+OtkJ1fZYWR9ZIu4yeLFXK
-	 HwDvyReArqnyDG3QmALWbiL1UUAoHlZ1jK/ZNhu4rubc/zrBuAi4DMzhCTF1DLKLRp
-	 xuN7JZL3hBmNMfjatE2r8jO3zUcSs9I4Bi4FufHBHsilAQiyHFpmc+e+H/ORp4tRkt
-	 6cYigqJetm+vXP0Gj5Det55akl6h45cWKjSosDs+bG3zhkoPtiv3Rkxc5jXm4t06es
-	 DoqXJat7+eqbmQdziODXhuruIj2c1Ezn3BX5guYcrgaeZ100NWd0yt9Q0wqog/BJJw
-	 yKF6S3iPYGcHA==
-Date: Fri, 6 Nov 2026 15:26:36 +0100
-From: Lorenzo Bianconi <lorenzo@kernel.org>
-To: Florian Maurer <fmaurer@disroot.org>
-Cc: Felix Fietkau <nbd@nbd.name>, Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org, stable@vger.kernel.org
-Subject: Re: [PATCH wireless 2/2] wifi: mt76: npu: read the rx slot count
- after the first slot is complete
-Message-ID: <au3jnOD5ZOJR0mvb@lore-desk>
-References: <cover.1793927986.git.fmaurer@disroot.org>
- <653d93b3c35975cd13dd6b33d76ea6517b55be91.1793927986.git.fmaurer@disroot.org>
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=LjOtuIDV;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=dQ2kOt7e
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A6EQMtl029965
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2026 14:31:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	qboeitKXtC/ct89Obi6R+XrF8lt4qTTqD4J1BPDmL80=; b=LjOtuIDV6sRjD92N
+	7H8s4sCuCODz0mIII3apvA8KSBgYUHOHKtC13oJM6GBPNQaPjQVms6cHGzLVIlHo
+	7nVl7LsxMjEizQGMaByVyDtfh8Fm0WCnmp0e0wBw6szVUetRL/1hQSi7g2XKCqY7
+	5rkK+dUwv2xVdOv+HdPEQ6a17Iv5N9UDBKFg0NFIqk6BgbxV0xXDjN8xrrt5xYHn
+	RFVXN2R6kNrTst2xxgh7Z8ykYFFSjRImAzDdRU53Et3i39egiIBEK9CA4yuCjZrj
+	2mv7wxHpDNNVKpQP9kdIMbsRaLs7WOJYu538GBubQ38x08/ZpQfswjHu1PQtZB9W
+	csuFyQ==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hs3pa36nq-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 14:31:37 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-36d69ab3c2bso939901eec.0
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 06:31:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793975496; x=1794580296; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qboeitKXtC/ct89Obi6R+XrF8lt4qTTqD4J1BPDmL80=;
+        b=dQ2kOt7eOnHUWNKA+a3FfukW79BB+yCug+bKaYwpEV4qvMnqBcbSWnBvocqaHDZ2xU
+         zE6XifIdo1lQOENMZQFHLM40Rzk6f0SYlHdDzeA6pJR06J8gdgsF0tVV8CWbXLI6UEsm
+         Ng276X8yt6HtlZk2cFhp4vGLUUr9Zt6EO2er/C9oOUl6f4/b0ji2NJVM2ta1aR5e60e9
+         gITpDwCMIJWoudKoINZ9YJsgPtFkkTHdpXKr/2uKQkRC7PtdUj8oi0BXPNXjX3oAGMyr
+         +Jr4PQb9o1tSHaIARtfWZ0NdcbWsSsPjhPAN1D1kufZxHPK3iLnKIEz0RtQvPyl8oMkm
+         07og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793975496; x=1794580296;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=qboeitKXtC/ct89Obi6R+XrF8lt4qTTqD4J1BPDmL80=;
+        b=aT0KrcQ/gQ5OdvMHuSjPAkDjs9/CI76bcbLyynBL9ovpURzwtIVC9PjrISmBOETYOj
+         S+eknUUe2BnJYLxLLnEOkoNoRWSBBLXhbBxVa06iugzPKi0jpkcXb6SHOO/jgSiTVqDG
+         HYVoAAQnp5E4kWngK7JNSj4hqKxDaIkjQD8UxgyaDTQl9sGY09HDEEKy4TfBHn+6GEnX
+         ZwkHG8foCOcjPqJnqZjnXArqu3/jxb0G5pIOQqD0mvVdk8VnYRKX6JuKLsTYCLvSbl7l
+         hOpjB/6MnvjONV+H7trrWNY+me3MtaQJoc7HUVLoPcteZtMbi4PmUAcN1IMMj1pRWXBt
+         vl0Q==
+X-Forwarded-Encrypted: i=1; AKwUvByRpkVS2JH3UJA0WT1omoGTuTb7lXxy6CYOChbFB/sNar1JfIxQOvCnfx8vAGEv7+a7iR16LPj/NDULahrxuA==@vger.kernel.org
+X-Gm-Message-State: APuU4Z+4Qj/GSISWbpzH38mKVhaC2yp+Ut1ojSst/NJZbFHYXdHLooeD
+	kIHKTNM93rsaepH/UNTsjQ+b+2U85GxD++88gTBsSy9H/ZVmilzM7b+Ba11PwX+HKSRzS0kNJlC
+	Glb5A2R5fTScjtcWPXtV4wOW827VqE7U5511osWDI6S7wPKFZjVvR7Sw9WWi8BDOnupxwnA==
+X-Gm-Gg: AYBFou2KrOHscp8IufIPpby2rRcaJWE/jz+BfN14/C6rqx6Ox0rRe8mc8fn+HcCUQzh
+	nDTbDdcLuB3O3zMY8XmWsDAM9YPVijXij0L4zTN6T67S0JRpvp6Vv4EqYqUfjZVvEsBXdouvnc3
+	lvBk59TJzr4yhh7imaOg831wSmrF0ka3SydfoamyOmBqSxL7D+qZLoEqXhLtuZEYCb08a/xRSo6
+	LVYVq32OK+Iz6QDjDgjsBG9Gv/jZ4h3SAzjAF69aE41hQXY/SzoGmXqv/Qk+TJDN4xfl+xr4FWN
+	MOizeWxyCrbgCbZxfRuJRV8M2v2/p91STP158qWc4CJCQwDpuzVp+NBAP4lJLrHb4+FcvJGrOxv
+	XPuD50bEB1vB3xUOSve28g0PDExyxEvtMGKcF8DzMMYo32W27AAj+JKOx7CT+8bG4/EUCFjl2wd
+	k12cWRzEWszvSzzoCL+EHeaCAQitkp+qk=
+X-Received: by 2002:a05:701b:2205:b0:16a:b995:dc7c with SMTP id a92af1059eb24-1b25d34efb3mr2989537c88.21.1793975495931;
+        Fri, 06 Nov 2026 06:31:35 -0800 (PST)
+X-Received: by 2002:a05:701b:2205:b0:16a:b995:dc7c with SMTP id a92af1059eb24-1b25d34efb3mr2989503c88.21.1793975495150;
+        Fri, 06 Nov 2026 06:31:35 -0800 (PST)
+Received: from [10.227.105.111] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36fa9ed126csm7361711eec.18.2026.11.06.06.31.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Nov 2026 06:31:34 -0800 (PST)
+Message-ID: <01da3719-51c4-4f0d-a3f9-f0e5c95dbb80@oss.qualcomm.com>
+Date: Fri, 6 Nov 2026 06:31:33 -0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,89 +116,69 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="KtjQmKF3zC2utkqj"
-Content-Disposition: inline
-In-Reply-To: <653d93b3c35975cd13dd6b33d76ea6517b55be91.1793927986.git.fmaurer@disroot.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Issues with ath12 wifi driver on WCN7850
+To: Rahul Balakrishnan <rahulbal29@gmail.com>, jjohnson@kernel.org
+Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <CAMOo2XeHzsWR_f5j1+ukPn97CpSNtPM7WLm1Y8cWqdGm3=yJFA@mail.gmail.com>
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+In-Reply-To: <CAMOo2XeHzsWR_f5j1+ukPn97CpSNtPM7WLm1Y8cWqdGm3=yJFA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDA1NyBTYWx0ZWRfX5/l690oTRTxN
+ w0xqOLXCtcgFPq3BDPy1KHbcigsh3ghDDwwA9RFaacTLoc0i9VJ6MkM0Cb6YpEUYx/Olkmlvrhz
+ 85NyU+2B1Mj1sPPlVyRrgAGbpKJFqFcr0gaDfC34U7H/BA4BieyyllmpKyP+ubzKqg7cHLH+4nQ
+ Wkix26Ozv4KBsuoroZfrD25L5d6hnlPSy6BrvKqMQ+91+7oJG3BkLoyTc0KE5bImO4OYKy82qfN
+ 8K/Jpys8DKcYMId2XZ9gqnDUcQgIwceJ3hWinhF0SfnPtvgjoK8PM/YXeAvb650MJVIumUbuCpB
+ I4HSF1OYqWGb340G3GIkNNsab3MwFUyaSW2ipn2nh0Pu7lrtG11BPSTarjmbZrDCjG/HgbEG4Bf
+ r9GArhVqVYyzZsmXVYndYxDxFiG/pjE1Hly9qeLcOHtgZij0Nbznf33aX6Rot9wJMi1+VkN5ikK
+ 7G6wgjCS53mJ0TYfxfQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDA1NyBTYWx0ZWRfX8gA4z+ZiYh1e
+ 6T+FydvLvVzkMHyd6mTtKu98GGIuUTHoyA4sx7VNaP+4UXIIKYTHgynl8jQ2nZ9pXW9gvj9uXyT
+ 1jrOloCZMEQDuzkeDepGZR0LU2BEJIo=
+X-Proofpoint-ORIG-GUID: dhPjuP1zqma2uji-WRPounNYOnfWrYBR
+X-Authority-Analysis: v=2.4 cv=GpzXaU1C c=1 sm=1 tr=0 ts=6aede4c9 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=VwQbUJbxAAAA:8 a=1nzeiQ3qHfAZu2nQ3WIA:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-GUID: dhPjuP1zqma2uji-WRPounNYOnfWrYBR
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-06_04,2026-11-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 lowpriorityscore=0 suspectscore=0 adultscore=0 malwarescore=0
+ priorityscore=1501 phishscore=0 bulkscore=0 clxscore=1015 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611060057
 
---KtjQmKF3zC2utkqj
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 11/6/2026 4:07 AM, Rahul Balakrishnan wrote:
+> Hello Mr Johnson,
+> 
+> I have been encountering an issue with my Qualcomm Wi-Fi chipset. Here
+> is my currrent system configuration.
+> 
+> Environment
+> ===========
+>   Board:     MSI PRO X870E-P WIFI (MS-7E70), BIOS 2.A52
+>   Device:    17cb:1107, subsystem 105b:e0f7 (Foxconn)
+>              "Wi-Fi 7 Hardware name: wcn7850 hw2.0"
+>              chip_id 0x2 chip_family 0x4 board_id 0xff soc_id 0x40170200
+>   Firmware:  fw_version 0x1103006c fw_build_timestamp 2026-03-06 09:10
+>              WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+>              (Arch linux-firmware 20261019)
+>   Kernel:    7.2.11-arch1-1 (Arch distribution kernel, not yet
+>              reproduced on mainline)
 
-> mt76_npu_dequeue() reads the slot count of a frame from the info word
-> of its first descriptor before checking the done bit of that slot. If
-> the NPU completes the slot in between, the count is still the 0 left
-> by the refill, so a frame spanning two slots is taken as a single slot
-> frame and its second slot is parsed as the start of the next frame.
-> With mt7996 this shows up as bogus tx-free events, which hit the
-> WARN_ON_ONCE() checks in mt7996_mac_tx_free(). From the code, such an
-> event can also release tokens that are still in use.
->=20
-> Check the done bit of the first slot before reading the slot count,
-> and order the descriptor reads with dma_rmb().
+We only work on the mainline kernel here.
 
-Relying on the patch I shared for 1/2, I guess this is no more a problem si=
-nce
-we will just delay the skb allocation. Agree or am I missing something?
+If you are having an issue on a distribution then you should go though that
+distribution's support channel since sometimes they carry their own patches
+which are not upstream.
 
-Regards,
-Lorenzo
+If you are able to reproduce using a mainline kernel then follow:
+https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath12k/bugreport.html
 
->=20
-> Fixes: 7fb554b1b623 ("wifi: mt76: Introduce the NPU generic layer")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Florian Maurer <fmaurer@disroot.org>
-> ---
->  drivers/net/wireless/mediatek/mt76/npu.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/npu.c b/drivers/net/wirel=
-ess/mediatek/mt76/npu.c
-> index 6e503a4a890c..f00ae683a7eb 100644
-> --- a/drivers/net/wireless/mediatek/mt76/npu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/npu.c
-> @@ -72,18 +72,25 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_d=
-ev *dev,
->  	int i, nframes, index =3D q->tail;
->  	struct sk_buff *skb =3D NULL;
-> =20
-> +	if (!q->queued ||
-> +	    !FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[index].ctrl))
-> +		return NULL;
-> +
-> +	/* The slot count is only valid once the first slot is complete */
-> +	dma_rmb();
->  	nframes =3D FIELD_GET(NPU_RX_DMA_PKT_COUNT_MASK, desc[index].info);
->  	nframes =3D max_t(int, nframes, 1);
->  	if (nframes > q->queued)
->  		return NULL;
-> =20
->  	/* Only take the frame once all of its slots are complete */
-> -	for (i =3D 0; i < nframes; i++) {
-> +	for (i =3D 1; i < nframes; i++) {
->  		int idx =3D (index + i) % q->ndesc;
-> =20
->  		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[idx].ctrl))
->  			return NULL;
->  	}
-> +	dma_rmb();
-> =20
->  	for (i =3D 0; i < nframes; i++) {
->  		struct mt76_queue_entry *e =3D &q->entry[index];
-> --=20
-> 2.47.3
->=20
-
---KtjQmKF3zC2utkqj
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCau3jnAAKCRA6cBh0uS2t
-rKxxAQCZ+WzNiOTB1+5eiTtdzP8G/JQKB+ravFT4xNbo4OIRTwEA61IME59No34X
-i6GOyP7UthDtFp6rmgVGBPNWrHeuPgo=
-=oeNY
------END PGP SIGNATURE-----
-
---KtjQmKF3zC2utkqj--
+/jeff
