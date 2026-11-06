@@ -1,72 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.190.148.227
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.216.248.207
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793944637;
-	b=P3SZg1PV2BtMp8Wp3hb7VWBYZQ/PJ8BA6k9vLHxAk8DnLuB9CgZWb52ouAvWG+Eyn/pd
-	 wsWs7XBAwSvmrCZNqbdXnW+U7SRksjts42hCLjij4r6fHTRKTuznCL/IrX+pS/lML+NNn
-	 UToetmZUv2UDNjeqjb60s9UKq+eXXGEGj+Txra/xzw1uIe9S988YBjbaEvRPoFIbxxXbD
-	 5CGUvrW5lPbDfFQWZng51cps6ghGtLtTbVmhN1gwZTiBlsYgZQB5mYLG0dXZXnCjBZ3yM
-	 Orq7M8sfYCvin8eG09V4S0lvTcWwqQtWyRbAslJ7NWf82d4V1vXkHZw3d6O/ew3T17w==
+	t=1793948884;
+	b=rrteD9Qwx5kSt+NrgygvyF/6dtLF3MTj3fzCrvibULYl/J0yX1a9TOe3OvxH4MClKdMt
+	 VT/+D7f2ODpfdiZmblJs7/+j3rqjnTxijGmZdfmv0kmnNUYGsiBDP4BqHZRF4NLmSsxgD
+	 lM9Zg000Bffb0o2ZeUh/cv6XlGP4pyMTnEIuD28KZdMP0Ig/DiFhkkBD0nRR4YaNZcOlv
+	 80IeBhYUYzP7Dtx1M52MNQpFY1GPppgBrvIVQ4ZEYAxd/IDaT0PjoFdHk0QN2UMsGajTp
+	 kKjmMaAySi0rIO/18ZyYDZdyKqaXXQaUWFpOdUAq97LlmuFne70+EvFt4b4CsxK4KTg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793944637;
-	h=DMARC-Filter:Received:Received:Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793948884;
+	h=DMARC-Filter:Date:X-Lima-ML-UUID:DKIM-Signature:From:To:Cc:Subject:
+	 Message-ID:In-Reply-To:References:Organization:X-Mailer:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=V5Lnobb+4I39QfB84s55NYKIPzzSfTvTzIQ5ko8LurA=;
-	b=I9yR+5OS8ZO4LOP9FG8El6iG9nnpIV8jt1kIM6TGnckl0TmV0FTVuNaQ5gSbhtQsejWB
-	 dq06aH841dQyTTluKfBfD+1UvVsv6b+psob1otDHXCFrVMGIHptaPGMWeRJO5KKpcynf1
-	 O9ikqSTxvsp/lPhmrS0UiKblflP15fiP6zV2mdVTZlf82V8G2gp8pLYHtWfnKkcVNoihU
-	 ie24IgjGEL0rV/nSqQQtPVhmtTdLXaFw2nXJJ6KsuvvFPUDcx3ILwrsmkbV5Oz7QdnQC8
-	 NTAMLLbggt0YTVSEmf0Ejdn2pLOqu4xhMIdkZYeCA5Jg29aczyAfBLnL0eTuBae6iDg==
+	bh=3XpOGU15gV2kkiX+x42/xqlgDds6kH/y/8TzU6FkmFA=;
+	b=Xe8lUyogV7wIB5i3XdL8vhCXj+J5jsrIDPsBToVnbhb+wykT/Cg1AdICNsf9Fod7mgxK
+	 /wzkm7JWBMcpQUOu0rRC5u3LOgRIN65imMROQ1vY0Y8jU3sgkjd+1kzgqhF7YlmjkC3lO
+	 2J8EIJsBd9sJHEUYdvZ9Eiwx6FdbZ0Mc3hHTmidCr/7L22JT1Da2HbRmrbKTBzNsHVgo7
+	 vmEJLror9Wep6dzj8OlyPtQZ+stPATtCR/WuqXjRU2OT1o5I8UNrDHjfU7uFuLL4eklV2
+	 wguYtHZsJ2KsOXWQTzk8zCYGJgiEgwMilvGxAeEFgowip5Js3jJ9y5KEBRIYyw1r6Cg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=foundata.com;
-	spf=pass smtp.mailfrom=foundata.com;
-	arc=none smtp.remote-ip=195.190.148.227
-Received: from hera.efm.de (hera.efm.de [195.190.148.227])
+	dmarc=none header.from=deq.rocks;
+	spf=none smtp.mailfrom=deq.rocks;
+	dkim=pass header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=Pe7Mincx;
+	arc=none smtp.remote-ip=91.216.248.207
+Received: from mx5.mail-out.lima-city.de (mx5.mail-out.lima-city.de [91.216.248.207])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0286606A328;
-	Fri,  6 Nov 2026 05:57:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0286606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=foundata.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foundata.com
-Received: from hera.efm.de (localhost [IPv6:::1])
-	by hera.efm.de (Postfix) with ESMTPS id 4BCA140C3D59A;
-	Fri,  6 Nov 2026 06:57:15 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-	by hera.efm.de (Postfix) with ESMTP id 30EC6413304F4;
-	Fri,  6 Nov 2026 06:57:15 +0100 (CET)
-Received: from hera.efm.de ([IPv6:::1])
- by localhost (hera.efm.de [IPv6:::1]) (amavis, port 10026) with ESMTP
- id sFwEJI33bHUb; Fri,  6 Nov 2026 06:57:15 +0100 (CET)
-Received: from tpx13-pf5nr32.fritz.box (ip-037-209-109-094.um11.pools.vodafone-ip.de [37.209.109.94])
-	(Authenticated sender: ah@foundata.com)
-	by hera.efm.de (Postfix) with ESMTPSA id 899CE40C3D59A;
-	Fri,  6 Nov 2026 06:57:14 +0100 (CET)
-From: Andreas Haerter <ah@foundata.com>
-To: cnfourt@gmail.com
-Cc: angelogioacchino.delregno@collabora.com,
-	leon.yen@mediatek.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	lorenzo@kernel.org,
-	lucid_duck@justthetip.ca,
-	matthias.bgg@gmail.com,
-	mingyen.hsieh@mediatek.com,
-	nbd@nbd.name,
-	ryder.lee@mediatek.com,
-	sean.wang@mediatek.com,
-	shayne.chen@mediatek.com,
-	stable@vger.kernel.org,
-	yu-ching.liu@mediatek.com
-Subject: Re: [PATCH] wifi: mt76: mt7925: fix NULL dereference in CSA worker
-Date: Fri,  6 Nov 2026 06:57:09 +0100
-Message-ID: <20261106055710.222567-1-ah@foundata.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261025140123.12056-1-cnfourt@gmail.com>
-References: <20261025140123.12056-1-cnfourt@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6CA1606A328;
+	Fri,  6 Nov 2026 07:08:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E6CA1606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=deq.rocks
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=deq.rocks
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=Pe7Mincx
+Date: Fri, 6 Nov 2026 08:07:51 +0100
+X-Lima-ML-UUID: cfddbb30-81b9-4b82-812e-7f150fa52ac4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=deq.rocks;
+	s=securedbylima-20251205; t=1793948874;
+	bh=3XpOGU15gV2kkiX+x42/xqlgDds6kH/y/8TzU6FkmFA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=Pe7MincxXYE/sg2TCk1Q28j/egaMNPo2yzX85iwCThOMdgAvqpu82OK2e+aPI8+9s
+	 Jp3JIKtUGSJIVCuXvswD929IUz3Lk+ub97Qaw54gcFAJP6X3RjHRGtW6xx95LdOXGp
+	 60LGzg9o4KwXBQxSFx6CzGDblbF6wIY4FB8LR5T2OabzXlVPFwM6yFdPGUPo14ySzC
+	 lv3/WXJUWTZbuFhebfeuQATFMLjj4OX5Rvw61cX5YBFJ8hNXKRONV+gagZNTNhYsbF
+	 PgmyAGUSBAZilkGfJxUTi/UHRjWRzf6PxUFf6pB68IyPzNPsqaO4+wAcXcZmOyA0T+
+	 QdQWNtiEdLy8g==
+From: =?UTF-8?B?QW5kcsOp?= Eikmeyer <dev@deq.rocks>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>,
+ <brcm80211-dev-list.pdl@broadcom.com>, <linux-kernel@vger.kernel.org>,
+ Aditya Garg <aditya.garg@linux.dev>, Yossef Osman <Yossef.Osman@proton.me>
+Subject: Re: [PATCH 1/7] wifi: brcmfmac: match firmware capabilities as
+ whole words
+Message-ID: <20261106080751.4c37b14e@kait2en-mbp15-1>
+In-Reply-To: <1a1acc5e9b0.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+References: <20261104151547.70333-1-dev@deq.rocks>
+	<20261104151547.70333-2-dev@deq.rocks>
+	<1a1acc5e9b0.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+Organization: KaiT2en
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -79,56 +71,12 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Oct 25, 2026 at 10:01:18PM +0800, Gris Ge wrote:
-> Reproduced the panic by injecting CSA-less "abort" beacon, works well
-> after patched.
+On Thu, 05 Nov 2026 18:33:34 +0100
+Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-I hit the same oops in normal use, with no injected frames, on a
-ThinkPad X13 Gen 6 (MT7925, 14c3:7925) running Fedora's
-7.2.14-200.fc44.x86_64, not tainted:
+> Nearly identical patch was already accepted in the 4388 support
+> series. Dropping this one.
 
-  BUG: kernel NULL pointer dereference, address: 0000000000000000
-  Workqueue: phy0 mt7925_csa_work [mt7925_common]
-  RIP: 0010:mt7925_csa_work+0x83/0x160 [mt7925_common]
-  RAX: 0000000000000000 RBX: ffff8eeb5bbb3910 RCX: 0000000000000fa0
+Thanks, will rebase 2-7 for v2 as per mail earlier.
 
-The code bytes decode to the dev->new_ctx load followed by the read of
-def.chan for mt7925_set_roc(), and RCX holds the duration of 4000.
-
-The access point announced a channel switch just after a roam:
-
-  10:58:02.90  associated with the new BSS on 5180 MHz
-  10:58:04.05  CTRL-EVENT-STARTED-CHANNEL-SWITCH freq=3D5180 (80 MHz)
-  10:58:04.47  oops
-
-It has happened once. Two earlier channel switches on this machine
-completed normally, and the log does not show what tore the context
-down.
-
-The impact MAY be worth a line in the changelog. The oops lands between
-mt792x_mutex_acquire() and the release, so dev->mt76.mutex stays held
-for good. WiFi did not come back, and at shutdown wpa_supplicant,
-NetworkManager, avahi-daemon and systemd-resolved all survived SIGKILL.
-The machine needed a forced power-off, so the stable tag looks right to
-me.
-
-I read the patch against master and v7.2.14. The chanctx hunks apply to
-v7.2.14 with an offset and mt7925_csa_work() is identical there. I see
-no new lock ordering problem.
-
-I have no reproducer, so I cannot offer a Tested-by.
-
-Thanks,
-Andreas
-
---=20
-foundata GmbH
-Steinh=C3=A4userstr. 20
-76135 Karlsruhe
-
-
-Web: https://foundata.com
-Sitz der Gesellschaft: Karlsruhe
-Registergericht: Amtsgericht Mannheim, HRB 714807
-Gesch=C3=A4ftsf=C3=BChrung: Andreas Haerter
-USt-IdNr.: DE284122682
+Andr=C3=A9
