@@ -1,63 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793953818;
-	b=l2snWI45c2n44YrUxUPNL6GGaP4n5SFTUjAxsrdJEb64ev8fYKGlOGcKUxgsc7e2RqV/
-	 kmolF5JoYoAvedDMQwbhIftf5F6DU7yDDVe8DfzjKIqswmtYcVCvf3helb7uIkP3AU354
-	 W7MqT8QjYKXRrXf7Ijg5MXh+2YvfDUKoLbU2sY7D9OHJ1YHeMyMpB3gsfTangtbHTN7qD
-	 V6KF6bXQdxtaJXQ4zUzM/UVH7QAcwf1xCM18HmaWqptWAxVZCiSkup3VKQc10l6fpdQtx
-	 QigUx77m52Ig44hflhy8efQdzjk1CD+xg3nnWG8D0G9y0RSodugASW9C9XfJiwEK/NQ==
+	t=1793953819;
+	b=F72yZi+aObVW2kSt5XJhOETu/actBzA964B20g3cJUHRlxNzd10JC3clLQrMozg8fCcu
+	 rYfxWim4famuVXUFmTpEt45kLhsRgOvMxODT3AuBBF7IzbZsSbJYQSneBOZZYAFTvk2b7
+	 lKfHmIg/pL3s21yP2pTbEPQC5GM+xPQluBpb1zGJDhb3WLo6eWt2Rj0ODgzwDoZX7Gyp0
+	 aD4Xv3CDwP9Pt+GCoGZ4QunSFJedM1H6xATiBaP2JbpwpHXOsE5JqUPI7pZQn4tBFGl5s
+	 YDG+PBB3Q0JcDhHEq29QKhbXlpWCiktsZcx14oL2ijDx/O65ErmxvZSiCDl9y/9RTuQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793953818;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793953819;
 	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
 	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
 	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
 	 Content-Type:X-MTK;
-	bh=Onxhd/DO9QQu/MS7DnsUyIRjDUpepoFOd57MpnUZbFc=;
-	b=QlOwPYjeadK88e7bDPJlnMF5LXouNw20BHFEET23ZIa7/6fhxu6/U1Ak/wkqZq2PJ5I3
-	 z/NNFwOih4/SXIFSLXKjDQ0xIEgB/gXePo+Xu0TBoIEXo83tCOXfqrxbomWT8+BOs5T/7
-	 9OxYRjD93PAYfbILRK+xPVJLmRGyikaBkfL8cNN9LLbp83gO8y5znYNf75JoXyWzCaHJq
-	 FPnSx+GEIvsR6IVsDPMEjdveqPkFyJjbhX18n5lvKa/MqPcuD6a3IBpV4LM/fl7d+/YD+
-	 p0aXCJE/q+3Y5lD+nNxpx0ETHanf61XMIVDAD4hOsQY1IcGcE916tdMBhmqps4lmZKg==
+	bh=LGSvrTv4Wf91vkSRllE7f4GzHyMY5oUERas0d4QiPbY=;
+	b=b98AANC8ihQarciy031bZPzwqJ8HNxtUFFWrZ87NT0TWzwqJIkWOpEDQ/VE5rni7fP4l
+	 0ZgoDikXxIv4yNOqJ2HnvtyJb2B/PPo5SL3WIuExDugmbw6xU6q9AqIfdzTYoS/ngzOta
+	 ZYQ2VpFDfzurKDDqP0X/kbLs9KMus2cmpuuDj/6H+GOA6gxN4ga6Q3mqy81oeUG7fPRRR
+	 HAPmngKW3dlg8Ftsm1POOaTx1PBz+svihbc/oFhH9DDZD8qiaOxMlpuiRlI4uKSFXr41i
+	 ZnQivyNz7JmJi0eB/4HAsIDFDcxh8C+lLjDSWBBsuTmmuNDZVZSwAPeZAmmhdwDFCmg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=mediatek.com;
 	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=XFwdw14H;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=ALDIxUv8;
 	arc=none smtp.remote-ip=60.244.123.138
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DEC7606D80F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C1C2606A33F
 	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 08:30:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DEC7606D80F
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3C1C2606A33F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=XFwdw14H
-X-UUID: 48f693c6d9bc11f1b1788b6acf885367-20261106
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=ALDIxUv8
+X-UUID: 47fb6f14d9bc11f1b1788b6acf885367-20261106
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Onxhd/DO9QQu/MS7DnsUyIRjDUpepoFOd57MpnUZbFc=;
-	b=XFwdw14HR3eagCKRAUokHc/vZDWTMOsUr0eQtlKJszyu4UdZkxk5n5J+yHWRZ9LN1E9MU90Xrc3u/ibtLveNo0Mx+q7XQF0XtN7lmlqokdQB9GstMd30GAd/7ntNA8NhYLlaVF2udrC4Nxd3niad3lBBpg4MBD6dar3zI7xjSEE=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=LGSvrTv4Wf91vkSRllE7f4GzHyMY5oUERas0d4QiPbY=;
+	b=ALDIxUv8D2b1uZtJG03ypcqLiJ9m3rq8DKxnWMcDn9C/VntDUW/rMJsVnKWwbbwxCBeLj7c8KKo3n04HPgUDnGvXVBBMpIKF31dhPDJc8Cr+asRrrQfudbK0+08AE+Dw3JQ7XpD5wPe+1faFP/a7ERuFqRk+6yi+P9+xRu8IZdg=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:313894d5-10fe-4fe0-a195-8bcd26c92dc4,IP:0,U
+X-CID-O-INFO: VERSION:1.3.21,REQID:3ec3dfb4-0104-4d1e-9374-7ff8844c8b4d,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:73e574bb-4006-44bb-949c-6e25a7b8dad4,B
-	ulkID:nil,BulkQuantity:0,SF:81|82|102|136|836|865|888|898,TC:-5,Content:0|
-	15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,CO
-	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:35a4dace-02bc-447e-ab88-2baec399874a,B
+	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
+	0|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0
+	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 48f693c6d9bc11f1b1788b6acf885367-20261106
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
+X-UUID: 47fb6f14d9bc11f1b1788b6acf885367-20261106
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
 	(envelope-from <james-ly.huang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 308104559; Fri, 06 Nov 2026 16:30:12 +0800
+	with ESMTP id 407701143; Fri, 06 Nov 2026 16:30:10 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.2562.29; Fri, 6 Nov 2026 16:30:09 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -68,9 +68,9 @@ To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<sean.wang@mediatek.com>, <jb.tsai@mediatek.com>, <kun.wu@mediatek.com>,
 	<James-LY.Huang@mediatek.com>, james-ly huang <james-ly.huang@mediatek.com>
-Subject: [PATCH v2 5/9] wifi: mt76: mt7925: describe the real chandef in ROC requests
-Date: Fri, 6 Nov 2026 16:30:00 +0800
-Message-ID: <20261106083004.3156085-6-james-ly.huang@mediatek.com>
+Subject: [PATCH v2 7/9] wifi: mt76: mt7925: inject the deauth for an aging-timeout SAP event
+Date: Fri, 6 Nov 2026 16:30:02 +0800
+Message-ID: <20261106083004.3156085-8-james-ly.huang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20261106083004.3156085-1-james-ly.huang@mediatek.com>
 References: <20261106083004.3156085-1-james-ly.huang@mediatek.com>
@@ -89,163 +89,242 @@ X-MTK: N
 
 From: james-ly huang <james-ly.huang@mediatek.com>
 
-Resolve the full chandef behind the bare channel (mt7925_mcu_roc_chandef):
-for a BSS-bound request the BSS's own chanctx already describes that
-channel; everything else (off-channel dwell) keeps the 20 MHz NOHT
-description, which is what a listen dwell actually uses. Program bw /
-center_chan / center_chan2 accordingly, and derive sco from the
-primary 40 MHz block instead of comparing against the center channel.
+The FW ages out inactive clients of an AP/GO and reports it with a
+SAP aging-timeout event; the expected reaction is a deauth with
+REASON_CODE_DISASSOC_INACTIVITY. The AP MLME here lives in
+wpa_supplicant (softmac, device_ap_sme=0), so synthesize the deauth
+frame the GO would have received from the GC and hand it to
+userspace via cfg80211_rx_mgmt_khz().
 
-Map the nl80211 channel width to the fw ENUM_CHANNEL_WIDTH_T encoding
-via mt7925_chandef_to_cw() and the new MT7925_CW_* enum (the fw casts
-roc.bw straight to that enum, so CMD_CBW_* values must not be used).
+Handle the new MCU_UNI_EVENT_SAP in p2p.c
+(mt7925_p2p_mcu_sap_event) and dispatch it from the unsolicited
+event handler.
 
 Signed-off-by: james-ly huang <james-ly.huang@mediatek.com>
 ---
-v2: no change
+v2: fix build warning
 ---
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 88 +++++++++++++++++--
- .../wireless/mediatek/mt76/mt7925/mt7925.h    | 13 +++
- 2 files changed, 92 insertions(+), 9 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |   1 +
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |   4 +
+ .../net/wireless/mediatek/mt76/mt7925/p2p.c   | 141 ++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/p2p.h   |  16 ++
+ 4 files changed, 162 insertions(+)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index bb98a6eacac4..817554ffb9d8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1099,6 +1099,7 @@ enum {
+ 	MCU_UNI_EVENT_PS_SYNC = 0x0d,
+ 	MCU_UNI_EVENT_SCAN_DONE = 0x0e,
+ 	MCU_UNI_EVENT_RDD_REPORT = 0x11,
++	MCU_UNI_EVENT_SAP = 0x1c,
+ 	MCU_UNI_EVENT_ROC = 0x27,
+ 	MCU_UNI_EVENT_MBMC = 0x28,
+ 	MCU_UNI_EVENT_TX_DONE = 0x2d,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 2ce403000765..056f7e2f284e 100644
+index 6ec74d7bfd82..d9a5b5f57fba 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -1593,11 +1593,57 @@ int mt7925_mcu_set_mlo_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf
- 				 &req, sizeof(req), true);
+@@ -8,6 +8,7 @@
+ #include "mcu.h"
+ #include "mac.h"
+ #include "nan.h"
++#include "p2p.h"
+ 
+ #define MT_STA_BFER			BIT(0)
+ #define MT_STA_BFEE			BIT(1)
+@@ -734,6 +735,9 @@ mt7925_mcu_uni_rx_unsolicited_event(struct mt792x_dev *dev,
+ 	case MCU_UNI_EVENT_BSS_BEACON_LOSS:
+ 		mt7925_mcu_connection_loss_event(dev, skb);
+ 		break;
++	case MCU_UNI_EVENT_SAP:
++		mt7925_p2p_mcu_sap_event(dev, skb);
++		break;
+ 	case MCU_UNI_EVENT_RSSI_MONITOR:
+ 		mt7925_mcu_rssi_monitor_event(dev, skb);
+ 		break;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
+index f41098b324ba..1fa6787600b2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
+@@ -462,3 +462,144 @@ bool mt7925_p2p_chanctx_bss_programmed(struct ieee80211_vif *vif,
+ 	}
  }
  
-+/* Resolve the full chandef behind a bare ieee80211_channel.
-+ *
-+ * The CNM channel-privilege request carries bw / center_chan / center_chan2 /
-+ * sco, and for a BSS-bound request they must match the BSS's own channel.
-+ * mt7925 only has a bare channel at this point, but for a BSS-bound
-+ * request (JOIN) the BSS's own chanctx already describes exactly that
-+ * channel, so use it.
-+ *
-+ * Everything else - an off-channel dwell (ROC / OFFCHNL_TX), or a request for a
-+ * channel that is not the one this BSS is parked on - keeps the previous 20 MHz
-+ * NOHT description, which is what a listen dwell actually uses anyway.
++/* ------------------------------------------------------------------ */
++/* P2P-only MCU events                                                  */
++/* ------------------------------------------------------------------ */
++
++/* FW reported that a peer of our AP/GO aged out (no traffic/no ack for the FW
++ * inactivity period); the expected reaction is a deauth with
++ * REASON_CODE_DISASSOC_INACTIVITY. Here the AP MLME lives in
++ * wpa_supplicant (softmac, device_ap_sme=0), so instead of tearing the
++ * STA down in the driver we synthesize the deauth frame the GO would
++ * have received from the GC and hand it to userspace via
++ * NL80211_CMD_FRAME.
 + */
 +static void
-+mt7925_mcu_roc_chandef(struct mt792x_bss_conf *mconf,
-+		       struct ieee80211_channel *chan,
-+		       enum mt7925_roc_req type,
-+		       struct cfg80211_chan_def *chandef)
++mt7925_mcu_sap_aging_timeout(struct mt792x_dev *dev, u16 wlan_idx)
 +{
-+	if (type == MT7925_ROC_REQ_JOIN &&
-+	    mconf->mt76.ctx && mconf->mt76.ctx->def.chan == chan) {
-+		*chandef = mconf->mt76.ctx->def;
++	struct {
++		struct ieee80211_hdr_3addr hdr;
++		__le16 reason_code;
++	} deauth = {};
++	u8 peer[ETH_ALEN], own[ETH_ALEN], bssid[ETH_ALEN];
++	struct ieee80211_chanctx_conf *ctx;
++	struct mt792x_bss_conf *mconf;
++	struct mt792x_link_sta *mlink;
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *sta;
++	struct mt792x_vif *mvif;
++	struct mt792x_sta *msta;
++	struct mt76_wcid *wcid;
++	struct wireless_dev *wdev;
++	int freq = 0;
++	u8 link_id;
++
++	rcu_read_lock();
++
++	wcid = mt76_wcid_ptr(dev, wlan_idx);
++	if (!wcid || !wcid->sta)
++		goto unlock;
++
++	mlink = container_of(wcid, struct mt792x_link_sta, wcid);
++	msta = mlink->sta;
++	if (!msta || !msta->vif)
++		goto unlock;
++
++	vif = container_of((void *)msta->vif, struct ieee80211_vif, drv_priv);
++	if (vif->type != NL80211_IFTYPE_AP &&
++	    vif->type != NL80211_IFTYPE_P2P_GO)
++		goto unlock;
++
++	mvif = (struct mt792x_vif *)vif->drv_priv;
++	sta = container_of((void *)msta, struct ieee80211_sta, drv_priv);
++	link_id = wcid->link_id;
++
++	ether_addr_copy(peer, sta->addr);
++	ether_addr_copy(own, vif->addr);
++	ether_addr_copy(bssid, vif->bss_conf.bssid);
++	mconf = &mvif->bss_conf;
++
++	if (ieee80211_vif_is_mld(vif) && link_id < IEEE80211_LINK_UNSPECIFIED) {
++		struct ieee80211_link_sta *link_sta;
++		struct ieee80211_bss_conf *link_conf;
++		struct mt792x_bss_conf *link_mconf;
++
++		link_sta = rcu_dereference(sta->link[link_id]);
++		if (link_sta)
++			ether_addr_copy(peer, link_sta->addr);
++
++		link_conf = rcu_dereference(vif->link_conf[link_id]);
++		if (link_conf) {
++			ether_addr_copy(own, link_conf->addr);
++			ether_addr_copy(bssid, link_conf->bssid);
++		}
++
++		link_mconf = rcu_dereference(mvif->link_conf[link_id]);
++		if (link_mconf)
++			mconf = link_mconf;
++	}
++
++	ctx = mconf->mt76.ctx;
++	if (ctx && ctx->def.chan)
++		freq = ctx->def.chan->center_freq;
++	else if (dev->mphy.chandef.chan)
++		freq = dev->mphy.chandef.chan->center_freq;
++
++	rcu_read_unlock();
++
++	deauth.hdr.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					       IEEE80211_STYPE_DEAUTH);
++	ether_addr_copy(deauth.hdr.addr1, own);	/* DA: the GO itself */
++	ether_addr_copy(deauth.hdr.addr2, peer);	/* SA: the aged-out GC */
++	ether_addr_copy(deauth.hdr.addr3, bssid);
++	deauth.reason_code = cpu_to_le16(WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
++
++	wdev = ieee80211_vif_to_wdev(vif);
++	if (!wdev)
 +		return;
-+	}
 +
-+	cfg80211_chandef_create(chandef, chan, NL80211_CHAN_NO_HT);
++	cfg80211_rx_mgmt_khz(wdev, MHZ_TO_KHZ(freq), 0, (const u8 *)&deauth,
++			     sizeof(deauth), 0);
++
++	return;
++
++unlock:
++	rcu_read_unlock();
 +}
 +
-+static u8 mt7925_chandef_to_cw(const struct cfg80211_chan_def *chandef)
++void mt7925_p2p_mcu_sap_event(struct mt792x_dev *dev, struct sk_buff *skb)
 +{
-+	static const u8 width_to_cw[] = {
-+		[NL80211_CHAN_WIDTH_20_NOHT] = MT7925_CW_20_40MHZ,
-+		[NL80211_CHAN_WIDTH_20] = MT7925_CW_20_40MHZ,
-+		[NL80211_CHAN_WIDTH_40] = MT7925_CW_20_40MHZ,
-+		[NL80211_CHAN_WIDTH_80] = MT7925_CW_80MHZ,
-+		[NL80211_CHAN_WIDTH_160] = MT7925_CW_160MHZ,
-+		[NL80211_CHAN_WIDTH_80P80] = MT7925_CW_80P80MHZ,
-+		[NL80211_CHAN_WIDTH_5] = MT7925_CW_5MHZ,
-+		[NL80211_CHAN_WIDTH_10] = MT7925_CW_10MHZ,
-+		[NL80211_CHAN_WIDTH_320] = MT7925_CW_320MHZ,
-+	};
++	struct mt7925_uni_sap_event *event;
++	u32 tlv_len;
++	u8 *tlv;
 +
-+	if (chandef->width >= ARRAY_SIZE(width_to_cw))
-+		return 0;
++	skb_pull(skb, sizeof(struct mt7925_mcu_rxd));
++	if (skb->len < sizeof(*event))
++		return;
 +
-+	return width_to_cw[chandef->width];
++	event = (struct mt7925_uni_sap_event *)skb->data;
++	tlv = event->tlv;
++	tlv_len = skb->len - sizeof(*event);
++
++	while (tlv_len >= sizeof(struct tlv)) {
++		struct tlv *hdr = (struct tlv *)tlv;
++		u16 tag = le16_to_cpu(hdr->tag);
++		u16 len = le16_to_cpu(hdr->len);
++
++		if (len < sizeof(*hdr) || len > tlv_len)
++			break;
++
++		if (tag == MT7925_SAP_TAG_AGING_TIMEOUT &&
++		    len >= sizeof(struct mt7925_sap_aging_timeout_tlv)) {
++			struct mt7925_sap_aging_timeout_tlv *aging =
++				(struct mt7925_sap_aging_timeout_tlv *)tlv;
++
++			mt7925_mcu_sap_aging_timeout(dev,
++						     le16_to_cpu(aging->wlan_idx));
++		}
++
++		tlv += len;
++		tlv_len -= len;
++	}
 +}
 +
- int mt7925_mcu_set_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf,
- 		       struct ieee80211_channel *chan, int duration,
- 		       enum mt7925_roc_req type, u8 token_id)
- {
--	int center_ch = ieee80211_frequency_to_channel(chan->center_freq);
- 	struct mt792x_dev *dev = phy->dev;
- 	struct {
- 		struct {
-@@ -1613,18 +1659,42 @@ int mt7925_mcu_set_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf,
- 			.maxinterval = cpu_to_le32(duration),
- 			.bss_idx = mconf->mt76.idx,
- 			.control_channel = chan->hw_value,
--			.bw = CMD_CBW_20MHZ,
--			.bw_from_ap = CMD_CBW_20MHZ,
--			.center_chan = center_ch,
--			.center_chan_from_ap = center_ch,
- 			.dbdcband = 0xff, /* auto */
- 		},
- 	};
-+	struct cfg80211_chan_def chandef;
-+	int center_ch, pri40_freq;
-+	u8 bw;
-+
-+	mt7925_mcu_roc_chandef(mconf, chan, type, &chandef);
-+	center_ch = ieee80211_frequency_to_channel(chandef.center_freq1);
-+	bw = mt7925_chandef_to_cw(&chandef);
-+
-+	/* Describe the REAL chandef, not a 20 MHz stub: CNM uses bw / center_chan
-+	 * to pick the band and to decide whether the request can share an existing
-+	 * SCC.
-+	 */
-+	req.roc.bw = bw;
-+	req.roc.bw_from_ap = bw;
-+	req.roc.center_chan = center_ch;
-+	req.roc.center_chan_from_ap = center_ch;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
+index f7af45ee4c1f..9afae222845f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
+@@ -39,6 +39,20 @@ static inline bool mt7925_is_p2p_go_probe_resp(struct sk_buff *skb)
+ 	return ieee80211_is_probe_resp(mgmt->frame_control);
+ }
  
--	if (chan->hw_value < center_ch)
--		req.roc.sco = 1; /* SCA */
--	else if (chan->hw_value > center_ch)
--		req.roc.sco = 3; /* SCB */
-+	if (chandef.center_freq2) {
-+		u8 center_ch2 = ieee80211_frequency_to_channel(chandef.center_freq2);
++/* SAP event (FW event UNI_EVENT_ID_SAP / enum ENUM_UNI_EVENT_SAP_TAG) */
++#define MT7925_SAP_TAG_AGING_TIMEOUT		0
 +
-+		req.roc.center_chan2 = center_ch2;
-+		req.roc.center_chan2_from_ap = center_ch2;
-+	}
++struct mt7925_sap_aging_timeout_tlv {
++	__le16 tag;
++	__le16 len;
++	__le16 wlan_idx;
++	u8 pad[2];
++} __packed;
 +
-+	/* Secondary channel offset of the PRIMARY 40 MHz block.
-+	 * sco: 0 = SCN, 1 = SCA (secondary above), 3 = SCB (secondary below).
-+	 */
-+	if (nl80211_chan_width_to_mhz(chandef.width) >= 40) {
-+		pri40_freq = cfg80211_chandef_primary(&chandef,
-+						      NL80211_CHAN_WIDTH_40, NULL);
-+		if (pri40_freq > 0)
-+			req.roc.sco = chan->center_freq < pri40_freq ? 1 : 3;
-+	}
++struct mt7925_uni_sap_event {
++	u8 pad[4];	/* fixed field */
++	u8 tlv[];
++} __packed;
+ /* TX/RX path overrides, BMC wcid bookkeeping and the P2P-only MCU event
+  * handlers.
+  */
+@@ -54,4 +68,6 @@ void mt7925_p2p_bmc_remove(struct mt792x_dev *dev,
+ bool mt7925_p2p_chanctx_bss_programmed(struct ieee80211_vif *vif,
+ 				       struct ieee80211_bss_conf *link_conf);
  
- 	switch (chan->band) {
- 	case NL80211_BAND_6GHZ:
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-index 636efe038392..36cbeaedb7b2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-@@ -60,6 +60,19 @@ enum {
- 	UNI_ROC_NUM
- };
- 
-+/* firmware channel width encoding (FW ENUM_CHANNEL_WIDTH_T), differs from
-+ * CMD_CBW_*
-+ */
-+enum mt7925_fw_chan_width {
-+	MT7925_CW_20_40MHZ,
-+	MT7925_CW_80MHZ,
-+	MT7925_CW_160MHZ,
-+	MT7925_CW_80P80MHZ,
-+	MT7925_CW_5MHZ,
-+	MT7925_CW_10MHZ,
-+	MT7925_CW_320MHZ,
-+};
++void mt7925_p2p_mcu_sap_event(struct mt792x_dev *dev, struct sk_buff *skb);
 +
- enum mt7925_roc_req {
- 	MT7925_ROC_REQ_JOIN,
- 	MT7925_ROC_REQ_ROC,
+ #endif /* __MT7925_P2P_H */
 -- 
 2.45.2
 
