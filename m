@@ -1,87 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=178.21.23.139
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793964993;
-	b=w0FhI9V3eNOJLjYzGASuyFbS7ZfJ0bjop1LX2fA8eWkWKL01jhd1vBUryTC6boAuPwaY
-	 e8WnzK8x4S0jbBWcJ5znz5PFIueEjvAzPd8/NM9+1JIKx8J3gr+ZNiz+Kne+xsuMSAvAB
-	 xg300fkRF+StIVk7n422M6+VHzJQiiHERrTqJIzpwQa9gmDtEudB5r27HemOOr5wCrUyU
-	 iY7eDXIB9wz9wLPCXrSxpLSuD+WlAI9yRv1EhcoBo8qsQIBVISLufI3JpwdTq1CuVlT7I
-	 SEY2mEMirz8piAlHh9E6wlpl3dHaUkymXFTGb4DIg02dnZW+pApErh+gcJvDBgT1kRA==
+	t=1793965915;
+	b=uRAvaxhFWWoInBXs9sHdtEW7Ev4iFUiag0miignNGVmdi5vlw3hi2zMMH7rzT6/WeWxG
+	 6/VbeKqV70sfxmFXmYYkMLZBKlI46O4jRe4qThatvJrtip7OrFCf2OjFM7UbH5zdLC4S3
+	 HPfbrR0ihznZCAu/s7VcSvjAbzIfMy867EW4mO8Ztq1bzzXQDOx20k6HYF5y7Kvc308fP
+	 N6wVUFluF8VNIJ6YUy7j7NkTaIRNrFZkAk2VwtxiwQJFtpnC/nUFvhZszA/U+Iylgn0Xr
+	 xygZXdSjQFVBJUQyfs/h+QH2DENwR0Sg/3YQyH3xqsGG1D6aHEbTZ1ddMhMcbIo3fxg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793964993;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793965915;
+	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:From:
+	 To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=JQ1f9Uvnwt1IC48c9Xy267I5XKiB5GMgSCCvFoXOTKM=;
-	b=vBz1n0DufQnfc4LdWZglh1ZZ5j79ZJQk74PrLeHsZ+3pWPOylLyW/n5of09fUQh3456F
-	 BVKm0LShqLYyg5KAfZZa8mu5suRbttrLQ/O+H7Lw5k52aoIMJeG5E+aJ7Dy1B35GDHLm6
-	 Sbn3Fp/djPxCcgNDd3sHfrySwyhGKVQu8ghPEDWT5JvYKiUOKMe1/5Mue9TqnG/8l+cOT
-	 KHJWn+38TkucEoBmZvLL8YT7Wyq7gmU3EbVRnbcQzsOuj7kHatcBJPtPDWyHdmmt57iiL
-	 0ouvKmezhQ1wr4eyYzr1RWDZZxv448UYuU5RSppQQkHxwL4OeCv3rLoCzMxyT2CYpBw==
+	bh=sowS8VlK0YFuxRXUqxju6orwyRWV15bvieZJXVvCSf8=;
+	b=zo3WgIoFTMDHCMbrd/MJcrEAuV/9lBNfFpWpRIbq5iChSApCiTS0+GZKMt+TyoCzUXuJ
+	 NtPGLXpXdQGSrqnjQmBRst0GR5bxiTvGgr0yy3XgBbsIqfzwbovu/J9H7QMCHzKzd7JJE
+	 p4zgO3OpSpUMkioaBHNkFdJto+KdVc7PTD8i+dWZbrbweELj64Qll8ekg1t/nmktlpBba
+	 alT1fxkR7bfuh2YTrKPyS0r+U4AZXYkDu9/CytM3FLaq8npFU/oPs4jxRwQdQAyz3KXln
+	 7loZE/PofXIhnlJBz9l08yn7KWBpY4Mt7Ks73a7k7zhNE4Vj8M5Hi36b7pLfGNuhdKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EpPMfHyo;
-	arc=none smtp.remote-ip=209.85.128.52
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=disroot.org;
+	spf=pass smtp.mailfrom=disroot.org;
+	dkim=pass header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=ADpUlpgz;
+	arc=none smtp.remote-ip=178.21.23.139
+Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B31C60A6F4C
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 11:36:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B31C60A6F4C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECBF606A329;
+	Fri,  6 Nov 2026 11:51:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DECBF606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EpPMfHyo
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a2069b9710so4488285e9.2
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 03:36:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793964991; x=1794569791; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=JQ1f9Uvnwt1IC48c9Xy267I5XKiB5GMgSCCvFoXOTKM=;
-        b=EpPMfHyo2EH9wXl7A7TT0MKKlEOQW7aOwrSlKAnA+dT3eS5T2YIYkekWL3DXbdwB25
-         Afy8tEiSeX4IRTymyN4b4aSZmHqJ9xhj/W3sqYtzplvaHFqQzfJkjr/arNdx6g6cUmUw
-         b6w/U/PBZSnyIKiO9EV/agSQNCXVH7XC2rEmuWOWjVcCTYwVZsRl2an713Zh+ZN7TJls
-         ONbM1lfPVg1CmBQGOZZ4cKjmiJs6jq44QuajXC/kFuuKuyUz18i5mpyDIqga2ElkKvCS
-         iu5zh2wUZFlZgAzzTxfR6ZsCKpBVjNVV3pIZz6ZRNu9oUXbWdZZgF1XhxJUoIKcoCsfl
-         yW7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793964991; x=1794569791;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JQ1f9Uvnwt1IC48c9Xy267I5XKiB5GMgSCCvFoXOTKM=;
-        b=oFL/Ov95qckKJtV+5VM6supVqDvACv2kyB5Odu0tOa2PLtWiUowgH1KW0vs89qyvG5
-         x+vbR8SB98a0p9VNa+K933HIRPZ6JjA5vXvY0FjqTEEIBcve3ck6PZl/udMaamyl6kQD
-         gicRroIkpux8FUglHA4n0662aQalpMVJ1kMd1Zkss5n035j2x84unXSDiHrup20Hy+YQ
-         kv32Ev0KvKXpI3cNPw8l4/gfbxN7Mb+jl0gE2ASeOfPdhwZGHy3mFF8TMlqvgGPVB5So
-         CN3zkKkkK4/1ThQYIbDRl+OJy9r303LL4a8Qugr7CL6Kt/fibZH7Dh4r82aYT484DyF7
-         Dzqw==
-X-Forwarded-Encrypted: i=1; AKwUvBxDSTu1G7yRCwjvvtpOwq83ytdvEBFE8vLbcJdblMRIYtEjxKHpQ5cFgS+e680AUyB6ADVH3a9nu2wyrSU/gg==@vger.kernel.org
-X-Gm-Message-State: APuU4Z++Uf1tlgp1MMRMEJofvEU2u4HN85+RXTaTdQXow5slb8RVZgAu
-	X6lRhDO7EtrRKORiq9IA5qbIrcCXCmgTysDu1YEWdaArSYnfDs+zcyqEwAcfLSFV
-X-Gm-Gg: AYBFou2IteZbl8JMqZAnlcpkm/Isynp6cq6xKxeLpX4SePPWbLZG1NIA5QMsqkx5zdY
-	wVtJU/GhFGyLQur6vycIaQI7oOTGX6IWaaen60SB/4Bn7rTpI/Un8+C3K+foarJJkAYO2rxYXk5
-	DBeJwYADQZ5LQ1jndEbc3t6tqOwyqvE3OfpiKgRaZfQRtVUgmTuaSIF92WvepsgV+T5sZxCeTcN
-	+ZncIVuJlA8KiYyka2HqDU+8xbATmRzQYM1vY5Xo0LA5SCjL7n9R0cM7h1Ss2nDscFkijaBSgmJ
-	Ef6RlhssqUCaYnOHrBFhslQ3cOEB6er5SAI7mF5ywLkXscFzOlAHTS/yk54j6GKANZDZylx96p4
-	3V9D6Myxe8JKCCZCmGm9knFsmYn9MYsQXuczndKch0U9h3i1HWE7NYh3IQJ5Pk8wzB5bf8dvvLY
-	LeQHqbNDRjD2U0GYuBV040UkyIKxWtqJnPk+vHkyk0dLzMJaxzsjb33EVnX6jTEbwHfLrj4sggB
-	7XiPoQYBtV8btnzaW25tTmY3yOuxONKNQIf6VITbwCDE7fvDCXf7SD63csL0CohSYNr1cuY7qIN
-	xBbnGJ5ysaUxBpQSMDOUd5hYHm3Myizi4YnV
-X-Received: by 2002:a05:600c:3b02:b0:4b6:267a:dd6e with SMTP id 5b1f17b1804b1-4b6ded49a38mr38919785e9.28.1793964991376;
-        Fri, 06 Nov 2026 03:36:31 -0800 (PST)
-Received: from [192.168.1.50] ([81.196.40.160])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b572caf48bsm146175625e9.11.2026.11.06.03.36.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 06 Nov 2026 03:36:30 -0800 (PST)
-Message-ID: <260010f2-ea55-42a6-b7bf-8600d9b006f8@gmail.com>
-Date: Fri, 6 Nov 2026 13:36:29 +0200
+	dkim=pass (2048-bit key, unprotected) header.d=disroot.org header.i=@disroot.org header.a=rsa-sha256 header.s=mail header.b=ADpUlpgz
+Received: from mail01.layka.lan (localhost [127.0.0.1])
+	by disroot.org (Postfix) with ESMTP id 29B26806EC;
+	Fri, 06 Nov 2026 12:51:52 +0100 (CET)
+X-Virus-Scanned: SPAM Filter at disroot.org
+Received: from layka.disroot.org ([127.0.0.1])
+ by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
+ id W4gt2lxuuIWH; Fri,  6 Nov 2026 12:51:51 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
+	t=1793965911; bh=2RDJyczQMowvvA1k3+Z+TXrpMLlqD8QWh6I1S4yjCY8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=ADpUlpgzIKc2V9n81xWTWSQ87qA/slREk3XS40Uj5B133nv8i0ZiW1mNDe9lN8Yaa
+	 YeLJSriuTZC9gBgMGWPKQxlk0d1tXRPHt5LqyS2O2sZoR2YJDth0SRMcNgSt3n/xov
+	 KsPMgS6jTaIGvK8LskxXs6MDyWPxcifspQ1UoRz26KxJGMpYmzJCEf+nj7h2+zwxw8
+	 xV4+nyY8mbATSpVntKScHfx8puriMd16sKhT+sU+movyq7ahiacg12cKv2VGvnMzmf
+	 XkUg3cvwPGzc7Q7UsFfdt0IjFd9IBXhcvYCBLBfzlhMFKlOXpT3umOxIN+0OfpXddd
+	 BtEjsBQaqfndw==
+From: Florian Maurer <fmaurer@disroot.org>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>
+Cc: Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	stable@vger.kernel.org
+Subject: [PATCH wireless 1/2] wifi: mt76: npu: return rx slots to the NPU only after refilling them
+Date: Fri,  6 Nov 2026 11:51:12 +0000
+Message-ID: <d6314f34e0965464207656d38a145490b6437aa5.1793927986.git.fmaurer@disroot.org>
+In-Reply-To: <cover.1793927986.git.fmaurer@disroot.org>
+References: <cover.1793927986.git.fmaurer@disroot.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -91,89 +76,95 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: rtw88: extend USB TX report timeout to RTL8822BU
-To: Barak Pearlmutter <barak@cs.nuim.ie>, linux-wireless@vger.kernel.org
-References: <au2zcmgiO7t35EZp@port-kadr.cs.nuim.ie>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <au2zcmgiO7t35EZp@port-kadr.cs.nuim.ie>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 06/11/2026 13:01, Barak Pearlmutter wrote:
-> I can confirm the "failed to get tx report from firmware" issue on an
-> RTL8822BU USB adapter and provide additional context about its impact.
-> 
-> Device:
->   RTL88x2bu AC1200 USB WiFi adapter
->   USB ID: 0bda:b812
->   Driver: rtw88_8822bu (in-tree)
->   Firmware: version 30.20.0, H2C version 14
->   Kernel: 7.2.15+deb14-amd64 (Debian 13 / linux-image-amd64)
->   Note: this is a Debian-patched kernel; Debian-specific patches may be
->   relevant, though the rtw88 driver is unlikely to be heavily patched.
-> 
-> Symptoms observed:
-> 
-> 1. Slow-fire mode (possibly normal operation): "failed to get tx report
->    from firmware" appears roughly every 5 minutes during extended idle
->    periods.  The link remains associated but throughput degrades.
-> 
-> 2. Rapid-fire mode (fatal): The message appears multiple times per
->    second.  The interface deauthenticates and does not recover without a
->    USB reset of the device.
-> 
-> The rapid-fire mode is frequently triggered indirectly by a companion
-> Realtek Bluetooth adapter (0bda:a725, RTL8761BU) on the same host
-> entering its own failure loop after USB autosuspend (see separate report
-> to linux-bluetooth).  When the BT device is in a 2-second USB reset
-> storm, the WiFi "failed to get tx report" messages begin within seconds
-> and escalate to rapid-fire within ~20 minutes.
-> 
-> Workarounds currently applied:
->   - USB autosuspend disabled for 0bda:b812:
->       ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda",
->         ATTRS{idProduct}=="b812", ATTR{power/autosuspend}="-1"
->   - WiFi PSM disabled on interface up:
->       ACTION=="add", SUBSYSTEM=="net", ATTRS{idVendor}=="0bda",
->         ATTRS{idProduct}=="b812", RUN+="/usr/sbin/iw dev %k set power_save off"
-> 
-> These reduce but do not eliminate the slow-fire messages.  Extending the
-> TX report timeout as proposed in the referenced patch would address the
-> root cause.
-> 
+mt76_npu_dequeue() writes the new tail to the dma_idx register of the
+NPU rx ring as soon as it has consumed a frame, while the slots are
+only refilled with new buffers by mt76_npu_rx_poll() after the whole
+NAPI budget. Until then, the descriptors of the released slots still
+point to the buffers that were passed up the stack, and on the first
+round of the ring the slot that was never filled points to address 0.
+If the NPU completes one of these slots, the host processes an entry
+without buffer, which crashes in dma_sync_single_for_cpu() under heavy
+rx load:
 
-That's doubtful. It would just hide or delay the messages. I think what
-you are experiencing is caused by this chip's USB 3 problem:
+  Unable to handle kernel paging request at virtual address ffffffff80000700
+  pc : dcache_inval_poc+0x28/0x58
+  lr : arch_sync_dma_for_cpu+0x28/0x38
+  Call trace:
+   dcache_inval_poc+0x28/0x58 (P)
+   __dma_sync_single_for_cpu+0xe4/0xf8
+   mt76_npu_rx_poll+0x184/0x390 [mt76]
+   __napi_poll+0x34/0x180
 
-https://lore.kernel.org/linux-wireless/b69f6496-dc12-4662-84ac-aa62d0ceac3f@gmail.com/
+Write dma_idx after refilling the ring instead, up to the slot kept
+free in front of the tail, which is the same value as before once the
+ring is full.
 
-It will work better in a USB 2 port.
+Also check that all slots of a frame are queued and complete before
+building the skb. So far a frame whose later slots were not yet
+done was freed together with the buffers of its first slots, which
+were then used again on the next poll.
 
-> Relevant log excerpt (slow-fire, link still up):
-> 
->   kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
->   [~5 minutes pass]
->   kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
->   [repeat]
-> 
-> Relevant log excerpt (rapid-fire leading to deauth):
-> 
->   kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
->   kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
->   kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
->   kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
->   kernel: wlx1cbfceb2abdb: deauthenticating from cc:2d:21:70:11:fd by local choice (Reason: 3=DEAUTH_LEAVING)
->   kernel: usb 4-5: reset SuperSpeed USB device number 3 using xhci_hcd
->   kernel: rtw88_8822bu 4-5:1.0: Firmware version 30.20.0, H2C version 14
->   [reconnects after USB reset]
-> 
-> Happy to test a patched kernel or provide further information.
-> 
+Fixes: 7fb554b1b623 ("wifi: mt76: Introduce the NPU generic layer")
+Cc: stable@vger.kernel.org
+Signed-off-by: Florian Maurer <fmaurer@disroot.org>
+---
+ drivers/net/wireless/mediatek/mt76/npu.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-An equivalent patch made it into kernel 7.4, so you can test that if
-you want.
-
-> Barak Pearlmutter <barak@cs.nuim.ie>
+diff --git a/drivers/net/wireless/mediatek/mt76/npu.c b/drivers/net/wireless/mediatek/mt76/npu.c
+index c4c7c0af6321..6e503a4a890c 100644
+--- a/drivers/net/wireless/mediatek/mt76/npu.c
++++ b/drivers/net/wireless/mediatek/mt76/npu.c
+@@ -40,6 +40,11 @@ int mt76_npu_fill_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ 		nframes++;
+ 	}
+ 
++	/* Hand the slots back to the NPU only once they have a new buffer,
++	 * up to the one kept free in front of the tail.
++	 */
++	Q_WRITE(q, dma_idx, (q->head + 1) % q->ndesc);
++
+ 	return nframes;
+ }
+ 
+@@ -69,17 +74,22 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_dev *dev,
+ 
+ 	nframes = FIELD_GET(NPU_RX_DMA_PKT_COUNT_MASK, desc[index].info);
+ 	nframes = max_t(int, nframes, 1);
++	if (nframes > q->queued)
++		return NULL;
++
++	/* Only take the frame once all of its slots are complete */
++	for (i = 0; i < nframes; i++) {
++		int idx = (index + i) % q->ndesc;
++
++		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[idx].ctrl))
++			return NULL;
++	}
+ 
+ 	for (i = 0; i < nframes; i++) {
+ 		struct mt76_queue_entry *e = &q->entry[index];
+ 		int len = FIELD_GET(NPU_RX_DMA_DESC_CUR_LEN_MASK,
+ 				    desc[index].ctrl);
+ 
+-		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[index].ctrl)) {
+-			dev_kfree_skb(skb);
+-			return NULL;
+-		}
+-
+ 		dma_sync_single_for_cpu(dev->dma_dev, e->dma_addr[0],
+ 					e->dma_len[0],
+ 					page_pool_get_dma_dir(q->page_pool));
+@@ -108,7 +118,6 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_dev *dev,
+ 	}
+ 	q->tail = index;
+ 	q->queued -= i;
+-	Q_WRITE(q, dma_idx, q->tail);
+ 
+ 	return skb;
+ }
+-- 
+2.47.3
 
