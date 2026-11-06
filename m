@@ -1,62 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=62.149.158.117
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=149.157.246.25
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793961693;
-	b=CUuQFtorSZMiSOyJw4rRNzKPqiCODFF9dtUpZsuaj5dIB4xeT8NQDLMJYfoMDUp+6HJK
-	 btR/gHgR4DFVYUj48VVz07SJ+Yavfoa9iFCLDpBo8SsNlflOj0nxNdfnERB0pIdvr/hVO
-	 u4MdgyuCHJaliT3ZmS7JpMZTV3rDBVMMGEJdcXrakb5j3WycRyGCaa8qmurWG1k+YVyyB
-	 JOc3+2LJ8V/szGllWK4yCnqIXDVE7ADc7Y9q662C2h73QljeUByaA+5OCKRfP6abESTEU
-	 nVFS663wpkUTcR5uqz0sb5jtFrAnY1pPyILdN7Xj+P0PwjQ6KxaqcbaYW64pSo1kYYA==
+	t=1793962882;
+	b=Ia1X/yB7iMAlyG+gaSSWZA/Rx6f16j+4LeSHb4EnmkvZpex1l6XzWk7o5BJJg2DZrOTW
+	 sRtC+BzF+kHrILJSFI5VMQ1RXp2p6H5wXJM9OANAgE4aLh191TV2qbxEkMoeQMHwiQxXv
+	 bLVqHSiAr4lQQcjaCw+FnMSP4kpTvetw5Y/eVmLZLRy8udxdwv/UZbshJ35cGfJCsvblD
+	 kRMkH3Qu19NZa0B93BRGTeKKtMpbIwdv9ontx5TfrbFRfxszSBtI7moONjEyHvhWYbdbm
+	 BxmsY0ULP+ZmSRryHTK7a2MRSTyv2qF6jTRU/rQgdGcvIrwOqt74+VhVwrDkwO+3KNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793961693;
-	h=DMARC-Filter:Received:DKIM-Signature:Date:From:To:Cc:Subject:
-	 Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-CMAE-Envelope;
-	bh=VVLo+1PoaqL+9ZuGgKyKf3JrT04a5KF8FAVfDEZgKGg=;
-	b=xupcfpZRdxgtF9UHib4CtUA29weopNsUXj2bJeP61yugGxJmMD6hdurxNUHZ8I7lhjSY
-	 ReCUanEvJtxJVV1oC15PAwI166F8f+DE5Qm2F1JPJs68VGHIeIv7kcJXOTRe6J7WZyqPz
-	 G9ckKM6TSfHOo0cq8WgFCCGlZWiTLWEMLQPDIR/6w7AhCYc+qBbNoAfV3QZXKfsnieW47
-	 zAXDwsr9RmrPCL6u6zlMahBIA7ZSJiwd9xSttEIj2Xiqa9/dlNTY+1++d0KcTPh0thk3k
-	 kO7Ao7H7SGF9Z9VTrgjyhOYkWfXQ1sYzXUwONRwnlUVps28ZbHznvTaybYbxgW0qJRA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793962882;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Subject:
+	 Message-ID:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=CJNIDZYU3b5+2LJ4URJLMNqAIniYRVz5Zd3/noBlr8M=;
+	b=Jg6wwv8RKLL2LIhLRY6KExJDsZeZr6NYsqgYMWCN0lx7mwjJW9kzLKRpNyQpc5Mu2TYt
+	 BK5qETldKkhnjX+MQubyH3m3chJp+Pk2MWTv/eq3qUlJqH/vhL+shtwyZd7mPnTRr/1Zl
+	 LmHYfAZ/7gOjTQRaVsVzM67J03Xoa1oPIQA9lMg7TTkmm00GextmfFOmPFKC/aVm1KBae
+	 cBDZcXIGx6Iu2t1TMNNKRrUPVint+Dkd/GZelNbZydrSeTITtiSWiOtRt6x9PJaN4I5yd
+	 adVfwxZFMEJcOUhrFRxHoErWAZDrodsTu4mes0Ku6XiryzBJSmX82pvAU1OpFWjwVgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mythread.it;
-	spf=pass smtp.mailfrom=mythread.it;
-	dkim=pass header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=Uaq37KtJ;
-	arc=none smtp.remote-ip=62.149.158.117
-Received: from smtpcmd03117.aruba.it (smtpcmd03117.aruba.it [62.149.158.117])
+	dmarc=pass header.from=cs.nuim.ie;
+	spf=pass smtp.mailfrom=cs.nuim.ie;
+	arc=none smtp.remote-ip=149.157.246.25
+Received: from mta-srv-01.cs.nuim.ie (mta-srv-01.cs.nuim.ie [149.157.246.25])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FC37606A336
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 10:41:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9FC37606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mythread.it header.i=@mythread.it header.a=rsa-sha256 header.s=a1 header.b=Uaq37KtJ
-Received: from DELL-MOBILE03.ad.smart.it ([87.16.49.252])
-	by Aruba SMTP with ESMTPSA
-	id PHNwxz9v507TYPHNwxQBzh; Fri, 06 Nov 2026 11:41:28 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1793961689; bh=rnIcWknTm82+IfhrWzDsEesFJyKXyUrZvYdUYSEquMo=;
-	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=Uaq37KtJQ6CPpxSvZ8q9mpxdNteQwmJog9MVuJ4+TBoWbG+StLd7U5viN6sjSXzyx
-	 129NbkVAt6YbuUOtgB4lUN2P5t5bdUCYBqcR4Z/t3cvi8aFFMtmPBvyv4QmLIIjB7R
-	 AdWemGAXZawgRV3ONgoUKWULJdFh3sGE4VKQqRJX7HCUpxXWwbYWBy+4dgXCiQjQKy
-	 oiFPbTikZl+rSSYH9NspcshI0HhraS1v6yIibZg7AgAAbxUNJxux92jimwPNWb1UAK
-	 i58RRCNBpTAXbeXPxMeAVfFh4TU+qkuI+1T9KQMciBqhsgLBXb4G3oEOqNpuPMdEjq
-	 myEctcse9LkAw==
-Date: Fri, 6 Nov 2026 11:41:26 +0100
-From: Alessio Ferri <alessio.ferri@mythread.it>
-To: Luca Casati <luk00casati@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
- arend.vanspriel@broadcom.com, b43-dev@lists.infradead.org
-Subject: Re: [PATCH wireless-next 4/5] b43: N-PHY: wait for the first 2057
- RC calibration run
-Message-ID: <20261106114126.235ce63d@DELL-MOBILE03.ad.smart.it>
-In-Reply-To: <20261026181543.77763-5-luk00casati@gmail.com>
-References: <20261026181543.77763-1-luk00casati@gmail.com>
-	<20261026181543.77763-5-luk00casati@gmail.com>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-pc-linux-gnu)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4025D606A333
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 11:01:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4025D606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cs.nuim.ie
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cs.nuim.ie
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=cs.nuim.ie;
+ i=@cs.nuim.ie; q=dns/txt; s=selector1; t=1793962866; h=date : from :
+ to : subject : message-id : mime-version : content-type : in-reply-to
+ : from; bh=yz3vk8wboI1/YRq43UihLtOW4SQjw6SgJLNDWiYEgXw=;
+ b=TDlKyLy0lvgXCUhEBCWboDohrOHaosBhMYStBJa/eo/aeM7uV7nDDt5uc7RGJt9U+cx3+
+ U5dPervPLm24e1V5K2rVewntnL8wx5FuvRbphAyQ4R9MGS+bT++L3kbh7qDVx93YYdt/HWc
+ dnTmtu87EYlOgZzllHbowtt1HhRFQQWS7txWNZjNTJElb0aHu+Yuel9QMqElZnMGzheXClf
+ HyuT6mDsMPVIJf6OEoJdLSyKXDFDjoB+jVZtSbDymgf//ACjoQFXRpRkqNd2dRbanKvvP5p
+ OzIGIeF9DhHz1V//TQ0U4R2els4QZ65jpP9b/Gb84bOGjIajox5GmTLdHTAQ==
+Received: from port-kadr (port-kadr.cs.nuim.ie [149.157.248.96])
+	by mta-srv-01.cs.nuim.ie (Postfix) with ESMTPS id 91F41600A5;
+	Fri,  6 Nov 2026 11:01:06 +0000 (GMT)
+Received: from barak by port-kadr with local (Exim 4.100.1)
+	(envelope-from <barak@port-kadr.cs.nuim.ie>)
+	id 1xPHgw-0000000Ag9X-241b;
+	Fri, 06 Nov 2026 11:01:06 +0000
+Date: Fri, 6 Nov 2026 11:01:06 +0000
+From: Barak Pearlmutter <barak@cs.nuim.ie>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wifi: rtw88: extend USB TX report timeout to RTL8822BU
+Message-ID: <au2zcmgiO7t35EZp@port-kadr.cs.nuim.ie>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -66,62 +59,69 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfFkGvyzT1Bin2ldD6WeRe2uCeHeZ8fF2waBGxf38ODpZU7EB6Ba7SXADOaxej3LHJt6nPCEPkfkxqsbMraPOjnmq8yRwXobOAk6flFjtrzS5sZKy1ebH
- l8tx9sb0N2OBUmky0Wc227yUap8b3nIK4tOqTDdxQYmLtqBhTKJ8VQ47dVkRsn9aWkjfZREXcqhZfuSNNE6+C1lmfBxBDrj98Psb4pEoaszFs0a5mCvvvEL7
- b9gQNX4/JVBqIYdHfd6ErytrP+SkjQBOs63Fg634BpYfdxh/IhraXFPpvR3A7aPVnNaNslOw+PuXIE7HS264hcAT1awhScw8kkuG+dwssb2CtDulYLTTXkcw
- uvyWFFDwCtNN+JfadRPovxzBEUdjxA==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260531223349.5952-1-Volcomilluminated@airmail.cc>
 
-On Mon, 26 Oct 2026 19:15:42 +0100
-Luca Casati <luk00casati@gmail.com> wrote:
+I can confirm the "failed to get tx report from firmware" issue on an
+RTL8822BU USB adapter and provide additional context about its impact.
 
-> RCCAL_DONE_OSCCAP still shows the previous run's done bit for a few us
-> after a start, and the first (SCAP) run polled it immediately, so the
-> run was stopped before it happened. RCCAL_SCAP_VAL then read 0 (wl
-> gets 8 on a BCM43228), which detunes the TX low-pass filter set up in
-> the rev7+ workarounds. Sleep before polling, as the other two runs do.
-> 
-> Found and fixed with the help of an AI coding assistant (Claude Opus
-> 5.5), by comparing mmiotraces of b43 and wl on the same card.
-> 
-> Signed-off-by: Luca Casati <luk00casati@gmail.com>
-> ---
->  drivers/net/wireless/broadcom/b43/phy_n.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c
-> b/drivers/net/wireless/broadcom/b43/phy_n.c index
-> 44769dbb7..cd50614ff 100644 ---
-> a/drivers/net/wireless/broadcom/b43/phy_n.c +++
-> b/drivers/net/wireless/broadcom/b43/phy_n.c @@ -938,8 +938,15 @@
-> static u16 b43_radio_2057_rccal(struct b43_wldev *dev) }
->  	b43_radio_write(dev, R2057_RCCAL_X1, 0x6E);
->  
-> -	/* Start, wait, stop */
-> +	/*
-> +	 * Start, wait, stop. DONE still holds the previous run's
-> done bit
-> +	 * for a few us after the start, so give the cal time to
-> clear it
-> +	 * before polling, as for the other two runs. Polling right
-> away
-> +	 * stopped this (SCAP) cal before it ran and left
-> RCCAL_SCAP_VAL at
-> +	 * 0, which detunes the TX LPF on radio rev 9.
-> +	 */
->  	b43_radio_write(dev, R2057_RCCAL_START_R1_Q1_P1, 0x55);
-> +	usleep_range(70, 140);
->  	if (!b43_radio_wait_value(dev, R2057_RCCAL_DONE_OSCCAP, 2,
-> 2, 500, 5000000))
->  		b43dbg(dev->wl, "Radio 0x2057 rccal timeout\n");
+Device:
+  RTL88x2bu AC1200 USB WiFi adapter
+  USB ID: 0bda:b812
+  Driver: rtw88_8822bu (in-tree)
+  Firmware: version 30.20.0, H2C version 14
+  Kernel: 7.2.15+deb14-amd64 (Debian 13 / linux-image-amd64)
+  Note: this is a Debian-patched kernel; Debian-specific patches may be
+  relevant, though the rtw88 driver is unlikely to be heavily patched.
 
+Symptoms observed:
 
-It seems to me, from your own traces, that wl does as b43. It
-doesn't wait and it exits immediately, just like b43. So the commit
-message is wrong. 
-Note: There is a bug somewhere, because wl do read 8, while b43 do
-read 0, but this isn't the reason. Find the real motivation and provide
-the real fix.
+1. Slow-fire mode (possibly normal operation): "failed to get tx report
+   from firmware" appears roughly every 5 minutes during extended idle
+   periods.  The link remains associated but throughput degrades.
 
-Alessio
+2. Rapid-fire mode (fatal): The message appears multiple times per
+   second.  The interface deauthenticates and does not recover without a
+   USB reset of the device.
+
+The rapid-fire mode is frequently triggered indirectly by a companion
+Realtek Bluetooth adapter (0bda:a725, RTL8761BU) on the same host
+entering its own failure loop after USB autosuspend (see separate report
+to linux-bluetooth).  When the BT device is in a 2-second USB reset
+storm, the WiFi "failed to get tx report" messages begin within seconds
+and escalate to rapid-fire within ~20 minutes.
+
+Workarounds currently applied:
+  - USB autosuspend disabled for 0bda:b812:
+      ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda",
+        ATTRS{idProduct}=="b812", ATTR{power/autosuspend}="-1"
+  - WiFi PSM disabled on interface up:
+      ACTION=="add", SUBSYSTEM=="net", ATTRS{idVendor}=="0bda",
+        ATTRS{idProduct}=="b812", RUN+="/usr/sbin/iw dev %k set power_save off"
+
+These reduce but do not eliminate the slow-fire messages.  Extending the
+TX report timeout as proposed in the referenced patch would address the
+root cause.
+
+Relevant log excerpt (slow-fire, link still up):
+
+  kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
+  [~5 minutes pass]
+  kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
+  [repeat]
+
+Relevant log excerpt (rapid-fire leading to deauth):
+
+  kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
+  kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
+  kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
+  kernel: rtw88_8822bu 4-5:1.0: failed to get tx report from firmware
+  kernel: wlx1cbfceb2abdb: deauthenticating from cc:2d:21:70:11:fd by local choice (Reason: 3=DEAUTH_LEAVING)
+  kernel: usb 4-5: reset SuperSpeed USB device number 3 using xhci_hcd
+  kernel: rtw88_8822bu 4-5:1.0: Firmware version 30.20.0, H2C version 14
+  [reconnects after USB reset]
+
+Happy to test a patched kernel or provide further information.
+
+Barak Pearlmutter <barak@cs.nuim.ie>
