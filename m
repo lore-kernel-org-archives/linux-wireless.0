@@ -1,60 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793974915;
-	b=WRLYBJH+gMmIS+ahgZdIWDb9h/8ySCsEyQUqk6sSTwgEhpStN2bA+5SBBra0exsANqR8
-	 vgtnzKnkGyIr/O51mFfZwZ6/jBAeDWy+ZK3D+qyWRk6nEbaWLoX6E6CJof3fDV9vuv2VY
-	 LOIo06QoKxq+s2A4YUmZN1AE2969PkX87U4tS/nWhgH73rPILxEMCbFJPkVTcA+sviHcK
-	 kF3akdYz6qRxn0RTMGUQ3OWhQU47dMGVUt8+FU5hedAZpvEonKmer/iKL48U4wAKznAlH
-	 zXBI38Lhp7Xg+yBybekLasDt9Wm+Q6Y1U7v3iGHI58BPCJn4ELTmQHdcK7Tdxxc9fBQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793974915;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=4w1ffQwzkhuFO1YskUNSB+WHf1fs6R5DfzwqOkWXzDg=;
-	b=HJcvn8f4WOJlXBGe9c8wLn4t8otffLfdPptB8/ngzI+jdbj1sQedkR7zWLs9lmAgqAeX
-	 ogAc0vqsC/IJWLCuGlbt7v+SBSnuDG939LkLyWj4Zy+jdUp/7OD/d+WLElsZqO1xBbMcW
-	 vnuUQX6LrXGvuUACWzB3WqiLotqVhxS2LnaWNU/+paWeEmaD3Fcv04gIi0Wy1QMgzScpm
-	 kkiOl5PReVtQb39lrucTQRFvs3h8JBI93b/jgs6n5wqQJojN6L6Bp8v1VEysVh8bvdjfn
-	 wOi+mbfWIfvct+NGEcDOcD1n77y9tYx8PJThITAf4U+Kek7rPHkaA/fJJHiriNfX62g==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ih9nz3hB;
-	arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793975099;
+	b=kbyVPI/rGwAUxADSLoHn5HQt8iwQUtkJ3tx6yKtHtF2u/h7qhOdNTMGekoJD45UrfEFq
+	 B6XKvVkihwWt6iet7KZQ/8XkuElRSTg9lTxYRWRccGGC6Bma05N+8IX7fFUV2c+AOEQsY
+	 FsR4fPDeslXOS/1KTiystXML4lDCZFOt8kJVN20bRPv+5gCyWodezy5fEgb/mS/71UhzX
+	 ej1TC+/Ia7avHAoNHvAjWGpLRTokhppif48vRkMjGJAbxpEcqRFRp8MeRnw1j4huOmE4w
+	 tZZ3FAoDC/674nqZGspVUkqyCnA9cgkFGI8uOkpTPSH8cdLsW5jz4MU1BBjSjrJ13BQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793975099;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=F43df1h2q5y42Jwd/fLJevAji+l1tv6T+8VtNAIuBwM=;
+	b=VPliCsN5exzLFz6/MFERjqsRJXM/spBNv8628OelXB7At6eiTIEaoe5vCgTM78wDlHRF
+	 GGPsF58wLbC5XIYEBtwklCsQibD1BQwdCHWETe00EERVhFxfIIUtR0K/Ha9qE/ZJD59H9
+	 SBTrbxswzkDDq0hiO5SWAehcGe2zFeKqkGDgMn0uoUeMGo1aSlWoazC4awHInUbasVPyL
+	 pkXHqKJFbWWLSUn2IgbcR7VJ+/UwkSCG21hIe+k5ukcIzpfy6vkHF2wQ3RDLPL+ifWkhq
+	 htOky7WTKYyN1tYsiW8S2D5uk/NANltM/dtIlJmj/1r29b+0QXLP3aLPj7SHzbwLtKw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lG6iIE8q;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BE8F606A326;
-	Fri,  6 Nov 2026 14:21:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F6B5606D809;
+	Fri,  6 Nov 2026 14:24:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ih9nz3hB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9A611F008A4;
-	Fri,  6 Nov 2026 14:21:54 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lG6iIE8q
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793975098;
+	b=CS0Sv3yhZz2UYignff4jcOeoQUd1WLvYdTT68SrTC8BCHeBeISuFTN5ltSF6K10W9NJC
+	 Y+rCq1niYDnpDG8DH89SK6uIOyRqwKOHpZmrNX3103dCJoaGCgwwHWlG3g14TGmzeeypK
+	 vTbhopCHsoh5wNbvZlf5IGq6hw98rqilKhTIN5bG9SqyXpOLnvK9M6MiQ4p90XguG+QJ5
+	 NSJryKFARj09qGS62t/nmir+f/q9/C0prvp4Zf6jkRezitX3SO5Evxc7j1ydzZCqTAiH6
+	 9Yqeof2CWYOPVR/SqtjfDJCRuuCgJ1BwAJK3gF3e9KQyAGhTUcE3KzRMRlRmn10wdjA==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793975098;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=F43df1h2q5y42Jwd/fLJevAji+l1tv6T+8VtNAIuBwM=;
+	b=mjUiXh7dC4aAcoMeFWvXzwOvLAVJmaiGWCG8wbhJV0XqDkLgeqJqfLXs0thhNFypDF79
+	 6NUb4pargCiUZ9nihjWfbyre++sjeFgk3c4le89SDv52s40uhWBuPsEdCU6tjq9WFrjj4
+	 5SevM17nroqLGF2/ZElUuRV22k/3y8OGxr/VvqmT4wZ4+w8AB5vvDUtMH63IFSTu0drKY
+	 oy5PHENeWfpwJfa7+Y/cocb2rmlCawyCFuj8euIl5GfpCnPPkevKU8/WzuQ4TXG/qEKne
+	 81hvjxCwiP/PlaqIyJkc0v1xnzlFLQSSABzUp3keePtgjljEbin7quzZpGnn7L7SJng==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 469DD1F008A1;
+	Fri,  6 Nov 2026 14:24:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793974915;
-	bh=4w1ffQwzkhuFO1YskUNSB+WHf1fs6R5DfzwqOkWXzDg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ih9nz3hBrnOj+a/u//x+Uv89KdGtdo6z0gcPLZBJVjvbXGuZfsbrpUKOXP61U2f8r
-	 WsyXnXJnbC9CdsFV/DhjIOo+8LfeZjysNnDm+xCAphsxdwqZ8h/MvYc5zY8F3ODt+t
-	 GnDxJwMmW1oDrgtGySIT9JKidKiTQEBNpHUak+hn8BxWDYNqqi5ZYfH/FinwcQe42W
-	 IGCLxbClF9IHNG325x9F/XTUQ6DmyHG6pwfxzSLNVcc10axfS30WREAk98M68wUvmY
-	 iR6VUbL3YrFFMZ5hnfZa7bbValkZnH5aWDVGboRLdY7njU5XmGCZnQX+MW9wCRImYV
-	 LkKtdNu5Srfbw==
-Date: Fri, 6 Nov 2026 15:21:52 +0100
-From: Lorenzo Bianconi <lorenzo@kernel.org>
-To: Florian Maurer <fmaurer@disroot.org>
-Cc: Felix Fietkau <nbd@nbd.name>, Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org, stable@vger.kernel.org
-Subject: Re: [PATCH wireless 1/2] wifi: mt76: npu: return rx slots to the NPU
- only after refilling them
-Message-ID: <au3igPTxdz3i64SO@lore-desk>
-References: <cover.1793927986.git.fmaurer@disroot.org>
- <d6314f34e0965464207656d38a145490b6437aa5.1793927986.git.fmaurer@disroot.org>
+	s=k20260515; t=1793975098;
+	bh=F43df1h2q5y42Jwd/fLJevAji+l1tv6T+8VtNAIuBwM=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=lG6iIE8qcDTuJNkN/b869m9JIz9FpL5xXqypiTyROyVP7p+yHjzqUD1mMGHgpgoAN
+	 ywnxj82e0t+azD4FPwCNZtX378VDT53tAJZAgFDPMAG+cjl/fwHhrDRMQy3YbmqNiD
+	 yoV2l9/5D90j5VC3hMckl0obcgo8g2KPrxW/Lh3cqQ2vfAC7GP3qshozIGAvjSKhPT
+	 S3I2kfCvZ/4CMECDit615yU8+ZALDpBLGTsZscO09/FDk0goyrZa+Ni/7LEK/txGmj
+	 h0iB4WGGiKTRmfLCC8Jy16ZuYGDi0B8PSp+jZU4pmrq5v/xfld7dv5F8EU6PAJwkAF
+	 0K7MXjWzj1/rQ==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 9D71A45D89;
+	Fri,  6 Nov 2026 14:24:57 +0000 (UTC)
+From: Christopher Griffin via B4 Relay <devnull+christophergriffin05.gmail.com@kernel.org>
+Date: Fri, 06 Nov 2026 08:24:58 -0600
+Subject: [PATCH] wifi: ath11k: don't report firmware-dropped TX frames as
+ failed
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,280 +83,135 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="hjdNWhN+M75PWH0l"
-Content-Disposition: inline
-In-Reply-To: <d6314f34e0965464207656d38a145490b6437aa5.1793927986.git.fmaurer@disroot.org>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261106-ath11k-tqm-internal-drops-v1-1-8ddcb8105dd0@gmail.com>
+X-B4-Tracking: v=1; b=H4sIADnj7WoC/yXMTQ6CQAxA4auQrm0yJWQwXsW4GIYi9WfAdjQkh
+ Lsz6vJbvLeCsQobnKoVlD9iMqUCOlQQx5CujNIXQ+1qT+Q8hjwS3TG/nigps6bwwF6n2bBpWzf
+ 4SNwcGUo/Kw+y/N7ny9/27m4c83cI27YDBZaJd30AAAA=
+X-Change-ID: 20261106-ath11k-tqm-internal-drops-4770f6c1e48e
+To: Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>, 
+ Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
+ Christopher Griffin <christophergriffin05@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793975097; l=4659;
+ i=christophergriffin05@gmail.com; s=20261024; h=from:subject:message-id;
+ bh=hpLRVZ36gLFspO6IkI74GMS59/eWb8aH9xvagx/E5BQ=;
+ b=zQgBkzn3jUFZ+Gqll6XIBgxBC4bxFiQeW+Yw7v/XMoV4q2ke64QGBxiQ8T+3QoFifJPfW7Z7h
+ JI28Y4pqEkIBBb0m6vrdjFFfMJIxNQHfLmfkgbZ4ZB27qqKaSWODLTk
+X-Developer-Key: i=christophergriffin05@gmail.com; a=ed25519;
+ pk=oa9tkTNpiGoFWdGvpDHXLSobApmsh9BfrJRJrRJAvWA=
+X-Endpoint-Received: by B4 Relay for
+ christophergriffin05@gmail.com/20261024 with auth_id=1309
+X-Original-From: Christopher Griffin <christophergriffin05@gmail.com>
+Reply-To: christophergriffin05@gmail.com
+Content-Transfer-Encoding: 7bit
 
---hjdNWhN+M75PWH0l
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Christopher Griffin <christophergriffin05@gmail.com>
 
-> mt76_npu_dequeue() writes the new tail to the dma_idx register of the
-> NPU rx ring as soon as it has consumed a frame, while the slots are
-> only refilled with new buffers by mt76_npu_rx_poll() after the whole
-> NAPI budget. Until then, the descriptors of the released slots still
-> point to the buffers that were passed up the stack, and on the first
-> round of the ring the slot that was never filled points to address 0.
-> If the NPU completes one of these slots, the host processes an entry
-> without buffer, which crashes in dma_sync_single_for_cpu() under heavy
-> rx load:
->=20
->   Unable to handle kernel paging request at virtual address ffffffff80000=
-700
->   pc : dcache_inval_poc+0x28/0x58
->   lr : arch_sync_dma_for_cpu+0x28/0x38
->   Call trace:
->    dcache_inval_poc+0x28/0x58 (P)
->    __dma_sync_single_for_cpu+0xe4/0xf8
->    mt76_npu_rx_poll+0x184/0x390 [mt76]
->    __napi_poll+0x34/0x180
->=20
-> Write dma_idx after refilling the ring instead, up to the slot kept
-> free in front of the tail, which is the same value as before once the
-> ring is full.
->=20
-> Also check that all slots of a frame are queued and complete before
-> building the skb. So far a frame whose later slots were not yet
-> done was freed together with the buffers of its first slots, which
-> were then used again on the next poll.
->=20
-> Fixes: 7fb554b1b623 ("wifi: mt76: Introduce the NPU generic layer")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Florian Maurer <fmaurer@disroot.org>
-> ---
->  drivers/net/wireless/mediatek/mt76/npu.c | 21 +++++++++++++++------
->  1 file changed, 15 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/npu.c b/drivers/net/wirel=
-ess/mediatek/mt76/npu.c
-> index c4c7c0af6321..6e503a4a890c 100644
-> --- a/drivers/net/wireless/mediatek/mt76/npu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/npu.c
-> @@ -40,6 +40,11 @@ int mt76_npu_fill_rx_queue(struct mt76_dev *dev, struc=
-t mt76_queue *q)
->  		nframes++;
->  	}
-> =20
-> +	/* Hand the slots back to the NPU only once they have a new buffer,
-> +	 * up to the one kept free in front of the tail.
-> +	 */
-> +	Q_WRITE(q, dma_idx, (q->head + 1) % q->ndesc);
+When the firmware drops a frame from its TX queue without sending it,
+the TX completion carries a TQM release reason other than FRAME_ACKED,
+and ath11k_dp_tx_complete_msdu() reports it to mac80211 as an unacked
+frame. mac80211 then counts it as a failed transmission: the station's
+tx_failed and the mesh path metric's failure average go up although
+nothing was lost on the air. With extended TX stats enabled, such a
+completion also overwrites the station's TX rate with the empty rate
+fields of the completion.
 
-why are you writing q->head here?
+On an IPQ8074 AP, three 30 s UDP downloads offered at 650 Mbit/s into a
+40 MHz HE link that carries about 400 Mbit/s raised the station's
+tx_failed by 659146, 826963 and 1020775, matching the datagrams iperf
+lost, while the firmware's PPDU statistics counted no failed MPDU. Every
+one of those completions carried HAL_WBM_TQM_REL_REASON_CMD_REMOVE_MPDU.
 
-> +
->  	return nframes;
->  }
-> =20
-> @@ -69,17 +74,22 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_d=
-ev *dev,
-> =20
->  	nframes =3D FIELD_GET(NPU_RX_DMA_PKT_COUNT_MASK, desc[index].info);
->  	nframes =3D max_t(int, nframes, 1);
-> +	if (nframes > q->queued)
-> +		return NULL;
+Handle the release reasons the way ath12k does since
+commit 50971dc6694c ("wifi: ath12k: drop failed transmitted frames from metric calculation.")
+and free the frames the firmware removed itself (CMD_REMOVE_MPDU,
+CMD_REMOVE_AGED_FRAMES, and CMD_REMOVE_TX of a frame that expected an
+ACK) with ieee80211_free_txskb() instead of reporting a TX status,
+before the extended TX stats are updated. With the change, three runs
+of the same download left tx_failed unchanged; TCP and UDP throughput
+stayed within the run-to-run spread of the runs without it.
 
-can this really occur?
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
 
-> +
-> +	/* Only take the frame once all of its slots are complete */
-> +	for (i =3D 0; i < nframes; i++) {
-> +		int idx =3D (index + i) % q->ndesc;
-> +
-> +		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[idx].ctrl))
-> +			return NULL;
-> +	}
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Assisted-by: Claude:claude-opus-5-5
+Signed-off-by: Christopher Griffin <christophergriffin05@gmail.com>
+---
+ath12k stopped reporting the firmware's own TX drops as failed
+transmissions in 2024; ath11k still does. Found on an Arista C-360
+(IPQ8074) while comparing the firmware's per-MCS TX statistics with the
+station's tx_failed under an overloaded UDP download: the firmware
+counted no failed MPDU while tx_failed matched the datagrams iperf lost.
+---
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 41 +++++++++++++++++++++++----------
+ 1 file changed, 29 insertions(+), 12 deletions(-)
 
-I got your time, and I agree this is an issue we need to fix but I guess we
-should avoid a double loop. What about the patch below? (just compiled and =
-not
-tested).
-
-Regards,
-Lorenzo
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wirele=
-ss/mediatek/mt76/mt76.h
-index 2ade848fe3bb..9537c6d28e8d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -249,6 +249,7 @@ struct mt76_queue {
- 	int ndesc;
- 	int queued;
- 	int buf_size;
-+	int pending;
- 	bool stopped;
- 	bool blocked;
-=20
-diff --git a/drivers/net/wireless/mediatek/mt76/npu.c b/drivers/net/wireles=
-s/mediatek/mt76/npu.c
-index c4c7c0af6321..e2fc361a5248 100644
---- a/drivers/net/wireless/mediatek/mt76/npu.c
-+++ b/drivers/net/wireless/mediatek/mt76/npu.c
-@@ -56,61 +56,74 @@ void mt76_npu_queue_cleanup(struct mt76_dev *dev, struc=
-t mt76_queue *q)
- 		q->tail =3D (q->tail + 1) % q->ndesc;
- 		q->queued--;
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index cac970c92806a..8f619d89ec100 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -586,22 +586,39 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 	/* skip tx rate update from ieee80211_status*/
+ 	info->status.rates[0].idx = -1;
+ 
+-	if (ts->status == HAL_WBM_TQM_REL_REASON_FRAME_ACKED &&
+-	    !(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-		info->flags |= IEEE80211_TX_STAT_ACK;
+-		info->status.ack_signal = ts->ack_rssi;
++	switch (ts->status) {
++	case HAL_WBM_TQM_REL_REASON_FRAME_ACKED:
++		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
++			info->flags |= IEEE80211_TX_STAT_ACK;
++			info->status.ack_signal = ts->ack_rssi;
+ 
+-		if (!test_bit(WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT,
+-			      ab->wmi_ab.svc_map))
+-			info->status.ack_signal += ATH11K_DEFAULT_NOISE_FLOOR;
++			if (!test_bit(WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT,
++				      ab->wmi_ab.svc_map))
++				info->status.ack_signal += ATH11K_DEFAULT_NOISE_FLOOR;
+ 
+-		info->status.flags |= IEEE80211_TX_STATUS_ACK_SIGNAL_VALID;
++			info->status.flags |= IEEE80211_TX_STATUS_ACK_SIGNAL_VALID;
++		}
++		break;
++	case HAL_WBM_TQM_REL_REASON_CMD_REMOVE_TX:
++		if (info->flags & IEEE80211_TX_CTL_NO_ACK) {
++			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
++			break;
++		}
++		fallthrough;
++	case HAL_WBM_TQM_REL_REASON_CMD_REMOVE_MPDU:
++	case HAL_WBM_TQM_REL_REASON_CMD_REMOVE_AGED_FRAMES:
++		/* The firmware dropped the frame itself (for example when the
++		 * peer's queue was full); it was not lost on the air, so do
++		 * not report it to mac80211 as a failed transmission.
++		 */
++		ieee80211_free_txskb(ar->hw, msdu);
++		return;
++	default:
++		ath11k_dbg(ab, ATH11K_DBG_DP_TX, "tx frame is not acked status %d\n",
++			   ts->status);
++		break;
  	}
-+	if (q->rx_head) {
-+		dev_kfree_skb(q->rx_head);
-+		q->rx_head =3D NULL;
-+		q->pending =3D 0;
-+	}
- 	spin_unlock_bh(&q->lock);
- }
-=20
--static struct sk_buff *mt76_npu_dequeue(struct mt76_dev *dev,
--					struct mt76_queue *q,
--					u32 *info)
-+static int mt76_npu_rx_process_entry(struct napi_struct *napi)
- {
-+	struct mt76_dev *dev =3D mt76_priv(napi->dev);
-+	enum mt76_rxq_id qid =3D napi - dev->napi;
-+	struct mt76_queue *q =3D &dev->q_rx[qid];
- 	struct airoha_npu_rx_dma_desc *desc =3D (void *)q->desc;
--	int i, nframes, index =3D q->tail;
--	struct sk_buff *skb =3D NULL;
-+	int nframes =3D q->pending;
-+	u32 info =3D 0;
-=20
--	nframes =3D FIELD_GET(NPU_RX_DMA_PKT_COUNT_MASK, desc[index].info);
--	nframes =3D max_t(int, nframes, 1);
-+	if (!nframes) {
-+		nframes =3D FIELD_GET(NPU_RX_DMA_PKT_COUNT_MASK,
-+				    desc[q->tail].info);
-+		nframes =3D max_t(int, nframes, 1);
-+	}
-=20
--	for (i =3D 0; i < nframes; i++) {
--		struct mt76_queue_entry *e =3D &q->entry[index];
-+	while (nframes > 0) {
-+		struct mt76_queue_entry *e =3D &q->entry[q->tail];
- 		int len =3D FIELD_GET(NPU_RX_DMA_DESC_CUR_LEN_MASK,
--				    desc[index].ctrl);
-+				    desc[q->tail].ctrl);
-=20
--		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[index].ctrl)) {
--			dev_kfree_skb(skb);
--			return NULL;
--		}
-+		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[q->tail].ctrl))
-+			return -EBUSY;
-=20
- 		dma_sync_single_for_cpu(dev->dma_dev, e->dma_addr[0],
- 					e->dma_len[0],
- 					page_pool_get_dma_dir(q->page_pool));
-=20
--		if (!skb) {
--			skb =3D napi_build_skb(e->buf, q->buf_size);
--			if (!skb)
--				return NULL;
-+		if (!q->rx_head) {
-+			q->rx_head =3D napi_build_skb(e->buf, q->buf_size);
-+			if (!q->rx_head)
-+				return -ENOMEM;
-=20
--			__skb_put(skb, len);
--			skb_reset_mac_header(skb);
--			skb_mark_for_recycle(skb);
-+			__skb_put(q->rx_head, len);
-+			skb_reset_mac_header(q->rx_head);
-+			skb_mark_for_recycle(q->rx_head);
- 		} else {
--			struct skb_shared_info *shinfo =3D skb_shinfo(skb);
-+			struct skb_shared_info *shinfo =3D skb_shinfo(q->rx_head);
- 			struct page *page =3D virt_to_head_page(e->buf);
- 			int nr_frags =3D shinfo->nr_frags;
-=20
- 			if (nr_frags < ARRAY_SIZE(shinfo->frags))
--				skb_add_rx_frag(skb, nr_frags, page,
-+				skb_add_rx_frag(q->rx_head, nr_frags, page,
- 						e->buf - page_address(page),
- 						len, q->buf_size);
- 		}
-=20
--		*info =3D desc[index].info;
--		index =3D (index + 1) % q->ndesc;
-+		info =3D desc[q->tail].info;
-+		q->tail =3D (q->tail + 1) % q->ndesc;
-+		q->queued--;
-+		nframes--;
- 	}
--	q->tail =3D index;
--	q->queued -=3D i;
-+
-+	dev->drv->rx_skb(dev, qid, q->rx_head, &info);
-+	mt76_rx_poll_complete(dev, qid, napi);
-+	q->rx_head =3D NULL;
-+	q->pending =3D 0;
-+
- 	Q_WRITE(q, dma_idx, q->tail);
-=20
--	return skb;
-+	return 0;
- }
-=20
- void mt76_npu_check_ppe(struct mt76_dev *dev, struct sk_buff *skb,
-@@ -155,18 +168,10 @@ static int mt76_npu_rx_poll(struct napi_struct *napi,=
- int budget)
- 		goto out;
-=20
- 	while (done < budget) {
--		struct sk_buff *skb;
--		u32 info =3D 0;
+ 
+-	if (ts->status == HAL_WBM_TQM_REL_REASON_CMD_REMOVE_TX &&
+-	    (info->flags & IEEE80211_TX_CTL_NO_ACK))
+-		info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
 -
--		skb =3D mt76_npu_dequeue(dev, &dev->q_rx[qid], &info);
--		if (!skb)
-+		if (mt76_npu_rx_process_entry(napi))
- 			break;
--
--		dev->drv->rx_skb(dev, qid, skb, &info);
--		mt76_rx_poll_complete(dev, qid, napi);
- 		done++;
- 	}
--
- 	mt76_npu_fill_rx_queue(dev, &dev->q_rx[qid]);
- out:
- 	if (done < budget && napi_complete(napi))
+ 	if (unlikely(ath11k_debugfs_is_extd_tx_stats_enabled(ar)) ||
+ 	    ab->hw_params.single_pdev_only) {
+ 		if (ts->flags & HAL_TX_STATUS_FLAGS_FIRST_MSDU) {
 
-> =20
->  	for (i =3D 0; i < nframes; i++) {
->  		struct mt76_queue_entry *e =3D &q->entry[index];
->  		int len =3D FIELD_GET(NPU_RX_DMA_DESC_CUR_LEN_MASK,
->  				    desc[index].ctrl);
-> =20
-> -		if (!FIELD_GET(NPU_RX_DMA_DESC_DONE_MASK, desc[index].ctrl)) {
-> -			dev_kfree_skb(skb);
-> -			return NULL;
-> -		}
-> -
->  		dma_sync_single_for_cpu(dev->dma_dev, e->dma_addr[0],
->  					e->dma_len[0],
->  					page_pool_get_dma_dir(q->page_pool));
-> @@ -108,7 +118,6 @@ static struct sk_buff *mt76_npu_dequeue(struct mt76_d=
-ev *dev,
->  	}
->  	q->tail =3D index;
->  	q->queued -=3D i;
-> -	Q_WRITE(q, dma_idx, q->tail);
-> =20
->  	return skb;
->  }
-> --=20
-> 2.47.3
->=20
+---
+base-commit: 5c8eab13e391aaabd5a1ad58f3ee4bb10ce7573e
+change-id: 20261106-ath11k-tqm-internal-drops-4770f6c1e48e
 
---hjdNWhN+M75PWH0l
-Content-Type: application/pgp-signature; name=signature.asc
+Best regards,
+--  
+Christopher Griffin <christophergriffin05@gmail.com>
 
------BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCau3igAAKCRA6cBh0uS2t
-rMP1AQDQW0nTl/iyQ8yyF1Ax+5X6SSbWqZBQL0LBfZ7WKMc0IAD/Z5rKVUbRgYMq
-xM8uGxYqPhvZ/cg9I3iGntIU2g0J8A8=
-=BKBZ
------END PGP SIGNATURE-----
-
---hjdNWhN+M75PWH0l--
