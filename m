@@ -1,80 +1,214 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.69.69
+ARC-Seal: i=3; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1793953816;
-	b=fNTrkOi5VS0xO0Oj7ZA03H5nqqoj4G1LJ40Cjyq1lHBxjJB2v2K8MIqGGv/m1d1EHTzY
-	 26vApG8wd4EdA1jHbnk36i7JrDVuOciTc/vjobPPuJoxOIxPgPk+j6O/+OEp5G+XESqR0
-	 8oWX55F0LaRu9LHScFA4Zc5b/biPN0phEIe1FqvTrV/FYUZBnmRW0U80jQQo5HYDhiIxE
-	 KDfewDWh1rq2dk/+THy7QSHWuGyBexJ15afWGWNbFeJaSqaoS4s99GJEdFZMLCK0EyCgA
-	 dZnFLLFuTAfhXKo+pILhVXrAXjF6cA7BNhc3CCXzIKSVG4hs8BNzCOe5n8s1Mu66XMA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	b=SmZgxU/qvgmbLsvebGEX0tQhZQ5EUrzOjQFRLtecTBaYH53jsW39xOGD7/Hcqzq5xwwy
+	 Tz+0UzF2AG4128hiMfac8dj5RAjulze25PxP3ZFIJajsYXNLbig3Ol2bt9Ahz9Dh/eC45
+	 brtjy/RkTPbvan/0GyS1A7sGh4TT8H3NJzFlP8w0rcogHGzYHfWKeOlqsIZtQH74Oio0p
+	 boYQvGsZrt0V8F9IpeAIKBDkw5+n6LqlXbtzJBtR1T1/ZTcbLVN4O9J22+aO0EFXoYqDu
+	 +xL1B0lrk6oIzGHZUWT3FT1xAfwwQtLJSUy2Jmm71fmWI2xabqHIQf138uJn2q2iZzw==
+ARC-Message-Signature: i=3; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793953816;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
-	 Content-Type:X-MTK;
-	bh=J5WkbCyWET3mP0lGp2C+rKGBoikF2s1awaOWTUy2kgQ=;
-	b=Ue9cRdboUAp8bsaNheH74MlQMs2WnOAaApP+Dx1XwoKT+xPsSZc5URHI8Ma44xfGCHRU
-	 sxGh1RVdRpmXmtw92ZlNKfyAt88yH8ZoBYhmpTyWoO5WV53/Dhe4l288+7lz6i+CBsd3h
-	 yeO/4jZswdwnfRr1mhndPQ6ZJ/R4GjJ8ohXkw3lbLuNNU0TVv+ELu9kJZRrfmhjeVF5uF
-	 yJUkcNc25mO2dqUYHOAys939HcSRnn53ajk98ND94N6NON3vOYgArX9Qn2XbDB+YATYMl
-	 LNwDgY5vwqHMwlXs6AvHwR5a0v4KdlMIX0vFuRsKPkg9rIlm0pN375tkjBdbB2x71mw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=d49uQ2lX;
-	arc=none smtp.remote-ip=210.61.82.184
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:
+	 DKIM-Signature:Authentication-Results-Original:Received:Received:
+	 Message-ID:Date:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-ClientProxiedBy:MIME-Version:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:x-checkrecipientrouted:
+	 NoDisclaimer:X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam-Untrusted:
+	 X-Microsoft-Antispam-Message-Info-Original:
+	 X-Forefront-Antispam-Report-Untrusted:X-Exchange-RoutingPolicyChecked:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:
+	 X-EOPAttributedMessage:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStripped:
+	 X-MS-PublicTrafficType:X-MS-Office365-Filtering-Correlation-Id-Prvs:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=L6VJsBBw+9aLUNmIbT5EOz+b9Lupz6euvihDRf+q8UA=;
+	b=sMRPZC9B+U7bSej0y6DXkGpdzt3cHzdsZOrXPfHkUOXDor7z5zU7nTXE8iUyDIAPW6vo
+	 aoaNyTJEyq7JT1Te/efnvuztpei4Ja4kJrvCrmTsmnMnHZxo+2V0G0e3lTgHU90oQENGr
+	 jPDD8gIRcB71Su5e1gumK+kMO7+7C/X/hNCq4HQ6T2Li+YnyuETqDedsiKx1eZlnXCPxt
+	 PybeolCcn7AK8fwz7e8nugtaSfjImNXAgM0iXWPOEqgPjklUGPABfCFFk04aPYRGQSbXO
+	 ay08SnBnwywmShoWeSRlGemxym1ag4QRET91jSTCPURJFOb2cUNkWg2TMBnSSshJvFg==
+ARC-Authentication-Results: i=3; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=arm.com;
+	spf=pass smtp.mailfrom=arm.com;
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=VTct3TJM;
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=VTct3TJM;
+	arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.69.69
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010069.outbound.protection.outlook.com [52.101.69.69])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29B9F606A333;
-	Fri,  6 Nov 2026 08:30:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29B9F606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06491606A329;
+	Fri,  6 Nov 2026 08:30:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06491606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=d49uQ2lX
-X-UUID: 4796feeed9bc11f18dc8c9802ae25ab1-20261106
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=J5WkbCyWET3mP0lGp2C+rKGBoikF2s1awaOWTUy2kgQ=;
-	b=d49uQ2lXdL95KFoL6Qfejfs0PkKswiSs9wpStau/7unWkFPygcUlEq8CU+wSw8IWBMv/wvISmKmlJzRGKI7hupnq+bfFyPOs8XbzfLMxxguhBeukftpfgO6QOk48zLLFsmD3InWabfSFEh5rlal7/oDh5RPWnImCkVsoE4QWxhA=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:f1e82809-62df-4134-8aa9-82b60e3bcca6,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:b0318ac,CLOUDID:47e574bb-4006-44bb-949c-6e25a7b8dad4,B
-	ulkID:nil,BulkQuantity:0,SF:81|82|102|136|836|865|888|898,TC:-5,Content:0|
-	15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,CO
-	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 4796feeed9bc11f18dc8c9802ae25ab1-20261106
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <james-ly.huang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1057213204; Fri, 06 Nov 2026 16:30:10 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Fri, 6 Nov 2026 16:30:10 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Fri, 6 Nov 2026 16:30:10 +0800
-From: James-LY Huang <james-ly.huang@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<sean.wang@mediatek.com>, <jb.tsai@mediatek.com>, <kun.wu@mediatek.com>,
-	<James-LY.Huang@mediatek.com>, Jacobs Wu <jacobs.wu@mediatek.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH v2 9/9] wifi: mt76: mt7925: send the common scan IEs and size the request
-Date: Fri, 6 Nov 2026 16:30:04 +0800
-Message-ID: <20261106083004.3156085-10-james-ly.huang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20261106083004.3156085-1-james-ly.huang@mediatek.com>
-References: <20261106083004.3156085-1-james-ly.huang@mediatek.com>
+	dkim=pass (1024-bit key, unprotected) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=VTct3TJM;
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=VTct3TJM
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=OdCVbwH56MMbZNewyuT/pqQanw3xwV3kLkdIKEitKvnuem+nJ728pq7yohU8iSAdnXZEvKmTjh59DCXnqz4Yaq0kYmw7XN+QiDgJ9iaDmlrIAxL6u1n8bQTIXf57lEkiNf/z/wVpR92+QWKTu+jccm0nBIs+suKncDDW7lZuNrzFZVj8pzGGWB/kD7dCm8dI+hEF6M/pgqxqIliJgvgRlJB8WoLXTbhxmtJ79Vy1uarOPYBPyP5ZL2JtTzaaeevfEJS+FF7S1VCLZXSFVM4UaF7e9jaNuRnTxx0CCymT5edPqZQvj9vIofk5jhsWHhoasIw7UqgV54+I7Ochzv7ZvQ==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=L6VJsBBw+9aLUNmIbT5EOz+b9Lupz6euvihDRf+q8UA=;
+ b=fJkVx2FTNpfQu6ContC49sJUkM1uWbN/7SQbVCc6br+M7qVLKXwFgo0tgYmPEqLKy9uGFpPPytrAeRPA8zPAvT2rjkHeEFtEJ4tO4EmI7EGBGvnsCGgM03Q+oenqsrVk83748H4u5SVoGpPUYY7yLISvUgSkGJmWU5YcKSQyuEdOLrCb/+VgVd5otYQmS/XYw84hT3F5cm72CC2of8ufs6F1CXkDfD/MtMNpyUtEpNH5MsQOfJ/MaYTpuVU2gXm53Q3/fIdbv4niOT+fDc2VtvHnOvEPq/IO3uVx6DJhD+66avmQ0TpMFAZo2DMtlTKIPf5zJBW08oT7fC2UK63TvA==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 4.158.2.129) smtp.rcpttodomain=infradead.org smtp.mailfrom=arm.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=arm.com;
+ dkim=pass (signature was verified) header.d=arm.com; arc=pass (0 oda=1 ltdi=1
+ spf=[1,1,smtp.mailfrom=arm.com] dkim=[1,1,header.d=arm.com]
+ dmarc=[1,1,header.from=arm.com])
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=L6VJsBBw+9aLUNmIbT5EOz+b9Lupz6euvihDRf+q8UA=;
+ b=VTct3TJM+OunBfzGKVKBs1bHWhwAuwIGQQLM9WyomdtBvDXcGitFSBsJw3rmK2+GxfFUf6PYXASw2g/WrvG280L9uw2yJf1eQhvxzypYk32uzbyPrrN0byTHHDvsZuwQX+qVQSenj0+RkPJOTkRgJhHTnr9L8zwWDV8Gyl9B1Ko=
+Received: from DB9PR06CA0010.eurprd06.prod.outlook.com (2603:10a6:10:1db::15)
+ by AM0PR08MB5364.eurprd08.prod.outlook.com (2603:10a6:208:186::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Fri, 6 Nov
+ 2026 08:30:07 +0000
+Received: from MAD0EPF000008B1.eurprd04.prod.outlook.com
+ (2603:10a6:10:1db:cafe::99) by DB9PR06CA0010.outlook.office365.com
+ (2603:10a6:10:1db::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.10 via Frontend Transport; Fri, 6
+ Nov 2026 08:30:07 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 4.158.2.129) smtp.mailfrom=arm.com; dkim=pass (signature was verified)
+ header.d=arm.com;dmarc=pass action=none header.from=arm.com;
+Received-SPF: Pass (protection.outlook.com: domain of arm.com designates
+ 4.158.2.129 as permitted sender) receiver=protection.outlook.com;
+ client-ip=4.158.2.129; helo=outbound-uk1.az.dlp.m.darktrace.com; pr=C
+Received: from outbound-uk1.az.dlp.m.darktrace.com (4.158.2.129) by
+ MAD0EPF000008B1.mail.protection.outlook.com (10.167.241.133) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.4
+ via Frontend Transport; Fri, 6 Nov 2026 08:30:06 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=s0U5i4Rn/UCIlotiLo/VvUA1a6U0v7YRBf0h0qxbKixjoTDXolHKMHI+81ST2iSBij40UkhqXDsL+sYt4MCLe5uWreOA7SkVr9TWGBJLsh9uuHMbNo/9Hn49hzj17LP8Sp7Xwa+48BNcoeykitRg/I9krN35oK1HKLgn0IomDqmVT9K1NRIhqPItUFmZ4WSP5n37dMz8RoWaQGFh71bQMHlIvtJZaKs5GFCad9CbuGItn33hnXVXTkuLGPJExq8CMcdPGQqZKrGyia9tyh1WuZoTO2vQ5B3p5TMA1E+ZTUhddqj3KImydjuyu55+G+yd0AQPzip/TZ/koWdM8u3ObQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=L6VJsBBw+9aLUNmIbT5EOz+b9Lupz6euvihDRf+q8UA=;
+ b=sljIyRyMiC/coR93PrX6AW9+zxGgQss9F5QGMweCfqgDQgcl07npH3G5kGJCC/ARACEbb/zVDf8AkeRr4g21mNI00hgprYqUmQfXaIePTPKaQOkxb+9FhJt8/Z8E9HLbweo6RmtWALMi0oa5NGTvcuzjGelY8BJKeIy0GEGb6zaCZ1tRXYgde7SEuzzvAKNVJC/lvlnKiCcQRWAss21cXrIokd1eVN2BHV+7EHqUX+j68pJsWkTmlAeJTOHE4iBZxShKge/EQwhRYYZIp1dEFEFAyorj6hRwkOY4+GQzRqql3JQ/TjO/PYVbrtW8xsWtrIsvIiTIAr+8wiFCFUMLyA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=arm.com; dmarc=pass action=none header.from=arm.com; dkim=pass
+ header.d=arm.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=L6VJsBBw+9aLUNmIbT5EOz+b9Lupz6euvihDRf+q8UA=;
+ b=VTct3TJM+OunBfzGKVKBs1bHWhwAuwIGQQLM9WyomdtBvDXcGitFSBsJw3rmK2+GxfFUf6PYXASw2g/WrvG280L9uw2yJf1eQhvxzypYk32uzbyPrrN0byTHHDvsZuwQX+qVQSenj0+RkPJOTkRgJhHTnr9L8zwWDV8Gyl9B1Ko=
+Authentication-Results-Original: mx.microsoft.com 1; dkim=none (message not
+ signed) header.d=none;dmarc=none action=none header.from=arm.com;
+Received: from AS8PR08MB10291.eurprd08.prod.outlook.com
+ (2603:10a6:20b:629::15) by VI0PR08MB11199.eurprd08.prod.outlook.com
+ (2603:10a6:800:255::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Fri, 6 Nov
+ 2026 08:29:30 +0000
+Received: from AS8PR08MB10291.eurprd08.prod.outlook.com
+ ([fe80::9f01:508:17aa:279c]) by AS8PR08MB10291.eurprd08.prod.outlook.com
+ ([fe80::9f01:508:17aa:279c%6]) with mapi id 15.21.0592.009; Fri, 6 Nov 2026
+ 08:29:30 +0000
+Message-ID: <00152592-fd72-4413-88cd-c78a3722829a@arm.com>
+Date: Fri, 6 Nov 2026 09:29:24 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] Add offsetofp() and offsetofendp() for pointer
+ arithmetic
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chengchang Tang <tangchengchang@huawei.com>,
+ Junxian Huang <huangjunxian6@hisilicon.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Leon Romanovsky <leon@kernel.org>,
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+ Jes Sorensen <Jes.Sorensen@gmail.com>, Ping-Ke Shih <pkshih@realtek.com>,
+ Johannes Berg <johannes@sipsolutions.net>,
+ Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>,
+ Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>,
+ Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+ Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
+ Yonghong Song <yonghong.song@linux.dev>, Jiri Olsa <jolsa@kernel.org>,
+ Emil Tsalapatis <emil@etsalapatis.com>,
+ Ihor Solodrai <ihor.solodrai@linux.dev>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Simon Horman <horms@kernel.org>,
+ Steffen Klassert <steffen.klassert@secunet.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8?=
+ =?UTF-8?Q?n?= <mic@digikod.net>, =?UTF-8?Q?G=C3=BCnther_Noack?=
+ <gnoack@google.com>, Paul Moore <paul@paul-moore.com>,
+ James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
+ Vineet Gupta <vgupta@kernel.org>, Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Philipp Stanner <phasta@kernel.org>, Sudeep Holla <sudeep.holla@kernel.org>,
+ Cristian Marussi <cristian.marussi@arm.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Jani Nikula <jani.nikula@linux.intel.com>,
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin
+ <tursulin@ursulin.net>, Lyude Paul <lyude@redhat.com>,
+ Danilo Krummrich <dakr@kernel.org>, Zack Rusin <zack.rusin@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+ Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+ Hans de Goede <hansg@kernel.org>, Mauro Carvalho Chehab
+ <mchehab@kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>,
+ Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+ Andrew Lunn <andrew+netdev@lunn.ch>, Benson Leung <bleung@chromium.org>,
+ Tzung-Bi Shih <tzungbi@kernel.org>, Guenter Roeck <groeck@chromium.org>,
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+ Paulo Alcantara <pc@manguebit.org>, Namjae Jeon <linkinjeon@kernel.org>,
+ Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+ Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>,
+ Bharath SM <bharathsm@microsoft.com>, Carlos Maiolino <cem@kernel.org>,
+ Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ Peter Zijlstra <peterz@infradead.org>, Darren Hart <dvhart@infradead.org>,
+ Davidlohr Bueso <dave@stgolabs.net>, =?UTF-8?Q?Andr=C3=A9_Almeida?=
+ <andrealmeid@igalia.com>, David Ahern <dsahern@kernel.org>,
+ Ido Schimmel <idosch@nvidia.com>,
+ Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+ "Geoffrey D. Bennett" <g@b4.vu>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, linux-kernel@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-wireless@vger.kernel.org,
+ bpf@vger.kernel.org, netdev@vger.kernel.org,
+ linux-security-module@vger.kernel.org, linux-snps-arc@lists.infradead.org,
+ linux-bluetooth@vger.kernel.org, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ arm-scmi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+ linux-hyperv@vger.kernel.org, chrome-platform@lists.linux.dev,
+ linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+ linux-xfs@vger.kernel.org, linux-sound@vger.kernel.org
+References: <20261105-offsetof-v1-0-4153f5c10edc@arm.com>
+ <au2J-lMcEn4p4KGR@infradead.org>
+Content-Language: en-US
+From: =?UTF-8?B?QmVuY2UgQ3PDs2vDoXM=?= <bence.csokas@arm.com>
+In-Reply-To: <au2J-lMcEn4p4KGR@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR2P281CA0163.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:99::6) To AS8PR08MB10291.eurprd08.prod.outlook.com
+ (2603:10a6:20b:629::15)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -84,233 +218,76 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+X-MS-TrafficTypeDiagnostic:
+	AS8PR08MB10291:EE_|VI0PR08MB11199:EE_|MAD0EPF000008B1:EE_|AM0PR08MB5364:EE_
+X-MS-Office365-Filtering-Correlation-Id: 24d05a3e-000b-4f47-7812-08df3be029d2
+x-checkrecipientrouted: true
+NoDisclaimer: true
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam-Untrusted:
+ BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|366016|4143699003|11063799006|56012099006|261022105027099003|261022075727099003|261021121427099003|261102123227099003|261026121527099003|261026140227099003|261028144727099003|22082099003|18002099003|6133799003|10067099003;
+X-Microsoft-Antispam-Message-Info-Original:
+ faF+axEssCynoG70FYMCePhIoNpODz8nUUte48ilBjAxzSF2ljdTx9FZ+6SAHTl+L2p2VXDJxSZLAuGF+8xFPD/wczlw8gbdBoL9FYDE/uIqKiUIVgMy9ykCSws2uLPnpBAK7V16FmgaDTf3NDZ4MRCgeh2p/ygbAULsuCjRiqxv58kWepRcOoaQ5ttqxnXxAXPKc2jvzHJmnczt5v2Kl8dZU8kI8J59iMg6p2A2UfEIkbd6esvii3NT0/PLpM3QpDXXGSib9e/FqsLftpDpwBHPG0ajxoEH77qdkiTImbxXmZaR+H7buSGy9nCBRwtkWF3EQzXzU8Un+j3LQ0ndbfjxrZXJuKFFb9qdo9vdlnYBzuYxZliIbcBCqGM8uEl08awDM9NgD4ISXI2Z8Fk9vjKO8IB+rDAACKMn7XVoXXn3aXYaoxFiC/+fU1rUjP9DJCuOdM/TNxWqW5sG/GIglVNr8u83u9+GzJGqGnbVLzt5toXnEiRGY02Q00lVU8FSmMDMgovq4aRgxyJtQSPVxatmi9SLwh4GF4wg+JPW2VuGA+Prl2qZeAir1/AyWcIbQEfeM8jN9f+XIQ7UjGHZqoolFhgR72yHr5Gwpsv/xmaYN35+U3vuTQYmWiwrxxEi2A3dMvf09/CGVjsdblkAJlBwzfpwxVdFkOsORGPVI/Y=
+X-Forefront-Antispam-Report-Untrusted:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR08MB10291.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(366016)(4143699003)(11063799006)(56012099006)(261022105027099003)(261022075727099003)(261021121427099003)(261102123227099003)(261026121527099003)(261026140227099003)(261028144727099003)(22082099003)(18002099003)(6133799003)(10067099003);DIR:OUT;SFP:1101;
+X-Exchange-RoutingPolicyChecked:
+ NeCIiAyKEnvG3hV2ch//xgC4atks9H+CsONLPBStOOh8CG85CyJF+aQCcRm3+Ez54VEWInVKsHEWmfQrrnHjx6GKV9fAL09L5MGK+lgS0vVTtRHSlZub1CBrTbF2T1URA+C9/2gQAvxl/cpBCRA670gFqJRIIOROFz25Frpvk68WIa5CF9Z832T4xoZMom1cCsaSvT8hspU7R+kOxNryq7oFCYnDuEUv/9AOknzx7HFViRfLoJG5F3ZXvirXd0fxz5WgVPd0+JUsUzOsKiXYZvDW5EXdOgNkIDrg3X8Nd9FzJNwSSx5bCq41uZQbnmLUoMn5JwUmO/XCfEZBdMBkTg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR08MB11199
+X-EOPAttributedMessage: 0
+X-MS-Exchange-Transport-CrossTenantHeadersStripped:
+ MAD0EPF000008B1.eurprd04.prod.outlook.com
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id-Prvs:
+	e5a6ba2e-9dc8-46a5-9ba1-08df3be013e6
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|23010399003|1800799024|376014|35042699022|36860700016|14060799003|82310400026|10067099003|56012099006|11063799006|4143699003|261028144727099003|261022075727099003|261021121427099003|261022105027099003|261026121527099003|261026140227099003|261102123227099003|6133799003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	KtcyxRwdz3XBeacj4DF3DwNqY6a6d5Weo4tvd+TnltgcLhTsGMkL3kCtdI8UpoXpYAUwx/b2CmVjEeSh+JnJtf4N+dqfPw/n6ze1qz3MNi2yw6dXGemhnTVvKKR9M+vneL6+u9TGRH65DUOrJm8/OW0GhFlJnKhzoDX7XzhHLbRFVdr4iFTW0on0eCA2rEB5kcAv5E2b4Txm3phHfcX4RuRLaNoYRDzTiizAKs7cdfhRAFtPvesurNGwgYbo+QVAggNbuQ7rmyAp/xINx/de9dPDEZLqELMbLdvsvqGOGKeh/S2GCOSuSCGoknwDU7pBDh1yISojYHo0yTw0q2ckXqdqO8uQQSLrLgOOd7ul/Lyxjx+0Xq7saXt0fGTuiUAh7b2JHzfC3L/qIoR9gI5uBp5NRsyB58WSQeXjN/TDN5XhIiKIVc8OTUAzOmQQNe4G6Isb2orxbpEoFrkjyUeWkBbSE4vHO7PafD/jj0dlQjrMwtS03TyRHah0JC7uA6moqHov1eUiw8wCr6uxjs8HoYGzv70pLZsHd1FNI8lsnKrtxgu6M0bornoJa5WTag1CYsHQJWt9sW1lIELgFHbebJ9W+2kAel28FcyyKXefK13yN4XMUfzE/XkjCh6RrafaWwcaHcid8wPVYmFrxwRwudebPkkIAWWg1D4SOQvElM72cRSz1MH99QwFvxc63WjxHfRApR7T27LkYb/FxR7qiw==
+X-Forefront-Antispam-Report:
+	CIP:4.158.2.129;CTRY:GB;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:outbound-uk1.az.dlp.m.darktrace.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(1800799024)(376014)(35042699022)(36860700016)(14060799003)(82310400026)(10067099003)(56012099006)(11063799006)(4143699003)(261028144727099003)(261022075727099003)(261021121427099003)(261022105027099003)(261026121527099003)(261026140227099003)(261102123227099003)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	Z71oRdmj/uG70Vv6dYtTt4jsBSPoaF2wcTw7jfAJ2b/QLyGBLwZJJNwdruOK7NeIbGuT5N7cIVdJF2TVV7I1f08Y5SHmBFQuhSBEFJtUrq8462moxunkngyB7S2Dc8clo2hUZeK9GBw/f2kYQDniZV+TZSDv3nijBPQNfbLz7vJanFT1YnluwBjRGmgalWZHmCDiMmM8yo+fURJhiaXOfuUVOdxXiGmibQgwih3BzdrHWrMrt9kQ6/3wdT6HK7bXyRH6wz5/B9mtZ0YH+D8WRvYn1J6WkzUTbgccmI01rbCw1EIc9i4ZL/GyO/bwnIB2RjtJ6WJit0o1LUIK3a5EnXrnKOPs0ve9DrYSIUUivyeJmlRM0e2LtDVKNx6fzX6CzrG1AxB3sD1LsmlLrQ4T52r1Q/B+EkC57F9bbfMHMTr6IbwBqox0mdYpGBYlovES
+X-OriginatorOrg: arm.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2026 08:30:06.7787
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 24d05a3e-000b-4f47-7812-08df3be029d2
+X-MS-Exchange-CrossTenant-Id: f34e5979-57d9-4aaa-ad4d-b122a662184d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=f34e5979-57d9-4aaa-ad4d-b122a662184d;Ip=[4.158.2.129];Helo=[outbound-uk1.az.dlp.m.darktrace.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MAD0EPF000008B1.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR08MB5364
 
-From: Jacobs Wu <jacobs.wu@mediatek.com>
+Hi,
 
-mt7925_mcu_build_scan_ie_tlv() sends the per-band sets of
-struct ieee80211_scan_ies but not scan_ies->common_ies. mac80211 puts
-only the band capabilities, and the custom IEs that must precede them,
-into the per-band sets; every other custom IE of the request, the
-vendor specific elements (P2P, WPS, MBO, ...) included, goes to
-common_ies. Since commit 9f8f4a51f3c1 ("wifi: mt76: mt7925: fix
-incorrect scan probe IE handling for hw_scan") these IEs are missing
-from the probe requests.
+On 2026. 11. 06. 9:04, Christoph Hellwig wrote:
+> On Thu, Nov 05, 2026 at 06:16:15PM +0100, Bence Csokas wrote:
+>> A common usage pattern for offsetof() is the following:
+>>
+>>    offsetof(typeof(*ptr), member)
+>>
+>> Condense this operation to one macro for a more maintainable code base.
+> 
+> What exactly makes non-standard macros with no obvious safety benefit
+> more maintainable?
 
-Send common_ies in a UNI_SCAN_IE TLV without a band: the firmware
-appends such a TLV to the probe requests of every band. It keeps up to
-MT76_CONNAC_SCAN_IE_LEN bytes of it, which max_scan_ie_len already
-guarantees for hw_scan; sched_scan shares the TLV, so give it the same
-limit instead of the IEEE80211_MAX_DATA_LEN of the connac devices that
-have a sched_scan command of their own. The per-band TLVs keep carrying
-the per-band sets; the firmware stores their length in a byte, so a
-longer set is left out instead of being truncated.
+It is written out in more detail in the msg of 1/3: it helps keep lines 
+short, and as typeof(*ptr) may not come naturally to many, some may be 
+compelled to write out the typename twice::
 
-Size the request for the IEs it carries. hw_scan reserved a fixed
-sizeof(struct scan_ie_tlv) + MT76_CONNAC_SCAN_IE_LEN, which the
-per-band TLVs of a request can exceed, and sched_scan reserved nothing
-beyond the TLV header since struct scan_ie_tlv lost its ies[] array, so
-mt76_connac_mcu_add_tlv() put the TLVs past the end of the buffer,
-which skb_put() turns into a panic, whenever the kmalloc slack did not
-happen to cover them. The builder now checks the tailroom of the skb
-instead of a budget of its own.
+   struct my_struct_type *p;
+   off = offsetof(struct my_struct_type, member);
+   // pointer arithmetic with p and off
 
-Fixes: 9f8f4a51f3c1 ("wifi: mt76: mt7925: fix incorrect scan probe IE handling for hw_scan")
-Cc: stable@vger.kernel.org
-Signed-off-by: Jacobs Wu <jacobs.wu@mediatek.com>
----
-v2: no change
----
- .../net/wireless/mediatek/mt76/mt7925/init.c  |   5 +
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 107 ++++++++++++------
- 2 files changed, 79 insertions(+), 33 deletions(-)
+which induces additional work if *p's type changes.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/init.c b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-index 8c3049b66a85..05305f4e1db8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-@@ -301,6 +301,11 @@ int mt7925_register_device(struct mt792x_dev *dev)
- 	if (ret)
- 		return ret;
- 
-+	/* hw_scan and sched_scan share the UNI_SCAN_IE TLV, and the firmware
-+	 * keeps at most MT76_CONNAC_SCAN_IE_LEN bytes of IEs for either.
-+	 */
-+	hw->wiphy->max_sched_scan_ie_len = MT76_CONNAC_SCAN_IE_LEN;
-+
- 	hw->wiphy->reg_notifier = mt7925_regd_notifier;
- 	dev->mphy.sband_2g.sband.ht_cap.cap |=
- 			IEEE80211_HT_CAP_LDPC_CODING |
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 24de2ff3a15d..22a6338acaf1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -3347,56 +3347,99 @@ int mt7925_mcu_set_dbdc(struct mt76_phy *phy, bool enable)
- }
- EXPORT_SYMBOL_GPL(mt7925_mcu_set_dbdc);
- 
-+/* Room for a UNI_SCAN_IE TLV carrying ies_len bytes of IEs */
-+static u32
-+mt7925_mcu_scan_ie_tlv_len(struct mt76_dev *mdev, u32 ies_len)
-+{
-+	u32 len = sizeof(struct scan_ie_tlv) + ies_len;
-+
-+	if (is_mt7928(mdev))
-+		len = ALIGN(len, 4);
-+
-+	return len;
-+}
-+
-+/* Room for the UNI_SCAN_IE TLVs of a scan request */
-+static u32
-+mt7925_mcu_scan_ies_len(struct mt76_dev *mdev,
-+			struct ieee80211_scan_ies *scan_ies)
-+{
-+	enum nl80211_band i;
-+	u32 len = 0;
-+
-+	if (scan_ies->common_ie_len)
-+		len += mt7925_mcu_scan_ie_tlv_len(mdev, scan_ies->common_ie_len);
-+
-+	for (i = 0; i <= NL80211_BAND_6GHZ; i++) {
-+		if (i == NL80211_BAND_60GHZ || !scan_ies->len[i])
-+			continue;
-+
-+		len += mt7925_mcu_scan_ie_tlv_len(mdev, scan_ies->len[i]);
-+	}
-+
-+	return len;
-+}
-+
-+static void
-+mt7925_mcu_add_scan_ie_tlv(struct mt76_dev *mdev, struct sk_buff *skb,
-+			   u8 band, const u8 *ies, u32 ies_len)
-+{
-+	u32 alloc_len = mt7925_mcu_scan_ie_tlv_len(mdev, ies_len);
-+	struct scan_ie_tlv *ie;
-+	struct tlv *tlv;
-+
-+	if (alloc_len > skb_tailroom(skb))
-+		return;
-+
-+	tlv = mt76_connac_mcu_add_tlv(skb, UNI_SCAN_IE, alloc_len);
-+	ie = (struct scan_ie_tlv *)tlv;
-+
-+	memcpy(ie->ies, ies, ies_len);
-+	ie->ies_len = cpu_to_le16(ies_len);
-+	ie->band = band;
-+}
-+
- static void
- mt7925_mcu_build_scan_ie_tlv(struct mt76_dev *mdev,
- 			     struct sk_buff *skb,
- 			     struct ieee80211_scan_ies *scan_ies)
- {
--	u32 max_len = sizeof(struct scan_ie_tlv) + MT76_CONNAC_SCAN_IE_LEN;
--	u32 ies_len, alloc_len;
--	struct scan_ie_tlv *ie;
- 	enum nl80211_band i;
--	struct tlv *tlv;
--	const u8 *ies;
-+
-+	/* The firmware appends a TLV without a band to the probe requests
-+	 * of every band: that is where the common IEs of the request go.
-+	 */
-+	if (scan_ies->common_ie_len)
-+		mt7925_mcu_add_scan_ie_tlv(mdev, skb, 0, scan_ies->common_ies,
-+					   scan_ies->common_ie_len);
- 
- 	for (i = 0; i <= NL80211_BAND_6GHZ; i++) {
-+		u8 band;
-+
- 		if (i == NL80211_BAND_60GHZ)
- 			continue;
- 
--		ies = scan_ies->ies[i];
--		ies_len = scan_ies->len[i];
--
--		if (!ies || !ies_len)
-+		if (!scan_ies->ies[i] || !scan_ies->len[i])
- 			continue;
- 
--		if (is_mt7928(mdev))
--			alloc_len = ALIGN(sizeof(*ie) + ies_len, 4);
--		else
--			alloc_len = sizeof(*ie) + ies_len;
--
--		if (alloc_len > max_len)
--			return;
--
--		tlv = mt76_connac_mcu_add_tlv(skb, UNI_SCAN_IE,
--					      alloc_len);
--		ie = (struct scan_ie_tlv *)tlv;
--
--		memcpy(ie->ies, ies, ies_len);
--		ie->ies_len = cpu_to_le16(ies_len);
-+		/* The firmware keeps the length of a per-band set in a byte */
-+		if (scan_ies->len[i] > U8_MAX)
-+			continue;
- 
- 		switch (i) {
- 		case NL80211_BAND_2GHZ:
--			ie->band = 1;
-+			band = 1;
- 			break;
- 		case NL80211_BAND_6GHZ:
--			ie->band = 3;
-+			band = 3;
- 			break;
- 		default:
--			ie->band = 2;
-+			band = 2;
- 			break;
- 		}
- 
--		max_len -= alloc_len;
-+		mt7925_mcu_add_scan_ie_tlv(mdev, skb, band, scan_ies->ies[i],
-+					   scan_ies->len[i]);
- 	}
- }
- 
-@@ -3415,7 +3458,6 @@ int mt7925_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 	struct scan_ssid_tlv *ssid;
- 	struct scan_bssid_tlv *bssid;
- 	struct scan_chan_info_tlv *chan_info;
--	struct scan_ie_tlv *ie;
- 	struct scan_misc_tlv *misc;
- 	struct tlv *tlv;
- 	int max_len;
-@@ -3425,8 +3467,8 @@ int mt7925_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 
- 	max_len = sizeof(*hdr) + sizeof(*req) + sizeof(*ssid) +
- 		  sizeof(*bssid) * MT7925_RNR_SCAN_MAX_BSSIDS +
--		  sizeof(*chan_info) + sizeof(*misc) + sizeof(*ie) +
--		  MT76_CONNAC_SCAN_IE_LEN;
-+		  sizeof(*chan_info) + sizeof(*misc) +
-+		  mt7925_mcu_scan_ies_len(mdev, &scan_req->ies);
- 
- 	skb = mt76_mcu_msg_alloc(mdev, NULL, max_len);
- 	if (!skb)
-@@ -3546,15 +3588,14 @@ int mt7925_mcu_sched_scan_req(struct mt76_phy *phy,
- 	struct scan_sched_req *req;
- 	struct scan_ssid_tlv *ssid;
- 	struct scan_chan_info_tlv *chan_info;
--	struct scan_ie_tlv *ie;
- 	struct scan_sched_ssid_match_sets *match;
- 	struct sk_buff *skb;
- 	struct tlv *tlv;
- 	int i, max_len;
- 
- 	max_len = sizeof(*hdr) + sizeof(*req) + sizeof(*ssid) +
--		  sizeof(*chan_info) + sizeof(*ie) +
--		  sizeof(*match);
-+		  sizeof(*chan_info) + sizeof(*match) +
-+		  mt7925_mcu_scan_ies_len(mdev, ies);
- 
- 	skb = mt76_mcu_msg_alloc(mdev, NULL, max_len);
- 	if (!skb)
--- 
-2.45.2
+However, as Sashiko pointed out (don't know why it didn't write this 
+earlier), struct_offset() already exists, so we should just use that 
+one, and probably add a struct_offset_end() variant.
 
+Sorry for the noise, everyone.
+
+Bence
