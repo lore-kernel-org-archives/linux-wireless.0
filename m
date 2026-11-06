@@ -1,11 +1,11 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793953816;
-	b=RJXEpK+Sb4pd1OCovbQoGvgSFUP62FEYnNiAOysDL4Xyat/nTgm6q/it/UkFB49uzgzJ
-	 nZeJwJiefCaPxXNk7lnTEpzI3oK/+sfrMrYJ/E8i8bv8ywNtSyDAlKDArsnVZl/Q6GYQO
-	 JuS3ntGJiJMlRzy0AblnjRHQ+tiJGaRlY5YlqZAEo/ouEWDU7rBSDtnBljG0x61yFfh2v
-	 n/DI0HSRjuh24dDHKICo6uZ9sSIeRyfjBImd80PRdxftNw3BrAfuC0oiYJLX6blvQ5uYl
-	 eS1qworPiNhTKznw0fPVMHMkbKTdS0h1+EO8787vJbRlzWuWRMm5LY+r/3KDo4i7B1A==
+	b=V+LdCxBnDeuiWh4Lo+fe7zpmvZeqytY6QlmL2MDo99yYqueDa87lZfbWVy/Dhhq5cUgR
+	 8d1UJ2p//Y44XjvJnudmQV0VFUtyvV8+fOarc5W1FoU5H+yBvrq8SOyMBzt26ETcFNkAn
+	 VZeEM336ClriiykbwU4tOsd1qavrKbNlJvej/dsQTsuvNNL6N7xgwT1zJH+mzB8xAv8Kb
+	 1wj+Fnrd7Jd43e3ZV8UbMCFxh5UQaSkZHFxPQzUQ7km1qkoNRLRgypgOuweP6u2T6IU7V
+	 G8zUvjwfL6UjUUfG9/gR2TvVyJNITe0P+yHDqJJm7QJ4IgIB0Du0WguhHWa20Wn2p4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793953816;
 	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
@@ -13,37 +13,37 @@ ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
 	 Content-Type:X-MTK;
-	bh=JS8yH/i3xsdkIIV8v8lsztk3i1DNBKfNBzKmg56OxCQ=;
-	b=LT/d1THbfHPPhbBoYqpgbzcI7turoZkw0YjJuaYttMZwe0yei+lSsdCEjZAo6Cy7uSyH
-	 2Ffx5biT4zuMud8lvR3TI9jY958c0/DMOebGJhlpRzktE3sJiCV9wmWEL+uC7GOAHWknG
-	 +1HaXFVqFDILQ4YOWT3f6/b57rX8DlZruAsFn67KqAgsUDJBn7cZXISzNoOk6B/Qn2YLD
-	 /mnz6tVldtukRXq4yoqWOR8uhppbrzrFIUomQb+arprR94yeOe94amQcRA4rOF1cNOMR3
-	 1qw5OJf07RKmBqKAzwPTw+sg4HeNoIVgkR04c5mFF6fsTCGZFdi3Rar/66OPlr8smnQ==
+	bh=Hzjfm76NLuqiMsx7bmbx6UPg+5TowXWCJDO61wOS2Y8=;
+	b=oQ/dBusbexN7Qo5ab8slfGC+AAJvfytb+g3hvOMdj6qI6ygUBKrHTQMx9PB7MDyD594b
+	 L3LGOWoOLkFdez6AF8MVDtlRNwgvVPsO3PIxC3+jED/ht+titnXrHKlhRiIOJIKhPI2ai
+	 Jwoyey9S8udghZZYAcINJ4dVPKYuxy6ErK2Jc+kKcuIo8JqhbeSAJ7jfTp0o0Nhiph7vx
+	 vusoPkavJwW9jjUb8z3GDS58eTiLOqH0lEvg4RBuzMtwOY2IYcITpJ9+Hx5+w5kTDmRHX
+	 qdJs8vT/r00knuiZzL03ChaAtRtlcW8h1zjJErrEdYngwK5H2pspZZHOWVBnbRcArNg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=mediatek.com;
 	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=LMgMR4d4;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b="IVdw1JG/";
 	arc=none smtp.remote-ip=210.61.82.184
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E113F606A334
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 08:30:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E113F606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2746D606A328
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 08:30:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2746D606A328
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=LMgMR4d4
-X-UUID: 4746a7a0d9bc11f18dc8c9802ae25ab1-20261106
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=IVdw1JG/
+X-UUID: 47eb8a40d9bc11f18dc8c9802ae25ab1-20261106
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=JS8yH/i3xsdkIIV8v8lsztk3i1DNBKfNBzKmg56OxCQ=;
-	b=LMgMR4d43PtH2P8ZUEDiJlzyR34Wulx5VGt7mNmwWPmybY+Ppt8oR8aV/jVKGJE5NQ34k7r7m4HEaesa8jUL11T66Ltr8UMLE7H30v3Wuf600v+UTDdWOxAem4XA4ewaVgFE7FxdTbHjSltP4feRhuYYbkcLvjr5FXOxycYWl5E=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Hzjfm76NLuqiMsx7bmbx6UPg+5TowXWCJDO61wOS2Y8=;
+	b=IVdw1JG/sIb/2aur34z1VIKGadlKlunCN+yXUdT1gMz1NhoMtvpRMBJD/BMQJzXtUCXGXIfsVDJp5kMiIEdhVETWGXDlcyv1I2xXDfN5cesthJElgsSnOxXjvZkuaQrukbRkGXHoReWGqv+sbro+xyfCcSvB+GzZBy2pydXfC5Q=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:c8030951-cd03-4a74-a9b8-1c2f3efb4d2a,IP:0,U
+X-CID-O-INFO: VERSION:1.3.21,REQID:69b9efd5-4ab2-4a5c-ac34-1377927791db,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:4ce574bb-4006-44bb-949c-6e25a7b8dad4,B
+X-CID-META: VersionHash:b0318ac,CLOUDID:b9932aee-6961-456c-adce-6d277e14e6ad,B
 	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
 	0|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0
 	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -51,13 +51,13 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 4746a7a0d9bc11f18dc8c9802ae25ab1-20261106
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw02.mediatek.com
+X-UUID: 47eb8a40d9bc11f18dc8c9802ae25ab1-20261106
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
 	(envelope-from <james-ly.huang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1492019320; Fri, 06 Nov 2026 16:30:09 +0800
+	with ESMTP id 1686563366; Fri, 06 Nov 2026 16:30:10 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.2562.29; Fri, 6 Nov 2026 16:30:09 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -68,9 +68,9 @@ To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<sean.wang@mediatek.com>, <jb.tsai@mediatek.com>, <kun.wu@mediatek.com>,
 	<James-LY.Huang@mediatek.com>, james-ly huang <james-ly.huang@mediatek.com>
-Subject: [PATCH v2 2/9] wifi: mt76: mt7925: bound P2P off-channel mgmt TX lifetime
-Date: Fri, 6 Nov 2026 16:29:57 +0800
-Message-ID: <20261106083004.3156085-3-james-ly.huang@mediatek.com>
+Subject: [PATCH v2 8/9] wifi: mt76: mt7925: track BSS absence and drop stale GO probe responses
+Date: Fri, 6 Nov 2026 16:30:03 +0800
+Message-ID: <20261106083004.3156085-9-james-ly.huang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20261106083004.3156085-1-james-ly.huang@mediatek.com>
 References: <20261106083004.3156085-1-james-ly.huang@mediatek.com>
@@ -89,296 +89,298 @@ X-MTK: N
 
 From: james-ly huang <james-ly.huang@mediatek.com>
 
-A P2P GO's Probe Response is only useful while the requester is
-still on the listen channel: give it a short TX lifetime and a
-small retry limit, and arm the TXD timestamp, so a response that
-cannot get on air in time is aged out by the HW instead of going
-out long after the requester has left.
+The FW tells the host with a BSS_IS_ABSENCE event when a P2P GO's
+BSS currently has no channel
 
-Bound an off-channel P2P mgmt frame to the dwell window it was
-queued for: program the lifetime from whatever is left of the
-granted ROC interval, and aim the expiry MT7925_P2P_OFFCHAN_TXS_MARGIN_MS
-short of its end so the TX status still reaches cfg80211 while it
-waits on the cookie. Both live in p2p.c behind
-mt7925_p2p_txwi_override(), which mt7925_mac_write_txwi() calls
-last so the more specific lifetime wins.
+  - latch the absent / free-quota state per bss_conf
+    (mt7925_p2p_mcu_bss_is_absence_event in p2p.c), and kick the
+    TX path (tx_worker) on the absent->present edge so whatever
+    piled up while the BSS had no channel is dequeued
+    immediately;
+  - clear the latched state where the BSS index is (re)assigned:
+    a GO stopped while absent and restarted on the same netdev
+    would otherwise come back with absent still latched and drop
+    every Probe Response until the FW sends a presence event
+    for the new bss_idx;
+  - the TX path (mt792x_tx) drops a GO Probe Response while the
+    BSS is absent - by the time the FW comes back the requester
+    has moved on, so the response is stale and only costs airtime
+    and a TX-abort.
 
 Signed-off-by: james-ly huang <james-ly.huang@mediatek.com>
 ---
 v2: no change
 ---
- .../net/wireless/mediatek/mt76/mt7925/mac.c   |   2 +
- .../net/wireless/mediatek/mt76/mt7925/p2p.c   | 197 ++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7925/p2p.h   |  31 +++
- 3 files changed, 230 insertions(+)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  1 +
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 12 +++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  3 +
+ .../net/wireless/mediatek/mt76/mt7925/p2p.c   | 97 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/p2p.h   | 20 ++++
+ drivers/net/wireless/mediatek/mt76/mt792x.h   | 25 +++++
+ .../net/wireless/mediatek/mt76/mt792x_core.c  | 16 +++
+ 7 files changed, 174 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 6e67ef3c52fa..577463af74b3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -865,6 +865,8 @@ mt7925_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 817554ffb9d8..2acaae9830fb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1102,6 +1102,7 @@ enum {
+ 	MCU_UNI_EVENT_SAP = 0x1c,
+ 	MCU_UNI_EVENT_ROC = 0x27,
+ 	MCU_UNI_EVENT_MBMC = 0x28,
++	MCU_UNI_EVENT_BSS_IS_ABSENCE = 0x29,
+ 	MCU_UNI_EVENT_TX_DONE = 0x2d,
+ 	MCU_UNI_EVENT_THERMAL = 0x35,
+ 	MCU_UNI_EVENT_RSSI_MONITOR = 0x41,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index cfdb736f53ca..25e981e38ea9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -401,6 +401,18 @@ static int mt7925_mac_link_bss_add(struct mt792x_dev *dev,
+ 			       0 : mconf->mt76.idx;
+ 	mconf->mt76.band_idx = 0xff;
  
- 		txwi[3] |= cpu_to_le32(MT_TXD3_BA_DISABLE);
- 	}
++	/* A freshly configured BSS is on channel until the FW says otherwise.
++	 * mt792x_bss_conf lives in vif->drv_priv / mvif->link_conf[], which
++	 * mac80211 only zeroes when the interface is created - a GO that is
++	 * stopped while absent and restarted on the same netdev would come back
++	 * with absent still latched, and then drop every Probe Response until
++	 * the FW happens to send a presence event for the new bss_idx. Clear it
++	 * here, where the BSS index is (re)assigned.
++	 */
++	mconf->absent = false;
++	mconf->free_quota = 0;
++	mconf->absence_tstamp = 0;
 +
-+	mt7925_p2p_txwi_override(dev, txwi, skb);
- }
- EXPORT_SYMBOL_GPL(mt7925_mac_write_txwi);
+ 	if (is_mt7927(&dev->mt76)) {
+ 		struct ieee80211_channel *chan;
  
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index d9a5b5f57fba..24de2ff3a15d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -738,6 +738,9 @@ mt7925_mcu_uni_rx_unsolicited_event(struct mt792x_dev *dev,
+ 	case MCU_UNI_EVENT_SAP:
+ 		mt7925_p2p_mcu_sap_event(dev, skb);
+ 		break;
++	case MCU_UNI_EVENT_BSS_IS_ABSENCE:
++		mt7925_p2p_mcu_bss_is_absence_event(dev, skb);
++		break;
+ 	case MCU_UNI_EVENT_RSSI_MONITOR:
+ 		mt7925_mcu_rssi_monitor_event(dev, skb);
+ 		break;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
-index 12d6eee8ce10..5dad902a0446 100644
+index 1fa6787600b2..e5748496a3a6 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.c
-@@ -21,6 +21,203 @@
- #include "mcu.h"
- #include "p2p.h"
+@@ -603,3 +603,100 @@ void mt7925_p2p_mcu_sap_event(struct mt792x_dev *dev, struct sk_buff *skb)
+ 	}
+ }
  
-+/* ------------------------------------------------------------------ */
-+/* TX: TXD overrides                                                    */
-+/* ------------------------------------------------------------------ */
++struct mt7925_bss_absence_data {
++	u8 bss_idx;
++	u8 is_absent;
++	u8 free_quota;
++};
 +
-+/* DW2 MAX_TX_TIME is a remaining-lifetime counter in units of 64 TU
-+ * (64 * 1024 us). Only bits [6:0] of the field may be programmed by the host -
-+ * the MSB is reserved for HW, which replaces the field with its own "max TX
-+ * time" once the packet is queued - so clamp there. A non-zero request must
-+ * never round down to 0 either, because 0 means "no lifetime" to the HW.
-+ */
-+#define MT7925_TXD_MAX_TX_TIME_LIMIT	0x7f
-+
-+static u32 mt7925_mac_txd_life_time(u32 ms)
-+{
-+	u32 unit;
-+
-+	if (!ms)
-+		return 0;
-+
-+	/* ms -> TU (1024 us) -> 64 TU */
-+	unit = (ms * USEC_PER_MSEC / 1024) >> 6;
-+
-+	if (unit > MT7925_TXD_MAX_TX_TIME_LIMIT)
-+		return MT7925_TXD_MAX_TX_TIME_LIMIT;
-+
-+	return unit ? unit : 1;
-+}
-+
-+/* Bound an off-channel P2P mgmt frame to the dwell window it was queued for.
-+ *
-+ * mt76 leaves DW2 MAX_TX_TIME at 0 (= no limit) for everything except a P2P
-+ * GO Probe Response, so an off-channel frame that cannot win the medium
-+ * inside its dwell stays in the PLE ALTX queue and keeps contending after
-+ * the window is gone: UNI_ROC_ABORT only pauses and resumes the STA, so
-+ * nothing drops the frame. If it does reach the air then, cfg80211 has
-+ * already emitted NL80211_CMD_FRAME_WAIT_CANCEL and wpa_supplicant has
-+ * dropped the cookie, so the TX status lands on an unknown cookie,
-+ * 'p2p-send-action' radio work is never freed and wpa_supplicant's
-+ * serialized radio-work queue stalls - p2p_find dies.
-+ *
-+ * Program the lifetime from the ROC instead: whatever is left of the
-+ * granted interval that mt7925_mcu_roc_handle_grant() armed phy->roc_timer
-+ * with, so the HW ages the frame out rather than transmitting it long
-+ * after the window is gone.
-+ *
-+ * Granularity: DW2 MAX_TX_TIME counts 64 TU (~65.5 ms) units and
-+ * mt7925_mac_txd_life_time() floors, with a floor of one unit, so it never
-+ * writes 0 (= no lifetime) for a non-zero input.
++/* Per-BSS handling of the BSS_IS_ABSENCE event: latch the absent /
++ * free-quota state, and on the absent->present edge kick the TX path so
++ * whatever piled up while the BSS had no channel gets dequeued
++ * immediately (the kick is the tx_worker).
 + */
 +static void
-+mt7925_mac_txwi_p2p_offchan_life_time(struct mt76_dev *mdev, __le32 *txwi,
-+				      struct sk_buff *skb)
++mt7925_mcu_bss_absence_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
 +{
-+	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct mt792x_phy *phy = &dev->phy;
-+	struct ieee80211_hdr *hdr;
-+	unsigned long expires;
-+	u32 life_time, dwell_ms;
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++	struct mt7925_bss_absence_data *data = priv;
++	struct mt792x_bss_conf *mconf = NULL;
++	struct mt792x_dev *dev = mvif->phy->dev;
++	unsigned long valid_links, now = jiffies;
++	unsigned int link_id;
++	bool absent, was_absent;
 +
-+	if (!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN))
-+		return;
++	if (ieee80211_vif_is_mld(vif)) {
++		valid_links = mvif->valid_links;
++		for_each_set_bit(link_id, &valid_links,
++				 IEEE80211_MLD_MAX_NUM_LINKS) {
++			struct mt792x_bss_conf *link_mconf;
 +
-+	if (!vif)
-+		return;
-+
-+	switch (ieee80211_vif_type_p2p(vif)) {
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		break;
-+	default:
-+		return;
++			link_mconf = rcu_dereference(mvif->link_conf[link_id]);
++			if (link_mconf && link_mconf->mt76.idx == data->bss_idx) {
++				mconf = link_mconf;
++				break;
++			}
++		}
++	} else if (mvif->bss_conf.mt76.idx == data->bss_idx) {
++		mconf = &mvif->bss_conf;
 +	}
 +
-+	/* skb->data is an 802.3 header in the HW-encap path, not a frame ctl */
-+	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
++	if (!mconf)
 +		return;
 +
-+	if (skb->len < sizeof(hdr->frame_control))
-+		return;
++	absent = !!data->is_absent;
++	was_absent = mconf->absent;
 +
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	if (!ieee80211_is_mgmt(hdr->frame_control))
-+		return;
-+
-+	/* Only meaningful while a dwell window actually exists. roc_timer is
-+	 * armed from the grant event only, so timer_pending() also means the
-+	 * FW has confirmed the channel.
-+	 */
-+	if (!test_bit(MT76_STATE_ROC, &phy->mt76->state) ||
-+	    !timer_pending(&phy->roc_timer))
-+		return;
-+
-+	expires = phy->roc_timer.expires;
-+	if (time_after_eq(jiffies, expires))
-+		return;
-+
-+	dwell_ms = jiffies_to_msecs(expires - jiffies);
-+
-+	/* Aim the expiry short of the end of the dwell, not at it. Two things
-+	 * have to fit in front of cfg80211's deadline:
-+	 *
-+	 *   - the TXS round trip, ~4..12 ms observed on healthy frames;
-+	 *   - the head start cfg80211's wait has over phy->roc_timer. The
-+	 *     wait starts when ieee80211_mgmt_tx() queues the frame, while
-+	 *     the timer is only armed when the FW grants the channel, and
-+	 *     the grant costs ~8..20 ms. So the ROC deadline this function
-+	 *     reads is ~17..20 ms later than the deadline that actually
-+	 *     matters: the frame wait expires just ahead of roc_work.
-+	 *
-+	 * 40 ms covers both with slack. Because mt7925_mac_txd_life_time()
-+	 * floors, subtracting first guarantees life_time <= dwell - margin.
-+	 * Without it the margin would swing between ~0 and ~65 ms depending
-+	 * on where the remaining dwell lands inside a unit.
-+	 */
-+	if (dwell_ms > MT7925_P2P_OFFCHAN_TXS_MARGIN_MS)
-+		dwell_ms -= MT7925_P2P_OFFCHAN_TXS_MARGIN_MS;
-+
-+	/* mt7925_mac_txd_life_time() only returns 0 for a 0 ms input, which
-+	 * time_after_eq() above already excluded, and otherwise floors to a
-+	 * minimum of one 64 TU unit (~65.5 ms) - it never writes 0, because
-+	 * 0 means "no lifetime" to the HW.
-+	 *
-+	 * The flip side is that a dwell shorter than ~65 ms cannot be
-+	 * expressed: it is rounded *up* to ~65.5 ms, so for e.g. a 50 ms
-+	 * off-channel wait the frame is bounded but not necessarily reported
-+	 * inside the wait. That is still strictly better than the unlimited
-+	 * lifetime it has today; capping the damage is the goal, and the
-+	 * short-dwell case would need a finer-grained field than DW2
-+	 * MAX_TX_TIME to do better.
-+	 */
-+	life_time = mt7925_mac_txd_life_time(dwell_ms);
-+	if (!life_time)
-+		return;
-+
-+	txwi[2] &= ~cpu_to_le32(MT_TXD2_MAX_TX_TIME);
-+	txwi[2] |= cpu_to_le32(FIELD_PREP(MT_TXD2_MAX_TX_TIME, life_time));
-+}
-+
-+/* A P2P GO's Probe Response is only useful while the requester is still
-+ * on the listen channel, so give it a short TX lifetime and a small retry
-+ * limit: a response that cannot get on air in time is aged out by the HW
-+ * instead of being transmitted long after the requester has left the
-+ * channel.
-+ *
-+ * Bound the lifetime, keep the small retry limit, and otherwise align the
-+ * TXD with a regular management frame.
-+ */
-+#define MT7925_TXD_PROBERESP_TIMESTAMP_IDX	0	/* WH_TXD_PROBERSP_TIMESTAMP_IDX */
-+
-+static void
-+mt7925_mac_txwi_p2p_go_probe_resp(struct mt76_dev *dev, __le32 *txwi,
-+				  struct sk_buff *skb)
-+{
-+	u32 life_time, val;
-+
-+	if (!mt7925_is_p2p_go_probe_resp(skb))
-+		return;
-+
-+	life_time = mt7925_mac_txd_life_time(MT7925_P2P_PROBERESP_LIFE_TIME_MS);
-+
-+	txwi[2] &= ~cpu_to_le32(MT_TXD2_MAX_TX_TIME);
-+	txwi[2] |= cpu_to_le32(FIELD_PREP(MT_TXD2_MAX_TX_TIME, life_time));
-+
-+	txwi[3] &= ~cpu_to_le32(MT_TXD3_REM_TX_COUNT);
-+	txwi[3] |= cpu_to_le32(FIELD_PREP(MT_TXD3_REM_TX_COUNT,
-+					  MT7925_P2P_PROBERESP_RETRY_LIMIT));
-+
-+	if (is_mt7928(dev)) {
-+		txwi[6] &= ~cpu_to_le32(MT_TXD6_MSDU_CNT_V2 |
-+					MT_TXD6_TIMESTAMP_OFS_EN_V2 |
-+					MT_TXD6_TIMESTAMP_OFS_IDX_V2);
-+		val = FIELD_PREP(MT_TXD6_TIMESTAMP_OFS_EN_V2, 1) |
-+		      FIELD_PREP(MT_TXD6_TIMESTAMP_OFS_IDX_V2,
-+				 MT7925_TXD_PROBERESP_TIMESTAMP_IDX);
-+	} else {
-+		txwi[6] &= ~cpu_to_le32(MT_TXD6_TIMESTAMP_OFS_EN |
-+					MT_TXD6_TIMESTAMP_OFS_IDX);
-+		val = MT_TXD6_TIMESTAMP_OFS_EN |
-+		      FIELD_PREP(MT_TXD6_TIMESTAMP_OFS_IDX,
-+				 MT7925_TXD_PROBERESP_TIMESTAMP_IDX);
++	mconf->free_quota = data->free_quota;
++	if (was_absent != absent) {
++		mconf->absent = absent;
++		mconf->absence_tstamp = now;
 +	}
-+	txwi[6] |= cpu_to_le32(val | MT_TXD6_VTA);
++
++	/* From Absent to Present */
++	if (was_absent && !absent)
++		mt76_worker_schedule(&dev->mt76.tx_worker);
 +}
 +
-+void mt7925_p2p_txwi_override(struct mt76_dev *dev, __le32 *txwi,
-+			      struct sk_buff *skb)
++void mt7925_p2p_mcu_bss_is_absence_event(struct mt792x_dev *dev, struct sk_buff *skb)
 +{
-+	/* Ordered so that the more specific lifetime wins if a frame ever
-+	 * matches both composers.
-+	 */
-+	mt7925_mac_txwi_p2p_offchan_life_time(dev, txwi, skb);
-+	mt7925_mac_txwi_p2p_go_probe_resp(dev, txwi, skb);
-+}
++	struct mt7925_uni_bss_is_absence_event *event;
++	struct mt7925_bss_absence_data data;
++	u32 tlv_len;
++	u8 *tlv;
 +
- /* ------------------------------------------------------------------ */
- /* RX: foreign-channel discovery frames                                 */
- /* ------------------------------------------------------------------ */
++	skb_pull(skb, sizeof(struct mt7925_mcu_rxd));
++	if (skb->len < sizeof(*event))
++		return;
++
++	event = (struct mt7925_uni_bss_is_absence_event *)skb->data;
++	tlv = event->tlv;
++	tlv_len = skb->len - sizeof(*event);
++
++	while (tlv_len >= sizeof(struct tlv)) {
++		struct tlv *hdr = (struct tlv *)tlv;
++		u16 tag = le16_to_cpu(hdr->tag);
++		u16 len = le16_to_cpu(hdr->len);
++
++		if (len < sizeof(*hdr) || len > tlv_len)
++			break;
++
++		if (tag == MT7925_BSS_IS_ABSENCE_TAG_INFO &&
++		    len >= sizeof(struct mt7925_bss_absence_info_tlv)) {
++			struct mt7925_bss_absence_info_tlv *info =
++				(struct mt7925_bss_absence_info_tlv *)tlv;
++
++			data.bss_idx = event->bss_idx;
++			data.is_absent = info->is_absent;
++			data.free_quota = info->free_quota;
++
++			ieee80211_iterate_active_interfaces_atomic(dev->mt76.phy.hw,
++								   IEEE80211_IFACE_ITER_RESUME_ALL,
++								   mt7925_mcu_bss_absence_iter,
++								   &data);
++		}
++
++		tlv += len;
++		tlv_len -= len;
++	}
++}
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
-index ed51670d9633..b005eebbfdca 100644
+index 9afae222845f..e189f9e56e93 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/p2p.h
-@@ -9,10 +9,41 @@
- #include "../mt76.h"
- #include "../mt792x.h"
- 
-+/* P2P TX timing knobs (values align gen4m FW defaults). */
-+#define MT7925_P2P_PROBERESP_LIFE_TIME_MS	100
-+#define MT7925_P2P_PROBERESP_RETRY_LIMIT	2	/* DEFAULT_P2P_PROBERESP_RETRY_LIMIT */
+@@ -53,6 +53,24 @@ struct mt7925_uni_sap_event {
+ 	u8 pad[4];	/* fixed field */
+ 	u8 tlv[];
+ } __packed;
 +
-+/* How far short of the end of an off-channel dwell an off-channel P2P mgmt
-+ * frame's TX lifetime is aimed, so that the resulting TX status still reaches
-+ * cfg80211 while it is waiting for it. Covers the TXS round trip (~4..12 ms
-+ * observed) plus the head start cfg80211's wait has over phy->roc_timer,
-+ * which is only armed once the FW grants the channel (~8..20 ms later).
-+ */
-+#define MT7925_P2P_OFFCHAN_TXS_MARGIN_MS	40
++/* BSS absence/presence event (FW event UNI_EVENT_ID_BSS_IS_ABSENCE) */
++#define MT7925_BSS_IS_ABSENCE_TAG_INFO		0
 +
-+static inline bool mt7925_is_p2p_go_probe_resp(struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
++struct mt7925_bss_absence_info_tlv {
++	__le16 tag;
++	__le16 len;
++	u8 is_absent;
++	u8 free_quota;
++	u8 pad[2];
++} __packed;
 +
-+	if (!vif || ieee80211_vif_type_p2p(vif) != NL80211_IFTYPE_P2P_GO)
-+		return false;
++struct mt7925_uni_bss_is_absence_event {
++	u8 bss_idx;
++	u8 pad[3];
++	u8 tlv[];
++} __packed;
 +
-+	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
-+		return false;
-+
-+	if (skb->len < sizeof(mgmt->frame_control))
-+		return false;
-+
-+	return ieee80211_is_probe_resp(mgmt->frame_control);
-+}
  /* TX/RX path overrides, BMC wcid bookkeeping and the P2P-only MCU event
   * handlers.
   */
- bool mt7925_p2p_rx_drop_chan_mismatch(struct mt792x_dev *dev,
- 				      struct sk_buff *skb);
-+void mt7925_p2p_txwi_override(struct mt76_dev *dev, __le32 *txwi,
-+			      struct sk_buff *skb);
+@@ -69,5 +87,7 @@ bool mt7925_p2p_chanctx_bss_programmed(struct ieee80211_vif *vif,
+ 				       struct ieee80211_bss_conf *link_conf);
+ 
+ void mt7925_p2p_mcu_sap_event(struct mt792x_dev *dev, struct sk_buff *skb);
++void mt7925_p2p_mcu_bss_is_absence_event(struct mt792x_dev *dev,
++					 struct sk_buff *skb);
  
  #endif /* __MT7925_P2P_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index 94186e9f77c8..6bfbeceaf026 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -163,6 +163,17 @@ struct mt792x_bss_conf {
+ 	struct ewma_rssi rssi;
+ 	struct ieee80211_tx_queue_params queue_params[IEEE80211_NUM_ACS];
+ 	unsigned int link_id;
++	/* FW BSS absence/presence state, updated by the BSS_IS_ABSENCE
++	 * event handler.
++	 */
++	bool absent;
++	u8 free_quota;
++	unsigned long absence_tstamp;
++
++	/* Dedicated BMC entry, only allocated for a p2p GO. Group-addressed
++	 * frames are transmitted on this wcid instead of the vif wcid, so
++	 * they no longer share the wcid
++	 */
+ 	struct mt792x_link_sta bmc;
+ 	bool bmc_valid;
+ };
+@@ -407,6 +418,20 @@ mt792x_link_conf_to_mconf(struct ieee80211_bss_conf *link_conf)
+ 	return mt792x_vif_to_link(mvif, link_conf->link_id);
+ }
+ 
++/* TRUE only while the BSS has no channel, so nothing we hand to the FW
++ * for it can go on air. Callable from the TX path: reads a single byte
++ * updated by the BSS_IS_ABSENCE event handler.
++ */
++static inline bool mt792x_vif_is_absent(struct ieee80211_vif *vif)
++{
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++
++	if (ieee80211_vif_is_mld(vif))
++		return false;
++
++	return mvif->bss_conf.absent;
++}
++
+ static inline struct ieee80211_bss_conf *
+ mt792x_vif_to_bss_conf(struct ieee80211_vif *vif, unsigned int link_id)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+index fa29af8fff49..98fa46e85c1b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+@@ -178,6 +178,22 @@ void mt792x_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	u8 link_id;
+ 	int qid;
+ 
++	/* Drop a GO Probe Response outright when mt792x_vif_is_absent()
++	 * says the BSS has no channel right now: by the time the FW comes
++	 * back the requester has moved on, so the response is stale and
++	 * only costs airtime and a TX-abort in the FW.
++	 */
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) && skb->len >= 2) {
++		struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
++
++		if (vif && ieee80211_vif_type_p2p(vif) == NL80211_IFTYPE_P2P_GO &&
++		    ieee80211_is_probe_resp(mgmt->frame_control) &&
++		    mt792x_vif_is_absent(vif)) {
++			ieee80211_free_txskb(hw, skb);
++			return;
++		}
++	}
++
+ 	if (control->sta) {
+ 		struct mt792x_link_sta *mlink;
+ 		struct mt792x_sta *sta;
 -- 
 2.45.2
 
