@@ -1,64 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.216.248.207
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.32
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793975782;
-	b=Yb0WLPiLtlRfVDY+HCI1yMWoP9NYgxUmgQuFDGfs+VSjgC23ja1Q9kvCgm1BXtXipQyh
-	 kCixzHGoJ9eFr3Ld8g/DOYjP/ka4n9/W1PhEdxr5TZ6By4Dpz8g6EXz8B9eFtFPlyVAEe
-	 Ys0X6HhKeV6pY50a45GxGezxkVOaDKAZOVrwNAsCYOH64I8O7loV0kAvWjxm3WvvJD1EJ
-	 qR3+8V5VApNw+fDXdAH1jNVEZN6OwsIegIkXCWx7P4sWXJUrqSUPUDHNCB0akkZXm7hm/
-	 8514RONvwyRa59yjG2RVm3AAxW97J7RWHYvd/5X46fC8hC8lma4NmBOIr2UMqXk2CZQ==
+	t=1793976380;
+	b=nJCu4HnhP9Mg9nhZ2wYJ6VnJkbjKI3byBy6uTqtBpS940lq7ZCS3/ewLCO8GxGU57md5
+	 6joHF5BE0GsxZhwVlIW0zN5r+kJE3USVYO7NocsDHGXYO1EkSqBwqdQc5uIf5feJHyOM2
+	 ehD9qfga1tlk544IIHGMEeiyK7oV9a7CZG6NORSX1bBmIan+HhUOrQx/86E+gVYmrrBMm
+	 X+gGOS5fAsJ0Hpb3PFOep065fVUZgk9hONse0XDLYVI64GB42zWXT0yu/mG4qnrUrN2Cq
+	 MFwYgyZI2ktMz/aoDHvGKmv6JTVc2n4/eodR00n1aLaTOE50nSuCqrYFgsL53ZFDbjw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793975782;
-	h=DMARC-Filter:Date:X-Lima-ML-UUID:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:Organization:X-Mailer:In-Reply-To:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=rawHr2YVl/H9jkwI+2q/ek0LKfKPSyS72kN0JSTFTe8=;
-	b=4aBjvkcJcuwnzSiSuQWX0NQhv4wHys/n/vGwVdJAWJZoGd3L026ThiQRtLIk9I3Skg7b
-	 OE7Tc6p95/IPUR+7UfbW9XDZhyQoyObVWewNXUV3pJ63jOdD+xFMDn750zMwAbMZPnjqI
-	 m6MMR73v4LBFDA2vWcTwlj4wzoycCkh4KvOn/l25xG2gBtrxggZAvhK48eUxv2Os4pVxa
-	 hF7+4dhkYa7DTcV2x7kqr1A/ZEsuMfN4ayNolCGy39v6lrR7T8t0d9fI0wmMWLeF/Buop
-	 Ld5sOUrHW4IBI4MrPcZSAatps0h1B68SvfRgMg3vM0RDLc/uqZyyMrrJGCLrw9hpZhg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793976380;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
+	 In-Reply-To:References;
+	bh=bcf8NooVSigb4TfmPTaRxGuCBTM15fUvnjEuKFhLl1k=;
+	b=iKloHGD/p9CEMvRGNbLsQzG6JdfqelDL7R+GPaCuhFqc9eLf9b9+3pQJZveDfPo5yHUB
+	 bkVUXAkymdcDMPLPLMyHNIOLruK2I73YvQgpFrxNc+iuJ9a+QKHyAryvz8TIzXVqFk0BS
+	 jNMGiZetZ2Q5kexltk9d7eDw11f21XgaB1g28qh91RFHlYq8NvlunnXISrUp4Ifuo+CES
+	 9V8YttQ79OZPmua4whbzG4hycp0kPhw37aI/7idy1+Tdg2IhU6IxungZTppWUAis8Ux28
+	 APaJ31Vl9f+PwGVqLCfxkgxq7E9ipuG2uBkgBehECvDOVeRdfgsnVOAbjctZO/dhfNw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=deq.rocks;
-	spf=none smtp.mailfrom=deq.rocks;
-	dkim=pass header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=hbL8du9u;
-	arc=none smtp.remote-ip=91.216.248.207
-Received: from mx5.mail-out.lima-city.de (mx5.mail-out.lima-city.de [91.216.248.207])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	arc=none smtp.remote-ip=91.218.175.32
+Received: from mta0.migadu.com (out-32.mta0.migadu.com [91.218.175.32])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214B8606D802;
-	Fri,  6 Nov 2026 14:36:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 214B8606D802
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=deq.rocks
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=deq.rocks
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=deq.rocks header.i=@deq.rocks header.a=rsa-sha256 header.s=securedbylima-20251205 header.b=hbL8du9u
-Date: Fri, 6 Nov 2026 15:36:12 +0100
-X-Lima-ML-UUID: cf184ba6-36c4-4d0a-b5d8-4034eb89d686
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=deq.rocks;
-	s=securedbylima-20251205; t=1793975777;
-	bh=cUspOtuWmA7XJYb4jzXp/qPVPvu+wOcxUbKsynPaRnI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=hbL8du9ufctCpUaLovUKKJcVq8POlp8KcWQKZ9pM6Cz0SzgdYKd9suBVx2OddI3H/
-	 Id9XxKNVG5QeAwS0DN+SrQl26rLWR5MzDtbgLSpUbvyNgJKznk2EAIvcaZ+aTacwQt
-	 Fir7WRTxEM5RYI0yFqaiNOSVeVwpGhDXTEo7hiL2vuVzKI0XZdqXCLpk41G08K4YvO
-	 9VVyIPqQrEy5TBvn/T6kQIpF8gX4GWscaifQVJDo3HN8U8U6rl45lcQ1/wrVzeoZxi
-	 GccCRnRcWxojEofWtHTATz+6wi9bGtp0wcYn1JH3Zd0uBvIefOXApecdUwJxcNjZZe
-	 LWqVUxCkSja4Q==
-From: =?UTF-8?B?QW5kcsOp?= Eikmeyer <dev@deq.rocks>
-To: arend.vanspriel@broadcom.com
-Cc: asahi@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
- brcm80211@lists.linux.dev, dberlin@dberlin.org, frankyl@broadcom.com,
- gustavoars@kernel.org, j@jannau.net, kees@kernel.org, kvalo@kernel.org,
- linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, marcan@marcan.st, meuleman@broadcom.com,
- michael.reeves077@gmail.com, pieterpg@broadcom.com, vanhoefm@gmail.com
-Subject: Re: [PATCH 05/13] wifi: brcmfmac: Negotiate PCIe mailbox transport
- with firmware
-Message-ID: <20261106153612.2aadef2a@kait2en-mbp15-1>
-Organization: KaiT2en
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
-In-Reply-To: <20261103135856.3676311-7-arend.vanspriel@broadcom.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5FC6606A329
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 14:46:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5FC6606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=2dbWv/ipPcBByrtWVppRgZPHES/QVz3Y/W26rsMlQ0o=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793976371; v=1; x=1794581171;
+ b=FFxrbnvMEF7JCHJuFCQDbFF0oOP5ds8ggkeEYsJnHnNSv9hkWDwkjBi8IHyeLul1mYWhMHgS
+ Mm/SKZVfFgBuCnHqqYps8CiK1dw/2tioGwTzkuNE3W1T7hWWF2tuiEhYKENGGspkPRenLkDiVdS
+ xs85kurRvIVLKwCbshO3QDEE=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 9a8c2e4ffcc01ae3;
+	Fri, 06 Nov 2026 14:46:10 +0000
+X-Mizu-Trace-ID: 9a8c2e4ffcc01ae3
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -68,53 +53,110 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Date: Fri, 06 Nov 2026 14:46:06 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <3c56f067d3d87156d8dad56c34b813543ef41d0f@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next v8 2/4] wifi: rtw88: sdio: Track running state
+ and cancel TX worker on stop
+To: "Alastair D'Silva" <alastair@d-silva.org>,
+ linux-wireless@vger.kernel.org, "Ping-Ke Shih" <pkshih@realtek.com>,
+ "Kalle Valo" <kvalo@kernel.org>
+Cc: "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>, "Jernej
+ Skrabec" <jernej.skrabec@gmail.com>, "Ulf Hansson" <ulfh@kernel.org>,
+ linux-kernel@vger.kernel.org, "Alastair D'Silva" <alastair@d-silva.org>,
+ stable@vger.kernel.org
+In-Reply-To: <20261105025700.1655219-3-alastair@d-silva.org>
+References: <20261105025700.1655219-1-alastair@d-silva.org>
+ <20261105025700.1655219-3-alastair@d-silva.org>
 
-Hi Michael,
+Hi Alastair,
 
-I tested 01, 04 and 05 on a T2 Macbook Air 9,1 (BCM4377/4). IIRC should be 
-the same chip as on T2 Macbook 15,4.
+Thanks for the new version. Two comments below.
 
-Arend, with the patch we get D3 ACK on s2idle and s3. So this basically
-renders the D3 ACK WoWL workaround patch obsolete, you recently acked.
-So it will suspend now without refusing d3cold transition, but BT is still
-dead on resume, which is a separate issue. Just mentioning... 
+November 5, 2026 at 3:56 AM, "Alastair D'Silva" <alastair@d-silva.org> wr=
+ote:
 
-Anyways Michael, the patch as acked now will fail on resume with
+> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wi=
+reless/realtek/rtw88/sdio.c
+> index 172aa7ad4732a..e318fefe5b5e7 100644
+> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
+> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
 
-  brcmf_pcie_send_mb_data: Failed to send H2D mailbox data (-5)
+[ ... ]
 
-brcmf_pcie_pm_leave_D3() sends D0_INFORM while devinfo->state is still
-DOWN, hence we get an -EIO, so the driver falls back to remove and 
-re-probe. The Asahi tree sets the state before D0_INFORM. With that
-change my 4377 resumes without reset.
+>  static void rtw_sdio_stop(struct rtw_dev *rtwdev)
+>  {
 
+[ ... ]
 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -2838,10 +2838,10 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
-        /* Check if device is still up and running, if so we are ready */
-        if (brcmf_pcie_read_pcie32(devinfo, devinfo->reginfo->intmask) != 0) {
-                brcmf_dbg(PCIE, "Try to wakeup device....\n");
-+               devinfo->state = BRCMFMAC_PCIE_STATE_UP;
-                if (brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D0_INFORM))
-                        goto cleanup;
-                brcmf_dbg(PCIE, "Hot resume, continue....\n");
--               devinfo->state = BRCMFMAC_PCIE_STATE_UP;
-                brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
-                brcmf_bus_change_state(bus, BRCMF_BUS_UP);
-                brcmf_pcie_intr_enable(devinfo);
-@@ -2851,6 +2851,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
-        }
+> +     cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
+> +
+> +     for (i =3D 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
+> +             ieee80211_purge_tx_queue(rtwdev->hw, &rtwsdio->tx_queue[i=
+]);
 
- cleanup:
-+       devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
-        brcmf_chip_detach(devinfo->ci);
-        devinfo->ci = NULL;
-        pdev = devinfo->pdev;
+ieee80211_purge_tx_queue() takes the frames off with __skb_dequeue(), so
+without the queue lock. rtw_sdio_tx_write() appends with skb_queue_tail()
+and does not look at running, so as far as I can see both can run on the
+same queue at once.
 
-Feel free to fold it into v2, or I can send it as a follow-up if the
-series is already applied.
+That seems possible on the firmware recovery path, where the device is
+stopped while mac80211 is still sending, since ieee80211_restart_hw()
+only comes afterwards:
 
-Andre
+        rtw_fw_recovery_work()
+          __fw_recovery_work()
+            rtw_enter_ips()
+              rtw_core_stop()
+                rtw_power_off()
+                  rtw_hci_stop()
+                    rtw_sdio_stop()
+          ieee80211_restart_hw()
+
+rtw_core_stop() clears RTW_FLAG_RUNNING, but it does not cancel
+rtwdev->tx_work, and __rtw_tx_work() does not check the flag. So a
+tx_work that is already pushing frames can append while the purge walks
+the queue, and the list and qlen get corrupted. On SDIO this path is
+reachable since dc16902cad9c ("wifi: rtw88: ps: Trigger firmware
+recovery when failing to leave LPS state"). If I read it right, that is
+the only rtw_fw_recovery() caller there, because rtw_fw_c2h_cmd_isr() is
+only called from pci.c.
+
+A frame appended just after the purge also stays in tx_queue[] and goes
+out after the restart with the TX descriptor from before it, like with
+the rearm in v7.
+
+Freeing with skb_dequeue() and ieee80211_free_txskb() in a loop would
+keep the list intact. Maybe a second pass in rtw_sdio_start(), before
+running is set, could drop the late frames too.
+
+> +     for (i =3D 0; i < IEEE80211_NUM_ACS; i++) {
+> +             queue =3D rtw_tx_ac_to_hwq(i);
+> +             if (rtwsdio->tx_queue_stopped[queue]) {
+> +                     rtwsdio->tx_queue_stopped[queue] =3D false;
+> +                     ieee80211_wake_queue(rtwdev->hw, i);
+> +             }
+> +     }
+>  }
+
+When the 8723bs back pressure has stopped an AC, mac80211 marks its txqs
+with IEEE80211_TXQ_DIRTY the next time a dequeue is tried. On the
+recovery path above, this wake runs before ieee80211_restart_hw() sets
+in_reconfig. So if I read it right, the wake_txqs tasklet clears the flag
+and calls rtw_ops_wake_tx_queue(), which returns early because
+RTW_FLAG_RUNNING is already clear. After the restart those txqs only move
+again once another frame is queued on them.
+
+PCI does this reset in rtw_pci_start() since 6ac7db1cea43 ("wifi: rtw88:
+pci: wake the TX queues after restart_hw and interface up"), through
+rtw_pci_reset_tx_queue_state(). On restart_hw that runs while in_reconfig
+is set and the SUSPEND reason still holds the queues, so the marked txqs
+are woken at the end of the reconfig instead. I think moving the reset
+and the wake to rtw_sdio_start() would work here too. It could also take
+tx_queue[].lock there, like the 8723bs stop and wake helpers.
+
+Best regards,
+Luka Gejak
