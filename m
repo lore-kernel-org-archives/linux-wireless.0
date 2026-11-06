@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793967773;
-	b=cD5OZGnYXPh+UY7QhXPg2Q8z1oukBDAqAn1uR9owiZ1Lt4EVOjIEst/fyV8DPpFC9mvh
-	 70kAU5do5AVgd9JJzd5DugTj7/cx5P3HIgsfUCQRo55ZzkupYTcXw6y8gHBr3lTnMkgZL
-	 oD2i3YvoqJV5un0UODc6BBv7+4W6Nq4U6NIKutFF71hX86PZxnqw1arL9SWwP60grQiMs
-	 tKo6xbkwh9+E86kt0WzVbJGWOmDgBeuF3CHcC+Q/udFrijSmVNUHGsfLxClV1uzi5LO4G
-	 pmUG18VDHnFDd4Uyw5tqxIcEf1KoQVkSXcTC07HqHa3d3Tdwlsj4pXHireYXPjE9pwA==
+	t=1793967828;
+	b=RkALrc54aCtoBnyglXWiEpCUnrobXxjvmrfejiDapNEyH+hK4N9N3JEL9UGgfVGDFroX
+	 MxgKKre6EdsO5RjzGHvAiBO4CtT23R05D5Uey5tB8EDlmHDyFNmPQHgkYGcjQYshCkL0k
+	 ZQQ+hXqb/l417EKy/M73T1sYSOXmtaLHrws8s4M3sZiQw16X7LU9KbfkPECuysbUyIhP5
+	 MM5fYn9ZnqA35m0XEhmXb5rs2r0oich4z7DDFoAOcPeeaCeE+K8HMyVaSRc0CpcEWsYn5
+	 IrG2i2jOQSypQqBZVuLDY68V99f3xQRgydGmelEN/9qA38hLJbzX3eVgGfWZvGbWhNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793967773;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793967828;
 	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
 	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type;
-	bh=1ID7gQ/1XwVoL4Geed/y9imS4zlTBuBX0PUANOjaPiY=;
-	b=Aw1cl0EPBO/KrOS92rMFezkU2D2DYH2Ylbw2uU7iy06MtnPmns74rEJg0JWtIUx/Sh8u
-	 Pqx5CfJUvXrj5LLU5pXs+5hw48h2PciHAeW4K8sjpCbO2yz1uxEaLHrGuaT+ds6QzFp7y
-	 E9KUuXEEcc5lmxiJ80MoEA+2iFJwBzCnfVBIW8uZF9lpgg8XgxZkAxybgik0K82twYwHK
-	 hVPtPYzEtr0zapr0it8peT/9dd5CNpGpD0tdrLD0nFysYEvAYDQZGXzG7SXXtvVnC7SXk
-	 OFuL8xOlD/1CKTBEe1e5CqfaGOEco42XODMvZRg8RKHtgij2KhdcQjlc2nOqB7IF0mQ==
+	bh=qyE6CYlL0hGqb8dHlLDDqpi1F8l3Odg8Urndse4foOU=;
+	b=zyohj6jT86AYP0wGgq2LV3r5rBwRDo9caP4AnH5AFjy/S1dXE0tLa2CqSBEC2iPMSdHo
+	 SSad/kSVwgLkfERp1DY9XHlLXGo3Ku/w1kvoLXJERqdE4v6TWAH2jdCj/bN9HXqje+Nxn
+	 X3HxUKJ8fLDI1KMHWiNkgrO8lA9lqssy91CsqhxdcV6v1e9vf8YJVuDzoRPqZoXrur9d6
+	 O7rJhtOuP8C2BsUhmB3GqkTQiZcSH2JpkIOBC9K6ZUYT47hcSPDgcMS9ZlQcAkFUnkkHI
+	 2/9MrPpddxCOCvKV+yHdYJzs4g5NnaqceGGHYv97I6023MW+sknzQBwEq5lU3xxB1Ew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=toke.dk;
 	spf=pass smtp.mailfrom=toke.dk;
@@ -24,23 +24,23 @@ Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352A4606A326
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 12:22:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 352A4606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 411C5606A326
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 12:23:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 411C5606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
 Authentication-Results: mail.toke.dk; dkim=none
 From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 13/30] wifi: mac80211: don't apply CoDel to PS-buffered
- frames
-In-Reply-To: <20261102203831.1058362-45-johannes@sipsolutions.net>
+Subject: Re: [PATCH 14/30] wifi: mac80211: put filtered data frames back on
+ TXQs
+In-Reply-To: <20261102203831.1058362-46-johannes@sipsolutions.net>
 References: <20261102203831.1058362-32-johannes@sipsolutions.net>
- <20261102203831.1058362-45-johannes@sipsolutions.net>
-Date: Fri, 06 Nov 2026 13:22:42 +0100
+ <20261102203831.1058362-46-johannes@sipsolutions.net>
+Date: Fri, 06 Nov 2026 13:23:45 +0100
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87cxsip2st.fsf@toke.dk>
+Message-ID: <87bj82p2r2.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,142 +56,57 @@ Johannes Berg <johannes@sipsolutions.net> writes:
 
 > From: Johannes Berg <johannes.berg@intel.com>
 >
-> Frames for sleeping stations remain on the TXQs now, applying
-> CoDel to them would start dropping them due to a long wait on
-> dequeue, but for PS STAs they will be on the queues for a while.
-> Bypass CoDel while a STA is sleeping and for a while (10s) or
-> when the queue drains after it wakes up, and for frames that
-> were enqueued after the wakeup as well, which really is the
-> common case.
+> When a device filters frames because the station went to
+> sleep, we put them back on tx_filtered or pending queues.
+> This can mix up ordering between TXQs and filtered frames
+> when the station wakes up again later.
+>
+> Put filtered frames onto the frags queue of the TXQ they
+> came from, fixing the order and simplifying the queueing
+> structure in mac80211.
 >
 > Assisted-by: LLM
 > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
->  net/mac80211/ieee80211_i.h |  7 +++++
->  net/mac80211/sta_info.c    |  6 ++++-
->  net/mac80211/tx.c          | 52 ++++++++++++++++++++++++++++++++++++++
->  3 files changed, 64 insertions(+), 1 deletion(-)
+>  net/mac80211/ht.c          |  5 ++++
+>  net/mac80211/ieee80211_i.h |  5 +++-
+>  net/mac80211/sta_info.c    | 52 +++++++++++++++++++++++++++++++++++-
+>  net/mac80211/sta_info.h    |  4 ++-
+>  net/mac80211/status.c      | 54 +++++++++++++++++++++++++++++++++++++-
+>  net/mac80211/tx.c          | 37 ++++++++++++++++++++++++++
+>  6 files changed, 153 insertions(+), 4 deletions(-)
 >
+> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+> index c5c2113fa4f7..e26d12659942 100644
+> --- a/net/mac80211/ht.c
+> +++ b/net/mac80211/ht.c
+> @@ -372,6 +372,11 @@ void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
+>  			/* Allow only frags to be dequeued */
+>  			set_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+>  
+> +			/*
+> +			 * Fragments and filtered frames (which already have a
+> +			 * sequence number) must be out before aggregation
+> +			 * starts, otherwise they'd be sent as part of it.
+> +			 */
+>  			if (!skb_queue_empty(&txqi->frags)) {
+>  				/* Fragmented Tx is ongoing, wait for it to
+>  				 * finish. Reschedule worker to retry later.
 > diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 5045144641a4..cb947341fee6 100644
+> index cb947341fee6..4a9b68022250 100644
 > --- a/net/mac80211/ieee80211_i.h
 > +++ b/net/mac80211/ieee80211_i.h
-> @@ -978,6 +978,7 @@ enum txq_info_flags {
->  	IEEE80211_TXQ_AMPDU,
->  	IEEE80211_TXQ_NO_AMSDU,
->  	IEEE80211_TXQ_DIRTY,
-> +	IEEE80211_TXQ_PS_BACKLOG,
->  };
->  
->  /**
-> @@ -990,6 +991,9 @@ enum txq_info_flags {
->   * @schedule_order: used with ieee80211_local->active_txqs
->   * @schedule_round: counter to prevent infinite loops on TXQ scheduling
->   * @flags: TXQ flags from &enum txq_info_flags
-> + * @ps_backlog_end: with %IEEE80211_TXQ_PS_BACKLOG, indicates when
-> + *	the station woke up, i.e. frames before this were just queued
-> + *	due to powersave
->   * @txq: the driver visible part
->   */
->  struct txq_info {
-> @@ -1003,6 +1007,7 @@ struct txq_info {
->  	struct sk_buff_head frags;
->  
->  	unsigned long flags;
-> +	codel_time_t ps_backlog_end;
->  
->  	/* keep last! */
->  	struct ieee80211_txq txq;
-> @@ -2724,6 +2729,8 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
->  			struct txq_info *txq, int tid);
->  struct sk_buff *ieee80211_tx_dequeue_ps_release(struct ieee80211_local *local,
->  						struct txq_info *txqi);
-> +void ieee80211_txq_ps_backlog_start(struct ieee80211_local *local,
-> +				    struct txq_info *txqi);
+> @@ -987,7 +987,8 @@ enum txq_info_flags {
+>   * @tin: contains packets split into multiple flows
+>   * @def_cvars: codel vars for the @tin's default_flow
+>   * @cstats: code statistics for this queue
+> - * @frags: used to keep fragments created after dequeue
+> + * @frags: used to keep fragments created after dequeue, and frames that
+> + *	were filtered by the device (queued before the fragments)
 
-The variable above is called ps_backlog_end, the function is called
-ps_backlog_start. Seems a tad confusing? :)
-
-
->  void ieee80211_txq_purge(struct ieee80211_local *local,
->  			 struct txq_info *txqi);
->  void ieee80211_purge_sta_txqs(struct sta_info *sta);
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index 51504f57128f..8d79e532b109 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -1889,10 +1889,14 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
->  	/* this can be called in process context, e.g. for mesh */
->  	local_bh_disable();
->  	for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-> +		struct txq_info *txqi;
-> +
->  		if (!sta->sta.txq[i] || !txq_has_queue(sta->sta.txq[i]))
->  			continue;
->  
-> -		schedule_and_wake_txq(local, to_txq_info(sta->sta.txq[i]));
-> +		txqi = to_txq_info(sta->sta.txq[i]);
-> +		ieee80211_txq_ps_backlog_start(local, txqi);
-> +		schedule_and_wake_txq(local, txqi);
->  	}
->  	local_bh_enable();
->  
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 0bd324a4d4cb..856018cdb617 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1380,6 +1380,55 @@ static void codel_drop_func(struct sk_buff *skb,
->  	ieee80211_free_txskb(hw, skb);
->  }
->  
-> +/* bypass codel since PS can last a long time */
-> +static bool ieee80211_txq_codel_bypass(struct txq_info *txqi,
-> +				       const struct fq_flow *flow)
-> +{
-> +	struct sta_info *sta;
-> +	struct sk_buff *skb;
-> +
-> +	if (!txqi->txq.sta)
-> +		return false;
-> +
-> +	sta = container_of(txqi->txq.sta, struct sta_info, sta);
-> +	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
-> +	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
-> +	    test_sta_flag(sta, WLAN_STA_PS_DELIVER))
-> +		return true;
-> +
-> +	if (likely(!test_bit(IEEE80211_TXQ_PS_BACKLOG, &txqi->flags)))
-> +		return false;
-> +
-> +	/*
-> +	 * Stop treating as backlog after it cleared or after 1s
-> +	 * (the latter to avoid time wrap and issues from that).
-> +	 */
-> +#define IEEE80211_TXQ_MAX_PS_BACKLOG	MS2TIME(MSEC_PER_SEC)
-> +
-> +	if (!txqi->tin.backlog_packets ||
-> +	    codel_time_after(codel_get_time(),
-> +			     (codel_time_t)(txqi->ps_backlog_end +
-> +					    IEEE80211_TXQ_MAX_PS_BACKLOG))) {
-> +		clear_bit(IEEE80211_TXQ_PS_BACKLOG, &txqi->flags);
-> +		return false;
-> +	}
-> +
-> +	skb = skb_peek(&flow->queue);
-> +	return skb && codel_time_before(codel_skb_time_func(skb),
-> +					txqi->ps_backlog_end);
-> +}
-> +
-> +void ieee80211_txq_ps_backlog_start(struct ieee80211_local *local,
-> +				    struct txq_info *txqi)
-> +{
-> +	spin_lock_bh(&local->fq.lock);
-> +	if (txqi->tin.backlog_packets) {
-> +		txqi->ps_backlog_end = codel_get_time();
-> +		set_bit(IEEE80211_TXQ_PS_BACKLOG, &txqi->flags);
-
-We should probably clear the codel variables here as well? Otherwise, if
-CoDel was already in a dropping state when this happens, that can carry
-over to after the bypass ends.
+Hmm, so rather than splicing these two together in one queue and having
+all that logic to insert into the middle, and to walk the queue to check
+flags, isn't it simpler to just have two distinct queues as struct
+members and check them in order on dequeue?
 
 -Toke
