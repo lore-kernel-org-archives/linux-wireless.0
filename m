@@ -1,98 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.46
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793942337;
-	b=zu55HB+sC3eyu2NdOChLZGagSMFhO3XMkBDugW6DMVp8iQ+X9WK1fTMFuuxvI2TF7H2/
-	 RsoaE+ewm6b6eKWFlK+o2qeQIzOT1Pr1G9cSdXCIq739xewD1C93s41rD467f0BJ20yqK
-	 tZbyvc7JsYx0CEdcVCGW+MgiEgmt610toN49r2TsNENERg+OPVYd10K2ym/Tc9L4LYV2q
-	 Ye4YE3l9+A+1VvWldvdIhuCTOcZR3hvDZD6clE6foGfZlPX2s/+pfNISxD/UfQ2Vv2knm
-	 wJAj1Cwkg9QSqcAF1lAfQhNU7fsa57bu7TgDmxnVaSi6YsbSedCp4BMsCwJB2RNkuTg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793942337;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type;
-	bh=loW1li7alaCOtU/5BmjclmN5Lf1RKbPb6XNoyq8GzBY=;
-	b=gCmZEappTKqV+YH3haQwc4b926nU16ddCLW7pwv00blFxGwNG/9gHqecR24G3PP5UBmo
-	 2Q1zaXhtJYbJtic1u8KLdWq86xsiHjDBsW3+7/Z5EPwrhwvDJibX+QHrLdrGEZ+/9+x8F
-	 Pf3mx4hx4N9HUQ2kX1q4ki3y82xFan+LMzoDs/R7PuSKFak3rDOZlRvbNU5PsZIrvrP7P
-	 w3noiRLEq2n8AAGs8jZRMqj6C1H62Sc710NJVSJZoYL9lXqDQICCQmcm4HMZggEqGWq4/
-	 /2dbq5XjuOBSNY7J6XcK/0LKPld62woYtUHm0yVqCFa0uL76elkkM4C30mSczOh5okg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NijjtoWT;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.46
-Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793942451;
+	b=AsljnlazzYgqF/0YY++C4rk/U4gAQfc0LXM31VJXg0qYp7AtPbXura2v659B30SbdljQ
+	 CG3wkUEpP4VkkMUGjsSuvMJFLc9QNfrpcW0H3DZjFCUCojH6k5VnqT81JgClh6pJyIfWn
+	 +eb1Jc5/Wb3PhC4+8Sku2XUcmChVH3Ku9ksmtnj2itXVnX9NvkglufmrFdZCDD5iptirE
+	 tyA6dEkGdB9WHUzvy4I1TNifXqBO63uatYcOVmLfikHkh4znNzrykFEbZ6qzNptsoVP75
+	 lxGFbfWmi2LlLw7h6iBndtiL3R5QtBGPg7nG6G/2Gzz7LuKEgGEIWZHtMV5qMjJ+J5A==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793942451;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-GUID:X-Authority-Analysis:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=s5r+/GLirXNpsiw8EpW1qS4uEOkcFuBUgn6AOzlYOS8=;
+	b=uttyHaw3Ynm7vFRzdsXtuUMIcWbfVJ9t2z28TIAlGXIduqA/swps+Eob6AXXaNKofKGy
+	 1M/bOFj1M5SC28S3e5UHcwYxxT5GbqpubA+EUoZrgf295DY4HMiO3fD+Rgs+BMAjBF4XX
+	 kwZysgJbeFbcAxZ2RURls8LZawRI4ys0kkBOTJiRA4MgWdadR38dCVnu204yzSftsBvAY
+	 aXFEFPLdVSswyIeTHSTy/vJyqweYiHmgzn4VDE9fIWUiFwQAdICLyNN1fLDPN7pih7ikB
+	 9pSnTlaXzCsAKpigZJuHWCOL6QXVMOzEu1xfDRze6JfYfwBTFhD3KqTLEJ4OxrQEGrw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=ehX4aPGW;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=d2Nv7X9R;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E779A606A331
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 05:18:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E779A606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62BD606A31B
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Nov 2026 05:20:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A62BD606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NijjtoWT
-Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-46556b9e02cso228770fac.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 21:18:56 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793942335; cv=none;
-        d=google.com; s=arc-20260327;
-        b=boc1OIkjqPvK9qz71lu1xWBXFZr0IUNZCIlS5a9x6WwzfObwdMZ3mJjCsyV/obbz9y
-         GVMY9rTFyh3rnwQm6QFW/oRvSmci1re/VX6/Q9cY4ckuoPBcqzfZc9t/soJz9woBQp/l
-         aMR0w5k1vd0PuuqB3ZipRIvNdWAnUojwZoR+umgpMAZifBf4lmmIWHz0TxjRX3L+Yh7l
-         zdZLcndMk/dasAXqBKWSUf8EKwnIbfRi9tqn+PhIApBlKlKwg51iZALmRnceEpKeLtLk
-         ezj2UWez/fQQTcgi0gSU6mWKllo6rVtwgZYX0XArJqZbberEdC8QFTyTaRqQF4O5VLlf
-         Kilg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=loW1li7alaCOtU/5BmjclmN5Lf1RKbPb6XNoyq8GzBY=;
-        fh=Gb8RSDLQoV+qgJjwh3JErt+C3hloosFkdHxORzYl2ZY=;
-        b=CtsKj0Lz3QYN5dBeIAXch6Tz8l1mR2y7KXy2aJTzp5jn4Q7cJGTQrYeeJd9XQpLjXz
-         FNuHYa5JGf+eIm7LiwWkwvdx5zM/pm1j5K7EVld+UIpncJXyhP+iHabMDILS+eEO9Akt
-         SL9DqTDE7MMs1/pjAg2iFAdNUBTKXevSi5MWpZWgTihqdTlsnHuGcyNszwEk2bJe9Fli
-         qS30eVa19HUNvBIgfb7cjiD+S4Bp0p9C2uf9lewNZ5XXvFG7RB8o+34oMjlWVrGV4E4U
-         IiwTWCNhT5wVkzjhtG99K+k0eonvb2Z45bgvKVftI/qjAOC6OBhamTVa/Lzgy2hTXY30
-         uZ7Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=ehX4aPGW;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=d2Nv7X9R
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A6400aq3439421
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2026 05:20:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	s5r+/GLirXNpsiw8EpW1qS4uEOkcFuBUgn6AOzlYOS8=; b=ehX4aPGWJA4S1X26
+	cEDcWAEDBtkHRQBFnGnSdpcDPltUjxyKCDOFthte90TZ/C2v+I4/VEDNAcTWgHB6
+	tFBpjeAVrUyL+2hI9tHjPkzniOJmtduxrTim9/km9aLXxNkosdZ+F4/s+w8+nEq2
+	oIOKPHGw1KjWEYH+bcqteuJan+jUMK6bdzmrh4PTvJnjisPn8ypgDTkM/orHVhik
+	1Qz2qJRxWYf7CanYaBitOh5DxJTH4MDjKE4TaxFTeoqO+p/UFjB0r0pVAW6/bmr8
+	7ooHnCO3ZnVsaFmIY3nhyY+vwesTGDupda0BSZRoC7TX31aNCW8w07hMIEb4LOux
+	VARBlQ==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hs3pas251-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2026 05:20:49 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2e9995cea88so3469865ad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2026 21:20:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793942335; x=1794547135; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=loW1li7alaCOtU/5BmjclmN5Lf1RKbPb6XNoyq8GzBY=;
-        b=NijjtoWT8ACZg9+T7J/snUkIgPzyvJbVPg7ROuphkqR9Da7wVL/ZoXX1EmHLLdODyP
-         XUZvuwty6cJX/E7JJZM+4xS3m2rYGj0VJ4NTVm776ZSWYMx0p85H0Lecx8dI2xBgIQ5W
-         B16fYVh8UjtwN50DorVQ5Wez7zAZom371Bhmeu4dKV+HJ/Da4qq0fQxN0E1rHQ3DA9bS
-         Id5RHgDc4p9hucXrC7Cf6XkdAd8y7ZzlbBtZNqFZNlnHtNqlC6BYBmLM2yj6RgOjUJ5V
-         c9wRxBQM4cz7ZuacTgcDRsZYZS08boLRfgh1K5qs86WkdWm+ZE6ZghohCWl2o5HjIhOb
-         WHVQ==
+        d=oss.qualcomm.com; s=google; t=1793942448; x=1794547248; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=s5r+/GLirXNpsiw8EpW1qS4uEOkcFuBUgn6AOzlYOS8=;
+        b=d2Nv7X9Rq6nqvAiXPSZ4FwaUxrNXWtT0bOSxUb+obA3eI58i8Wsvw8ZcvNcfdvGX1T
+         rytfZRCCrR7J1fabDJ1+RR6RCEmyPx3CLlX4Z6nZq7s5BJhMc2BM6BszikCNeZbGJZ8y
+         mqjuyxoSNRVJODt/T7TL7D7s/7zXZMLDJT1PqdWMTniqHxjk1BjuzIhMcsRPtzUQzyF2
+         qUA3tDOK1tuDAEMcO9XJjjJ7Yii6m5cpvf/re5wiYKJbRQBxGAwbnEwVVsJ7X4i9KqfX
+         Kgsf7ClUIj0u0WQ6J+bxq0J0ixCd0wskpSpmNLH3onUCbfOyhwksNRTVXVT0IDdXgscm
+         CWuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793942335; x=1794547135;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=loW1li7alaCOtU/5BmjclmN5Lf1RKbPb6XNoyq8GzBY=;
-        b=bSyZcCt6ZD7ouCWwsjGxzqGb+X68ErCfF/7foeK9toRI34aYreIrNA7iOyurgwVw3o
-         udPGAqxZBsDw2h7Cex01ldnp8hntW3hS7t/4538TucBKJKqCo9pIwU63JBZ7EM1mkjEM
-         1n7EIcLZWXOHfJO57veLMylB2G9iTRVxLdxPBdu3vVJpxlj6kY2VsEaphOefZ7GaLFNF
-         SENJICbt1S1BJ1br8UBi4mv0oOh1MOVEovoKcYV8oBLgc+mfLjVuuaO7ZvB4jhlT+l0e
-         UK0eN9waeCiPUlupDoDri3RoF+G74cXwqIRJFs+uAe51jQ0x9Nv9qNGFN50bZ1brlsfe
-         gwFA==
-X-Gm-Message-State: APuU4Z+6WtVhB77QeDC8XEaHbBjCr/9tacabhEDP0WCf1Fs4bUzXY2K9
-	QFBN+k9tnd9qd/GDYZ5D3UaOdflxbQsUVPABaL6whZ47sDWjNkP8P2S2G1sOdDIGzUmQbtlXVjJ
-	NI4hbL24Dnwu0AvY3u1ySjVrlVhqS5y0BE9fE8fg=
-X-Gm-Gg: AYBFou0OuogXli8J+p3ICfUM4gzlO+spurWOJ5GxJvf3JuY8yoKh43iIJHFM03y7lWl
-	dy+SGwqYJmhL86ekZ29sKPkslBmyRipSqubzQ6lHA+h/dumg+IznxR1JA9QNbbEyexZ/4V1LQPN
-	b7wAFLTiB2M4xl1ySc7+ugyoNyfaCftCOTt2fhUD8eAN2QYbyFS74x7y+7EzrWzrDKbGrgThHTP
-	uDAYYrsnPvqaB9xbwK3YJipmvbdiJXQ+l0RZe1e1LzKvKp6zS2VvDZyrDwBgPHsPDlEO7UGjwPR
-	eidnEDeuVtbWWSre05b1BFmHj6QMq2Mx+64hVY2ynwTZTrM+ejjbxliI02OqtfwKRR+yjBK1Elf
-	beBWEEpdGn5Z93wctNbrpwq7ifILr1v92PPNfa/eSQt87KCiNb2WKHIun19UZJi/d16JzqOQ=
-X-Received: by 2002:a05:6870:be8e:b0:464:13bb:5b63 with SMTP id
- 586e51a60fabf-4ad6afcda7dmr2937363fac.5.1793942335519; Thu, 05 Nov 2026
- 21:18:55 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793942448; x=1794547248;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=s5r+/GLirXNpsiw8EpW1qS4uEOkcFuBUgn6AOzlYOS8=;
+        b=0O5LYQXhNrPoyG5lvrJ04Y+DZ+vsC+tUuUyda0A56ecfrijQb3ZljwPhC+SFJaqkge
+         t9Te5IBzkqDrHudB9lWzjaqtSi1pxX86PXqfa4Yiq0SMa+XvX45Ti+6y3cf//45Kow0V
+         IOo5WAV+HPfLRkTjITqUegk+glMFxD5IJbLa5vSC9oW/9VoG/CftmgoainyTGjAKwUEF
+         WtLyEGa3X4ctTqpJ1pPoSZ2xfA3/TY0hnpj5z8qmOs69buifZ6UP7UEdD7EwxXbI9Y6f
+         w8vdhi64NK1fIKWAdAi327LInyXwopkcj4vXgFJK2f2xAER2yY27XGzEN5fX0rvFy8DW
+         AGrQ==
+X-Gm-Message-State: APuU4Z8vUG5MYDo6fWsb3lo8uQE+0axBZ61ubX0jcxrDcY+bWnr5nDDU
+	egZ4J2niZZd1PqnBr2USXLuxhmMrXmFnA2yUh3VPf1TGJNwF0GmExfA6qL/R6zrYKJ5+3UKdiOc
+	Y+3AnSKvsRVqkE1Cx+572FSN6/BTNiTsBA44vU7le10g0qQhyBBQIQlsUOTfOtEwy5JGNcQ==
+X-Gm-Gg: AYBFou03WjkyvHZfCQHuumLNxHX+DjZSxCg+Yoe+iuEilCFfZoyeo5iF1q0ZlzSuuuE
+	zAUUlsY5QJmbzIs+HD0Jil2sDudZJRDTiDeG1vMkmzEnvVzPffOxpKv8j6jn2SwCof6+vxsfLCO
+	vs52ZS422TzUI9vGcMgij6fJlVIRrH3clujedWFs2RLuOWnZ736EYyIL7GiXrTlrx7aWxCEYqKt
+	FfpyDsJwsntVeSMG1phMQh9HLXeVBF8MnZbuqkfQ94lCZW2xNueS/BAjcqdN2wQNUF2dcowbCfL
+	B06lXl8oj3uV1HiHy2CMmkaT8rOoHyNDShvd/Zrv8kfyXhCrTchKX8EFQ1bR0Zs8mgFEw7ETenC
+	JV7MXkc5U0FVJA7adkV2J2RxW+w29J6tBtjeHDLxGdcjot30Urz49LgOL560NP2M0d7rq7wTObN
+	l2jA0hn1Iwu1nO4N8oxUHuxzV1bKhdFHkULvV1b4aIGWEb
+X-Received: by 2002:a17:90b:2891:b0:3a6:f1d2:57f3 with SMTP id 98e67ed59e1d1-3b0db6ee368mr1285352a91.58.1793942448510;
+        Thu, 05 Nov 2026 21:20:48 -0800 (PST)
+X-Received: by 2002:a17:90b:2891:b0:3a6:f1d2:57f3 with SMTP id 98e67ed59e1d1-3b0db6ee368mr1285334a91.58.1793942448014;
+        Thu, 05 Nov 2026 21:20:48 -0800 (PST)
+Received: from [10.133.33.112] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0d7c8ff96sm1769378a91.13.2026.11.05.21.20.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Nov 2026 21:20:47 -0800 (PST)
+Message-ID: <4d530236-bc44-4d01-9589-08bf715d8eb9@oss.qualcomm.com>
+Date: Fri, 6 Nov 2026 13:20:44 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,123 +113,79 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261031165117.2868671-1-hjf3108@gmail.com> <20261031165117.2868671-7-hjf3108@gmail.com>
- <20261105081000.GF64923@wp.pl>
-In-Reply-To: <20261105081000.GF64923@wp.pl>
-From: Jie Feng <hjf3108@gmail.com>
-Date: Fri, 6 Nov 2026 13:18:19 +0800
-X-Gm-Features: AclHuK_fiDFrQ87gno9MouRhE8h3dnRf10gG0aroYP5mIgUq8TVgCF74HX90xik
-Message-ID: <CABOQOSVW+KwgdTbUC_9RDS9mOCW-2Xj-7HdfpCUiGtdQ+f9zVw@mail.gmail.com>
-Subject: Re: [PATCH wireless-next v2 6/7] wifi: rt2800usb: enable RX bulk aggregation
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 0/2] wifi: ath12k: Fix HE BA mode and extend
+ buffer size for EHT
+To: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Paulson Raja L <lraja@qti.qualcomm.com>
+References: <20261106-eht-ba-window-v1-0-622f2272e582@oss.qualcomm.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261106-eht-ba-window-v1-0-622f2272e582@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDAyMCBTYWx0ZWRfX0J2yDsD1Sh1T
+ qyBD/B9FZzWXONscWLoilAfF4tmM/b9eXNc64j3MrDrbgl+OVv9SNb3DP84ZuQNlXZZbUCKhkCi
+ USotsb35l0sNWS2p0qXdw8mzxikYfsm51hm+zeKchuM1iBSqn958PoiNXftthqvA0a9Y1cup72Z
+ yxkUtLfL0ZJgtgop1YpzGSd30eh7RmElFNdtuTztTBvfX7mDu5ZcJ9Uu9YVVJ93QKTMUfJ91qyw
+ Zw3cc28FXRXQBGPWb1qTNKwmmJIu+vlnPxfD0SCHMtQiSsAB/0aaMMWZzI3u6blqaAYzUfM3e/x
+ Jy5peR6nErWmQTQl//z/VXSPhyF9S0J5Bn6WXWNzwWC/nXzhSnlGIAgky3E7KX2bEkIsn1HAfG2
+ vw9ay1Y6qnYw2TNy1oCcCqqjmtUfF/t1cAltkCi0qWSnFJW7/QatCQo43WYdqw6p3+3O0ReJw77
+ XMPpccoTVeYuQhtGlEQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDAyMCBTYWx0ZWRfX97t8qfNMLrK+
+ znFmMdMWZWxrujClOmBdFSa884kTFS0m4AoofKNrRBjcpGDLnzxUYC6HSnQByJy9el5dQSwlZgE
+ 0dHK9hGI2QWGBoBhOwXTTc5Uo73UIgY=
+X-Proofpoint-GUID: iPXchE8cUMcPPHkNnStkBkvqNyZgXji7
+X-Authority-Analysis: v=2.4 cv=P4ivFSAu c=1 sm=1 tr=0 ts=6aed63b1 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=EUspDBNiAAAA:8 a=qSRq8I4OGtnwRW6ma38A:9 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-ORIG-GUID: iPXchE8cUMcPPHkNnStkBkvqNyZgXji7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-06_01,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 clxscore=1015 spamscore=0 phishscore=0 suspectscore=0
+ bulkscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
+ definitions=main-2611060020
 
-On Thu, 5 Nov 2026 at 16:10, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
->
-> On Sun, Nov 01, 2026 at 12:51:13AM +0800, Ho Jie Feng wrote:
-> > Enable RX bulk aggregation on high speed USB, to receive more
-> > frames per URB.
-> >
-> > RX buffers are now 24KB, so reduce it to 16 buffers instead of 128,
-> > so that they take 512 KB in total instead of 4 MB.
-> >
-> > Test results:
-> >    before after
-> > TX 30.5   30.5
-> > RX 67.8   80.9
- ...
-> > --- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-> > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-> > @@ -301,15 +301,15 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
-> >               return -EIO;
-> >
-> >       rt2x00_set_field32(&reg, USB_DMA_CFG_PHY_CLEAR, 0);
-> > -     rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN, 0);
-> > +     rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN,
-> > +                        rt2x00dev->rx->usb_maxpacket == 512);
->
-> Any idea why this condition ? We can not have aggregation on slower
-> or faster USB?
-usb_maxpacket is 512 for high-speed and 64 for full-speed, and I don't think
-rt2800usb has any superspeed devices? In that case I could make it into
-a maxpacket >= 512 check instead for robustness.
 
-Both the ralink drivers and mt7601 disable it on full speed usb. My best guess
-would be that waiting for a large aggregated buffer over full speed is slow
-and increases latency.
 
-https://github.com/boundarydevices/rt5572/blob/master/common/cmm_mac_usb.c#L1333
+On 11/6/2026 12:57 PM, Rameshkumar Sundaram wrote:
+> This series addresses two related issues with Block Acknowledgement (BA)
+> configuration for HE and EHT capable links.
+> 
+> Patch 1 fixes a bug where WMI_VDEV_PARAM_BA_MODE was never configured
+> for HE in AP mode. The existing code placed the BA mode configuration
+> inside the he_oper.params check, but mac80211 does not populate
+> he_oper.params for AP mode, so HE AP links never had BA mode set.
+> 
+> Patch 2 builds on the fix by enabling 1024-entry BA buffers for EHT
+> capable links. IEEE 802.11be extends the maximum BA buffer size from 256
+> (HE) to 1024 MPDUs; without this patch, EHT-capable links were limited
+> to 256.
+> 
+> Signed-off-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+> ---
+> Paulson Raja L (1):
+>       wifi: ath12k: Extend BA buffer size to 1024 for EHT capable links
+> 
+> Rameshkumar Sundaram (1):
+>       wifi: ath12k: Fix HE BA mode configuration for AP mode
+> 
+>  drivers/net/wireless/ath/ath12k/mac.c | 41 ++++++++++++++++++++---------------
+>  drivers/net/wireless/ath/ath12k/wmi.h |  1 +
+>  2 files changed, 25 insertions(+), 17 deletions(-)
+> ---
+> base-commit: b9acb873d035fccc8824164246535ea6fc95c71a
+> change-id: 20261106-eht-ba-window-5c2df1a8e910
+> 
 
-...
-> > +static unsigned int rt2800usb_get_rx_seg_len(void *data, unsigned int len)
-> > +{
-> > +     unsigned int min_seg_len = RXINFO_DESC_SIZE + RXWI_DESC_SIZE_4WORDS +
-> > +                                RXD_DESC_SIZE;
-> > +     unsigned int rx_pkt_len;
-> > +     u32 word;
-> > +
-> > +     if (len < min_seg_len)
-> > +             return 0;
-> > +
-> > +     word = rt2x00_desc_read(data, 0);
-> > +     rx_pkt_len = rt2x00_get_field32(word, RXINFO_W0_USB_DMA_RX_PKT_LEN);
-> > +
-> > +     if (!rx_pkt_len ||
-> > +         RXINFO_DESC_SIZE + rx_pkt_len + RXD_DESC_SIZE > len ||
-> > +         rx_pkt_len & 0x3)
->
-> This is indication of we do something wrong, similar when len < min_seg_len.
-> Maybe wrap those with WARN_ON_ONCE() ?
->
-Should I put one WARN_ON_ONCE for the full condition, or wrap it individually
-Wrapping it individually might be easier for debugging if someone
-sends their dmesg.
-
-> >
-> > +
-> > +     return RXINFO_DESC_SIZE + rx_pkt_len + RXD_DESC_SIZE;
-> > +}
-> > +
-> >  static void rt2800usb_fill_rxdone(struct queue_entry *entry,
-> >                                 struct rxdone_entry_desc *rxdesc)
-> >  {
-> > @@ -706,6 +727,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
-> >       .clear_beacon           = rt2800_clear_beacon,
-> >       .get_tx_data_len        = rt2800usb_get_tx_data_len,
-> >       .fill_rxdone            = rt2800usb_fill_rxdone,
-> > +     .get_rx_seg_len         = rt2800usb_get_rx_seg_len,
-> >       .config_shared_key      = rt2800_config_shared_key,
-> >       .config_pairwise_key    = rt2800_config_pairwise_key,
-> >       .config_filter          = rt2800_config_filter,
-> > @@ -725,8 +747,8 @@ static void rt2800usb_queue_init(struct data_queue *queue)
-> >
-> >       switch (queue->qid) {
-> >       case QID_RX:
-> > -             queue->limit = 128;
-> > -             queue->data_size = AGGREGATION_SIZE;
-> > +             queue->limit = 16;
-> > +             queue->data_size = MAX_RXBULK_SIZE;
->
-> Since we enable aggregation conditionally, this probably should also be
-> conditional. But the issue is that we do not have
-> rt2x00dev->rx->usb_maxpacket value available yet.
-Due to full-speed USB being 40x slower than high speed, I think
-the reduction in queue limit might not be a problem.
-
-> We could just enable aggregation unconditionally,
-> but I'm not sure it will work with some older chips like RT2870?
-On my tests it works on RT3070 too, but I don't have any others to
-test. The ralink driver also does it for all chips too.
-
-> So perhaps better would be set a capability flag during probe for
-> chips that know to work with the aggregation and use it here and
-> when configuring USB_DMA register? Or base on usb_maxpacket
-> but check it during probe?
-A flag looks good for this if we decide to conditionally gate it on
-more than just usb speed.
-
-> Regards
-> Stanislaw
->
->
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
